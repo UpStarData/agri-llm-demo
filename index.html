@@ -46,6 +46,10 @@ body{
 .mod-tags{display:flex;gap:10px;margin-top:30px;flex-wrap:wrap}
 .mtag{border:1px solid var(--line);background:#fff;border-radius:18px;padding:8px 16px;font-size:13.5px;color:var(--mut)}
 .mtag b{color:var(--ink)}
+/* 首页五层结构说明：文字条目，不可点击（不是按钮/入口） */
+.land-struct{list-style:none;padding:0;margin:34px 0 0;display:flex;flex-wrap:wrap;gap:9px 38px;max-width:780px;border-left:1px solid var(--line);padding-left:22px}
+.land-struct li{font-size:14px;color:var(--mut);display:flex;align-items:baseline;gap:9px}
+.land-struct i{font-style:normal;font-size:11px;letter-spacing:.14em;color:#1d4ed8;opacity:.7;font-variant-numeric:tabular-nums}
 .land-cta{margin-top:40px;display:flex;gap:14px;align-items:center}
 .btn-primary{background:#1d4ed8;color:#fff;border:none;font-family:"IBM Plex Sans SC";font-weight:600;
   font-size:17px;letter-spacing:.12em;padding:15px 34px;border-radius:14px;cursor:pointer;
@@ -165,19 +169,22 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   <div class="land-wrap">
     <div class="land-top"><div class="mark">🌾</div>农链 · AgriLink &nbsp;<span style="color:var(--dim)">农产品产业大数据平台（概念原型）</span></div>
     <div class="land-hero">
-      <div class="kicker">从地球到产区 · 五层数据下钻</div>
+      <div class="kicker">五层结构 · 从全球货源到一亩产地</div>
       <h1 class="land-title">读懂一颗<br>农产品的<span class="thin">全球旅程</span></h1>
-      <p class="land-sub">从一个旋转的地球开始，追踪货物如何在全球流动、汇聚到一个国家、落到一个个产区与城市 —— 每一层都是真实地图，数据随你逐层深入而刷新。</p>
-      <div class="mod-tags">
-        <span class="mtag"><b>全球贸易流向</b></span><span class="mtag"><b>全国产区分布</b></span>
-        <span class="mtag"><b>省区城市下钻</b></span><span class="mtag"><b>单品全产业链</b></span>
-      </div>
+      <p class="land-sub">从全球货源到一亩产地：看清货从哪来、产区有什么、价格怎么走、链条卡在哪。</p>
+      <ol class="land-struct">
+        <li><i>01</i>全球货源流向</li>
+        <li><i>02</i>全国产区与省际流通</li>
+        <li><i>03</i>省区产业分析</li>
+        <li><i>04</i>城市与单品全产业链</li>
+        <li><i>05</i>环节与经营主体</li>
+      </ol>
       <div style="margin-top:38px">
         <button class="btn-primary" id="enterBtn">进 入 系 统 →</button>
         <span style="font-size:12.5px;color:var(--dim);margin-left:16px">概念原型 · 数据均为示意</span>
       </div>
     </div>
-    <div class="land-foot">农链 AgriLink · 面向集团与农博会展示场景的概念演示（2026）</div>
+    <div class="land-foot">农链 AgriLink · 面向集团与农博会展示场景的概念演示（2026）· 页面数据均为示意，口径与来源待内部数据梳理后标定</div>
   </div>
 </div>
 
