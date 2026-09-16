@@ -125,6 +125,27 @@ h2.sec::before{content:"";width:4px;height:16px;border-radius:2px;background:lin
 .filters button.on[data-c="fresh"]{background:var(--fresh);border-color:var(--fresh)}
 .legend{margin-left:auto;display:flex;gap:14px;font-size:12px;color:var(--dim)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.tourbar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.tourbar button.primary{background:linear-gradient(90deg,#0891b2,#059669);border:none;color:#fff;font-weight:700;
+  padding:7px 18px;border-radius:8px;cursor:pointer;letter-spacing:1px}
+.tourbar button.primary.on{background:linear-gradient(90deg,#c2410c,#b91c1c)}
+.tourbar .seg{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--dim)}
+.tourbar .seg span{margin-right:2px}
+.tourbar button{background:none;border:1px solid var(--line);color:var(--dim);padding:5px 11px;border-radius:7px;
+  font-size:12.5px;cursor:pointer}
+.tourbar .seg button.on{color:#03121f;background:var(--cyan);border-color:var(--cyan);font-weight:700}
+.mapwrap{position:relative}
+.focus-caption{position:absolute;left:50%;top:22px;transform:translateX(-40%);text-align:center;
+  pointer-events:none;opacity:0;transition:.35s ease}
+.focus-caption.show{opacity:1;transform:translateX(-45%) scale(1)}
+.focus-caption span{font-size:32px;font-weight:800;color:#fff;letter-spacing:3px;
+  text-shadow:0 6px 26px rgba(34,211,238,.7),0 2px 8px rgba(5,15,30,.9)}
+.focus-caption small{display:block;margin-top:4px;color:var(--cyan);font-size:13px;letter-spacing:1px}
+.tour-steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tour-steps button{background:none;border:1px solid var(--line);color:var(--dim);border-radius:14px;
+  padding:4px 12px;font-size:11.5px;cursor:pointer;transition:.2s}
+.tour-steps button:hover{border-color:rgba(34,211,238,.5)}
+.tour-steps button.on{color:#03121f;background:var(--cyan);border-color:var(--cyan);font-weight:700}
 #regionPanel h3{font-size:16px;margin-bottom:2px}
 #regionPanel .feat{font-size:12.5px;color:var(--dim);line-height:1.7;margin:10px 0}
 .hbar{margin:7px 0}
@@ -326,7 +347,14 @@ input[type=range]{flex:1;accent-color:#22d3ee}
   <div class="map-layout">
     <div class="panel">
       <h2 class="sec">全国生鲜果蔬主产区分布</h2>
-      <div class="sub">气泡大小 = 产能规模（示意） · 颜色 = 品类大类 · 点击产区查看产业档案</div>
+      <div class="sub">Prezi 式漫游：自动推近逐区聚焦，或点击任意产区气泡直达 · 数据均为示意</div>
+      <div class="tourbar">
+        <button id="playBtn" class="primary">▶ 开始漫游</button>
+        <div class="seg"><span>节奏</span><button data-sp="1">慢</button><button data-sp="2" class="on">中</button><button data-sp="3">快</button></div>
+        <span style="flex:1"></span>
+        <button id="prevBtn">‹ 上一步</button>
+        <button id="nextBtn">下一步 ›</button>
+      </div>
       <div class="filters">
         <button data-c="all" class="on">全部品类</button>
         <button data-c="fruit">水果</button>
@@ -338,7 +366,11 @@ input[type=range]{flex:1;accent-color:#22d3ee}
           <span><i style="background:var(--fresh)"></i>生鲜·粮油</span>
         </div>
       </div>
-      <div id="chinaMap"></div>
+      <div class="mapwrap">
+        <div id="chinaMap"></div>
+        <div class="focus-caption" id="focusCaption"><span></span><small></small></div>
+      </div>
+      <div class="tour-steps" id="tourSteps"></div>
       <div class="map-fallback" id="mapFallback"></div>
     </div>
     <div class="panel" id="regionPanel">
@@ -537,7 +569,7 @@ const charts={};
 let curCat='all',curRegion=null,mapInited=false;
 document.querySelectorAll('.filters button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.filters button').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on');curCat=b.dataset.c;renderMap();
+  b.classList.add('on');curCat=b.dataset.c;stopTour();toOverview(true);renderChips();
 });
 function mapFallback(){
   document.getElementById('chinaMap').style.display='none';
@@ -547,48 +579,77 @@ function mapFallback(){
 }
 const LABEL_POS=['right','top','bottom','left'];
 let mapList=[];
+/* ---- Prezi 相机与漫游状态 ---- */
+const OVERVIEW_C=[104,36],OVERVIEW_Z=1,FOCUS_ZOOM=6.5,FLY_MS=1200;
+const DWELL={1:6000,2:4200,3:2800};
+let viewC=[104,36],viewZ=1,focusIdx=-1,tourTimer=null,flyId=null,speed=2,playing=false;
+function easeIO(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+const $id=x=>document.getElementById(x);
+function setCam(c,z){
+  viewC=c.slice();viewZ=z;
+  if(charts.map)charts.map.setOption({geo:{center:c.slice(),zoom:+z.toFixed(4)}});
+}
+function flyTo(c,z,dur=FLY_MS){
+  cancelAnimationFrame(flyId);
+  const fC=viewC.slice(),fZ=viewZ,t0=performance.now();
+  (function st(t){let k=(t-t0)/dur;if(k>1)k=1;k=easeIO(k);
+    setCam([fC[0]+(c[0]-fC[0])*k,fC[1]+(c[1]-fC[1])*k], fZ+(z-fZ)*k);
+    if(k<1)flyId=requestAnimationFrame(st);})(t0);
+}
+/* mode: null = 概览（全部柔和显示）; string = 聚焦某个产区 */
+function buildScatter(mode){
+  return mapList.map((r,i)=>{const act=typeof mode==='string'&&r.name===mode;
+    const op=mode===null?.55:(act?1:.13);
+    const sz=mode===null?Math.max(11,r.cap*.3):(act?Math.max(30,r.cap):9);
+    return {name:r.name,value:[r.lng,r.lat,r.cap],cat:r.cat,cap:r.cap,scale:r.scale,_i:i,
+      symbolSize:sz,
+      itemStyle:{color:CAT_COLOR[r.cat],opacity:op,
+        shadowBlur:act?30:(mode===null?12:6),shadowColor:CAT_COLOR[r.cat]+'aa',
+        borderWidth:act?2:0,borderColor:'#eaffff'},
+      label:{show:act}};});
+}
 function renderMap(){
   const el=document.getElementById('chinaMap');
   if(!window.echarts){if(!mapInited){mapInited=true;mapFallback();}return;}
   mapList=REGIONS.filter(r=>curCat==='all'||r.cat===curCat);
-  const opt={
-    backgroundColor:'transparent',
+  const opt={backgroundColor:'transparent',animation:false,
     tooltip:{trigger:'item',backgroundColor:'rgba(10,20,40,.95)',borderColor:'#22d3ee55',textStyle:{color:'#dbe7ff',fontSize:12},
       formatter:p=>p.seriesType==='scatter'?`<b>${p.data.name}</b><br>${p.data.scale}<br>产能指数 ${p.data.cap}（示意）`:p.name},
-    geo:{map:'china',roam:false,
+    geo:{map:'china',roam:false,center:[104,36],zoom:1,
       itemStyle:{areaColor:'rgba(20,40,80,.55)',borderColor:'rgba(94,148,255,.35)',borderWidth:.8},
       emphasis:{disabled:true},select:{disabled:true}},
-    series:[{type:'scatter',coordinateSystem:'geo',symbolSize:d=>Math.max(14,d[2]*.42),
-      itemStyle:{color:p=>CAT_COLOR[p.data.cat],shadowBlur:12,shadowColor:p=>CAT_COLOR[p.data.cat]+'99',opacity:.92},
-      label:{show:true,formatter:p=>p.data.name.split('·').pop(),position:p=>LABEL_POS[p.dataIndex%4],color:'#aebfdd',fontSize:10},
-      data:mapList.map(r=>({name:r.name,value:[r.lng,r.lat,r.cap],cat:r.cat,cap:r.cap,scale:r.scale}))}]
+    series:[{type:'scatter',coordinateSystem:'geo',
+      label:{formatter:p=>p.data.name.split('·').pop(),position:p=>LABEL_POS[p.data._i%4],color:'#eaf2ff',fontSize:12,
+        textBorderColor:'rgba(0,10,25,.9)',textBorderWidth:2},
+      data:buildScatter(null)}]
   };
   if(!mapInited){
     if(el.offsetParent===null){return} // tab 隐藏时尺寸为 0，等首次切换再初始化
     mapInited=true;
     charts.map=echarts.init(el);
-    charts.map.on('click',p=>{if(p.dataIndex!=null)selectRegion(mapList[p.dataIndex])});
+    charts.map.on('click',p=>{if(p.dataIndex!=null&&mapList[p.dataIndex]){stopTour();focusRegion(mapList.indexOf(mapList[p.dataIndex]));}});
   }
   const c=charts.map;
   if(echarts.getMap('china')){c.setOption(opt)}
   else if(window.__CHINA_GEO){echarts.registerMap('china',window.__CHINA_GEO);c.setOption(opt)}
   else fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
     .then(r=>r.json()).then(geo=>{echarts.registerMap('china',geo);c.setOption(opt)}).catch(mapFallback);
+  renderChips();setPanelOverview();
 }
 function selectRegion(r){
   curRegion=r;
-  document.getElementById('regionEmpty').style.display='none';
-  document.getElementById('regionBody').style.display='block';
-  document.getElementById('rName').textContent=r.name;
-  document.getElementById('rTags').innerHTML=
+  $id('regionEmpty').style.display='none';
+  $id('regionBody').style.display='block';
+  $id('rName').textContent=r.name;
+  $id('rTags').innerHTML=
     `<span class="chip tag ${r.cat}">${CAT_NAME[r.cat]}</span><span class="chip">产能指数 ${r.cap}（示意）</span><span class="chip">${r.scale.split('·')[0].trim()}</span>`;
-  document.getElementById('rFeat').textContent=r.feat;
+  $id('rFeat').textContent=r.feat;
   const max=Math.max(...r.breeds.map(b=>b[1]));
-  document.getElementById('rBars').innerHTML=r.breeds.map(b=>
+  $id('rBars').innerHTML=r.breeds.map(b=>
     `<div class="hbar"><div class="row"><span>${b[0]}</span><span style="color:var(--dim)">${b[1]}%</span></div>
      <div class="bar"><i style="width:${b[1]/max*100}%"></i></div></div>`).join('');
   if(window.echarts){
-    if(!charts.radar)charts.radar=echarts.init(document.getElementById('radar'));
+    if(!charts.radar)charts.radar=echarts.init($id('radar'));
     charts.radar.setOption({
       radar:{indicator:['品质','品牌','规模化','冷链配套','成本优势'].map(n=>({name:n,max:5})),
         splitArea:{areaStyle:{color:['rgba(34,211,238,.03)','rgba(34,211,238,.06)']}},
@@ -598,6 +659,51 @@ function selectRegion(r){
     });
   }
 }
+function setPanelOverview(){
+  $id('regionBody').style.display='none';
+  const e=$id('regionEmpty');e.style.display='block';
+  if(mapList.length)e.innerHTML=`<div style="text-align:center;padding:34px 16px">
+    <div style="font-size:38px;margin-bottom:10px">🗺️</div>
+    点击任意产区气泡，或按 <b style="color:var(--cyan)">▶ 开始漫游</b> 逐区推近聚焦<br><span style="font-size:12px;color:#6f86ad">当前共 ${mapList.length} 个核心主产区（示意）</span></div>`;
+}
+function showCaption(name,cat){const c=$id('focusCaption');c.querySelector('span').textContent=name;c.querySelector('small').textContent='· '+cat+' ·';c.classList.add('show');}
+function hideCaption(){$id('focusCaption').classList.remove('show')}
+function toOverview(rebuild){
+  focusIdx=-1;curRegion=null;
+  flyTo(OVERVIEW_C,OVERVIEW_Z);
+  if(charts.map)charts.map.setOption({series:[{data:buildScatter(null)}]});
+  setPanelOverview();hideCaption();markChips(-1);renderPlayBtn();
+}
+function focusRegion(i){
+  const r=mapList[i];if(!r)return;
+  curRegion=r;focusIdx=i;
+  flyTo([r.lng,r.lat],FOCUS_ZOOM);
+  charts.map.setOption({series:[{data:buildScatter(r.name)}]});
+  selectRegion(r);markChips(i);showCaption(r.name,CAT_NAME[r.cat]);renderPlayBtn();
+}
+/* ---- 漫游控制 ---- */
+function renderChips(){
+  $id('tourSteps').innerHTML=mapList.map((r,i)=>`<button data-i="${i}">${r.name.split('·')[0]}</button>`).join('');
+  document.querySelectorAll('#tourSteps button').forEach(b=>b.onclick=()=>{stopTour();focusRegion(+b.dataset.i);});
+  markChips(focusIdx);
+}
+function markChips(i){document.querySelectorAll('#tourSteps button').forEach((b,k)=>b.classList.toggle('on',k===i));}
+const playBtn=$id('playBtn');
+function renderPlayBtn(){playBtn.textContent=playing?'⏸ 暂停漫游':'▶ 开始漫游';playBtn.classList.toggle('on',playing);}
+function tourStep(){
+  focusIdx=(focusIdx+1)%mapList.length;
+  focusRegion(focusIdx);
+  if(playing)tourTimer=setTimeout(tourStep,DWELL[speed]+FLY_MS);
+}
+function startTour(){if(!mapList.length)return;playing=true;renderPlayBtn();tourStep();}
+function stopTour(){playing=false;clearTimeout(tourTimer);renderPlayBtn();}
+playBtn.onclick=()=>{playing?stopTour():startTour()};
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');speed=+b.dataset.sp;
+});
+$id('prevBtn').onclick=()=>{stopTour();if(focusIdx<0)focusRegion(mapList.length-1);else focusRegion((focusIdx-1+mapList.length)%mapList.length)};
+$id('nextBtn').onclick=()=>{stopTour();if(focusIdx<0)focusRegion(0);else focusRegion((focusIdx+1)%mapList.length)};
 renderMap(); // 页面加载时 tab2 隐藏，会自动跳过，等首次切到 t2 再真正初始化
 
 /* ============ TAB3 单品全链路 ============ */
