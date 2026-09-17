@@ -1,7 +1,7 @@
 {
-  "hash": "697c095709ce",
-  "git": "11c7207",
-  "builtAt": "2026-09-17T03:52:10.199Z",
+  "hash": "7710f0006c28",
+  "git": "72e78d1",
+  "builtAt": "2026-09-17T07:52:14.240Z",
   "inputs": [
     "src/shell.html",
     "src/app.css",
@@ -9,6 +9,7 @@
     "src/globe.js",
     "src/provider.js",
     "src/ai.js",
+    "src/aiconfig.js",
     "src/map.js",
     "src/app-chain.js",
     "src/app.js",
@@ -19,5 +20,5 @@
     "fonts/PlexRegular-sub.woff2",
     "fonts/PlexBold-sub.woff2"
   ],
-  "bytes": 2418674
+  "bytes": 2456820
 }

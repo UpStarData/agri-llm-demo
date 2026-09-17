@@ -191,8 +191,24 @@ async function desktop1440(browser) {
     scr1.sh <= scr1.ih + 1 && boxes[1].r.h + boxes[0].r.h === scr1.ih,
     `topbar=${boxes[0].r.h} stage=${boxes[1].r.h} viewport=${scr1.ih}`);
 
-  const aiIdle = await page.evaluate(() => ({ send: document.querySelector('#aiSend').disabled, input: document.querySelector('#aiInput').disabled }));
-  check('全局：未选中对象时 AI 提问为禁用态（不给假入口）', aiIdle.send === true && aiIdle.input === true, JSON.stringify(aiIdle));
+  /* LLM-234：未选中对象不再是提问门槛 —— 输入框可用，空态是真欢迎态（不是「先选对象」也不是假回答） */
+  const aiIdle = await page.evaluate(() => {
+    const i = document.querySelector('#aiInput');
+    const d = window.AGRI_DEBUG;
+    return { panel: d.aiPanelReady(), text: d.aiText(), obj: document.querySelector('.ai-obj').textContent,
+      state: d.aiStateLine(), tags: d.aiTags(), qs: Array.from(document.querySelectorAll('.ai-qs button')).map(b => b.textContent) };
+  });
+  check('全局：未选中对象时 AI 输入框仍可用（不再因未选对象禁用）',
+    aiIdle.panel.sendDisabled === false && aiIdle.panel.disabled === false, JSON.stringify({ send: aiIdle.panel.sendDisabled, input: aiIdle.panel.disabled }));
+  check('全局：空态是欢迎 / 示例问题，不再输出「先选对象」硬门槛',
+    /不选对象也能问/.test(aiIdle.text) && aiIdle.qs.length >= 4 && /占比|份额/.test(aiIdle.qs[0])
+    && !/尚未选中对象|先选中一个数据对象|先选一个数据对象/.test(aiIdle.text),
+    `qs=${aiIdle.qs.length} | ${aiIdle.text.replace(/\n/g, ' ').slice(0, 90)}`);
+  check('全局：面板声明「不选对象也能提问」，状态行区分真实模型 / 规则降级 / 未配置',
+    /不选对象也能提问/.test(aiIdle.obj) && /真实模型|规则演示|未配置|连接失败|加载中/.test(aiIdle.state) && /key (已|未)配置/.test(aiIdle.state),
+    `obj=${aiIdle.obj.slice(0, 34)} | state=${aiIdle.state.slice(0, 80)}`);
+  check('全局：回答操作齐备（取消 / 重试 / 清空会话）',
+    aiIdle.panel.hasCancel && aiIdle.panel.hasRetry && aiIdle.panel.hasClear, JSON.stringify(aiIdle.panel));
   const ov1 = await page.evaluate(sels => __P.overlaps(sels), ['#scene-l1 .scene-head', '#legendL1', '#scene-l1 .scene-hint']);
   check('L1：层头 / 图例 / 操作提示三块浮层互不重叠', ov1.hits.length === 0,
     ov1.checked.join(' + ') + (ov1.hits.length ? ' → ' + ov1.hits.join(', ') : ' → 0 重叠'));

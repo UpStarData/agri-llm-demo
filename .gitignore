@@ -4,3 +4,6 @@ shots-r3/
 .DS_Store
 .env
 .probe/
+shots-r4/
+shots-live/
+test/.live-lm.json

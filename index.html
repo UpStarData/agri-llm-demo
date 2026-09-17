@@ -337,10 +337,85 @@ button{font-family:inherit;cursor:pointer}
 .ai .ai-in button:hover{background:#1b45c4}
 .ai .ai-in button:disabled{background:#c7d2e6;cursor:not-allowed}
 .ai .ai-in input:disabled{background:#f6f8fc;color:var(--dim)}
+/* 状态行：运行模式 + key 状态（只末尾 4 位）+ 最后成功/失败时间 */
+.ai .ai-state{font-size:.75rem;color:var(--dim);line-height:1.7;background:#fff;border:1px solid var(--hair);
+  border-radius:9px;padding:6px 9px;margin-bottom:9px;font-variant-numeric:tabular-nums}
+.ai .ai-err{font-size:.75rem;color:var(--warn);background:var(--warn-bg);border:1px solid #fde68a;
+  border-radius:8px;padding:5px 9px;margin:-5px 0 9px;line-height:1.7;word-break:break-word}
+/* 取消 / 重试 / 清空：次级按钮，只有请求处理中才禁用发送 */
+.ai .ai-in button.ghost{background:#fff;color:var(--mut);border:1px solid var(--line)}
+.ai .ai-in button.ghost:hover{background:#f8fbff;color:var(--accent);border-color:#bfd3f7}
+.ai .ai-acts{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:wrap}
+.ai .ai-acts button{background:#fff;border:1px solid var(--line);border-radius:9px;padding:5px 10px;
+  font-size:.75rem;color:var(--mut);transition:border-color .2s,color .2s,background .2s}
+.ai .ai-acts button:hover:not(:disabled){border-color:#bfd3f7;color:var(--accent);background:#f8fbff}
+.ai .ai-acts button:disabled{opacity:.45;cursor:not-allowed}
+.ai .ai-acts .ai-turns{margin-left:auto;font-size:.75rem;color:var(--dim)}
 .side-foot{font-size:.75rem;color:var(--dim);line-height:1.8;padding:2px 4px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:rgba(16,21,31,.92);color:#fff;
   font-size:.8125rem;padding:9px 16px;border-radius:11px;opacity:0;transition:.3s;z-index:200;pointer-events:none;max-width:88vw}
 .toast.on{opacity:1;transform:translateX(-50%)}
+
+/* ================= 「⚙ AI 配置」入口与配置面板 =================
+   key 只在服务端落盘；本面板不写 localStorage / URL / DOM，输入框 type=password 且保存后立即清空 */
+.cfg-entry{border:1px solid var(--line);background:#fff;border-radius:10px;padding:6px 11px;
+  font-size:.78125rem;color:var(--mut);font-weight:600;white-space:nowrap;transition:border-color .2s,color .2s,background .2s}
+.cfg-entry:hover{border-color:#bfd3f7;color:var(--accent);background:#f8fbff}
+.cfg-mask{position:fixed;inset:0;z-index:300;background:rgba(16,21,31,.44);backdrop-filter:blur(3px);
+  display:flex;align-items:flex-start;justify-content:center;padding:5vh var(--s4) var(--s4);overflow:auto}
+.cfg-mask[hidden]{display:none}
+.cfg-box{width:min(720px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 30px 70px -30px rgba(15,23,42,.55)}
+.cfg-body{padding:var(--s5)}
+.cfg-head{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
+.cfg-head b{font-size:1.0625rem}
+.cfg-x{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:9px;width:30px;height:30px;
+  font-size:.875rem;color:var(--mut);line-height:1}
+.cfg-x:hover{border-color:#bfd3f7;color:var(--accent)}
+.cfg-mode{font-size:.75rem;font-weight:600;border-radius:6px;padding:2px 8px;color:var(--dim);background:var(--panel-2);border:1px solid var(--hair)}
+.cfg-mode.live{color:var(--veg-ink);background:#f3fbf5;border-color:rgba(22,163,74,.4)}
+.cfg-mode.error{color:var(--warn);background:var(--warn-bg);border-color:#fde68a}
+.cfg-note{font-size:.78125rem;color:var(--mut);line-height:1.8;background:#f6f9ff;border:1px solid #e3ecfb;
+  border-radius:10px;padding:9px 12px;margin-bottom:var(--s3)}
+.cfg-note.warn{color:var(--warn);background:var(--warn-bg);border-color:#fde68a;margin-top:var(--s3)}
+.cfg-note code,.cfg-line code{background:rgba(16,21,31,.06);border-radius:4px;padding:1px 4px;font-size:.95em;word-break:break-all}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-bottom:var(--s3)}
+.cfg-f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.cfg-f>span{font-size:.75rem;color:var(--dim);font-weight:600}
+.cfg-f>span em{font-style:normal;font-weight:400;color:var(--hint)}
+.cfg-f input,.cfg-f select{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.78125rem;
+  font-family:inherit;color:var(--ink);background:#fff;min-width:0;width:100%}
+.cfg-f input:focus,.cfg-f select:focus{outline:2px solid #dbe6fb;border-color:#bfd3f7}
+.cfg-f input:disabled{background:#f6f8fc;color:var(--dim)}
+.cfg-inline{display:flex;gap:6px;align-items:center}
+.cfg-inline input{flex:1;min-width:0}
+.cfg-inline .cfg-btn{flex-shrink:0}
+.cfg-f .cfg-key{font-size:.75rem;color:var(--dim);line-height:1.6}
+.cfg-f .cfg-key b{color:var(--ink)}
+.cfg-f3{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+.cfg-row{display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s3)}
+.cfg-btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font-size:.78125rem;
+  color:var(--mut);font-weight:600;transition:border-color .2s,color .2s,background .2s;text-align:center;text-decoration:none;display:inline-block}
+.cfg-btn:hover{border-color:#bfd3f7;color:var(--accent);background:#f8fbff}
+.cfg-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.cfg-btn.primary:hover{background:#1b45c4;color:#fff}
+.cfg-result .cfg-res{font-size:.78125rem;line-height:1.8;color:var(--mut);background:#f8fafd;
+  border:1px solid var(--hair);border-radius:10px;padding:9px 12px;word-break:break-word}
+.cfg-result .cfg-res.ok{color:var(--veg-ink);background:#f3fbf5;border-color:rgba(22,163,74,.4)}
+.cfg-result .cfg-res.err{color:var(--warn);background:var(--warn-bg);border-color:#fde68a}
+.cfg-result .cfg-res.busy{color:var(--accent);background:var(--accent-soft);border-color:#bfd3f7}
+.cfg-sec{font-size:.75rem;letter-spacing:.1em;color:var(--dim);font-weight:700;margin:var(--s3) 0 6px}
+.cfg-line{font-size:.78125rem;color:var(--mut);line-height:1.9;font-variant-numeric:tabular-nums}
+.cfg-line b{color:var(--ink)}
+.cfg-line.err{color:var(--warn);word-break:break-word}
+.cfg-ol{font-size:.78125rem;color:var(--mut);line-height:1.9;padding-left:1.3em}
+.cfg-ol code{background:rgba(16,21,31,.06);border-radius:4px;padding:1px 4px}
+.cfg-ol a{color:var(--accent)}
+.cfg-imports{list-style:none;display:flex;flex-direction:column;gap:7px;margin:8px 0}
+.cfg-imports li{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.cfg-imports li>span{flex:1;min-width:0;font-size:.78125rem;line-height:1.7;word-break:break-word}
+.cfg-imports li small{color:var(--hint)}
+.cfg-foot{font-size:.75rem;color:var(--hint);line-height:1.8;margin-top:var(--s3);padding-top:var(--s3);border-top:1px solid var(--hair)}
 
 /* ================= 矮屏 / 笔记本（≤860px 高）：保证地图上的数据节点不被卡片盖住 ================= */
 @media (min-width:1081px) and (max-height:860px){
@@ -366,6 +441,11 @@ button{font-family:inherit;cursor:pointer}
   #stage{height:62vh;min-height:360px}
   #side{width:100%;height:auto;max-height:none;border-left:none;border-top:1px solid var(--line);padding:var(--s3) var(--s3) 40px}
   .topbar{padding:9px var(--s3);min-height:0}
+  /* 配置面板：窄屏改单列，避免输入框被压到不可用 */
+  .cfg-mask{padding:var(--s3)}
+  .cfg-body{padding:var(--s4)}
+  .cfg-grid{grid-template-columns:1fr}
+  .cfg-f3{grid-template-columns:1fr}
   .crumbs{width:100%;margin-left:0;order:3}
   /* 图例：右上竖排 → 底部横向单行（不遮地球 / 地图手势；仅开关可点） */
   .scene-legend{left:var(--s2);right:auto;top:auto;bottom:52px;max-width:none;width:calc(100% - var(--s4));
@@ -468,6 +548,7 @@ button{font-family:inherit;cursor:pointer}
   <header class="topbar">
     <div class="brand">农链 AgriLink<small>产业地图</small></div>
     <nav class="crumbs" id="crumbs"></nav>
+    <button class="cfg-entry" id="cfgEntry" title="AI 配置：Provider / Base URL / Model / Key 状态（key 只在服务端保存，页面不回显）">⚙ AI 配置</button>
     <span class="demo-badge">示意数据 · 待标定</span>
   </header>
   <div class="layout">
@@ -571,7 +652,7 @@ button{font-family:inherit;cursor:pointer}
 </div>
 <div class="toast" id="toast"></div>
 
-<script>window.__AGRI_BUILD={"hash":"697c095709ce","git":"11c7207","builtAt":"2026-09-17T03:52:10.199Z"};</script>
+<script>window.__AGRI_BUILD={"hash":"7710f0006c28","git":"72e78d1","builtAt":"2026-09-17T07:52:14.240Z"};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -1505,37 +1586,65 @@ window.AGRI_GLOBE = (function () {
 <script>
 /* ============================================================
    AI chat provider adapter —— 统一「真实模型 / 规则演示」两条通路
-   - 凭证永远只在服务端（server.mjs）读取环境变量，前端 bundle 不含任何 key
+   - 凭证永远只在服务端（server.mjs）读取/落盘；前端 bundle 不含任何 key，
+     也不把 key 写进 localStorage / URL / DOM
    - file:// 静态版（GitHub Pages / 双击打开）没有同源代理 → 直接进入规则演示，
-     不发起任何网络请求（离线可用 + 零控制台错误）
-   - 模式：加载中(detecting) / 真实模型已连接(live) / 规则演示(rule) / 错误后降级(degraded)
+     不发起任何网络请求（离线可用 + 零控制台错误），并且不展示任何 key 输入框
+   - 「AI 配置」只调用服务端配置 API（默认只监听 127.0.0.1，见 server.mjs）
+   模式：detecting 加载中 / live 真实模型已连接 / unconfigured 未配置 /
+        rule 规则演示（静态版）/ degraded 调用失败·已降级
    ============================================================ */
 window.AGRI_PROVIDER = (function () {
   const HTTP = typeof location !== 'undefined' && /^https?:$/.test(location.protocol);
   const LABEL = {
     detecting: '加载中 · 正在检测模型服务',
     live: '真实模型已连接',
+    unconfigured: '未配置模型 · 规则演示',
     rule: '规则演示',
     degraded: '错误后降级 · 规则演示'
   };
   const st = {
-    mode: 'rule', liveAvailable: false, busy: false,
-    model: '', baseUrl: '', keyConfigured: false, lastError: '',
-    reason: HTTP ? '' : '静态离线版没有同源代理（/api/chat）'
+    mode: 'rule', liveAvailable: false, busy: false, proxyAvailable: false,
+    model: '', baseUrl: '', provider: '', keyConfigured: false, keyTail: '', keySource: '',
+    lastError: '', reason: '', lastOkAt: '', lastErrAt: '', calls: 0,
+    reason0: HTTP ? '' : '静态离线版（file://）没有同源代理'
   };
   const subs = [];
 
   function snapshot() {
     return {
-      mode: st.mode, label: LABEL[st.mode], model: st.model, baseUrl: st.baseUrl,
-      keyConfigured: st.keyConfigured, busy: st.busy, lastError: st.lastError, reason: st.reason,
+      mode: st.mode, label: LABEL[st.mode], model: st.model, baseUrl: st.baseUrl, provider: st.provider,
+      keyConfigured: st.keyConfigured, keyTail: st.keyTail, keySource: st.keySource,
+      busy: st.busy, lastError: st.lastError, reason: st.reason, proxy: st.proxyAvailable,
+      lastOkAt: st.lastOkAt, lastErrAt: st.lastErrAt, calls: st.calls,
       detail: LABEL[st.mode] + (st.mode === 'live' && st.model ? ' · ' + st.model : (st.reason ? ' · ' + st.reason : ''))
     };
   }
   function emit() { const s = snapshot(); subs.forEach(f => { try { f(s); } catch (e) { /* 订阅者异常不影响主流程 */ } }); }
 
+  async function api(path, opts) {
+    const r = await fetch(path, Object.assign({ headers: { accept: 'application/json' } }, opts || {}));
+    const ct = r.headers.get('content-type') || '';
+    const j = /json/.test(ct) ? await r.json().catch(() => ({})) : {};
+    return { status: r.status, ok: r.ok, body: j || {} };
+  }
+
+  function adopt(j) {
+    const c = (j && j.config) || {};
+    st.model = c.model || st.model; st.baseUrl = c.baseUrl || st.baseUrl; st.provider = c.provider || st.provider;
+    st.keyConfigured = !!c.keyConfigured; st.keyTail = c.keyTail || ''; st.keySource = c.keySource || '';
+    const v = (j && j.verify) || {};
+    if (j && j.mode === 'live') { st.mode = 'live'; st.liveAvailable = true; st.reason = ''; }
+    else if (j && j.mode === 'error') { st.mode = 'unconfigured'; st.liveAvailable = false; st.reason = v.reason || '连接失败'; }
+    else if (j && j.mode === 'unconfigured') { st.mode = 'unconfigured'; st.liveAvailable = false; st.reason = v.reason || '未配置模型凭证'; }
+    if (j && j.lastOkAt) st.lastOkAt = j.lastOkAt; else if (c.updatedAt) st.lastOkAt = c.updatedAt;
+    if (j && j.lastErrAt) st.lastErrAt = j.lastErrAt;
+    if (j && j.lastError) st.lastError = j.lastError;
+    if (j && typeof j.calls === 'number') st.calls = j.calls;
+  }
+
   async function probe() {
-    if (!HTTP) { st.mode = 'rule'; st.reason = '静态离线版没有同源代理（/api/chat）'; emit(); return snapshot(); }
+    if (!HTTP) { st.mode = 'rule'; st.reason = st.reason0; emit(); return snapshot(); }
     st.mode = 'detecting'; emit();
     /* 先确认同源代理在不在：本地演示服务的静态响应带 x-agri-proxy: 1。
        GitHub Pages 等静态托管没有这个头，于是直接进规则演示，
@@ -1543,61 +1652,91 @@ window.AGRI_PROVIDER = (function () {
     try {
       const head = await fetch('.', { method: 'HEAD', cache: 'no-store' });
       if (head.headers.get('x-agri-proxy') !== '1') {
-        st.mode = 'rule'; st.liveAvailable = false;
+        st.proxyAvailable = false; st.mode = 'rule'; st.liveAvailable = false;
         st.reason = '当前是静态托管（GitHub Pages / 静态服务器），没有同源代理';
         emit(); return snapshot();
       }
+      st.proxyAvailable = true;
     } catch (e) {
-      st.mode = 'rule'; st.liveAvailable = false;
+      st.proxyAvailable = false; st.mode = 'rule'; st.liveAvailable = false;
       st.reason = '未检测到同源代理（静态探测不可达）';
       emit(); return snapshot();
     }
     try {
-      const r = await fetch('api/health', { headers: { accept: 'application/json' }, cache: 'no-store' });
-      const ct = r.headers.get('content-type') || '';
-      const j = /json/.test(ct) ? await r.json().catch(() => ({})) : {};
-      st.model = (j && j.model) || ''; st.baseUrl = (j && j.baseUrl) || '';
-      st.keyConfigured = !!(j && j.keyConfigured);
-      if (r.ok && j && j.ok && st.keyConfigured) {
-        st.mode = 'live'; st.liveAvailable = true; st.reason = '';
-      } else {
-        st.mode = 'rule'; st.liveAvailable = false;
-        st.reason = (j && j.reason) || `同源代理异常（HTTP ${r.status}）`;
-      }
+      const { status, ok, body } = await api('api/config');
+      if (!ok) throw new Error((body && body.error) || ('HTTP ' + status));
+      adopt(body);
     } catch (e) {
       st.mode = 'rule'; st.liveAvailable = false;
-      st.reason = '未检测到本地演示服务（/api/health 不可达）';
+      st.reason = '未检测到本地演示服务（/api/config 不可达）';
+      st.lastError = String((e && e.message) || e);
     }
     emit(); return snapshot();
   }
 
-  /* 返回 {content, model}；失败返回 null，并把面板切到「错误后降级」 */
-  async function chat(messages, context) {
+  /* 返回 {content, model, elapsedMs}；失败返回 null，并把面板切到「调用失败·已降级」 */
+  async function chat(messages, context, opts) {
     if (!HTTP || !st.liveAvailable) return null;
     st.busy = true; if (st.mode !== 'degraded') st.mode = 'live'; emit();
+    const t0 = Date.now();
     try {
       const r = await fetch('api/chat', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ messages: messages || [], context: context || {} })
+        body: JSON.stringify({ messages: messages || [], context: context || {} }),
+        signal: (opts && opts.signal) || undefined
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j || !j.ok) throw new Error((j && j.error) || ('HTTP ' + r.status));
-      st.busy = false; st.lastError = ''; st.mode = 'live'; emit();
-      return { content: String(j.content || ''), model: j.model || st.model };
+      st.busy = false; st.lastError = ''; st.mode = 'live'; st.liveAvailable = true;
+      st.calls++; st.lastOkAt = new Date().toISOString(); emit();
+      return { content: String(j.content || ''), model: j.model || st.model, elapsedMs: j.elapsedMs || (Date.now() - t0) };
     } catch (e) {
-      st.busy = false; st.lastError = String((e && e.message) || e);
-      st.mode = 'degraded';                       // 显示降级；liveAvailable 保持 true，下次提问可重试
+      const aborted = (e && (e.name === 'AbortError' || /abort/i.test(String(e.message || '')))) || !!(opts && opts.cancelled && opts.cancelled());
+      st.busy = false;
+      if (aborted) { st.lastError = '已取消（请求已中止）'; if (st.mode === 'live') st.mode = st.liveAvailable ? 'live' : 'rule'; emit(); return null; }
+      st.lastError = String((e && e.message) || e);
+      st.mode = 'degraded';                       // 显示降级；liveAvailable 保持 true，下次提问会自动重试真实模型
+      st.lastErrAt = new Date().toISOString();
       emit();
       return null;
     }
   }
 
+  /* ---- 配置 API（只在同源代理可用时；静态公开版一律拒绝，避免 key 落浏览器） ---- */
+  async function configGet() { const r = await api('api/config'); if (!r.ok) throw new Error((r.body && r.body.error) || ('HTTP ' + r.status)); adopt(r.body); emit(); return r.body; }
+  async function configSave(patch) {
+    const r = await api('api/config', { method: 'PUT', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(patch) });
+    if (!r.ok) throw new Error((r.body && r.body.error) || ('HTTP ' + r.status));
+    adopt(r.body); emit(); return r.body;
+  }
+  async function configTest(patch) {
+    const r = await api('api/config/test', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(patch || {}) });
+    return Object.assign({ httpStatus: r.status }, r.body);
+  }
+  async function configReset(body) {
+    const r = await api('api/config/reset', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify(body || {}) });
+    if (!r.ok) throw new Error((r.body && r.body.error) || ('HTTP ' + r.status));
+    adopt(r.body); emit(); return r.body;
+  }
+  async function configImports() { const r = await api('api/config/imports'); return r.ok ? (r.body.candidates || []) : []; }
+  async function configImport(id) {
+    const r = await api('api/config/import', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' }, body: JSON.stringify({ id }) });
+    if (!r.ok) throw new Error((r.body && r.body.error) || ('HTTP ' + r.status));
+    adopt(r.body); emit(); return r.body;
+  }
+  async function models(refresh) { const r = await api('api/models' + (refresh ? '?refresh=1' : '')); return r.body || {}; }
+
   return {
     onChange(f) { subs.push(f); },
-    probe, chat,
+    probe, chat, configGet, configSave, configTest, configReset, configImports, configImport, models,
     get state() { return snapshot(); },
     get mode() { return st.mode; },
-    get live() { return st.mode === 'live' && st.liveAvailable; }
+    /* liveAvailable = 「真实通路可用（代理在 + 凭证已配置）」，与当前是否刚调用失败无关：
+       降级后下一次提问（或点「重试」）仍会重试真实模型，不必重载页面。
+       mode 只用于展示时的钻标文案。 */
+    get live() { return st.liveAvailable; },
+    get proxy() { return st.proxyAvailable; },
+    get staticOnly() { return !st.proxyAvailable; }
   };
 })();
 
@@ -1612,7 +1751,8 @@ window.AGRI_AI = (function () {
 
   /* -------- 每个对象各自的预设问题 -------- */
   function presets(o) {
-    if (!o) return [{ q: '先选一个数据对象', a: '' }];
+    /* 未选中对象时不再是「先选对象」的硬门槛：给全局问题（可换算比、算口径、看结构） */
+    if (!o) return GLOBAL_Q.map(q => ({ q }));
     switch (o.type) {
       case 'flow': return [{ q: '这条流向的量级与节奏？' }, { q: '对国内同品类价格的传导？' }, { q: '运价 / 汇率变动会影响多少？' }];
       case 'market': return [{ q: '这个市场的到货结构？' }, { q: '与国内产区货源如何竞争？' }];
@@ -1626,9 +1766,50 @@ window.AGRI_AI = (function () {
     return [{ q: '分析当前对象' }];
   }
 
+  const GLOBAL_Q = [
+    '红星市场的榴莲销售占比需要哪些数据？',
+    '榴莲进口的主要来源国和节奏？',
+    '油价涨 20% 对到岸成本影响多少？',
+    '湖南集散在全国处于什么位置？'
+  ];
+  /* 欢迎态：真正的空态说明 + 示例问题，不预设一段假回答 */
+  function welcome() {
+    const d = D();
+    return [
+      '我是「农链 AgriLink」的产业分析助手，可以就**当前层级 / 选中对象 / 全局问题**作答。',
+      '',
+      '你可以直接问我（不选对象也能问），例如：',
+      GLOBAL_Q.map(q => `- ${q}`).join('\n'),
+      '',
+      `口径：全部为示意数据 · 待标定（${d.ORG} · 周期 ${d.PERIOD}）；回答会带上「层级 / 选择 / 红星 / 品类 / 口径」上下文封套。`
+    ].join('\n');
+  }
+
+  /* -------- 全局问题（无选中对象）：也要给出有依据的回答 -------- */
+  function globalCore(q) {
+    const d = D(), hx = hongxing();
+    const head = '**全局提问**（未选中对象）';
+    if (/占比|份额|分子|分母|口径|计算|怎么算|需要哪些/.test(q)) {
+      return { a: `${head}\n\n- 份额类指标的通用口径：**分子** = 该市场 / 该品类在**同一时间窗、同一区域、同一渠道**下的量（或额）；**分母** = 同期同范围该品类的市场总量（或总额）。\n- 落到「${hx.short} · 榴莲销售占比」需要四组数据：① 分子：红星榴莲的交易量 / 额（市场经营台账，按日 / 月归集）；② 分母：红星全部水果或全部品类的交易总额（同一台账口径）；③ 时间与区域边界：自然月 / 自然年 + 红星场内 vs 含分市场；④ 渠道口径：场内批发成交 vs 含商超 / 电商直供。\n- 口径红线：红星数据是企业台账口径，**不能与海关统计直接相除**，也不能拿场内占比外推全省或全国。\n- 口径：${d.cal.market}。`, tags: ['口径 · 待标定'] };
+    }
+    if (/来源国|进口|节奏|货源/.test(q)) {
+      const top = d.flows.slice().sort((a, b) => b.vol - a.vol).slice(0, 3);
+      return { a: `${head}\n\n- 量级前 3 的来源国（示意）：${top.map(f => `${f.country} ${f.vol} 万吨 / ${d.CATN[f.cat]}`).join('；')}。\n- 节奏：旺季集中在 4–8 月（水果反季与东盟陆运窗口叠加），单月峰值出现在 5–6 月。\n- 判断：反季高价值品类（车厘子 / 猫山王）价格弹性大、量级小；陆运品类（越南 Ri6）时效强、价格随口岸拥堵波动。\n- 口径：${d.cal.trade}。`, tags: ['示意 · 待标定'] };
+    }
+    if (/油价|汇率|成本|运价|影响/.test(q)) {
+      const drv = d.drivers[0];
+      return { a: `${head}\n\n- 推演变量：${drv.k} ${drv.p}，传导时滞 ${drv.lag}。\n- 传导路径：${drv.chains[0].path}\n- 影响量级：${drv.chains[0].impact}\n- 范围：对长运距海运品类（智利车厘子 / 巴西牛肉）放大最明显，对东盟陆运品类影响较小。\n- 口径：方向性示意推演，变量参数待标定。`, tags: ['推演 · 示意'] };
+    }
+    if (/湖南|集散|枢纽|区域|位置/.test(q)) {
+      const hn = d.provinces['湖南'];
+      return { a: `${head}\n\n- 结构位置：境外产区/国家 → 中国进口与消费 → **湖南集散与消费** → ${hx.name} → 渠道/终端。\n- 湖南的角色：${hn ? hn.feature : '中南区域集散枢纽'}；本省供给规模指数 ${hn ? hn.supply : '—'}（示意）。\n- 含义：湖南是「进口落地 + 省际调运」的中间段，判断湖南价值要看调出结构与到货节奏，而不是本省产量。\n- 口径：${d.cal.supply}。`, tags: ['示意 · 待标定'] };
+    }
+    return { a: `${head}\n\n- 可以这样问：全局结构与口径（份额怎么算）、来源国与节奏、关联变量推演（油价 / 汇率 / 天气 / 政策）、湖南集散的位置。\n- 也可以点选左侧任意数据对象（贸易弧 / 国家节点 / 省份气泡 / 调运线 / 城市节点 / 环节），把问题落到具体对象上。\n- 口径：${d.cal.supply}。`, tags: ['示意 · 待标定'] };
+  }
+
   /* -------- 应答主体 -------- */
   function askCore(o, q) {
-    if (!o) return { a: '**尚未选中对象**\n\n在左侧点击一个数据对象（贸易弧、国家节点、省份气泡、调运线、城市节点、环节卡片），我会基于这个对象回答——回答内容随对象变化。\n\n口径：全部为示意数据 · 待标定。', tags: ['示意 · 待标定'] };
+    if (!o) return globalCore(q);
     const d = D(), P = d.PERIOD, tag = ['示意 · 待标定'];
     const head = `**${o.label}** ｜ 周期 ${P} ｜ 口径：${o.cal || '示意'}`;
 
@@ -1705,6 +1886,8 @@ window.AGRI_AI = (function () {
 
   /* -------- 自由提问：关键词 → 对象化推演 -------- */
   function freeCore(o, q) {
+    /* 未选中对象：自由提问同样走全局回答（与预设问题一致，不再退回「当前对象」泛答） */
+    if (!o) return globalCore(q);
     const d = D();
     const name = o ? o.label : '当前对象';
     const base = `**${name}** ｜ 自由提问 ｜ 周期 ${d.PERIOD}`;
@@ -1748,7 +1931,7 @@ window.AGRI_AI = (function () {
     const d = D(), n = layerNo(), hx = hongxing();
     return {
       layer: `${n} · ${LAYER_NAME[n] || '—'}`,
-      selection: o ? `${o.label}（${o.type}）` : '未选中对象',
+      selection: o ? `${o.label}（${o.type}）` : '未选中对象（全局提问）',
       hongxing: `${hx.name} · ${hx.prov} · ${hx.role}（企业 / 媒体表述，口径待核）`,
       category: catOf(o),
       caliber: (o && o.cal) || d.cal.supply,
@@ -1776,17 +1959,19 @@ window.AGRI_AI = (function () {
   ].join('\n');
 
   /* 真实模型通路：失败返回 null（由调用方降级到规则回答，不白屏） */
-  async function live(o, q) {
+  async function live(o, q, opts) {
     const P = window.AGRI_PROVIDER;
     if (!P || !P.live) return null;
     const c = ctxOf(o);
-    const res = await P.chat(
-      [{ role: 'system', content: SYS }, { role: 'user', content: `【当前上下文】\n层级：${c.layer}\n选择：${c.selection}\n红星市场：${c.hongxing}\n品类：${c.category}\n口径：${c.caliber}\n数据属性：${c.nature}\n\n【问题】${q}` }],
-      c
-    );
+    const msgs = [{ role: 'system', content: SYS }];
+    /* 连续追问：把本会话已发生的对话带上（最多保留最近 6 条），服务端只转发、不落盘 */
+    const hist = (opts && opts.history) || [];
+    msgs.push(...hist.slice(-6));
+    msgs.push({ role: 'user', content: `【当前上下文】\n层级：${c.layer}\n选择：${c.selection}\n红星市场：${c.hongxing}\n品类：${c.category}\n口径：${c.caliber}\n数据属性：${c.nature}\n\n【问题】${q}` });
+    const res = await P.chat(msgs, c, opts);
     if (!res) return null;
     return withCtx({
-      a: `**真实模型回答**（${res.model}）\n\n${res.content}\n\n— 口径复核：${c.caliber}；数值均为示意 · 待标定，引用前需标定。`,
+      a: `**真实模型回答**（${res.model} · ${(res.elapsedMs / 1000).toFixed(1)}s）\n\n${res.content}\n\n— 口径复核：${c.caliber}；数值均为示意 · 待标定，引用前需标定。`,
       tags: ['真实模型']
     }, o);
   }
@@ -1803,7 +1988,225 @@ window.AGRI_AI = (function () {
     return Object.entries(comp).sort((a, b) => a[1] - b[1])[0][0];
   }
 
-  return { presets, ask, free, live, ctxOf, hongxing, layerNo };
+  return { presets, ask, free, live, ctxOf, hongxing, layerNo, welcome, globalCore, GLOBAL_Q };
+})();
+
+</script>
+<script>
+/* ============================================================
+   「AI 配置」产品入口 —— 右上角 ⚙ AI 配置
+   两条分支：
+   A. 本地演示服务（同源代理可用）：完整配置面板 —— Provider / Base URL / Model（可从 /models 刷新）
+      / API Key（只显示「已配置 + 末尾 4 位」，输入框永不回显原值）/ 超时 / 最大输出长度 / 温度
+      / 测试连接 / 保存配置 / 恢复默认 / 从本机已有配置导入；并显示运行模式与最后一次成功 / 失败时间。
+   B. 公开静态版（GitHub Pages）：明确提示「静态公开版没有安全后端」，
+      不渲染任何 key 输入框与保存按钮，只给「打开本地演示地址 / 查看部署说明」。
+   安全：key 只经服务端配置 API 落盘到本机 0600 配置文件；前端不落 localStorage / URL / DOM / 日志。
+   ============================================================ */
+window.AGRI_AICFG = (function () {
+  const LOCAL_DEMO = 'http://127.0.0.1:4173/';
+  const DEPLOY_DOC = 'https://github.com/UpStarData/agri-llm-demo#ai-问答两种模式--安全降级';
+  let dlg = null, last = null;
+
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const P = () => window.AGRI_PROVIDER;
+  const fmt = t => { if (!t) return '—'; const d = new Date(t); return isNaN(d) ? '—' : d.toLocaleString('zh-CN', { hour12: false }); };
+
+  function el() {
+    if (dlg) return dlg;
+    dlg = document.createElement('div');
+    dlg.className = 'cfg-mask';
+    dlg.id = 'aiCfg';
+    dlg.setAttribute('hidden', '');
+    dlg.innerHTML = '<div class="cfg-box" role="dialog" aria-modal="true" aria-label="AI 配置"><div class="cfg-body" id="aiCfgBody"></div></div>';
+    dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+    document.body.appendChild(dlg);
+    return dlg;
+  }
+
+  function close() { if (dlg) dlg.setAttribute('hidden', ''); }
+  function open() {
+    el().removeAttribute('hidden');
+    render();
+  }
+
+  /* ---------- 分支 B：公开静态版 ---------- */
+  function staticHtml() {
+    const st = P().state;
+    return `<div class="cfg-head"><b>AI 配置</b><button class="cfg-x" id="cfgClose" aria-label="关闭">✕</button></div>
+      <div class="cfg-note warn">
+        <b>静态公开版没有安全后端。</b>
+        这个页面是纯静态托管（GitHub Pages），没有服务端代理，所以
+        <b>这里不提供 API Key 输入框</b>：任何写在前端的 key 都会进入 bundle / 浏览器存储 / 网络请求，等于公开泄露。
+      </div>
+      <div class="cfg-sec">公开版当前行为</div>
+      <div class="cfg-line">运行模式：<b>规则演示</b>（${esc(st.reason || '无同源代理')}）</div>
+      <div class="cfg-line">问答能力：基于当前对象 / 全局问题的本地规则化分析，全部标注「示意 · 待标定」</div>
+      <div class="cfg-sec">要接真实模型，用本机演示服务</div>
+      <ol class="cfg-ol">
+        <li>在本机项目目录执行 <code>node server.mjs</code>（或 <code>npm run serve</code>）</li>
+        <li>打开 <a href="${LOCAL_DEMO}" target="_blank" rel="noopener">${LOCAL_DEMO}</a>（只监听本机 127.0.0.1）</li>
+        <li>在本地页面的「⚙ AI 配置」里选 Provider、填 Base URL，粘贴一次 key → 测试连接 → 保存</li>
+      </ol>
+      <div class="cfg-row">
+        <a class="cfg-btn primary" href="${LOCAL_DEMO}" target="_blank" rel="noopener">打开本地演示地址</a>
+        <a class="cfg-btn" href="${DEPLOY_DOC}" target="_blank" rel="noopener">查看部署说明</a>
+      </div>
+      <div class="cfg-foot">安全规则：公开 Pages 永不携带计费 key；密钥只允许服务端写入本机受限配置文件（0600）。</div>`;
+  }
+
+  /* ---------- 分支 A：本地演示服务 ---------- */
+  function branchHtml(j) {
+    const c = j.config, st = P().state;
+    const providers = (j.providers || []).map(p => `<option value="${p.id}"${p.id === c.provider ? ' selected' : ''}>${esc(p.label)}</option>`).join('');
+    const models = (j.models || []).concat(c.model ? [] : []).filter((v, i, a) => a.indexOf(v) === i);
+    const modelList = models.map(m => `<option value="${esc(m)}"${m === c.model ? ' selected' : ''}>${esc(m)}</option>`).join('');
+    const envLocked = (c.envLocked || []);
+    const mode = j.mode === 'live' ? `真实模型已连接（${esc(c.model)}）`
+      : j.mode === 'unconfigured' ? '未配置模型凭证（规则演示）' : `连接失败（规则演示）：${esc((j.verify && j.verify.reason) || '')}`;
+    return `<div class="cfg-head"><b>AI 配置</b><span class="cfg-mode ${j.mode}">${mode}</span><button class="cfg-x" id="cfgClose" aria-label="关闭">✕</button></div>
+      <div class="cfg-note">
+        key 只保存在服务端本地受限配置文件（<code>${esc(c.configFile)}</code>，权限 0600），
+        <b>页面永不回显完整值</b>，也不写入 localStorage / URL / bundle。
+      </div>
+      <div class="cfg-grid">
+        <label class="cfg-f"><span>Provider</span>
+          <select id="cfgProvider">${providers}</select></label>
+        <label class="cfg-f"><span>Base URL</span>
+          <input id="cfgBaseUrl" value="${esc(c.baseUrl)}" placeholder="https://api.deepseek.com 或 http://127.0.0.1:1234/v1"${envLocked.indexOf('baseUrl') >= 0 ? ' disabled' : ''}></label>
+        <label class="cfg-f"><span>Model <em>（可从 /models 刷新）</em></span>
+          <span class="cfg-inline"><input id="cfgModel" list="cfgModelList" value="${esc(c.model)}" placeholder="deepseek-flash"><button class="cfg-btn" id="cfgRefreshModels">刷新模型</button></span>
+          <datalist id="cfgModelList">${modelList}</datalist></label>
+        <label class="cfg-f"><span>API Key</span>
+          <span class="cfg-inline"><input id="cfgKey" type="password" autocomplete="off" placeholder="粘贴新 key（留空 = 不改动；页面不回显原值）"><button class="cfg-btn" id="cfgClearKey">清除</button></span>
+          <small class="cfg-key">状态：<b>${c.keyConfigured ? '已配置' : '未配置'}</b>${c.keyConfigured ? ` ｜ 末尾 ${esc(c.keyTail)} ｜ 来源 ${esc(c.keySource || '—')}` : ''}${c.hasStoredKey ? ' ｜ 已落盘到本机配置文件' : ''}</small></label>
+        <div class="cfg-f3">
+          <label class="cfg-f"><span>超时（ms）</span><input id="cfgTimeout" type="number" min="1000" max="600000" step="1000" value="${c.timeoutMs}"></label>
+          <label class="cfg-f"><span>最大输出长度（tokens）</span><input id="cfgMaxTokens" type="number" min="64" max="32768" step="64" value="${c.maxTokens}"></label>
+          <label class="cfg-f"><span>温度（0–2）</span><input id="cfgTemp" type="number" min="0" max="2" step="0.1" value="${c.temperature}"></label>
+        </div>
+      </div>
+      ${envLocked.length ? `<div class="cfg-note warn">这些字段被环境变量锁定，保存不会改变它们：${envLocked.map(esc).join('、')}</div>` : ''}
+      ${c.keyEnvVar ? `<div class="cfg-note warn">当前生效的 key 来自环境变量 <code>${esc(c.keyEnvVar)}</code>，它的优先级高于本机配置文件：
+        你在下面保存的 key 会写入配置文件，但<b>只有移除该环境变量后才会生效</b>（上面显示的末尾 4 位仍是环境变量里的那个）。</div>` : ''}
+      <div class="cfg-row">
+        <button class="cfg-btn primary" id="cfgTest">测试连接</button>
+        <button class="cfg-btn primary" id="cfgSave">保存配置</button>
+        <button class="cfg-btn" id="cfgReset">恢复默认</button>
+        <button class="cfg-btn" id="cfgImportList">从本机已有配置导入</button>
+      </div>
+      <div class="cfg-result" id="cfgResult"></div>
+      <div class="cfg-sec">运行状态</div>
+      <div class="cfg-line">当前运行模式：<b>${mode}</b></div>
+      <div class="cfg-line">最后一次成功：<b>${fmt(j.lastOkAt || st.lastOkAt)}</b> ｜ 最后一次失败：<b>${fmt(j.lastErrAt || st.lastErrAt)}</b> ｜ 服务端调用 <b>${j.calls || 0}</b> 次</div>
+      ${j.lastError ? `<div class="cfg-line err">最近错误：${esc(j.lastError)}</div>` : ''}
+      <div class="cfg-line">绑定：配置 API 只监听本机（<code>127.0.0.1</code>）；局域网访问请用 <code>AGRI_BIND</code> 显式放开。</div>
+      <div class="cfg-foot">默认候选模型：DeepSeek 云端 <code>deepseek-flash</code> / <code>deepseek-v4-pro</code>；LM Studio 用 <code>GET /v1/models</code> 返回的 id。</div>`;
+  }
+
+  function result(msg, cls) {
+    const r = document.getElementById('cfgResult');
+    if (r) r.innerHTML = `<div class="cfg-res ${cls || ''}">${msg}</div>`;
+    else toast(String(msg).replace(/<[^>]+>/g, ''));
+  }
+  function toast(m) { const t = document.getElementById('toast'); if (t) { t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2400); } }
+
+  function readForm() {
+    const g = id => { const e = document.getElementById(id); return e ? String(e.value || '').trim() : ''; };
+    const patch = { baseUrl: g('cfgBaseUrl'), model: g('cfgModel'), provider: g('cfgProvider') };
+    const key = g('cfgKey');
+    if (key) patch.apiKey = key;                                  // 留空 = 不改动
+    if (g('cfgTimeout')) patch.timeoutMs = +g('cfgTimeout');
+    if (g('cfgMaxTokens')) patch.maxTokens = +g('cfgMaxTokens');
+    if (g('cfgTemp')) patch.temperature = +g('cfgTemp');
+    return patch;
+  }
+
+  async function render() {
+    const body = document.getElementById('aiCfgBody');
+    if (!body) return;
+    const p = P();
+    /* 重绘会把 #cfgResult 一起重建 —— 先把上一条结果留下来，否则「保存 / 测试连接」的
+       反馈会在 render() 里被立刻抹掉，用户点了按钮看不到任何结果。 */
+    const keep = (() => { const r = document.getElementById('cfgResult'); return r ? r.innerHTML : ''; })();
+    if (!p || !p.proxy) { body.innerHTML = staticHtml(); }
+    else {
+      body.innerHTML = '<div class="cfg-head"><b>AI 配置</b><span class="cfg-mode">加载中…</span></div>';
+      try { last = await p.configGet(); body.innerHTML = branchHtml(last); }
+      catch (e) { body.innerHTML = `<div class="cfg-head"><b>AI 配置</b><button class="cfg-x" id="cfgClose">✕</button></div><div class="cfg-note warn">读取配置失败：${esc(e && e.message)}</div>${staticHtml().replace(/^<div class="cfg-head">[\s\S]*?<\/div>/, '')}`; }
+    }
+    wire();
+    const r = document.getElementById('cfgResult');
+    if (r && keep) r.innerHTML = keep;
+  }
+
+  function wire() {
+    const on = (id, fn) => { const e = document.getElementById(id); if (e) e.onclick = fn; };
+    on('cfgClose', close);
+    const p = P();
+    if (!p || !p.proxy) return;
+    /* Provider 预置：切换即填入该 Provider 的默认 baseUrl（用户可改） */
+    const sel = document.getElementById('cfgProvider');
+    if (sel) sel.onchange = () => {
+      const hit = ((last && last.providers) || []).find(x => x.id === sel.value);
+      if (hit && hit.baseUrl) { const b = document.getElementById('cfgBaseUrl'); if (b && !b.disabled) b.value = hit.baseUrl; }
+    };
+    on('cfgTest', async () => {
+      result('测试中…（GET /models，真实请求上游）', 'busy');
+      try {
+        const r = await p.configTest({ baseUrl: String(document.getElementById('cfgBaseUrl').value).trim(), model: String(document.getElementById('cfgModel').value).trim(), apiKey: String(document.getElementById('cfgKey').value).trim() });
+        result(`测试连接：<b>${r.ok ? '成功' : '失败'}</b> ｜ HTTP ${r.status || '—'} ｜ ${r.elapsedMs || 0}ms ｜ 模型 ${r.modelFound === null ? '—' : (r.modelFound ? '在列表中' : '不在列表中')} ${r.models && r.models.length ? '｜ 可见模型：' + r.models.slice(0, 6).map(esc).join(', ') : ''} ${r.reason ? '｜ 原因：' + esc(r.reason) : ''}`, r.ok ? 'ok' : 'err');
+        if (r.ok) render();                                        // 刷新状态行（最后成功时间）
+      } catch (e) { result('测试连接异常：' + esc(e && e.message), 'err'); }
+    });
+    on('cfgSave', async () => {
+      const patch = readForm();
+      try {
+        const j = await p.configSave(patch);
+        const k = document.getElementById('cfgKey'); if (k) k.value = '';   // 保存后立即清空输入框，避免明文滞留
+        last = j; result('已保存到本机受限配置文件（key 已配置：' + (j.config.keyConfigured ? '是，末尾 ' + esc(j.config.keyTail) : '否') + '）', 'ok');
+        render();
+      } catch (e) { result('保存失败：' + esc(e && e.message), 'err'); }
+    });
+    on('cfgClearKey', async () => {
+      try { const j = await p.configSave({ clearKey: true }); last = j; result('已清除本机保存的 key（环境变量里的 key 不受影响）', 'ok'); render(); }
+      catch (e) { result('清除失败：' + esc(e && e.message), 'err'); }
+    });
+    on('cfgReset', async () => {
+      try { const j = await p.configReset({}); last = j; result('已恢复默认（Provider / Base URL / Model / 超时 / 最大输出 / 温度；key 保留，可点「清除」单独删除）', 'ok'); render(); }
+      catch (e) { result('恢复默认失败：' + esc(e && e.message), 'err'); }
+    });
+    on('cfgRefreshModels', async () => {
+      result('正在从上游刷新模型列表…', 'busy');
+      try {
+        const r = await p.models(true);
+        if (r.ok && r.ids && r.ids.length) {
+          const dl = document.getElementById('cfgModelList');
+          if (dl) dl.innerHTML = r.ids.map(m => `<option value="${esc(m)}"></option>`).join('');
+          result(`已刷新 ${r.ids.length} 个模型：${r.ids.slice(0, 8).map(esc).join(', ')}${r.model && !r.ids.includes(r.model) ? ` ｜ 注意：当前模型 ${esc(r.model)} 不在列表里` : ''}`, 'ok');
+        } else result('刷新失败：' + esc(r.reason || '上游不可达'), 'err');
+      } catch (e) { result('刷新异常：' + esc(e && e.message), 'err'); }
+    });
+    on('cfgImportList', async () => {
+      result('正在扫描本机已有配置…', 'busy');
+      try {
+        const list = await p.configImports();
+        const box = document.getElementById('cfgResult');
+        if (!list.length) return result('本机没有可导入的配置（未发现 pi / LM Studio 配置）', 'err');
+        box.innerHTML = `<div class="cfg-res"><b>本机已有配置（只读扫描，key 只显示末尾 4 位）</b>
+          <ul class="cfg-imports">${list.map(c => `<li><span>${esc(c.label)} ｜ ${esc(c.baseUrl)} ｜ ${esc((c.models || []).slice(0, 3).join(', '))} ${c.keyConfigured ? `｜ key 已配置（…${esc(c.keyTail)}）` : '｜ 无 key'}<br><small>${esc(c.source)}</small></span><button class="cfg-btn" data-imp="${esc(c.id)}">导入这一项</button></li>`).join('')}</ul>
+          <small>导入 = 把该 baseUrl / model / key 复制进本机 AgriLink 配置文件；<b>不改动你的 pi / LM Studio 原配置</b>。</small></div>`;
+        box.querySelectorAll('button[data-imp]').forEach(b => b.onclick = async () => {
+          try { const j = await p.configImport(b.dataset.imp); last = j; result('已导入：' + esc(j.config.baseUrl) + ' ｜ 模型 ' + esc(j.config.model) + ' ｜ key ' + (j.config.keyConfigured ? '已配置（…' + esc(j.config.keyTail) + '）' : '无'), 'ok'); render(); }
+          catch (e) { result('导入失败：' + esc(e && e.message), 'err'); }
+        });
+      } catch (e) { result('扫描失败：' + esc(e && e.message), 'err'); }
+    });
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && dlg && !dlg.hasAttribute('hidden')) { e.stopPropagation(); close(); } }, true);
+
+  return { open, close, get isOpen() { return !!dlg && !dlg.hasAttribute('hidden'); } };
 })();
 
 </script>
@@ -2987,11 +3390,30 @@ window.AGRI_CHAIN = (function () {
       k === im.id ? '当前' : D.imports[k].origin.split(' · ')[0] + ' · 点击切换')).join(''));
   }
 
-  /* AI 模式徽标：真实模型已连接 / 规则演示 / 加载中 / 错误后降级 */
+  /* AI 模式徽标：真实模型已连接 / 未配置 / 加载中 / 规则演示 / 错误后降级 */
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function aiModeBadge() {
     const P = window.AGRI_PROVIDER;
     const st = P ? P.state : { mode: 'rule', detail: '规则演示' };
-    return `<span class="ai-mode ${st.mode}" id="aiMode" title="${st.reason || st.lastError || ''}">${st.detail}</span>`;
+    return `<span class="ai-mode ${st.mode}" id="aiMode" title="${esc(st.reason || st.lastError || '')}">${esc(st.detail)}</span>`;
+  }
+  const fmtT = t => { if (!t) return '—'; const d = new Date(t); if (isNaN(d)) return '—';
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  /* 状态行：运行模式 + key 状态（只末尾 4 位）+ 最后成功 / 失败时间；失败时给错误详情 */
+  function aiStateLine() {
+    const P = window.AGRI_PROVIDER;
+    if (!P) return '';
+    const st = P.state;
+    const mode = !st.proxy ? '公开静态版（无安全后端）· 规则演示'
+      : st.mode === 'live' ? `真实模型：${st.model || '—'}（${st.provider || '—'}）`
+      : st.mode === 'unconfigured' ? '未配置模型凭证 · 规则演示'
+      : st.mode === 'degraded' ? '连接失败 · 已降级为规则回答'
+      : st.mode === 'detecting' ? '加载中 · 正在检测模型服务' : '规则演示';
+    const key = st.keyConfigured ? `key 已配置（…${st.keyTail || '****'}，来源 ${st.keySource || '—'}）` : 'key 未配置';
+    const line = `${mode} ｜ ${key} ｜ 最后成功 ${fmtT(st.lastOkAt)} ｜ 最后失败 ${fmtT(st.lastErrAt)} ｜ 服务端调用 ${st.calls} 次`;
+    const err = st.lastError && (st.mode === 'degraded' || st.mode === 'unconfigured')
+      ? `<div class="ai-err">错误详情：${esc(st.lastError)}</div>` : '';
+    return `<div id="aiStateInfo">${esc(line)}</div>${err}`;
   }
   function refreshAiMode() {
     const el = $('aiMode');
@@ -3000,20 +3422,42 @@ window.AGRI_CHAIN = (function () {
     el.className = 'ai-mode ' + st.mode;
     el.textContent = st.detail;
     el.title = st.reason || st.lastError || '';
+    const s = $('aiState');
+    if (s) s.innerHTML = aiStateLine();            // 状态行原地刷新（不动回答区，不丢输入焦点）
   }
+
+  /* ---------- AI 会话状态（对象切换即重置；同一对象内连续追问保留） ---------- */
+  let aiS = { key: undefined, res: null, lastQ: '', turns: 0, history: [] };
+  let aiBusy = false, aiCtl = null;
+  const aiKey = () => (S.sel ? S.sel.type + ':' + S.sel.id : '@global');
+  function aiReset() { aiS = { key: aiKey(), res: null, lastQ: '', turns: 0, history: [] }; }
 
   function aiPanel() {
     const o = S.sel;
     const qs = window.AGRI_AI.presets(o);
-    const label = o ? `${o.label} ｜ ${o.cal}` : '尚未选中对象';
-    const first = window.AGRI_AI.ask(o, qs[0].q);
+    const label = o ? `${o.label} ｜ ${o.cal}` : '未选中对象 · 可问全局问题（不选对象也能提问）';
+    if (aiS.key !== aiKey()) aiReset();
+    /* 空态 = 真正的欢迎 / 示例问题；选中对象时预置该对象的默认问题（对象驱动，换对象即换答案） */
+    const res = aiS.res || (o ? window.AGRI_AI.ask(o, qs[0].q) : null);
+    const body = res ? md(res.a) : md(window.AGRI_AI.welcome());
+    const tags = res ? res.tags : ['欢迎', '示例问题可直接点'];
     return `<div class="panel ai">
-      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small>${aiModeBadge()}</div>
+      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>对象 / 全局都能问</small>${aiModeBadge()}</div>
       <div class="ai-obj">当前对象：${label}</div>
+      <div class="ai-state" id="aiState">${aiStateLine()}</div>
       <div class="ai-qs">${qs.map((x, i) => `<button data-q="${i}">${x.q}</button>`).join('')}</div>
-      <div class="ai-a">${md(first.a)}</div>
-      <div class="ai-tags">${first.tags.map(t => `<span>${t}</span>`).join('')}</div>
-      <div class="ai-in"><input id="aiInput" placeholder="${o ? '针对该对象提问，如：油价涨 20% 会怎样' : '先选中一个数据对象再提问'}"${o ? '' : ' disabled'}><button id="aiSend"${o ? '' : ' disabled'}>提问</button></div>
+      <div class="ai-a" id="aiAnswer">${body}</div>
+      <div class="ai-tags">${tags.map(t => `<span>${t}</span>`).join('')}</div>
+      <div class="ai-in">
+        <input id="aiInput" placeholder="${o ? '继续追问，如：油价涨 20% 会怎样' : '问全局问题，如：红星榴莲销售占比需要哪些数据'}">
+        <button id="aiSend">提问</button>
+        <button id="aiCancel" class="ghost" hidden>取消</button>
+      </div>
+      <div class="ai-acts">
+        <button id="aiRetry" class="ghost"${aiS.lastQ ? '' : ' disabled'}>重试上一条</button>
+        <button id="aiClear" class="ghost">清空会话</button>
+        <span class="ai-turns" id="aiTurns">${aiS.turns} 轮${aiS.history.length ? ' · 连续追问已带上下文' : ''}</span>
+      </div>
     </div>`;
   }
 
@@ -3046,27 +3490,60 @@ window.AGRI_CHAIN = (function () {
     if (input && send) {
       const go = () => { const q = input.value.trim(); if (!q) return; askCurrent(q, { free: true }); input.value = ''; };
       send.onclick = go;
-      input.onkeydown = e => { if (e.key === 'Enter') go(); };
+      input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
     }
+    const cancel = side.querySelector('#aiCancel');
+    if (cancel) cancel.onclick = () => cancelAsk();
+    const retry = side.querySelector('#aiRetry');
+    if (retry) retry.onclick = () => { if (aiS.lastQ) askCurrent(aiS.lastQ); };
+    const clear = side.querySelector('#aiClear');
+    if (clear) clear.onclick = () => { aiReset(); renderSide(true); toast('已清空本对象会话'); };
   }
 
-  /* ---------- 提问：有同源代理走真实模型，否则回落到规则演示（不白屏） ---------- */
-  let aiBusy = false;
+  /* ---------- 提问：有同源代理且已配置就真实调用，否则回落到规则演示（不白屏） ---------- */
   async function askCurrent(q, opts) {
+    q = String(q || '').trim();
+    if (!q || aiBusy) return;
+    if (aiS.key !== aiKey()) aiReset();
     const o = S.sel;
-    if (!o || aiBusy) return;
     const rule = () => (opts && opts.free) ? window.AGRI_AI.free(o, q) : window.AGRI_AI.ask(o, q);
     const P = window.AGRI_PROVIDER;
-    if (!P || !P.live) { showAnswer(rule()); return; }
-    const selId = o.id;
+    aiS.lastQ = q;
+    if (!P || !P.live) {
+      const res = rule();
+      aiS.res = res; aiS.turns++;
+      showAnswer(res, P && P.proxy && !P.state.keyConfigured ? '未配置模型 · 规则回答' : '');
+      return;
+    }
+    const selId = o ? o.id : '@global';
     aiBusy = true;
+    aiCtl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     showLoading(o, q);
-    const res = await window.AGRI_AI.live(o, q);
-    aiBusy = false;
-    if (S.sel && S.sel.id !== selId) return;            // 请求期间换了对象，丢弃这次结果
-    if (res) { showAnswer(res); refreshAiMode(); return; }
-    showAnswer(rule());
-    refreshAiMode();                                     // 徽标切到「错误后降级」
+    const res = await window.AGRI_AI.live(o, q, {
+      signal: aiCtl ? aiCtl.signal : undefined,
+      cancelled: () => !!aiCtl && aiCtl.signal.aborted,
+      history: aiS.history
+    });
+    aiBusy = false; aiCtl = null;
+    if ((S.sel ? S.sel.id : '@global') !== selId) return;       // 请求期间换了对象，丢弃这次结果
+    aiS.turns++;
+    if (res) {
+      aiS.res = res;
+      aiS.history.push({ role: 'user', content: q }, { role: 'assistant', content: res.a.replace(/^.*?\n\n/s, '') });
+      if (aiS.history.length > 8) aiS.history = aiS.history.slice(-8);
+      showAnswer(res); refreshAiMode(); return;
+    }
+    const st = P.state;
+    const planned = st.lastError && st.lastError.indexOf('已取消') === 0;
+    const rres = rule();
+    aiS.res = rres;
+    showAnswer(rres, planned ? '已取消 · 规则回答' : '真实模型失败 · 已降级');
+    refreshAiMode();                                   // 徽标切到「错误后降级」
+  }
+
+  function cancelAsk() {
+    if (aiCtl) { try { aiCtl.abort(); } catch (e) { /* 已结束 */ } }
+    toast('已取消本次请求');
   }
 
   function showLoading(o, q) {
@@ -3075,7 +3552,10 @@ window.AGRI_CHAIN = (function () {
     const c = window.AGRI_AI.ctxOf(o);
     a.innerHTML = md(`**加载中**｜正在请求真实模型…\n\n问题：${q}\n上下文：层级 ${c.layer} ｜ 选择 ${c.selection} ｜ 品类 ${c.category}`);
     const t = $('side').querySelector('.ai-tags');
-    if (t) t.innerHTML = '<span>加载中</span>';
+    if (t) t.innerHTML = '<span>加载中</span><span>可点「取消」中止</span>';
+    const send = $('side').querySelector('#aiSend'), cxl = $('side').querySelector('#aiCancel');
+    if (send) send.disabled = true;
+    if (cxl) cxl.hidden = false;                        // 只有请求处理中才禁用发送
   }
   function showAnswer(res, extraTag) {
     const a = $('side').querySelector('.ai-a');
@@ -3083,6 +3563,12 @@ window.AGRI_CHAIN = (function () {
     a.innerHTML = md(res.a);
     const t = $('side').querySelector('.ai-tags');
     if (t) t.innerHTML = res.tags.concat(extraTag ? [extraTag] : []).map(x => `<span>${x}</span>`).join('');
+    const send = $('side').querySelector('#aiSend'), cxl = $('side').querySelector('#aiCancel');
+    if (send) send.disabled = false;
+    if (cxl) cxl.hidden = true;
+    const retry = $('side').querySelector('#aiRetry'), turns = $('side').querySelector('#aiTurns');
+    if (retry) retry.disabled = !aiS.lastQ;
+    if (turns) turns.textContent = `${aiS.turns} 轮${aiS.history.length ? ' · 连续追问已带上下文' : ''}`;
     S.lastAnswer = res.a;
   }
 
@@ -3182,6 +3668,12 @@ window.AGRI_CHAIN = (function () {
     renderCrumbs(); renderSide();
     setTimeout(() => { window.AGRI_GLOBE.resize(); if (map2.el) map2.el.resize(); if (map3.el) map3.el.resize(); }, 150);
   }
+  /* 「⚙ AI 配置」：本地演示服务 → 完整配置面板；公开静态版 → 只提示「没有安全后端」+ 本地演示地址。
+     两种分支都在 aiconfig.js 内判定，这里不接触任何 key。 */
+  $('cfgEntry').onclick = () => {
+    if (window.AGRI_AICFG) window.AGRI_AICFG.open();
+    else toast('配置面板未加载');
+  };
   window.addEventListener('resize', () => { if (map2 && map2.el) map2.el.resize(); if (map3 && map3.el) map3.el.resize(); });
 
   window.AGRI_DEBUG = {
@@ -3197,6 +3689,17 @@ window.AGRI_CHAIN = (function () {
     aiText: () => { const a = $('side').querySelector('.ai-a'); return a ? a.innerText : ''; },
     aiTags: () => Array.from($('side').querySelectorAll('.ai-tags span')).map(x => x.textContent),
     aiMode: () => (window.AGRI_PROVIDER ? window.AGRI_PROVIDER.state : null),
+    aiStateLine: () => { const e = $('aiState'); return e ? e.innerText.replace(/\n/g, ' | ') : ''; },
+    aiPanelReady: () => { const i = $('side').querySelector('#aiInput'); return i ? { disabled: !!i.disabled, placeholder: i.placeholder, hasSend: !!$('side').querySelector('#aiSend'), sendDisabled: !!($('side').querySelector('#aiSend') || {}).disabled, hasCancel: !!$('side').querySelector('#aiCancel'), hasRetry: !!$('side').querySelector('#aiRetry'), hasClear: !!$('side').querySelector('#aiClear') } : null; },
+    aiOpenConfig: () => { if (window.AGRI_AICFG) window.AGRI_AICFG.open(); return !!window.AGRI_AICFG; },
+    aiCfg: () => { const d = document.getElementById('aiCfg'); if (!d) return null; const q = s => d.querySelector(s); return {
+      open: !d.hasAttribute('hidden'),
+      hasKeyInput: !!q('#cfgKey'), keyInputType: q('#cfgKey') ? q('#cfgKey').type : '',
+      keyInputValue: q('#cfgKey') ? q('#cfgKey').value : null,
+      fields: ['#cfgProvider', '#cfgBaseUrl', '#cfgModel', '#cfgTimeout', '#cfgMaxTokens', '#cfgTemp'].map(s => !!q(s)),
+      buttons: ['#cfgTest', '#cfgSave', '#cfgReset', '#cfgRefreshModels', '#cfgImportList', '#cfgClearKey'].map(s => !!q(s)),
+      mode: q('.cfg-mode') ? q('.cfg-mode').textContent : '',
+      bodyText: d.innerText || '' }; },
     aiCtx: () => window.AGRI_AI.ctxOf(S.sel),
     ask: q => { const r = window.AGRI_AI.ask(S.sel, q); showAnswer(r); return r.a; },
     askLive: q => askCurrent(q),

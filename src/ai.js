@@ -7,7 +7,8 @@ window.AGRI_AI = (function () {
 
   /* -------- 每个对象各自的预设问题 -------- */
   function presets(o) {
-    if (!o) return [{ q: '先选一个数据对象', a: '' }];
+    /* 未选中对象时不再是「先选对象」的硬门槛：给全局问题（可换算比、算口径、看结构） */
+    if (!o) return GLOBAL_Q.map(q => ({ q }));
     switch (o.type) {
       case 'flow': return [{ q: '这条流向的量级与节奏？' }, { q: '对国内同品类价格的传导？' }, { q: '运价 / 汇率变动会影响多少？' }];
       case 'market': return [{ q: '这个市场的到货结构？' }, { q: '与国内产区货源如何竞争？' }];
@@ -21,9 +22,50 @@ window.AGRI_AI = (function () {
     return [{ q: '分析当前对象' }];
   }
 
+  const GLOBAL_Q = [
+    '红星市场的榴莲销售占比需要哪些数据？',
+    '榴莲进口的主要来源国和节奏？',
+    '油价涨 20% 对到岸成本影响多少？',
+    '湖南集散在全国处于什么位置？'
+  ];
+  /* 欢迎态：真正的空态说明 + 示例问题，不预设一段假回答 */
+  function welcome() {
+    const d = D();
+    return [
+      '我是「农链 AgriLink」的产业分析助手，可以就**当前层级 / 选中对象 / 全局问题**作答。',
+      '',
+      '你可以直接问我（不选对象也能问），例如：',
+      GLOBAL_Q.map(q => `- ${q}`).join('\n'),
+      '',
+      `口径：全部为示意数据 · 待标定（${d.ORG} · 周期 ${d.PERIOD}）；回答会带上「层级 / 选择 / 红星 / 品类 / 口径」上下文封套。`
+    ].join('\n');
+  }
+
+  /* -------- 全局问题（无选中对象）：也要给出有依据的回答 -------- */
+  function globalCore(q) {
+    const d = D(), hx = hongxing();
+    const head = '**全局提问**（未选中对象）';
+    if (/占比|份额|分子|分母|口径|计算|怎么算|需要哪些/.test(q)) {
+      return { a: `${head}\n\n- 份额类指标的通用口径：**分子** = 该市场 / 该品类在**同一时间窗、同一区域、同一渠道**下的量（或额）；**分母** = 同期同范围该品类的市场总量（或总额）。\n- 落到「${hx.short} · 榴莲销售占比」需要四组数据：① 分子：红星榴莲的交易量 / 额（市场经营台账，按日 / 月归集）；② 分母：红星全部水果或全部品类的交易总额（同一台账口径）；③ 时间与区域边界：自然月 / 自然年 + 红星场内 vs 含分市场；④ 渠道口径：场内批发成交 vs 含商超 / 电商直供。\n- 口径红线：红星数据是企业台账口径，**不能与海关统计直接相除**，也不能拿场内占比外推全省或全国。\n- 口径：${d.cal.market}。`, tags: ['口径 · 待标定'] };
+    }
+    if (/来源国|进口|节奏|货源/.test(q)) {
+      const top = d.flows.slice().sort((a, b) => b.vol - a.vol).slice(0, 3);
+      return { a: `${head}\n\n- 量级前 3 的来源国（示意）：${top.map(f => `${f.country} ${f.vol} 万吨 / ${d.CATN[f.cat]}`).join('；')}。\n- 节奏：旺季集中在 4–8 月（水果反季与东盟陆运窗口叠加），单月峰值出现在 5–6 月。\n- 判断：反季高价值品类（车厘子 / 猫山王）价格弹性大、量级小；陆运品类（越南 Ri6）时效强、价格随口岸拥堵波动。\n- 口径：${d.cal.trade}。`, tags: ['示意 · 待标定'] };
+    }
+    if (/油价|汇率|成本|运价|影响/.test(q)) {
+      const drv = d.drivers[0];
+      return { a: `${head}\n\n- 推演变量：${drv.k} ${drv.p}，传导时滞 ${drv.lag}。\n- 传导路径：${drv.chains[0].path}\n- 影响量级：${drv.chains[0].impact}\n- 范围：对长运距海运品类（智利车厘子 / 巴西牛肉）放大最明显，对东盟陆运品类影响较小。\n- 口径：方向性示意推演，变量参数待标定。`, tags: ['推演 · 示意'] };
+    }
+    if (/湖南|集散|枢纽|区域|位置/.test(q)) {
+      const hn = d.provinces['湖南'];
+      return { a: `${head}\n\n- 结构位置：境外产区/国家 → 中国进口与消费 → **湖南集散与消费** → ${hx.name} → 渠道/终端。\n- 湖南的角色：${hn ? hn.feature : '中南区域集散枢纽'}；本省供给规模指数 ${hn ? hn.supply : '—'}（示意）。\n- 含义：湖南是「进口落地 + 省际调运」的中间段，判断湖南价值要看调出结构与到货节奏，而不是本省产量。\n- 口径：${d.cal.supply}。`, tags: ['示意 · 待标定'] };
+    }
+    return { a: `${head}\n\n- 可以这样问：全局结构与口径（份额怎么算）、来源国与节奏、关联变量推演（油价 / 汇率 / 天气 / 政策）、湖南集散的位置。\n- 也可以点选左侧任意数据对象（贸易弧 / 国家节点 / 省份气泡 / 调运线 / 城市节点 / 环节），把问题落到具体对象上。\n- 口径：${d.cal.supply}。`, tags: ['示意 · 待标定'] };
+  }
+
   /* -------- 应答主体 -------- */
   function askCore(o, q) {
-    if (!o) return { a: '**尚未选中对象**\n\n在左侧点击一个数据对象（贸易弧、国家节点、省份气泡、调运线、城市节点、环节卡片），我会基于这个对象回答——回答内容随对象变化。\n\n口径：全部为示意数据 · 待标定。', tags: ['示意 · 待标定'] };
+    if (!o) return globalCore(q);
     const d = D(), P = d.PERIOD, tag = ['示意 · 待标定'];
     const head = `**${o.label}** ｜ 周期 ${P} ｜ 口径：${o.cal || '示意'}`;
 
@@ -100,6 +142,8 @@ window.AGRI_AI = (function () {
 
   /* -------- 自由提问：关键词 → 对象化推演 -------- */
   function freeCore(o, q) {
+    /* 未选中对象：自由提问同样走全局回答（与预设问题一致，不再退回「当前对象」泛答） */
+    if (!o) return globalCore(q);
     const d = D();
     const name = o ? o.label : '当前对象';
     const base = `**${name}** ｜ 自由提问 ｜ 周期 ${d.PERIOD}`;
@@ -143,7 +187,7 @@ window.AGRI_AI = (function () {
     const d = D(), n = layerNo(), hx = hongxing();
     return {
       layer: `${n} · ${LAYER_NAME[n] || '—'}`,
-      selection: o ? `${o.label}（${o.type}）` : '未选中对象',
+      selection: o ? `${o.label}（${o.type}）` : '未选中对象（全局提问）',
       hongxing: `${hx.name} · ${hx.prov} · ${hx.role}（企业 / 媒体表述，口径待核）`,
       category: catOf(o),
       caliber: (o && o.cal) || d.cal.supply,
@@ -171,17 +215,19 @@ window.AGRI_AI = (function () {
   ].join('\n');
 
   /* 真实模型通路：失败返回 null（由调用方降级到规则回答，不白屏） */
-  async function live(o, q) {
+  async function live(o, q, opts) {
     const P = window.AGRI_PROVIDER;
     if (!P || !P.live) return null;
     const c = ctxOf(o);
-    const res = await P.chat(
-      [{ role: 'system', content: SYS }, { role: 'user', content: `【当前上下文】\n层级：${c.layer}\n选择：${c.selection}\n红星市场：${c.hongxing}\n品类：${c.category}\n口径：${c.caliber}\n数据属性：${c.nature}\n\n【问题】${q}` }],
-      c
-    );
+    const msgs = [{ role: 'system', content: SYS }];
+    /* 连续追问：把本会话已发生的对话带上（最多保留最近 6 条），服务端只转发、不落盘 */
+    const hist = (opts && opts.history) || [];
+    msgs.push(...hist.slice(-6));
+    msgs.push({ role: 'user', content: `【当前上下文】\n层级：${c.layer}\n选择：${c.selection}\n红星市场：${c.hongxing}\n品类：${c.category}\n口径：${c.caliber}\n数据属性：${c.nature}\n\n【问题】${q}` });
+    const res = await P.chat(msgs, c, opts);
     if (!res) return null;
     return withCtx({
-      a: `**真实模型回答**（${res.model}）\n\n${res.content}\n\n— 口径复核：${c.caliber}；数值均为示意 · 待标定，引用前需标定。`,
+      a: `**真实模型回答**（${res.model} · ${(res.elapsedMs / 1000).toFixed(1)}s）\n\n${res.content}\n\n— 口径复核：${c.caliber}；数值均为示意 · 待标定，引用前需标定。`,
       tags: ['真实模型']
     }, o);
   }
@@ -198,5 +244,5 @@ window.AGRI_AI = (function () {
     return Object.entries(comp).sort((a, b) => a[1] - b[1])[0][0];
   }
 
-  return { presets, ask, free, live, ctxOf, hongxing, layerNo };
+  return { presets, ask, free, live, ctxOf, hongxing, layerNo, welcome, globalCore, GLOBAL_Q };
 })();
