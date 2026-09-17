@@ -29,11 +29,14 @@
 ## 构建与测试
 
 ```bash
-node build.mjs        # src + vendor + data + fonts → index.html（单文件）
-node test/e2e.mjs     # Playwright 桌面端 + 移动端端到端测试 → test/report.md 与 shots/
+node build.mjs          # src + vendor + data + fonts → index.html（单文件）
+node test/e2e.mjs       # Playwright 交互回归：桌面端 + 移动端 → test/report.md 与 shots/
+node test/visual.mjs    # Playwright 视觉/布局验收（1440×900 · 1920×1080 · 390×844）→ test/report-visual.md 与 shots/
 ```
 
 测试直接以 `file://` 加载单文件，并拦截全部外部请求 —— 同时验证离线可用与零控制台错误。
+`test/visual.mjs` 另含：左基线一致性、字号下限（正文 ≥12px）、文本对比度 ≥4.5:1、
+浮层两两不重叠、舞台不可被滚动带偏、图表绑定当前对象、移动端触控目标 ≥44px 等版面断言。
 
 ## 目录
 

@@ -15,7 +15,7 @@
   <div class="land-wrap">
     <div class="land-top">
       <span class="mark">🌾</span>
-      <div><b>农链 AgriLink</b><div style="font-size:12px;color:#98a2b3">中国农产品产业地图 · 阶段演示</div></div>
+      <div><b>农链 AgriLink</b><small>中国农产品产业地图 · 阶段演示</small></div>
     </div>
     <div class="land-hero">
       <div class="kicker">AGRILINK</div>
@@ -33,7 +33,8 @@
       </div>
     </div>
     <div class="land-foot">
-      数据口径：本页所有数值为示意值（待标定），仅用于表达展示结构；口径框架为真实框架（海关贸易量 / 产区供给规模 / 省际调运量 / 环节台账）。本页为独立阶段性领导演示 Demo，仅用于本次方案讨论，不代表长期农产品交易大模型的产品方案。
+      <span><b>数据口径</b>　本页所有数值为示意值（待标定），仅用于表达展示结构；口径框架为真实框架（海关贸易量 / 产区供给规模 / 省际调运量 / 环节台账）。</span>
+      <span><b>独立性声明</b>　本页为独立阶段性领导演示 Demo，仅用于本次方案讨论，不代表长期农产品交易大模型的产品方案。</span>
     </div>
   </div>
 </div>
@@ -50,38 +51,61 @@
       <!-- L1 -->
       <section class="scene" id="scene-l1" data-layer="1">
         <canvas id="globe"></canvas>
-        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外来源国 → 中国 · 点击弧线 / 国家节点看数据</span></div>
-        <div class="hint-mini">地球自动旋转 · 拖动可旋转</div>
+        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外来源国 → 中国</span></div>
+        <div class="scene-legend" id="legendL1">
+          <span class="lg-title">品类 · 图例</span>
+          <span class="lg-item"><span class="tag fruit">🍇 水果</span></span>
+          <span class="lg-item"><span class="tag veg">🥬 蔬菜</span></span>
+          <span class="lg-item"><span class="tag fresh">🐟 生鲜·粮油</span></span>
+          <span class="lg-item"><i class="lg-arc"></i>弧线 = 流向 · 线宽 = 年进口量</span>
+          <span class="lg-item"><i class="lg-swatch" style="background:#1d4ed8"></i>中国 = 贸易终点 · 点击进入 L2</span>
+        </div>
         <div class="g-tip" id="gTip"></div>
-        <div class="scene-hint">点弧线或国家节点 → 右侧出这条流向的明细；再次点击 → 进入全国产区层</div>
+        <div class="scene-hint">点弧线 / 回流点 / 国家节点 → 右侧出这条流向的明细；再次点击 → 进入全国产区层</div>
       </section>
       <!-- L2 -->
-      <section class="scene" id="scene-l2" data-layer="2">
+      <section class="scene" id="scene-l2" data-layer="2" inert>
         <div class="map" id="mapL2"></div>
-        <div class="scene-head"><span class="lv">L2</span><b>全国产区与省际流通</b><span>气泡 = 供给规模 · 线 = 调运量（按量级依次点亮）</span></div>
-        <div class="map-toolbar">
-          <label class="switch"><input type="checkbox" id="directToggle"><span>叠加进口直达市场</span></label>
+        <div class="scene-head"><span class="lv">L2</span><b>全国产区与省际流通</b><span>供给 + 流通 两层语义</span></div>
+        <div class="scene-legend" id="legendL2">
+          <span class="lg-title">图层 · 图例</span>
+          <span class="lg-item"><i class="lg-swatch" style="background:#f97316"></i>供给气泡 = 供给规模</span>
+          <span class="lg-item"><i class="lg-line" style="border-top-color:#16a34a"></i>调运线 = 调运量 · 色 = 品类</span>
+          <span class="lg-item"><i class="lg-area"></i>底色 = 产区供给规模</span>
+          <label class="lg-item lg-toggle" id="lgDirect"><input type="checkbox" id="directToggle"><i class="lg-line direct"></i>进口直达市场（虚线）</label>
         </div>
         <div class="scene-hint">点省份气泡 / 调运线看数据；再次点击省份 → 进入省区层 · 滚轮缩小 / 点空白 / Esc 返回</div>
       </section>
       <!-- L3 -->
-      <section class="scene" id="scene-l3" data-layer="3">
+      <section class="scene" id="scene-l3" data-layer="3" inert>
         <div class="map" id="mapL3"></div>
         <div class="scene-head"><span class="lv">L3</span><b>省区产业分析</b><span id="l3Sub">省内城市 / 产区 · 产量 · 竞争力</span></div>
-        <div class="l3-extras">
+        <div class="l3-extras" id="l3Extras">
           <div class="l3-card">
-            <h4>品类结构（示意）</h4>
-            <div class="l3-rows" id="l3Bars"></div>
-          </div>
-          <div class="radar-box">
-            <h4>竞争力五维（示意）</h4>
-            <canvas id="l3Radar" width="200" height="176"></canvas>
+            <div class="l3-rail-head">
+              <span class="lv">当前对象</span>
+              <b id="l3Obj">—</b>
+              <span class="tag plain" id="l3ObjCat">—</span>
+              <span class="l3-obj-note" id="l3ObjNote">选中城市节点后，本卡切换为该产区口径</span>
+            </div>
+            <div class="l3-rail-body">
+              <div class="l3-bars-wrap">
+                <h4 id="l3BarsTitle">品类结构（示意）</h4>
+                <div class="l3-rows" id="l3Bars"></div>
+              </div>
+              <div class="radar-box">
+                <h4 id="l3RadarTitle">竞争力五维（示意）</h4>
+                <canvas id="l3Radar" width="200" height="176"></canvas>
+                <div class="radar-cap" id="l3RadarCap">实线 = 当前产区 · 虚线 = 省均值</div>
+              </div>
+              <ul class="l3-facts" id="l3Facts"></ul>
+            </div>
           </div>
         </div>
         <div class="scene-hint">点城市节点看数据；再次点击 → 进入该产区代表单品全链路 · Esc / 滚轮缩小 / 点空白返回</div>
       </section>
       <!-- L4 -->
-      <section class="scene" id="scene-l4" data-layer="4">
+      <section class="scene" id="scene-l4" data-layer="4" inert>
         <div class="scene-head"><span class="lv">L4</span><b>城市代表单品全链路</b><span id="l4Sub">六环节：规模 / 成本 / 价格 / 风险</span></div>
         <div class="chain-head">
           <h2 id="chainTitle">—</h2>
@@ -96,8 +120,9 @@
             <div class="tip-note" id="stageRisk"></div>
           </div>
           <div class="card">
-            <h3>田头 → 零售 价格链路<small>元/kg · 示意</small></h3>
+            <h3>田头 → 批发 → 零售 价格链路<small>元/kg · 示意</small></h3>
             <div id="priceChain"></div>
+            <div class="price-sum" id="priceSum"></div>
           </div>
         </div>
         <div class="scene-hint">点环节看该环节的规模 / 成本 / 价格 / 风险；点「经营主体」展开抽屉 · Esc 关闭抽屉或返回上一层</div>

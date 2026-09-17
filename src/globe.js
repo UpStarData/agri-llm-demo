@@ -274,9 +274,12 @@ window.AGRI_GLOBE = (function () {
       ctx.beginPath(); ctx.arc(p.x, p.y, sz, 0, Math.PI * 2);
       ctx.fillStyle = col; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
-      if (nd.china || hover === nd.id) {
+      // 名称：中国常显；hover 或「已选中该来源国」时显示（选中即标注，避免满屏标签）
+      if (nd.china || hover === nd.id || sel === nd.id) {
         ctx.globalAlpha = 1; ctx.fillStyle = '#10151f'; ctx.font = '600 13px "IBM Plex Sans SC",sans-serif';
-        ctx.textAlign = 'left'; ctx.fillText(nd.china ? '中国' : nd.flow.country, p.x + sz + 5, p.y + 4);
+        const rAlign = p.x < cx + R * 0.4;              // 贴右侧球缘时标签翻到左边，避免越出画布
+        ctx.textAlign = rAlign ? 'left' : 'right';
+        ctx.fillText(nd.china ? '中国' : nd.flow.country, rAlign ? p.x + sz + 5 : p.x - sz - 5, p.y + 4);
       }
       hit.nodes.push({ id: nd.id, x: p.x, y: p.y, r: Math.max(12, sz + 6), china: !!nd.china });
       ctx.globalAlpha = 1;

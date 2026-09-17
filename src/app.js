@@ -35,12 +35,13 @@
   function dolly(from, to, dir) {
     const a = sceneEl(from), b = sceneEl(to);
     S.flying = true;
+    b.removeAttribute('inert');                     // 进场层可交互（离场层等切场结束再 inert）
     b.dataset.pose = dir > 0 ? 'under' : 'over';   // 更深一层从画布下方推入 / 更浅一层从远处退回
     b.classList.add('cur');
     void b.offsetWidth;                            // 强制回流：起始位姿必须先生效
     a.dataset.pose = dir > 0 ? 'over' : 'under';
     b.removeAttribute('data-pose');
-    setTimeout(() => { a.classList.remove('cur'); a.removeAttribute('data-pose'); }, FLIGHT + 140);
+    setTimeout(() => { a.classList.remove('cur'); a.removeAttribute('data-pose'); a.setAttribute('inert', ''); }, FLIGHT + 140);
     setTimeout(() => { S.flying = false; }, FLIGHT);
     S.log.push({ t: Date.now(), ev: 'fly', from, to, dir });
   }
@@ -53,7 +54,7 @@
     prepare(n);
     saveExit(from);
     if (from > 0) dolly(from, n, dir);
-    else { sceneEl(n).classList.add('cur'); }
+    else { sceneEl(n).classList.add('cur'); sceneEl(n).removeAttribute('inert'); }
     S.layer = n;
     if (n === 2) S.sel = null;
     if (n === 3) S.sel = null;
@@ -75,12 +76,14 @@
       if (!S.seen[2]) { map2.renderL2(); S.pendingFocusChina = S.l1.flow; }
       else map2.setPose(S.cam[2] || map2.home());
       S.l2.prov = null; S.l2.line = null;
+      map2.selectProvince(null);            // 回到 L2 = 恢复未选中态（与上层位姿一致）
     }
     if (n === 3) {
       const prov = S.l3.prov || '山东';
       S.l3.prov = prov;
       map3.renderL3(prov);                              // 先渲染在整图位姿，进场后再飞入
       window.AGRI_CHAIN.renderProvinceL3(prov, {});
+      window.AGRI_CHAIN.l3Focus(prov, S.l3.city);       // 分析卡片始终绑定当前对象
       window.AGRI_CHAIN.closeDrawer();
     }
     if (n === 4) {
@@ -121,11 +124,17 @@
     if (!tip) return;
     if (!info) { tip.style.display = 'none'; return; }
     tip.style.display = 'block';
-    tip.style.left = Math.min(info.x + 14, 300) + 'px';
-    tip.style.top = Math.max(8, info.y - 12) + 'px';
+    const f = info.flow;
     tip.innerHTML = info.china
-      ? `<b>中国</b><div class="t-cal">贸易终点 · 再次点击进入全国产区层</div>`
-      : `<b>${info.flow.country}</b> · ${info.flow.item}<br>${info.flow.vol} 万吨/年（示意）｜ 同比 ${info.flow.yoy > 0 ? '+' : ''}${info.flow.yoy}%<div class="t-cal">${D.cal.trade} · 再次点击进入 L2</div>`;
+      ? `<b>中国</b><div class="t-row">贸易终点 · 再次点击进入全国产区层</div>`
+      : `<b>${f.country}</b>
+         <div class="t-row">${catTag(f.cat)}<span>${f.item}</span></div>
+         <div class="t-row"><span class="t-num">${f.vol}</span><span>万吨/年（示意）</span><span class="t-num">${f.yoy > 0 ? '+' : ''}${f.yoy}%</span><span>同比</span></div>
+         <div class="t-cal">${D.cal.trade} · 再次点击进入 L2</div>`;
+    // 悬浮卡始终留在舞台内（贴边时自动内收）
+    const cvBox = $('globe');
+    tip.style.left = Math.max(8, Math.min(info.x + 14, (cvBox.clientWidth || 900) - tip.offsetWidth - 12)) + 'px';
+    tip.style.top = Math.max(8, Math.min(info.y - 12, (cvBox.clientHeight || 600) - tip.offsetHeight - 8)) + 'px';
   };
   UI.onProvinceClick = name => {
     if (!D.provinces[name]) return;
@@ -153,6 +162,7 @@
     S.l3.city = city;
     if (map3) map3.highlightCity(city);
     setSel({ type: 'city', id: city, label: `${city}（${prov}）`, raw: c, cal: D.cal.supply });
+    window.AGRI_CHAIN.l3Focus(prov, city);          // 左侧分析卡片切换到该产区口径
   };
   function chainHooks() {
     const ch = () => D.chains[S.l4.city];
@@ -165,8 +175,8 @@
 
   function onBlank() {
     if (S.layer === 1) { setSel(null); window.AGRI_GLOBE.clearSelect(); return; }
-    if (S.layer === 2) { S.l2.prov = null; S.l2.line = null; setSel(null); }
-    if (S.layer === 3) { S.l3.city = null; setSel(null); }
+    if (S.layer === 2) { S.l2.prov = null; S.l2.line = null; map2.selectProvince(null); setSel(null); }
+    if (S.layer === 3) { S.l3.city = null; setSel(null); window.AGRI_CHAIN.l3Focus(S.l3.prov, null); }
     goUp();
   }
   UI.onBlank = onBlank;
@@ -193,8 +203,15 @@
   function setSel(obj, keepScroll) { S.sel = obj; renderSide(keepScroll); }
   const kpi = (k, v, cls) => `<div class="kpi"><div class="k">${k}</div><div class="v ${cls || ''}">${v}</div></div>`;
   const relLi = (id, t, v, extra) => `<li data-id="${id}"><span>${t} ${extra || ''}</span><small>${v}</small></li>`;
+  /* AI 回答里的 **粗体** 标记渲染为 <b>（此前会裸出星号） */
+  const md = s => String(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  /* 品类标识（旧版 .tag 表达复用）：Emoji 只作品类识别辅助，不做装饰 */
+  const CAT_EMOJI = { fruit: '🍇', veg: '🥬', fresh: '🐟' };
+  const catTag = c => c && D.CATN[c] ? `<span class="tag ${c}">${CAT_EMOJI[c]} ${D.CATN[c]}</span>` : '';
+  /* 右侧面板的信息层级：量级 → 结构 → 节奏 → 口径 */
+  const sec = (t, inner) => `<div class="sec"><h5>${t}</h5>${inner}</div>`;
   function relatedPanel(title, inner) {
-    return `<div class="panel"><div class="phead"><span class="lv">同层对象</span><span style="font-size:11.5px;color:#5b6677">${title}</span></div><div class="rel-note">数值均为示意 · 待标定；口径同当前层</div><ul class="rel">${inner}</ul></div>`;
+    return `<div class="panel"><div class="phead"><span class="lv">同层对象</span><span style="font-size:.75rem;color:var(--dim)">${title}</span></div><div class="rel-note">数值均为示意 · 待标定；口径同当前层</div><ul class="rel">${inner}</ul></div>`;
   }
 
   function renderSide(keepScroll) {
@@ -208,42 +225,42 @@
       const flows = D.flows.slice().sort((a, b) => b.vol - a.vol);
       const sum = flows.reduce((a, b) => a + b.vol, 0);
       if (sel && sel.type === 'flow') {
-        const f = sel.raw;
+        const f = sel.raw, mx = Math.max.apply(null, f.months);
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L1 全球</span><span style="font-size:11.5px;color:#5b6677">来源国 → 中国</span></div>
-          <h2>${f.country}<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L1 全球</span><span class="kind">来源国 → 中国 · 单条流向</span></div>
+          <h2><span class="h2-txt">${f.country}</span>${catTag(f.cat)}<span class="mark">示意/待标定</span></h2>
+          ${sec('量级与同比', `<div class="kpis">
             ${kpi('年进口量', f.vol + '<small>万吨</small>')}
             ${kpi('同比', (f.yoy > 0 ? '+' : '') + f.yoy + '%', f.yoy > 0 ? 'pos' : 'neg')}
             ${kpi('环比', (f.mom > 0 ? '+' : '') + f.mom + '%', f.mom > 0 ? 'pos' : 'neg')}
-            ${kpi('年内峰值', (f.months.indexOf(Math.max.apply(null, f.months)) + 1) + ' 月')}
-          </div>
-          <div class="metrics" style="grid-template-columns:1fr 1fr;margin-top:9px">
-            <div class="metric"><div class="k">品类</div><div class="v" style="font-size:13.5px">${f.item}</div></div>
-            <div class="metric"><div class="k">入境方式</div><div class="v" style="font-size:13.5px">${f.mode}</div></div>
-            <div class="metric"><div class="k">主要入境口岸</div><div class="v" style="font-size:13.5px">${f.port}</div></div>
-            <div class="metric"><div class="k">下游</div><div class="v" style="font-size:13.5px">${f.client}</div></div>
-          </div>
-          <div class="months" title="月度节奏（示意）">
-            ${f.months.map((m, i) => `<div class="mo${m === Math.max.apply(null, f.months) ? ' peak' : ''}"><i style="height:${Math.round(m / Math.max.apply(null, f.months) * 30)}px"></i><span>${i + 1}</span></div>`).join('')}
-            <div class="months-cap">月度节奏 · ${f.months.indexOf(Math.max.apply(null, f.months)) + 1} 月为年内高峰（示意）</div>
-          </div>
+            ${kpi('年内峰值', (f.months.indexOf(mx) + 1) + ' <small>月</small>')}
+          </div>`)}
+          ${sec('结构', `<div class="metrics" style="grid-template-columns:1fr 1fr">
+            <div class="metric"><div class="k">品类</div><div class="v" style="font-size:.84375rem">${f.item}</div></div>
+            <div class="metric"><div class="k">入境方式</div><div class="v" style="font-size:.84375rem">${f.mode}</div></div>
+            <div class="metric"><div class="k">主要入境口岸</div><div class="v" style="font-size:.84375rem">${f.port}</div></div>
+            <div class="metric"><div class="k">下游</div><div class="v" style="font-size:.84375rem">${f.client}</div></div>
+          </div>`)}
+          ${sec('月度节奏', `<div class="months" title="月度节奏（示意）">
+            ${f.months.map((m, i) => `<div class="mo${m === mx ? ' peak' : ''}"><i style="height:${Math.round(m / mx * 30)}px"></i><span>${i + 1}</span></div>`).join('')}
+            <div class="months-cap">${f.months.indexOf(mx) + 1} 月为年内高峰</div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.trade} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">再次点击这条弧线（或点击终点「中国」节点）→ 相机切场进入 L2 全国产区层。</div>
+          <div class="tip-note">再次点击这条弧线（或点击终点<b>中国节点</b>）→ 相机切场进入 L2 全国产区层。</div>
         </div>`;
         html += relatedPanel('其他来源国', flows.filter(x => x.id !== f.id).map(x => relLi('f:' + x.id, x.country, `${x.vol} 万吨 · ${D.CATN[x.cat]}`)).join('') + relLi('f:CN', '中国（终点）', '进入 L2 全国产区层'));
       } else {
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L1 全球</span><span style="font-size:11.5px;color:#5b6677">未选中对象</span></div>
-          <h2>全球货源流向<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L1 全球</span><span class="kind">未选中对象 · 全局概览</span></div>
+          <h2><span class="h2-txt">全球货源流向</span><span class="mark">示意/待标定</span></h2>
+          ${sec('量级', `<div class="kpis">
             ${kpi('来源国', D.flows.length + '<small>个</small>')}
             ${kpi('合计进口量', sum + '<small>万吨</small>')}
             ${kpi('最大来源国', flows[0].country, 'pos')}
             ${kpi('平均同比', '+' + (flows.reduce((a, b) => a + b.yoy, 0) / flows.length).toFixed(1) + '%')}
-          </div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.trade} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">点击左侧任意弧线、弧上流光点或来源国节点 → 这里显示这条流向的明细（来源、品类、量、月份、同比、口径）。</div>
+          <div class="tip-note">点击地球上的<b>弧线 / 流光点 / 来源国节点</b> → 这里显示这条流向的明细（来源、品类、量、月份、同比、口径）。</div>
         </div>`;
         html += relatedPanel('来源国（按量级排序）', flows.map(x => relLi('f:' + x.id, x.country, `${x.vol} 万吨 · ${D.CATN[x.cat]}`)).join(''));
       }
@@ -255,17 +272,17 @@
         const p = sel.raw, name = sel.label;
         const outs = D.interProv.filter(x => x.from === name).sort((a, b) => b.vol - a.vol);
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L2 全国</span><span style="font-size:11.5px;color:#5b6677">产区 · 省际流通</span></div>
-          <h2>${name}<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L2 全国</span><span class="kind">产区 · 省际流通</span></div>
+          <h2><span class="h2-txt">${name}</span>${catTag(p.cat)}<span class="mark">示意/待标定</span></h2>
+          ${sec('供需与流通规模', `<div class="kpis">
             ${kpi('供给规模指数', p.supply)}
             ${kpi('主导品类', D.CATN[p.cat])}
             ${kpi('调出量', (p.out / 10).toFixed(1) + '<small>十万吨</small>')}
             ${kpi('调入量', (p.in / 10).toFixed(1) + '<small>十万吨</small>')}
-          </div>
-          <div class="metrics" style="grid-template-columns:1fr;margin-top:9px">
-            <div class="metric"><div class="k">产业特征</div><div class="v" style="font-size:12.5px;font-weight:400;line-height:1.8">${p.feature}</div></div>
-          </div>
+          </div>`)}
+          ${sec('产业特征', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">特征</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${p.feature}</div></div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply} ｜ 来源：${D.ORG}</div>
           <div class="tip-note">再次点击该省份气泡 → 相机推进到 L3 省区层（省内城市 / 产区）。</div>
         </div>`;
@@ -273,14 +290,14 @@
       } else if (sel && sel.type === 'pline') {
         const x = sel.raw;
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L2 全国</span><span style="font-size:11.5px;color:#5b6677">省际调运线</span></div>
-          <h2>${x.from} → ${x.to}<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L2 全国</span><span class="kind">省际调运线</span></div>
+          <h2><span class="h2-txt">${x.from} → ${x.to}</span>${catTag(x.cat)}<span class="mark">示意/待标定</span></h2>
+          ${sec('流通量级', `<div class="kpis">
             ${kpi('调运量', x.vol + '<small>万吨</small>')}
             ${kpi('品类', x.item)}
             ${kpi('同比', (x.yoy > 0 ? '+' : '') + x.yoy + '%', x.yoy > 0 ? 'pos' : 'neg')}
             ${kpi('起点供给指数', D.provinces[x.from].supply)}
-          </div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.inter} ｜ 来源：${D.ORG}</div>
           <div class="tip-note">线宽 = 调运量，颜色 = 品类；点击省份气泡可继续下钻到 L3。</div>
         </div>`;
@@ -288,31 +305,31 @@
       } else if (sel && sel.type === 'market') {
         const f = sel.raw;
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L2 全国</span><span style="font-size:11.5px;color:#5b6677">进口直达市场</span></div>
-          <h2>${f.country} → ${f.market}<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L2 全国</span><span class="kind">进口直达市场</span></div>
+          <h2><span class="h2-txt">${f.country} → ${f.market}</span>${catTag(f.cat)}<span class="mark">示意/待标定</span></h2>
+          ${sec('直达量级', `<div class="kpis">
             ${kpi('直达量', f.vol + '<small>万吨</small>')}
             ${kpi('品类', f.item)}
             ${kpi('同比', '+' + f.yoy + '%', 'pos')}
             ${kpi('所在省', f.mProv)}
-          </div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.market} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">进口货源直达销地一级市场，与国内产区的调运线形成直接竞争（可在左上角开关叠加 / 关闭该图层）。</div>
+          <div class="tip-note">进口货源直达销地一级市场，与国内产区的调运线形成直接竞争（可在左侧图例栏勾选叠加 / 关闭该图层）。</div>
         </div>`;
         html += relatedPanel('全部进口直达线', D.directFlows.map(y => relLi('m:' + y.id, `${y.country} → ${y.market}`, `${y.vol} 万吨 · ${y.item}`)).join(''));
       } else {
         const totalInter = D.interProv.reduce((a, b) => a + b.vol, 0);
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L2 全国</span><span style="font-size:11.5px;color:#5b6677">未选中对象</span></div>
-          <h2>全国供给 + 省际流通<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L2 全国</span><span class="kind">未选中对象 · 全国概览</span></div>
+          <h2><span class="h2-txt">全国供给 + 省际流通</span><span class="mark">示意/待标定</span></h2>
+          ${sec('规模概览', `<div class="kpis">
             ${kpi('重点产区', provs.length + '<small>个</small>')}
             ${kpi('标注调运线', D.interProv.length + '<small>条</small>')}
             ${kpi('调运量合计', totalInter + '<small>万吨</small>')}
             ${kpi('最大调出省', provs[0])}
-          </div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply} / ${D.cal.inter} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">气泡大小 = 供给规模；连线粗细 = 省际调运量，已按量级从大到小依次点亮。点省份气泡 → 看该省明细；再次点击 → 进入 L3。</div>
+          <div class="tip-note"><b>底色深浅</b> = 产区供给规模；<b>气泡</b> = 供给对象（色 = 主导品类）；<b>连线</b> = 省际调运量，已按量级从大到小依次点亮。点省份气泡 → 看该省明细；再次点击 → 进入 L3。</div>
         </div>`;
         html += relatedPanel('重点产区（按供给规模）', provs.map(p => relLi('prov:' + p, p, `供给指数 ${D.provinces[p].supply} · ${D.CATN[D.provinces[p].cat]}`)).join(''));
       }
@@ -323,37 +340,37 @@
       if (sel && sel.type === 'city') {
         const c = sel.raw;
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L3 省区</span><span style="font-size:11.5px;color:#5b6677">${prov} · 省内产区</span></div>
-          <h2>${c.name}<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L3 省区</span><span class="kind">${prov} · 省内产区</span></div>
+          <h2><span class="h2-txt">${c.name}</span>${catTag(c.cat)}<span class="mark">示意/待标定</span></h2>
+          ${sec('产区规模', `<div class="kpis">
             ${kpi('外调规模', c.out + '<small>万吨</small>')}
             ${kpi('主导品类', c.main)}
             ${kpi('竞争力均值', Math.round(Object.values(c.comp).reduce((a, b) => a + b, 0) / Object.keys(c.comp).length))}
             ${kpi('代表单品链路', D.chains[c.name] ? '已标定' : '待标定', D.chains[c.name] ? 'pos' : '')}
-          </div>
-          <div class="metrics" style="grid-template-columns:1fr;margin-top:9px">
-            <div class="metric"><div class="k">竞争力五维（示意）</div><div class="v" style="font-size:12.5px;font-weight:400">${Object.entries(c.comp).map(([k, v]) => `${k} ${v}`).join(' / ')}</div></div>
-            <div class="metric"><div class="k">区域特征</div><div class="v" style="font-size:12.5px;font-weight:400;line-height:1.8">${c.feature}</div></div>
-          </div>
+          </div>`)}
+          ${sec('竞争力与区域特征', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">竞争力五维（示意）</div><div class="v" style="font-size:.78125rem;font-weight:400">${Object.entries(c.comp).map(([k, v]) => `${k} ${v}`).join(' / ')}</div></div>
+            <div class="metric"><div class="k">区域特征</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${c.feature}</div></div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply} ｜ 来源：${D.ORG}</div>
           <div class="tip-note">${D.chains[c.name] ? '再次点击该城市节点 → 进入 L4 城市代表单品全链路。' : '该产区代表单品链路待标定（已标定：伽师 / 红河蒙自 / 洛川 / 武鸣）。'}</div>
         </div>`;
         html += relatedPanel(`其他产区（${prov}）`, d.cities.filter(x => x.name !== c.name).map(x => relLi('city:' + x.name, x.name, `${x.out} 万吨 · ${x.main}`, D.chains[x.name] ? '<span class="chain-tag">全链路</span>' : '')).join(''));
       } else {
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L3 省区</span><span style="font-size:11.5px;color:#5b6677">${prov}</span></div>
-          <h2>${prov} · 省内产业<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L3 省区</span><span class="kind">${prov} · 全省口径</span></div>
+          <h2><span class="h2-txt">${prov}</span>${catTag(d.cat)}<span class="mark">示意/待标定</span></h2>
+          ${sec('省域规模', `<div class="kpis">
             ${kpi('重点产区', d.cities.length + '<small>个</small>')}
             ${kpi('主导品类', D.CATN[d.cat])}
             ${kpi('供给规模指数', d.supply)}
             ${kpi('同比', '+' + d.yoy + '%', 'pos')}
-          </div>
-          <div class="metrics" style="grid-template-columns:1fr;margin-top:9px">
-            <div class="metric"><div class="k">产业特征</div><div class="v" style="font-size:12.5px;font-weight:400;line-height:1.8">${d.feature}</div></div>
-          </div>
+          </div>`)}
+          ${sec('产业特征', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">特征</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${d.feature}</div></div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">点城市节点 → 看该产区的产量、主导品类、竞争力五维与区域特征；再次点击 → 进入 L4 单品全链路。</div>
+          <div class="tip-note">点城市节点 → 看该产区的产量、主导品类、竞争力五维与区域特征；<b>左侧分析卡片会同步切换为该产区口径</b>；再次点击 → 进入 L4 单品全链路。</div>
         </div>`;
         html += relatedPanel('省内产区', d.cities.map(c => relLi('city:' + c.name, c.name, `${c.out} 万吨 · ${c.main}`, D.chains[c.name] ? '<span class="chain-tag">全链路</span>' : '')).join(''));
       }
@@ -363,14 +380,14 @@
       const key = S.l4.city, ch = D.chains[key];
       if (ch) {
         html += `<div class="panel">
-          <div class="phead"><span class="lv">L4 单品</span><span style="font-size:11.5px;color:#5b6677">${ch.prov} · ${ch.city}</span></div>
-          <h2>${ch.emoji} ${ch.product}<span class="mark">示意/待标定</span></h2>
-          <div class="kpis">
+          <div class="phead"><span class="lv">L4 单品</span><span class="kind">${ch.prov} · ${ch.city}</span></div>
+          <h2><span class="h2-txt">${ch.emoji} ${ch.product}</span><span class="mark">示意/待标定</span></h2>
+          ${sec('季节与价格区间', `<div class="kpis">
             ${kpi('上市季', ch.season.split('（')[0])}
             ${kpi('环节数', '6 <small>环节</small>')}
             ${kpi('田头价', ch.price[0].v + '<small>元/kg</small>')}
             ${kpi('零售价', ch.price[ch.price.length - 1].v + '<small>元/kg</small>')}
-          </div>
+          </div>`)}
           <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.chain} / ${D.cal.price} ｜ 来源：${D.ORG}</div>
           <div class="tip-note">点环节卡片 → 该环节的规模 / 成本 / 价格 / 风险；点「本环节经营主体」→ 抽屉展开明细（不强制第五次下钻）。</div>
         </div>`;
@@ -392,9 +409,9 @@
       <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small></div>
       <div class="ai-obj">当前对象：${label}</div>
       <div class="ai-qs">${qs.map((x, i) => `<button data-q="${i}">${x.q}</button>`).join('')}</div>
-      <div class="ai-a">${first.a}</div>
+      <div class="ai-a">${md(first.a)}</div>
       <div class="ai-tags">${first.tags.map(t => `<span>${t}</span>`).join('')}</div>
-      <div class="ai-in"><input id="aiInput" placeholder="针对该对象提问，如：油价涨 20% 会怎样"><button id="aiSend">提问</button></div>
+      <div class="ai-in"><input id="aiInput" placeholder="${o ? '针对该对象提问，如：油价涨 20% 会怎样' : '先选中一个数据对象再提问'}"${o ? '' : ' disabled'}><button id="aiSend"${o ? '' : ' disabled'}>提问</button></div>
     </div>`;
   }
 
@@ -431,7 +448,7 @@
   function showAnswer(res) {
     const a = $('side').querySelector('.ai-a');
     if (!a) return;
-    a.innerHTML = res.a;
+    a.innerHTML = md(res.a);
     const t = $('side').querySelector('.ai-tags');
     if (t) t.innerHTML = res.tags.map(x => `<span>${x}</span>`).join('');
     S.lastAnswer = res.a;
@@ -465,7 +482,10 @@
       if (e.target.closest('.chip, .ent-list li, .card, .scene-head, .scene-hint, .metric, button, input')) return;
       onBlank();
     });
-    $('directToggle').addEventListener('change', e => { map2.setDirect(e.target.checked); });
+    $('directToggle').addEventListener('change', e => {
+      map2.setDirect(e.target.checked);
+      $('legendL2').classList.toggle('direct-on', e.target.checked);
+    });
     if ($('drawerClose')) $('drawerClose').onclick = () => window.AGRI_CHAIN.closeDrawer();
   }
 
@@ -506,6 +526,7 @@
       l4: { city: S.l4.city, stage: window.AGRI_CHAIN.stage }, wheelOut: wheelOut, log: S.log.slice(-10)
     }),
     sideText: () => $('side').innerText,
+    selLabel: () => (S.sel ? `${S.sel.type}:${S.sel.label}` : null),
     aiText: () => { const a = $('side').querySelector('.ai-a'); return a ? a.innerText : ''; },
     ask: q => { const r = window.AGRI_AI.ask(S.sel, q); showAnswer(r); return r.a; },
     globePick: (x, y) => window.AGRI_GLOBE.pick(x, y),
@@ -523,6 +544,41 @@
     },
     chipState: () => Array.from(document.querySelectorAll('#chainAxis .chip')).map(c => c.classList.contains('lit')),
     barsW: () => Array.from(document.querySelectorAll('.l3-row .bar i')).map(i => i.style.width),
+    /* 分析卡片 / 图例 / 环节轴 / 价格链路的可读状态，供视觉验收断言 */
+    rect: sel => { const el = document.querySelector(sel); if (!el) return null; const r = el.getBoundingClientRect();
+      return { x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1) }; },
+    l3Rail: () => ({
+      obj: $('l3Obj').textContent, cat: $('l3ObjCat').textContent, radarTitle: $('l3RadarTitle').textContent,
+      radarCap: $('l3RadarCap') ? $('l3RadarCap').textContent : '',
+      barsTitle: $('l3BarsTitle').textContent,
+      barsOn: Array.from(document.querySelectorAll('#l3Bars .l3-row.on')).map(r => r.querySelector('span').textContent),
+      facts: Array.from(document.querySelectorAll('#l3Facts li')).map(li => li.innerText.replace(/\n/g, ' '))
+    }),
+    legend: id => { const el = $(id); return el ? { items: Array.from(el.querySelectorAll('.lg-item')).map(x => x.innerText.trim()), directOn: el.classList.contains('direct-on') } : null; },
+    chips: () => Array.from(document.querySelectorAll('#chainAxis .chip')).map(c => ({
+      no: c.querySelector('.no').textContent, name: c.querySelector('b').textContent,
+      cv: c.querySelector('.cv').textContent, on: c.classList.contains('on'), lit: c.classList.contains('lit')
+    })),
+    priceRows: () => Array.from(document.querySelectorAll('#priceChain .price-row')).map(r => ({
+      k: r.querySelector('.pk').textContent, v: r.querySelector('.pv').textContent,
+      mult: r.querySelector('.px').textContent, hot: r.classList.contains('hot'), w: r.querySelector('.pbar i').style.width
+    })),
+    priceSum: () => $('priceSum').innerText,
+    /* 供视觉验收：气泡尺寸梯度是否仍有可读差异 */
+    bubbleScale: () => {
+      const sup = Object.values(D.provinces).map(p => p.supply);
+      const out = [].concat.apply([], Object.values(D.provinces).map(p => p.cities.map(c => c.out)));
+      const map2Size = x => 12 + Math.max(0, Math.sqrt(x) - 7) * 9, cityM = x => 13 + Math.max(0, Math.sqrt(x) - 3) * 4.2;
+      return { sup: [map2Size(Math.min.apply(null, sup)), map2Size(Math.max.apply(null, sup))],
+               city: [cityM(Math.min.apply(null, out)), cityM(Math.max.apply(null, out))] };
+    },
+    /* 供视觉验收：进口直达图层是否裁剪在图内（避免图外游离虚线） */
+    directClip: () => { const o = map2 && map2.el && map2.el.getOption();
+      const d = ((o && o.series) || []).find(x => x.id === 'direct'); return !!(d && d.clip); },
+    /* 供视觉验收：关键图层的标签防重叠是否已启用 */
+    overlapGuard: which => { const chart = which === 'l2' ? map2 : map3;
+      const o = chart && chart.el && chart.el.getOption();
+      return ((o && o.series) || []).filter(x => x.labelLayout && x.labelLayout.hideOverlap).map(x => x.id); },
     radarInk: () => { const cv = $('l3Radar'); const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 8) n++; return n; },
     // 层间切场过程中两个场景的可见度（用于验证不白屏）
     sceneOpacity: () => Array.from(document.querySelectorAll('.scene')).map(s => ({ id: s.id, op: +getComputedStyle(s).opacity, cur: s.classList.contains('cur') })),

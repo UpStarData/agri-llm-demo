@@ -6,9 +6,13 @@
 window.createChinaMap = function (elId) {
   const D = window.AGRI_DATA;
   const HOMEPOSE = { center: [104.5, 34.5], zoom: 1.12 };
-  const ZOOM_HINT = { '新疆': 2.0, '西藏': 2.0, '内蒙古': 1.9, '黑龙江': 2.3, '青海': 2.2, '四川': 2.3, '云南': 2.3, '广西': 2.5, '甘肃': 2.3, '海南': 3.2, '浙江': 3.0, '广东': 2.4, '陕西': 2.5, '山东': 2.6, '河南': 2.7 };
+  /* 东部密集区：标签按方位避让（hideOverlap 兜底），避免上海/浙江/湖南挤成一团 */
+  const LABEL_POS = { '上海': 'bottom', '浙江': 'bottom', '江苏': 'right', '北京': 'top', '天津': 'top', '辽宁': 'top',
+    '广东': 'bottom', '湖南': 'left', '湖北': 'left', '重庆': 'left', '四川': 'left', '海南': 'bottom', '黑龙江': 'top', '吉林': 'top' };
+  const labelPos = name => LABEL_POS[name] || 'right';
+  const ZOOM_HINT = { '新疆': 2.3, '西藏': 2.0, '内蒙古': 1.9, '黑龙江': 2.3, '青海': 2.2, '四川': 2.3, '云南': 2.3, '广西': 2.5, '甘肃': 2.3, '海南': 3.2, '浙江': 3.0, '广东': 2.4, '陕西': 2.5, '山东': 2.6, '河南': 2.7 };
   let chart = null, pose = { center: HOMEPOSE.center.slice(), zoom: HOMEPOSE.zoom };
-  let raf = null, directOn = false, mode = 'l2', curProv = null, litCount = 0;
+  let raf = null, directOn = false, mode = 'l2', curProv = null, litCount = 0, selProv = null;
 
   function init() {
     if (chart) return;
@@ -52,26 +56,47 @@ window.createChinaMap = function (elId) {
   function setPose(p) { pose = { center: p.center.slice(), zoom: p.zoom }; applyPose(); }
 
   /* ---------- 公共：底部省份底色 ---------- */
+  /* 规模 → 半径：供给指数 52–95 映射到约 14–37px，拉开可读梯度 */
+  const supSize = sup => 12 + Math.max(0, Math.sqrt(sup) - 7) * 9;
+  /* 省内产区规模 → 半径（外调量 8–46 万吨 → 约 15–33px） */
+  const citySize = out => 13 + Math.max(0, Math.sqrt(out) - 3) * 4.2;
+  /* 供给（面 + 点）与流通（线）两套视觉语言：底色 = 供给规模，气泡 = 供给对象，线 = 调运量 */
   function provinceRegions(active) {
-    return Object.keys(D.provinces).map(p => ({
-      name: p,
-      itemStyle: {
-        areaColor: active && active !== p ? '#f4f6fa' : `rgba(37,99,235,${(0.05 + D.provinces[p].supply / 900).toFixed(3)})`,
-        borderColor: active === p ? '#1d4ed8' : 'rgba(120,145,185,.55)', borderWidth: active === p ? 1.8 : .7
-      }
-    }));
+    return Object.keys(D.provinces).map(p => {
+      const on = active === p;
+      return {
+        name: p,
+        itemStyle: {
+          // 底色深浅 = 供给规模：拉开到 0.10–0.34，肉眼可辨
+          areaColor: `rgba(37,99,235,${Math.min(.34, .08 + .26 * (D.provinces[p].supply - 50) / 50).toFixed(3)})`,
+          opacity: active && !on ? 0.5 : 1,
+          borderColor: on ? '#1d4ed8' : 'rgba(120,145,185,.55)', borderWidth: on ? 1.8 : .7
+        }
+      };
+    });
   }
+  // 选中省份时：相关调运线提亮加粗，其余线压到背景层
   function lineItem(x) {
+    const related = !selProv || x.from === selProv || x.to === selProv;
+    const w = 1 + x.vol / 11;
     return {
       coords: [[D.provinces[x.from].lng, D.provinces[x.from].lat], [D.provinces[x.to].lng, D.provinces[x.to].lat]],
       value: x.vol, cat: x.cat, x: x,
-      lineStyle: { width: 1 + x.vol / 11, color: D.CAT[x.cat], opacity: .62, curveness: .22 }
+      lineStyle: {
+        width: related ? w * (selProv ? 1.15 : 1) : w * 0.8,
+        color: D.CAT[x.cat],
+        opacity: related ? (selProv ? 0.92 : 0.62) : 0.14,
+        curveness: .22
+      }
     };
   }
+  const litLines = () => D.interProv.slice().sort((a, b) => b.vol - a.vol).slice(0, litCount).map(lineItem);
 
   /* ---------- L2 ---------- */
   function l2Option() {
     const provs = Object.keys(D.provinces);
+    // 窄屏地图小：只给"规模较大"的产区常显名称，其余靠悬浮/右侧列表，避免标签压住气泡
+    const compact = !!(chart && chart.getWidth() < 560);
     const directs = directOn ? D.directFlows.map(f => ({
       coords: [[f.lng, f.lat], [f.mLng, f.mLat]], value: f.vol, f: f,
       lineStyle: { width: 1 + f.vol / 12, color: '#7c3aed', opacity: .8, curveness: .34, type: 'dashed' }
@@ -84,18 +109,23 @@ window.createChinaMap = function (elId) {
         { id: 'pline', type: 'lines', coordinateSystem: 'geo', zlevel: 3, data: [],
           effect: { show: true, period: 5.2, trailLength: .35, symbol: 'circle', symbolSize: 3.4, color: '#fff' },
           lineStyle: { curveness: .22 } },
-        { id: 'direct', type: 'lines', coordinateSystem: 'geo', zlevel: 3, data: directs,
+        { id: 'direct', type: 'lines', coordinateSystem: 'geo', zlevel: 3, data: directs, clip: true,
           effect: directs.length ? { show: true, period: 6, trailLength: .3, symbol: 'circle', symbolSize: 3, color: '#fff' } : { show: false },
           lineStyle: { curveness: .34 } },
         { id: 'dmkt', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 4,
           data: directOn ? D.directFlows.map(f => ({ name: f.market, value: [f.mLng, f.mLat], f: f })) : [],
           symbolSize: 9, rippleEffect: { scale: 2.4, brushType: 'stroke' }, itemStyle: { color: '#7c3aed' },
+          labelLayout: { hideOverlap: true },
           label: { show: true, formatter: p => p.data.name, position: 'right', color: '#5b21b6', fontSize: 11, fontWeight: 600 } },
         { id: 'prov', type: 'scatter', coordinateSystem: 'geo', zlevel: 5,
           data: provs.map(p => ({ name: p, value: [D.provinces[p].lng, D.provinces[p].lat], sup: D.provinces[p].supply, cat: D.provinces[p].cat })),
-          symbolSize: (v, p) => 12 + Math.sqrt(p.data.sup) * 1.3,
-          itemStyle: { color: d => D.CAT[d.data.cat], borderColor: '#fff', borderWidth: 1.6, opacity: .92 },
-          label: { show: true, formatter: p => p.name, position: 'right', color: '#243043', fontSize: 11, fontWeight: 600,
+          symbolSize: (v, p) => supSize(p.data.sup),
+          itemStyle: { color: d => D.CAT[d.data.cat], borderColor: '#fff', borderWidth: 2, opacity: .95,
+            shadowBlur: 8, shadowColor: 'rgba(15,23,42,.18)' },
+          emphasis: { scale: 1.15 },
+          labelLayout: { hideOverlap: true },
+          label: { show: true, formatter: p => (compact && p.data.sup < 76) ? '' : p.name, distance: compact ? 11 : 5,
+            position: p => labelPos(p.name), color: '#243043', fontSize: 11, fontWeight: 600,
             backgroundColor: 'rgba(255,255,255,.72)', padding: [1, 3], borderRadius: 3 } }
       ]
     };
@@ -136,7 +166,7 @@ window.createChinaMap = function (elId) {
     });
   }
   function renderL2() {
-    mode = 'l2'; init(); litCount = 0;
+    mode = 'l2'; init(); litCount = 0; selProv = null;
     chart.clear();
     chart.setOption(l2Option(), { notMerge: true });
     pose = { center: HOMEPOSE.center.slice(), zoom: HOMEPOSE.zoom };
@@ -147,7 +177,7 @@ window.createChinaMap = function (elId) {
     const order = D.interProv.slice().sort((a, b) => b.vol - a.vol);
     order.forEach((x, i) => setTimeout(() => {
       litCount = i + 1;
-      chart.setOption({ series: [{ id: 'pline', data: order.slice(0, i + 1).map(lineItem) }] }, { lazyUpdate: false });
+      chart.setOption({ series: [{ id: 'pline', data: litLines() }] }, { lazyUpdate: false });
     }, 260 + i * (stepMs || 170)));
   }
   function setDirect(on) {
@@ -158,7 +188,8 @@ window.createChinaMap = function (elId) {
   }
   function selectProvince(name) {
     if (!chart || mode !== 'l2') return;
-    chart.setOption({ geo: { regions: provinceRegions(name) } }, { lazyUpdate: false, silent: true });
+    selProv = name || null;
+    chart.setOption({ geo: { regions: provinceRegions(selProv) }, series: [{ id: 'pline', data: litLines() }] }, { lazyUpdate: false, silent: true });
   }
 
   /* ---------- L3 ---------- */
@@ -177,8 +208,9 @@ window.createChinaMap = function (elId) {
       series: [
         { id: 'city', type: 'scatter', coordinateSystem: 'geo', zlevel: 5,
           data: d.cities.map(c => ({ name: c.name, value: [c.lng, c.lat], out: c.out, cat: c.cat, main: c.main, comp: c.comp })),
-          symbolSize: (v, p) => 14 + Math.sqrt(p.data.out) * 2.1,
+          symbolSize: (v, p) => citySize(p.data.out),
           itemStyle: { color: x => D.CAT[x.data.cat], borderColor: '#fff', borderWidth: 1.8, shadowBlur: 10, shadowColor: 'rgba(37,99,235,.25)' },
+          labelLayout: { hideOverlap: true },
           label: { show: true, formatter: x => x.name, position: 'right', color: '#1d4ed8', fontSize: 12, fontWeight: 700,
             backgroundColor: 'rgba(255,255,255,.82)', padding: [2, 5], borderRadius: 4 } },
         { id: 'brace', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 4,
@@ -221,7 +253,7 @@ window.createChinaMap = function (elId) {
     const d = D.provinces[curProv];
     chart.setOption({ series: [{ id: 'city', data: d.cities.map(c => ({
       name: c.name, value: [c.lng, c.lat], out: c.out, cat: c.cat, main: c.main, comp: c.comp,
-      symbolSize: (14 + Math.sqrt(c.out) * 2.1) * (city && c.name !== city ? .8 : 1),
+      symbolSize: citySize(c.out) * (city && c.name !== city ? .82 : 1),
       itemStyle: { color: D.CAT[c.cat], borderColor: c.name === city ? '#1d4ed8' : '#fff', borderWidth: c.name === city ? 3 : 1.8 }
     })) }] }, { lazyUpdate: false, silent: true });
   }
@@ -232,7 +264,7 @@ window.createChinaMap = function (elId) {
     init, renderL2, lightUp, setDirect, selectProvince, renderL3, highlightCity, flyTo, setPose, focusProvince,
     home() { return HOMEPOSE; },
     getPose: () => ({ center: pose.center.slice(), zoom: pose.zoom }),
-    getLit: () => litCount, getDirect: () => directOn, getMode: () => mode,
+    getLit: () => litCount, getDirect: () => directOn, getMode: () => mode, getSel: () => selProv,
     resize() { if (chart) chart.resize(); }
   };
 };
