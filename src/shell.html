@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>农链 AgriLink · 中国农产品产业地图（阶段演示 · 示意数据）</title>
+<style>/*FONT_CSS*/</style>
+<style>/*APP_CSS*/</style>
+</head>
+<body>
+
+<!-- ================= 海报首页 ================= -->
+<div id="landing">
+  <div class="grid-bg"></div>
+  <div class="land-wrap">
+    <div class="land-top">
+      <span class="mark">🌾</span>
+      <div><b>农链 AgriLink</b><div style="font-size:12px;color:#98a2b3">中国农产品产业地图 · 阶段演示</div></div>
+    </div>
+    <div class="land-hero">
+      <div class="kicker">AGRILINK</div>
+      <h1 class="land-title">读懂一颗农产品的<br>全球旅程</h1>
+      <p class="land-sub">从全球货源到一亩产地：看清货从哪来、产区有什么、价格怎么走、链条卡在哪。</p>
+      <ul class="land-struct" id="landStruct">
+        <li><i>01</i><em>全球货源流向</em><small>境外来源国 → 中国：量级、品类、节奏</small></li>
+        <li><i>02</i><em>全国产区与省际流通</em><small>谁产、谁销、怎么流</small></li>
+        <li><i>03</i><em>省区产业分析</em><small>省内城市产量、主导品类、竞争力</small></li>
+        <li><i>04</i><em>城市与单品全产业链</em><small>育种 → 种植 → 采后 → 冷链 → 批发 → 零售</small></li>
+      </ul>
+      <div class="land-cta">
+        <button class="btn-primary" id="enterBtn">进入系统</button>
+        <span class="cta-note">全部数字为示意数据，用于确认展示形态与信息结构</span>
+      </div>
+    </div>
+    <div class="land-foot">
+      数据口径：本页所有数值为示意值（待标定），仅用于表达展示结构；口径框架为真实框架（海关贸易量 / 产区供给规模 / 省际调运量 / 环节台账）。
+    </div>
+  </div>
+</div>
+
+<!-- ================= 主界面 ================= -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand">农链 AgriLink<small>产业地图</small></div>
+    <nav class="crumbs" id="crumbs"></nav>
+    <span class="demo-badge">示意数据 · 待标定</span>
+  </header>
+  <div class="layout">
+    <main id="stage">
+      <!-- L1 -->
+      <section class="scene" id="scene-l1" data-layer="1">
+        <canvas id="globe"></canvas>
+        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外来源国 → 中国 · 点击弧线 / 国家节点看数据</span></div>
+        <div class="hint-mini">地球自动旋转 · 拖动可旋转</div>
+        <div class="g-tip" id="gTip"></div>
+        <div class="scene-hint">点弧线或国家节点 → 右侧出这条流向的明细；再次点击 → 进入全国产区层</div>
+      </section>
+      <!-- L2 -->
+      <section class="scene" id="scene-l2" data-layer="2">
+        <div class="map" id="mapL2"></div>
+        <div class="scene-head"><span class="lv">L2</span><b>全国产区与省际流通</b><span>气泡 = 供给规模 · 线 = 调运量（按量级依次点亮）</span></div>
+        <div class="map-toolbar">
+          <label class="switch"><input type="checkbox" id="directToggle"><span>叠加进口直达市场</span></label>
+        </div>
+        <div class="scene-hint">点省份气泡 / 调运线看数据；再次点击省份 → 进入省区层 · 滚轮缩小 / 点空白 / Esc 返回</div>
+      </section>
+      <!-- L3 -->
+      <section class="scene" id="scene-l3" data-layer="3">
+        <div class="map" id="mapL3"></div>
+        <div class="scene-head"><span class="lv">L3</span><b>省区产业分析</b><span id="l3Sub">省内城市 / 产区 · 产量 · 竞争力</span></div>
+        <div class="l3-extras">
+          <div class="l3-card">
+            <h4>品类结构（示意）</h4>
+            <div class="l3-rows" id="l3Bars"></div>
+          </div>
+          <div class="radar-box">
+            <h4>竞争力五维（示意）</h4>
+            <canvas id="l3Radar" width="200" height="176"></canvas>
+          </div>
+        </div>
+        <div class="scene-hint">点城市节点看数据；再次点击 → 进入该产区代表单品全链路 · Esc / 滚轮缩小 / 点空白返回</div>
+      </section>
+      <!-- L4 -->
+      <section class="scene" id="scene-l4" data-layer="4">
+        <div class="scene-head"><span class="lv">L4</span><b>城市代表单品全链路</b><span id="l4Sub">六环节：规模 / 成本 / 价格 / 风险</span></div>
+        <div class="chain-head">
+          <h2 id="chainTitle">—</h2>
+          <span class="sub" id="chainSub"></span>
+        </div>
+        <div class="chain-progress"><i id="chainProg"></i></div>
+        <div class="chain-axis" id="chainAxis"></div>
+        <div class="chain-body">
+          <div class="card">
+            <h3>环节指标<small id="stageName">—</small></h3>
+            <div class="metrics" id="stageMetrics"></div>
+            <div class="tip-note" id="stageRisk"></div>
+          </div>
+          <div class="card">
+            <h3>田头 → 零售 价格链路<small>元/kg · 示意</small></h3>
+            <div id="priceChain"></div>
+          </div>
+        </div>
+        <div class="scene-hint">点环节看该环节的规模 / 成本 / 价格 / 风险；点「经营主体」展开抽屉 · Esc 关闭抽屉或返回上一层</div>
+      </section>
+      <!-- 经营主体抽屉 -->
+      <aside class="drawer" id="drawer">
+        <div class="dh">
+          <div><b id="drawerTitle">经营主体</b><br><small id="drawerSub">示意 · 待标定</small></div>
+          <button id="drawerClose" aria-label="关闭">✕</button>
+        </div>
+        <div class="db" id="drawerBody"></div>
+      </aside>
+    </main>
+    <aside id="side"></aside>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!--LIBS-->
+<!--DATA-->
+<!--APP_JS-->
+</body>
+</html>
