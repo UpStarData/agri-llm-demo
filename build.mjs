@@ -24,11 +24,11 @@ const data = [
   `<script>${rd('src/data.js')}</script>`
 ].join('\n');
 
-const appJs = ['src/globe.js', 'src/provider.js', 'src/ai.js', 'src/map.js', 'src/app-chain.js', 'src/app.js']
+const appJs = ['src/globe.js', 'src/provider.js', 'src/ai.js', 'src/aiconfig.js', 'src/map.js', 'src/app-chain.js', 'src/app.js']
   .map(f => `<script>\n${rd(f)}\n</script>`).join('\n');
 
 /* 构建指纹：对所有输入取 sha256（确定性，与构建时间无关）—— 用于核对线上 Pages 的版本 */
-const INPUTS = ['src/shell.html', 'src/app.css', 'src/data.js', 'src/globe.js', 'src/provider.js', 'src/ai.js',
+const INPUTS = ['src/shell.html', 'src/app.css', 'src/data.js', 'src/globe.js', 'src/provider.js', 'src/ai.js', 'src/aiconfig.js',
   'src/map.js', 'src/app-chain.js', 'src/app.js', 'build.mjs',
   'data/china.geo.json', 'data/world110.geo.json', 'vendor/echarts.min.js',
   'fonts/PlexRegular-sub.woff2', 'fonts/PlexBold-sub.woff2'];

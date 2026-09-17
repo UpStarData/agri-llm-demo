@@ -490,11 +490,30 @@
       k === im.id ? '当前' : D.imports[k].origin.split(' · ')[0] + ' · 点击切换')).join(''));
   }
 
-  /* AI 模式徽标：真实模型已连接 / 规则演示 / 加载中 / 错误后降级 */
+  /* AI 模式徽标：真实模型已连接 / 未配置 / 加载中 / 规则演示 / 错误后降级 */
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function aiModeBadge() {
     const P = window.AGRI_PROVIDER;
     const st = P ? P.state : { mode: 'rule', detail: '规则演示' };
-    return `<span class="ai-mode ${st.mode}" id="aiMode" title="${st.reason || st.lastError || ''}">${st.detail}</span>`;
+    return `<span class="ai-mode ${st.mode}" id="aiMode" title="${esc(st.reason || st.lastError || '')}">${esc(st.detail)}</span>`;
+  }
+  const fmtT = t => { if (!t) return '—'; const d = new Date(t); if (isNaN(d)) return '—';
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  /* 状态行：运行模式 + key 状态（只末尾 4 位）+ 最后成功 / 失败时间；失败时给错误详情 */
+  function aiStateLine() {
+    const P = window.AGRI_PROVIDER;
+    if (!P) return '';
+    const st = P.state;
+    const mode = !st.proxy ? '公开静态版（无安全后端）· 规则演示'
+      : st.mode === 'live' ? `真实模型：${st.model || '—'}（${st.provider || '—'}）`
+      : st.mode === 'unconfigured' ? '未配置模型凭证 · 规则演示'
+      : st.mode === 'degraded' ? '连接失败 · 已降级为规则回答'
+      : st.mode === 'detecting' ? '加载中 · 正在检测模型服务' : '规则演示';
+    const key = st.keyConfigured ? `key 已配置（…${st.keyTail || '****'}，来源 ${st.keySource || '—'}）` : 'key 未配置';
+    const line = `${mode} ｜ ${key} ｜ 最后成功 ${fmtT(st.lastOkAt)} ｜ 最后失败 ${fmtT(st.lastErrAt)} ｜ 服务端调用 ${st.calls} 次`;
+    const err = st.lastError && (st.mode === 'degraded' || st.mode === 'unconfigured')
+      ? `<div class="ai-err">错误详情：${esc(st.lastError)}</div>` : '';
+    return `<div id="aiStateInfo">${esc(line)}</div>${err}`;
   }
   function refreshAiMode() {
     const el = $('aiMode');
@@ -503,20 +522,42 @@
     el.className = 'ai-mode ' + st.mode;
     el.textContent = st.detail;
     el.title = st.reason || st.lastError || '';
+    const s = $('aiState');
+    if (s) s.innerHTML = aiStateLine();            // 状态行原地刷新（不动回答区，不丢输入焦点）
   }
+
+  /* ---------- AI 会话状态（对象切换即重置；同一对象内连续追问保留） ---------- */
+  let aiS = { key: undefined, res: null, lastQ: '', turns: 0, history: [] };
+  let aiBusy = false, aiCtl = null;
+  const aiKey = () => (S.sel ? S.sel.type + ':' + S.sel.id : '@global');
+  function aiReset() { aiS = { key: aiKey(), res: null, lastQ: '', turns: 0, history: [] }; }
 
   function aiPanel() {
     const o = S.sel;
     const qs = window.AGRI_AI.presets(o);
-    const label = o ? `${o.label} ｜ ${o.cal}` : '尚未选中对象';
-    const first = window.AGRI_AI.ask(o, qs[0].q);
+    const label = o ? `${o.label} ｜ ${o.cal}` : '未选中对象 · 可问全局问题（不选对象也能提问）';
+    if (aiS.key !== aiKey()) aiReset();
+    /* 空态 = 真正的欢迎 / 示例问题；选中对象时预置该对象的默认问题（对象驱动，换对象即换答案） */
+    const res = aiS.res || (o ? window.AGRI_AI.ask(o, qs[0].q) : null);
+    const body = res ? md(res.a) : md(window.AGRI_AI.welcome());
+    const tags = res ? res.tags : ['欢迎', '示例问题可直接点'];
     return `<div class="panel ai">
-      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small>${aiModeBadge()}</div>
+      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>对象 / 全局都能问</small>${aiModeBadge()}</div>
       <div class="ai-obj">当前对象：${label}</div>
+      <div class="ai-state" id="aiState">${aiStateLine()}</div>
       <div class="ai-qs">${qs.map((x, i) => `<button data-q="${i}">${x.q}</button>`).join('')}</div>
-      <div class="ai-a">${md(first.a)}</div>
-      <div class="ai-tags">${first.tags.map(t => `<span>${t}</span>`).join('')}</div>
-      <div class="ai-in"><input id="aiInput" placeholder="${o ? '针对该对象提问，如：油价涨 20% 会怎样' : '先选中一个数据对象再提问'}"${o ? '' : ' disabled'}><button id="aiSend"${o ? '' : ' disabled'}>提问</button></div>
+      <div class="ai-a" id="aiAnswer">${body}</div>
+      <div class="ai-tags">${tags.map(t => `<span>${t}</span>`).join('')}</div>
+      <div class="ai-in">
+        <input id="aiInput" placeholder="${o ? '继续追问，如：油价涨 20% 会怎样' : '问全局问题，如：红星榴莲销售占比需要哪些数据'}">
+        <button id="aiSend">提问</button>
+        <button id="aiCancel" class="ghost" hidden>取消</button>
+      </div>
+      <div class="ai-acts">
+        <button id="aiRetry" class="ghost"${aiS.lastQ ? '' : ' disabled'}>重试上一条</button>
+        <button id="aiClear" class="ghost">清空会话</button>
+        <span class="ai-turns" id="aiTurns">${aiS.turns} 轮${aiS.history.length ? ' · 连续追问已带上下文' : ''}</span>
+      </div>
     </div>`;
   }
 
@@ -549,27 +590,60 @@
     if (input && send) {
       const go = () => { const q = input.value.trim(); if (!q) return; askCurrent(q, { free: true }); input.value = ''; };
       send.onclick = go;
-      input.onkeydown = e => { if (e.key === 'Enter') go(); };
+      input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
     }
+    const cancel = side.querySelector('#aiCancel');
+    if (cancel) cancel.onclick = () => cancelAsk();
+    const retry = side.querySelector('#aiRetry');
+    if (retry) retry.onclick = () => { if (aiS.lastQ) askCurrent(aiS.lastQ); };
+    const clear = side.querySelector('#aiClear');
+    if (clear) clear.onclick = () => { aiReset(); renderSide(true); toast('已清空本对象会话'); };
   }
 
-  /* ---------- 提问：有同源代理走真实模型，否则回落到规则演示（不白屏） ---------- */
-  let aiBusy = false;
+  /* ---------- 提问：有同源代理且已配置就真实调用，否则回落到规则演示（不白屏） ---------- */
   async function askCurrent(q, opts) {
+    q = String(q || '').trim();
+    if (!q || aiBusy) return;
+    if (aiS.key !== aiKey()) aiReset();
     const o = S.sel;
-    if (!o || aiBusy) return;
     const rule = () => (opts && opts.free) ? window.AGRI_AI.free(o, q) : window.AGRI_AI.ask(o, q);
     const P = window.AGRI_PROVIDER;
-    if (!P || !P.live) { showAnswer(rule()); return; }
-    const selId = o.id;
+    aiS.lastQ = q;
+    if (!P || !P.live) {
+      const res = rule();
+      aiS.res = res; aiS.turns++;
+      showAnswer(res, P && P.proxy && !P.state.keyConfigured ? '未配置模型 · 规则回答' : '');
+      return;
+    }
+    const selId = o ? o.id : '@global';
     aiBusy = true;
+    aiCtl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     showLoading(o, q);
-    const res = await window.AGRI_AI.live(o, q);
-    aiBusy = false;
-    if (S.sel && S.sel.id !== selId) return;            // 请求期间换了对象，丢弃这次结果
-    if (res) { showAnswer(res); refreshAiMode(); return; }
-    showAnswer(rule());
-    refreshAiMode();                                     // 徽标切到「错误后降级」
+    const res = await window.AGRI_AI.live(o, q, {
+      signal: aiCtl ? aiCtl.signal : undefined,
+      cancelled: () => !!aiCtl && aiCtl.signal.aborted,
+      history: aiS.history
+    });
+    aiBusy = false; aiCtl = null;
+    if ((S.sel ? S.sel.id : '@global') !== selId) return;       // 请求期间换了对象，丢弃这次结果
+    aiS.turns++;
+    if (res) {
+      aiS.res = res;
+      aiS.history.push({ role: 'user', content: q }, { role: 'assistant', content: res.a.replace(/^.*?\n\n/s, '') });
+      if (aiS.history.length > 8) aiS.history = aiS.history.slice(-8);
+      showAnswer(res); refreshAiMode(); return;
+    }
+    const st = P.state;
+    const planned = st.lastError && st.lastError.indexOf('已取消') === 0;
+    const rres = rule();
+    aiS.res = rres;
+    showAnswer(rres, planned ? '已取消 · 规则回答' : '真实模型失败 · 已降级');
+    refreshAiMode();                                   // 徽标切到「错误后降级」
+  }
+
+  function cancelAsk() {
+    if (aiCtl) { try { aiCtl.abort(); } catch (e) { /* 已结束 */ } }
+    toast('已取消本次请求');
   }
 
   function showLoading(o, q) {
@@ -578,7 +652,10 @@
     const c = window.AGRI_AI.ctxOf(o);
     a.innerHTML = md(`**加载中**｜正在请求真实模型…\n\n问题：${q}\n上下文：层级 ${c.layer} ｜ 选择 ${c.selection} ｜ 品类 ${c.category}`);
     const t = $('side').querySelector('.ai-tags');
-    if (t) t.innerHTML = '<span>加载中</span>';
+    if (t) t.innerHTML = '<span>加载中</span><span>可点「取消」中止</span>';
+    const send = $('side').querySelector('#aiSend'), cxl = $('side').querySelector('#aiCancel');
+    if (send) send.disabled = true;
+    if (cxl) cxl.hidden = false;                        // 只有请求处理中才禁用发送
   }
   function showAnswer(res, extraTag) {
     const a = $('side').querySelector('.ai-a');
@@ -586,6 +663,12 @@
     a.innerHTML = md(res.a);
     const t = $('side').querySelector('.ai-tags');
     if (t) t.innerHTML = res.tags.concat(extraTag ? [extraTag] : []).map(x => `<span>${x}</span>`).join('');
+    const send = $('side').querySelector('#aiSend'), cxl = $('side').querySelector('#aiCancel');
+    if (send) send.disabled = false;
+    if (cxl) cxl.hidden = true;
+    const retry = $('side').querySelector('#aiRetry'), turns = $('side').querySelector('#aiTurns');
+    if (retry) retry.disabled = !aiS.lastQ;
+    if (turns) turns.textContent = `${aiS.turns} 轮${aiS.history.length ? ' · 连续追问已带上下文' : ''}`;
     S.lastAnswer = res.a;
   }
 
@@ -685,6 +768,12 @@
     renderCrumbs(); renderSide();
     setTimeout(() => { window.AGRI_GLOBE.resize(); if (map2.el) map2.el.resize(); if (map3.el) map3.el.resize(); }, 150);
   }
+  /* 「⚙ AI 配置」：本地演示服务 → 完整配置面板；公开静态版 → 只提示「没有安全后端」+ 本地演示地址。
+     两种分支都在 aiconfig.js 内判定，这里不接触任何 key。 */
+  $('cfgEntry').onclick = () => {
+    if (window.AGRI_AICFG) window.AGRI_AICFG.open();
+    else toast('配置面板未加载');
+  };
   window.addEventListener('resize', () => { if (map2 && map2.el) map2.el.resize(); if (map3 && map3.el) map3.el.resize(); });
 
   window.AGRI_DEBUG = {
@@ -700,6 +789,17 @@
     aiText: () => { const a = $('side').querySelector('.ai-a'); return a ? a.innerText : ''; },
     aiTags: () => Array.from($('side').querySelectorAll('.ai-tags span')).map(x => x.textContent),
     aiMode: () => (window.AGRI_PROVIDER ? window.AGRI_PROVIDER.state : null),
+    aiStateLine: () => { const e = $('aiState'); return e ? e.innerText.replace(/\n/g, ' | ') : ''; },
+    aiPanelReady: () => { const i = $('side').querySelector('#aiInput'); return i ? { disabled: !!i.disabled, placeholder: i.placeholder, hasSend: !!$('side').querySelector('#aiSend'), sendDisabled: !!($('side').querySelector('#aiSend') || {}).disabled, hasCancel: !!$('side').querySelector('#aiCancel'), hasRetry: !!$('side').querySelector('#aiRetry'), hasClear: !!$('side').querySelector('#aiClear') } : null; },
+    aiOpenConfig: () => { if (window.AGRI_AICFG) window.AGRI_AICFG.open(); return !!window.AGRI_AICFG; },
+    aiCfg: () => { const d = document.getElementById('aiCfg'); if (!d) return null; const q = s => d.querySelector(s); return {
+      open: !d.hasAttribute('hidden'),
+      hasKeyInput: !!q('#cfgKey'), keyInputType: q('#cfgKey') ? q('#cfgKey').type : '',
+      keyInputValue: q('#cfgKey') ? q('#cfgKey').value : null,
+      fields: ['#cfgProvider', '#cfgBaseUrl', '#cfgModel', '#cfgTimeout', '#cfgMaxTokens', '#cfgTemp'].map(s => !!q(s)),
+      buttons: ['#cfgTest', '#cfgSave', '#cfgReset', '#cfgRefreshModels', '#cfgImportList', '#cfgClearKey'].map(s => !!q(s)),
+      mode: q('.cfg-mode') ? q('.cfg-mode').textContent : '',
+      bodyText: d.innerText || '' }; },
     aiCtx: () => window.AGRI_AI.ctxOf(S.sel),
     ask: q => { const r = window.AGRI_AI.ask(S.sel, q); showAnswer(r); return r.a; },
     askLive: q => askCurrent(q),
