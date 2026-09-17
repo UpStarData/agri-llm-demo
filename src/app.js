@@ -217,7 +217,6 @@
   function renderSide(keepScroll) {
     const side = $('side');
     if (!side) return;
-    const scroll = keepScroll ? 0 : 0;
     let html = '';
     const sel = S.sel;
 
@@ -397,7 +396,10 @@
 
     html += aiPanel();
     side.innerHTML = html;
-    wireSide(scroll);
+    // 换对象 = 换面板：滚动位置必须回到顶部，否则新面板的标题会被上一次的滚动位置截掉
+    // （同一对象内重绘，例如环节/主体切换，保留当前位置）
+    if (!keepScroll) side.scrollTop = 0;
+    wireSide();
   }
 
   function aiPanel() {

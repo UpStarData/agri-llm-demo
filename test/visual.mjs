@@ -245,6 +245,8 @@ async function desktop1440(browser) {
     lg2 && lg2.items.join(' / '));
   const ov2 = await page.evaluate(sels => __P.overlaps(sels), ['#scene-l2 .scene-head', '#legendL2', '#scene-l2 .scene-hint']);
   check('L2：层头 / 图例 / 提示三块浮层互不重叠', ov2.hits.length === 0, ov2.hits.join(', ') || '0 重叠');
+  await page.waitForFunction(() => window.AGRI_DEBUG.state().l2.lit >= 14, null, { timeout: 9000 });   // 截图取稳定态
+  await page.mouse.move(6, 6); await sleep(250);
   await page.screenshot({ path: path.join(SHOTS, '13-l2-national-1440.png') });
 
   const scale = await page.evaluate(() => window.AGRI_DEBUG.bubbleScale());
@@ -258,6 +260,8 @@ async function desktop1440(browser) {
   check('L2：进口直达线裁剪在图内（不出现图外游离虚线）', await page.evaluate(() => window.AGRI_DEBUG.directClip()));
   check('L2：图例与图层开关联动（勾选后图例进入开态且图层叠加）',
     lg2on.directOn === true && (await state(page)).l2.direct === true && await page.locator('#directToggle').isChecked());
+  await page.waitForFunction(() => window.AGRI_DEBUG.state().l2.lit >= 14, null, { timeout: 9000 });
+  await page.mouse.move(6, 6); await sleep(250);
   await page.screenshot({ path: path.join(SHOTS, '14-l2-direct-1440.png') });
   await page.locator('#lgDirect').click();
   await sleep(900);
@@ -308,6 +312,12 @@ async function desktop1440(browser) {
   await clickMapPoint(page, 'l2', [85.5, 40]);                // 新疆
   await sleep(500);
   const selInfo = await page.evaluate(() => ({ sel: window.AGRI_DEBUG.selLabel(), lit: window.AGRI_DEBUG.state().l2.lit }));
+  const panelScroll = await page.evaluate(() => { const el = document.querySelector('#side');
+    const head = document.querySelector('#side .panel .phead');
+    return { top: el.scrollTop, headY: Math.round(head.getBoundingClientRect().y), panelY: Math.round(el.getBoundingClientRect().y) }; });
+  check('地图选中对象后：右侧面板回到顶部（面板标题不被上一次的滚动位置截掉）',
+    panelScroll.top === 0 && panelScroll.headY <= panelScroll.panelY + 40,
+    `scrollTop=${panelScroll.top} 标题y=${panelScroll.headY} 面板y=${panelScroll.panelY}`);
   check('L2：选中省份 → 地图进入「选中态」（其余省份与无关调运线压到背景层）', selInfo.sel === 'prov:新疆' && selInfo.lit === 14, `sel=${selInfo.sel} lit=${selInfo.lit}`);
 
   /* --- L3 --- */
