@@ -498,8 +498,8 @@
     map2 = window.createChinaMap('mapL2');
     map3 = window.createChinaMap('mapL3');
     map2.init(); map3.init();
-    if (map2.el) map2.el.getZr().on('click', e => { if (!e.target && S.layer === 2) onBlank(); });
-    if (map3.el) map3.el.getZr().on('click', e => { if (!e.target && S.layer === 3) onBlank(); });
+    if (map2.el) map2.el.getZr().on('click', e => { if (!e.target && S.layer === 2 && !map2.gestureConsumed()) onBlank(); });
+    if (map3.el) map3.el.getZr().on('click', e => { if (!e.target && S.layer === 3 && !map3.gestureConsumed()) onBlank(); });
     bindGlobal();
     renderSide();
   }
@@ -542,6 +542,7 @@
       const r = chart.getDom().getBoundingClientRect();
       return { x: r.x + px[0], y: r.y + px[1] };
     },
+    linePoint: (from, to, t) => map2 && map2.linePoint ? map2.linePoint(from, to, t) : null,
     chipState: () => Array.from(document.querySelectorAll('#chainAxis .chip')).map(c => c.classList.contains('lit')),
     barsW: () => Array.from(document.querySelectorAll('.l3-row .bar i')).map(i => i.style.width),
     /* 分析卡片 / 图例 / 环节轴 / 价格链路的可读状态，供视觉验收断言 */

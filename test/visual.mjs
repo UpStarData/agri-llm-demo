@@ -262,6 +262,48 @@ async function desktop1440(browser) {
   await page.locator('#lgDirect').click();
   await sleep(900);
 
+  /* --- 回归：切换图层后立即点省份（真实鼠标路径 · 一次点击 · 不重试） --- */
+  const geomBefore = await page.evaluate(() => ({ stage: window.AGRI_DEBUG.rect('#stage'),
+    sl: document.querySelector('#stage').scrollLeft, wx: window.scrollX, htmlSL: document.documentElement.scrollLeft,
+    bodySL: document.body.scrollLeft }));
+  const switchPos = await page.evaluate(() => { const r = document.querySelector('#lgDirect').getBoundingClientRect();
+    return { x: r.x + 18, y: r.y + r.height / 2 }; });
+  const provPos = await page.evaluate(() => window.AGRI_DEBUG.mapXY('l2', [85.5, 40]));
+  await page.mouse.click(switchPos.x, switchPos.y);      // 用户：鼠标点图层开关
+  await page.mouse.click(provPos.x, provPos.y);          // 立即点省份（无等待、无重试）
+  await sleep(400);
+  const afterInstant = await page.evaluate(() => ({ sel: window.AGRI_DEBUG.selLabel(), layer: window.AGRI_DEBUG.state().layer,
+    rect: window.AGRI_DEBUG.rect('#stage'), sl: document.querySelector('#stage').scrollLeft, wx: window.scrollX,
+    htmlSL: document.documentElement.scrollLeft, bodySL: document.body.scrollLeft,
+    ids: (() => { const a = document.querySelectorAll('#scene-l2 canvas'); return a.length; })() }));
+  check('L2：切换图层后立即点省份 —— 第一次点击即生效（点亮重绘不得吞掉点击）',
+    afterInstant.sel === 'prov:新疆' && afterInstant.layer === 2,
+    `首次点击 → ${afterInstant.sel || '（未选中）'} layer=${afterInstant.layer}`);
+  check('L2：切换图层 + 立即点省份 全程无版面偏移',
+    afterInstant.rect.x === geomBefore.stage.x && afterInstant.rect.y === geomBefore.stage.y &&
+    afterInstant.sl === 0 && afterInstant.wx === 0 && afterInstant.htmlSL === 0 && afterInstant.bodySL === 0,
+    `stage(${afterInstant.rect.x},${afterInstant.rect.y}) scroll=${afterInstant.sl}/${afterInstant.wx}/${afterInstant.htmlSL}/${afterInstant.bodySL}`);
+  // 兜底不得重复触发：第二次点击应恰好推进一层（而不是被吞或被算两次）
+  await page.mouse.click(provPos.x, provPos.y);
+  check('L2：再点同一省份恰好进入 L3 一次（兜底与 ECharts 不重复处理）', await waitLayer(page, 3));
+  await waitIdle(page); await waitCamera(page);
+  await page.keyboard.press('Escape');
+  await waitLayer(page, 2); await waitIdle(page);
+
+  /* --- 回归：点亮动画进行中点调运线（同一兜底路径） --- */
+  const lineP = await page.evaluate(() => window.AGRI_DEBUG.linePoint('新疆', '广东', 0.5));
+  const sw2 = await page.evaluate(() => { const r = document.querySelector('#lgDirect').getBoundingClientRect();
+    return { x: r.x + 18, y: r.y + r.height / 2 }; });
+  await page.mouse.click(sw2.x, sw2.y);            // 重新点亮（重置点亮序列）
+  await page.mouse.click(lineP.x, lineP.y);        // 点亮进行中立即点调运线（一次点击）
+  await sleep(400);
+  const lineSel = await page.evaluate(() => window.AGRI_DEBUG.selLabel());
+  check('L2：点亮动画进行中点调运线 —— 第一次点击即选中该线', lineSel === 'pline:新疆 → 广东', `选中=${lineSel || '（未选中）'}`);
+  await page.keyboard.press('Escape');
+  await waitLayer(page, 1); await waitIdle(page);
+  check('回到 L1 准备后续版面检查', await enterL2(page, 'CL'));
+  await waitCamera(page);
+
   /* --- L2 选中态：供给 + 流通 视觉区分 --- */
   await clickMapPoint(page, 'l2', [85.5, 40]);                // 新疆
   await sleep(500);

@@ -130,6 +130,93 @@ window.createChinaMap = function (elId) {
       ]
     };
   }
+  /* ---------- 手势兜底 ----------
+     点亮动画每一步都会 setOption 重绘，期间 zrender 的 click 目标可能落在
+     非数据元素（compound）上，ECharts 于是整次点击不派发 —— 表现就是
+     "切换图层后立刻点省份，第一次点击没有反应"。这里用坐标命中兜底：
+     只在该次手势确实没被上层处理时生效，不重试、不猜。 */
+  let gesture = { downAt: 0, pt: null, handledAt: 0, fallbackAt: 0 };
+  const consumedByFallback = () => gesture.fallbackAt > gesture.downAt;
+  const markHandled = () => { if (!consumedByFallback()) gesture.handledAt = performance.now(); };
+
+  function px(lng, lat) { const p = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]);
+    return p && isFinite(p[0]) ? p : null; }
+
+  function hitProvince(x, y) {
+    let best = null, bd = 1e9;
+    Object.keys(D.provinces).forEach(k => {
+      const p = px(D.provinces[k].lng, D.provinces[k].lat); if (!p) return;
+      const d = Math.hypot(p[0] - x, p[1] - y), r = supSize(D.provinces[k].supply) / 2 + 4;
+      if (d <= r && d < bd) { bd = d; best = k; }
+    });
+    return best;
+  }
+  function hitCity(x, y) {
+    const d = D.provinces[curProv]; if (!d) return null;
+    let best = null, bd = 1e9;
+    d.cities.forEach(c => {
+      const p = px(c.lng, c.lat); if (!p) return;
+      const dist = Math.hypot(p[0] - x, p[1] - y), r = citySize(c.out) / 2 + 4;
+      if (dist <= r && dist < bd) { bd = dist; best = c.name; }
+    });
+    return best;
+  }
+  function hitMarket(x, y) {
+    let best = null, bd = 14;
+    D.directFlows.forEach(f => {
+      const p = px(f.mLng, f.mLat); if (!p) return;
+      const d = Math.hypot(p[0] - x, p[1] - y);
+      if (d < bd) { bd = d; best = f; }
+    });
+    return best;
+  }
+  // 与 ECharts lines(curveness .22) 同一条二次曲线上的最近距离
+  function hitLine(x, y) {
+    let best = null, bd = 8;
+    D.interProv.forEach(item => {
+      const a = px(D.provinces[item.from].lng, D.provinces[item.from].lat);
+      const b = px(D.provinces[item.to].lng, D.provinces[item.to].lat);
+      if (!a || !b) return;
+      const cx = (a[0] + b[0]) / 2 - (b[1] - a[1]) * .22, cy = (a[1] + b[1]) / 2 + (b[0] - a[0]) * .22;
+      for (let i = 0; i <= 24; i++) {
+        const t = i / 24, u = 1 - t;
+        const qx = u * u * a[0] + 2 * u * t * cx + t * t * b[0];
+        const qy = u * u * a[1] + 2 * u * t * cy + t * t * b[1];
+        const d = Math.hypot(qx - x, qy - y);
+        if (d < bd) { bd = d; best = item; }
+      }
+    });
+    return best;
+  }
+  function hitTest(x, y) {
+    if (mode === 'l2') {
+      const p = hitProvince(x, y); if (p) { window.AGRI_UI.onProvinceClick(p); return true; }
+      if (directOn) { const f = hitMarket(x, y); if (f) { window.AGRI_UI.onDirectClick(f); return true; } }
+      const l = hitLine(x, y); if (l) { window.AGRI_UI.onPlineClick(l); return true; }
+    } else if (mode === 'l3') {
+      const c = hitCity(x, y); if (c) { window.AGRI_UI.onCityClick(curProv, c); return true; }
+    }
+    return false;
+  }
+  function bindGesture() {
+    if (!chart || chart.__agriGesture) return;
+    chart.__agriGesture = true;
+    const zr = chart.getZr();
+    zr.on('mousedown', e => { gesture.downAt = performance.now(); gesture.pt = { x: e.offsetX, y: e.offsetY }; });
+    zr.on('globalout', () => { gesture.pt = null; });
+    chart.getDom().addEventListener('pointerup', e => {
+      const pt = gesture.pt, downAt = gesture.downAt; gesture.pt = null;
+      if (!pt || performance.now() - downAt > 1500) return;
+      if (Math.hypot(e.offsetX - pt.x, e.offsetY - pt.y) > 6) return;     // 拖动过就不算点击
+      // 下一宏任务再判定：zrender 的 click 派发在同一次输入序列内完成，
+      // 若它已处理（handledAt 更新）就跳过；若它丢了这次点击，则由兜底接手。
+      setTimeout(() => {
+        if (gesture.handledAt > downAt || consumedByFallback()) return;   // 上层已处理
+        if (hitTest(pt.x, pt.y)) gesture.fallbackAt = performance.now();  // 兜底生效，迟到的事件不再重复处理
+      }, 0);
+    });
+  }
+
   function tooltip(p) {
     if (p.seriesId === 'prov') {
       const d = D.provinces[p.name]; if (!d) return p.name;
@@ -152,17 +239,21 @@ window.createChinaMap = function (elId) {
     return best;
   }
   function bindL2Click() {
+    bindGesture();
     chart.off('click');
     chart.on('click', p => {
+      if (consumedByFallback()) return;
+      // 只有真正派发了对象动作才算"已处理"：重绘期间 ECharts 可能把点击解析成
+      // 非数据元素（seriesId 为空），此时必须让坐标兜底接手，而不是当成已处理吞掉。
       const ev = p.event || {};
       if (p.seriesId === 'pline' && ev.offsetX !== undefined) {
         const near = nearestProvince(ev.offsetX, ev.offsetY);
-        if (near) { window.AGRI_UI.onProvinceClick(near); return; }
+        if (near) { markHandled(); window.AGRI_UI.onProvinceClick(near); return; }
       }
-      if (p.seriesId === 'prov') window.AGRI_UI.onProvinceClick(p.name);
-      else if (p.seriesId === 'pline') window.AGRI_UI.onPlineClick(p.data.x);
-      else if (p.seriesId === 'direct' || p.seriesId === 'dmkt') window.AGRI_UI.onDirectClick(p.data.f);
-      else if (p.componentType === 'geo' && D.provinces[p.name]) window.AGRI_UI.onProvinceClick(p.name);
+      if (p.seriesId === 'prov') { markHandled(); window.AGRI_UI.onProvinceClick(p.name); }
+      else if (p.seriesId === 'pline') { markHandled(); window.AGRI_UI.onPlineClick(p.data.x); }
+      else if (p.seriesId === 'direct' || p.seriesId === 'dmkt') { markHandled(); window.AGRI_UI.onDirectClick(p.data.f); }
+      else if (p.componentType === 'geo' && D.provinces[p.name]) { markHandled(); window.AGRI_UI.onProvinceClick(p.name); }
     });
   }
   function renderL2() {
@@ -219,14 +310,16 @@ window.createChinaMap = function (elId) {
     }, { notMerge: true });
     pose = { center: HOMEPOSE.center.slice(), zoom: HOMEPOSE.zoom };
     applyPose();
+    bindGesture();
     chart.off('click');
     chart.on('click', p => {
-      if (p.seriesId === 'city') { window.AGRI_UI.onCityClick(prov, p.name); return; }
+      if (consumedByFallback()) return;
+      if (p.seriesId === 'city') { markHandled(); window.AGRI_UI.onCityClick(prov, p.name); return; }
       // 兜底：城市节点附近（半径 24px）的点击也算点到该城市，避免点不动
       const ev = p.event || {};
       if (ev.offsetX !== undefined) {
         const near = nearestCity(prov, ev.offsetX, ev.offsetY);
-        if (near) window.AGRI_UI.onCityClick(prov, near);
+        if (near) { markHandled(); window.AGRI_UI.onCityClick(prov, near); }
       }
     });
   }
@@ -258,13 +351,27 @@ window.createChinaMap = function (elId) {
     })) }] }, { lazyUpdate: false, silent: true });
   }
 
+  // 供验收使用：调运线在 t 处的页面坐标（与绘制曲线一致，便于确定性点击）
+  function linePoint(from, to, t) {
+    const a = px(D.provinces[from].lng, D.provinces[from].lat);
+    const b = px(D.provinces[to].lng, D.provinces[to].lat);
+    if (!a || !b) return null;
+    const cx = (a[0] + b[0]) / 2 - (b[1] - a[1]) * .22, cy = (a[1] + b[1]) / 2 + (b[0] - a[0]) * .22;
+    const u = 1 - t;
+    const x = u * u * a[0] + 2 * u * t * cx + t * t * b[0];
+    const y = u * u * a[1] + 2 * u * t * cy + t * t * b[1];
+    const r = chart.getDom().getBoundingClientRect();
+    return { x: r.x + x, y: r.y + y };
+  }
+
   window.addEventListener('resize', () => { if (chart) chart.resize(); });
   return {
     get el() { return chart; },
-    init, renderL2, lightUp, setDirect, selectProvince, renderL3, highlightCity, flyTo, setPose, focusProvince,
+    init, renderL2, lightUp, setDirect, selectProvince, renderL3, highlightCity, flyTo, setPose, focusProvince, linePoint,
     home() { return HOMEPOSE; },
     getPose: () => ({ center: pose.center.slice(), zoom: pose.zoom }),
     getLit: () => litCount, getDirect: () => directOn, getMode: () => mode, getSel: () => selProv,
+    gestureConsumed: () => consumedByFallback(),
     resize() { if (chart) chart.resize(); }
   };
 };
