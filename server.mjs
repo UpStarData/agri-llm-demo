@@ -138,7 +138,11 @@ function serve(res, urlPath) {
   if (!abs.startsWith(root) || DENY.test(p)) return json(res, 404, { ok: false, error: 'not found' });
   fs.stat(abs, (err, st) => {
     if (err || !st.isFile()) return json(res, 404, { ok: false, error: 'not found' });
-    res.writeHead(200, { 'content-type': MIME[path.extname(abs).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+    // x-agri-proxy：前端靠这个响应头判断「同源代理在不在」。
+    // 静态托管（GitHub Pages）不会有这个头，于是前端直接进规则演示，
+    // 不会去打 /api/health 而报 404 —— 公开版零控制台错误。
+    res.writeHead(200, { 'content-type': MIME[path.extname(abs).toLowerCase()] || 'application/octet-stream',
+      'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-agri-proxy': '1' });
     fs.createReadStream(abs).pipe(res);
   });
 }
@@ -168,4 +172,5 @@ server.listen(PORT, () => {
   console.log(`  model   = ${MODEL}`);
   console.log(`  key     = ${KEY ? '已配置（来源 ' + KEY_SOURCE + '，值不打印）' : '未配置 → 前端会显示「规则演示」'}`);
   if (LOCAL_UPSTREAM && KEY_SOURCE === 'lmstudio-local') console.log('  提示：LM Studio 若开启「Require API token」，请把有效 token 放进 LM_API_TOKEN 或 AGRI_LLM_API_KEY');
+  console.log('  同源代理标识：响应头 x-agri-proxy: 1（前端据此在「真实模型 / 规则演示」间选择）');
 });

@@ -1,7 +1,7 @@
 {
-  "hash": "c89c8836a4f2",
-  "git": "c503a8b",
-  "builtAt": "2026-09-17T03:43:11.408Z",
+  "hash": "697c095709ce",
+  "git": "11c7207",
+  "builtAt": "2026-09-17T03:52:10.199Z",
   "inputs": [
     "src/shell.html",
     "src/app.css",
@@ -19,5 +19,5 @@
     "fonts/PlexRegular-sub.woff2",
     "fonts/PlexBold-sub.woff2"
   ],
-  "bytes": 2417792
+  "bytes": 2418674
 }

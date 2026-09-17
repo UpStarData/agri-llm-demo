@@ -335,6 +335,32 @@ async function aiPaths(browser) {
   check('AI 离线版：全程 0 外部请求（file:// 下不探测 /api/*）', off.errs.length === 0, off.errs.slice(0, 2).join(' | ') || 'clean');
   await off.ctx.close();
 
+  /* --- 静态托管（模拟 GitHub Pages）：不得去打 /api/*，也不得谎报「未配置凭证」--- */
+  const staticHits = [];
+  const staticSrv = http.createServer((req, res) => {
+    staticHits.push((req.url || '/').split('?')[0]);
+    const u = (req.url || '/').split('?')[0];
+    const abs = path.join(root, u === '/' ? 'index.html' : u.replace(/^\//, ''));
+    if (!abs.startsWith(root) || !fs.existsSync(abs) || fs.statSync(abs).isDirectory()) {
+      res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' }); return res.end('<h1>404</h1>');
+    }
+    res.writeHead(200, { 'content-type': /html$/.test(abs) ? 'text/html; charset=utf-8' : 'application/octet-stream' });
+    fs.createReadStream(abs).pipe(res);
+  });
+  await new Promise(r => staticSrv.listen(0, '127.0.0.1', r));
+  const stHost = await openApp(browser, { width: 1440, height: 900, url: `http://127.0.0.1:${staticSrv.address().port}/` });
+  await stHost.page.locator('#enterBtn').click();
+  await stHost.page.waitForTimeout(1600);
+  const statMode = await stHost.page.evaluate(() => window.AGRI_DEBUG.aiMode());
+  const apiHits = staticHits.filter(u => u === '/api' || u.startsWith('/api/'));
+  check('AI 静态托管（模拟 GitHub Pages）：正确识别为静态托管，不谎报「未配置凭证」',
+    statMode.mode === 'rule' && /静态托管/.test(statMode.reason) && apiHits.length === 0,
+    `reason=${statMode.reason} ｜ 打到 /api/* 的请求 ${apiHits.length} 次`);
+  check('AI 静态托管：公开版零控制台错误（不会为 /api/health 报 404）', stHost.errs.length === 0,
+    stHost.errs.slice(0, 2).join(' | ') || 'clean');
+  await stHost.ctx.close();
+  staticSrv.close();
+
   /* --- 本地服务 + 模拟上游：真实模型通路 --- */
   const mock = await startMockUpstream();
   const PORT = 4711 + (process.pid % 400);

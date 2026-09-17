@@ -30,18 +30,34 @@ window.AGRI_PROVIDER = (function () {
   function emit() { const s = snapshot(); subs.forEach(f => { try { f(s); } catch (e) { /* 订阅者异常不影响主流程 */ } }); }
 
   async function probe() {
-    if (!HTTP) { st.mode = 'rule'; emit(); return snapshot(); }
+    if (!HTTP) { st.mode = 'rule'; st.reason = '静态离线版没有同源代理（/api/chat）'; emit(); return snapshot(); }
     st.mode = 'detecting'; emit();
+    /* 先确认同源代理在不在：本地演示服务的静态响应带 x-agri-proxy: 1。
+       GitHub Pages 等静态托管没有这个头，于是直接进规则演示，
+       不会去打 /api/health 而制造 404 与控制台错误。 */
+    try {
+      const head = await fetch('.', { method: 'HEAD', cache: 'no-store' });
+      if (head.headers.get('x-agri-proxy') !== '1') {
+        st.mode = 'rule'; st.liveAvailable = false;
+        st.reason = '当前是静态托管（GitHub Pages / 静态服务器），没有同源代理';
+        emit(); return snapshot();
+      }
+    } catch (e) {
+      st.mode = 'rule'; st.liveAvailable = false;
+      st.reason = '未检测到同源代理（静态探测不可达）';
+      emit(); return snapshot();
+    }
     try {
       const r = await fetch('api/health', { headers: { accept: 'application/json' }, cache: 'no-store' });
-      const j = await r.json().catch(() => ({}));
+      const ct = r.headers.get('content-type') || '';
+      const j = /json/.test(ct) ? await r.json().catch(() => ({})) : {};
       st.model = (j && j.model) || ''; st.baseUrl = (j && j.baseUrl) || '';
       st.keyConfigured = !!(j && j.keyConfigured);
       if (r.ok && j && j.ok && st.keyConfigured) {
         st.mode = 'live'; st.liveAvailable = true; st.reason = '';
       } else {
         st.mode = 'rule'; st.liveAvailable = false;
-        st.reason = (j && j.reason) || '服务端未配置模型凭证（AGRI_LLM_API_KEY / LM_API_TOKEN）';
+        st.reason = (j && j.reason) || `同源代理异常（HTTP ${r.status}）`;
       }
     } catch (e) {
       st.mode = 'rule'; st.liveAvailable = false;
