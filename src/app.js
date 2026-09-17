@@ -194,7 +194,7 @@
   const kpi = (k, v, cls) => `<div class="kpi"><div class="k">${k}</div><div class="v ${cls || ''}">${v}</div></div>`;
   const relLi = (id, t, v, extra) => `<li data-id="${id}"><span>${t} ${extra || ''}</span><small>${v}</small></li>`;
   function relatedPanel(title, inner) {
-    return `<div class="panel"><div class="phead"><span class="lv">同层对象</span><span style="font-size:11.5px;color:#5b6677">${title}</span></div><ul class="rel">${inner}</ul></div>`;
+    return `<div class="panel"><div class="phead"><span class="lv">同层对象</span><span style="font-size:11.5px;color:#5b6677">${title}</span></div><div class="rel-note">数值均为示意 · 待标定；口径同当前层</div><ul class="rel">${inner}</ul></div>`;
   }
 
   function renderSide(keepScroll) {

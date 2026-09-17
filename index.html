@@ -164,6 +164,7 @@ button{font-family:inherit;cursor:pointer}
 .kpi .v{font-size:17px;font-weight:700;margin-top:2px;color:#12203a}
 .kpi .v.pos{color:#15803d}.kpi .v.neg{color:#b91c1c}
 .kpi .v small{font-size:11px;color:var(--mut);font-weight:400;margin-left:3px}
+.rel-note{font-size:10.5px;color:var(--dim);margin:-4px 0 6px}
 .rel{list-style:none;margin-top:4px}
 .rel li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px dashed var(--hair);
   font-size:12.5px;cursor:pointer;border-radius:7px}
@@ -250,7 +251,7 @@ button{font-family:inherit;cursor:pointer}
       </div>
     </div>
     <div class="land-foot">
-      数据口径：本页所有数值为示意值（待标定），仅用于表达展示结构；口径框架为真实框架（海关贸易量 / 产区供给规模 / 省际调运量 / 环节台账）。
+      数据口径：本页所有数值为示意值（待标定），仅用于表达展示结构；口径框架为真实框架（海关贸易量 / 产区供给规模 / 省际调运量 / 环节台账）。本页为独立阶段性领导演示 Demo，仅用于本次方案讨论，不代表长期农产品交易大模型的产品方案。
     </div>
   </div>
 </div>
@@ -1790,7 +1791,7 @@ window.AGRI_CHAIN = (function () {
   const kpi = (k, v, cls) => `<div class="kpi"><div class="k">${k}</div><div class="v ${cls || ''}">${v}</div></div>`;
   const relLi = (id, t, v, extra) => `<li data-id="${id}"><span>${t} ${extra || ''}</span><small>${v}</small></li>`;
   function relatedPanel(title, inner) {
-    return `<div class="panel"><div class="phead"><span class="lv">同层对象</span><span style="font-size:11.5px;color:#5b6677">${title}</span></div><ul class="rel">${inner}</ul></div>`;
+    return `<div class="panel"><div class="phead"><span class="lv">同层对象</span><span style="font-size:11.5px;color:#5b6677">${title}</span></div><div class="rel-note">数值均为示意 · 待标定；口径同当前层</div><ul class="rel">${inner}</ul></div>`;
   }
 
   function renderSide(keepScroll) {
