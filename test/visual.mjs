@@ -403,6 +403,56 @@ async function desktop1440(browser) {
   await ctx.close();
 }
 
+/* ============================ 1366×768 ============================ */
+async function desktop1366(browser) {
+  const { ctx, page } = await newPage(browser, { width: 1366, height: 768 });
+  const scr = await page.evaluate(() => __P.scroll());
+  check('笔记本 1366×768：首页无溢出且一屏内完成', scr.sh <= scr.ih + 1 && scr.sw <= scr.iw + 1, `scrollH=${scr.sh}/${scr.ih}`);
+  await page.screenshot({ path: path.join(SHOTS, '27-landing-1366.png') });
+
+  await page.locator('#enterBtn').click();
+  await sleep(900);
+  check('1366×768：进入 L2', await enterL2(page, 'CL'));
+  await waitCamera(page);
+  await page.mouse.move(6, 6); await sleep(200);
+  await page.screenshot({ path: path.join(SHOTS, '28-l2-1366.png') });
+
+  await gotoL3(page, [85.5, 40]);
+  await page.screenshot({ path: path.join(SHOTS, '29-l3-province-1366.png') });
+  await clickMapPoint(page, 'l3', [76.73, 39.49]);               // 伽师
+  await sleep(700);
+  const geo = await page.evaluate(() => {
+    const card = document.querySelector('.l3-card');
+    const cr = card.getBoundingClientRect();
+    const rs = sel => { const el = document.querySelector(sel); if (!el) return null; const b = el.getBoundingClientRect();
+      return { x: +b.x.toFixed(1), y: +b.y.toFixed(1), w: +b.width.toFixed(1), h: +b.height.toFixed(1), rl: +b.right.toFixed(1), bt: +b.bottom.toFixed(1) }; };
+    const bad = [];
+    card.querySelectorAll('*').forEach(el => { const b = el.getBoundingClientRect();
+      if (b.width > 0 && (b.right > cr.right + 1 || b.left < cr.left - 1)) bad.push(String(el.className) || el.tagName); });
+    return { card: rs('.l3-card'), facts: rs('.l3-facts'), extras: rs('#l3Extras'), stage: rs('#stage'),
+      scrollW: card.scrollWidth, clientW: card.clientWidth, bad: bad.slice(0, 4),
+      factsVisible: Array.from(document.querySelectorAll('.l3-facts li')).filter(li => li.getBoundingClientRect().width > 1).length,
+      doc: { sw: document.documentElement.scrollWidth, iw: innerWidth } };
+  });
+  check('1366×768 L3：分析卡片内容不溢出（要点列不再越出卡右缘）',
+    geo.scrollW <= geo.clientW + 1 && geo.bad.length === 0,
+    `scrollW/clientW=${geo.scrollW}/${geo.clientW}px 越界元素=${geo.bad.join(',') || '无'}`);
+  check('1366×768 L3：要点 4 条全部可见且在卡内（未靠隐藏糊弄）',
+    geo.factsVisible === 4 && geo.facts.rl <= geo.card.rl + 1 && geo.facts.bt <= geo.card.bt + 1,
+    `可见 ${geo.factsVisible} 条 ｜ 要点右缘 ${geo.facts.rl} ≤ 卡右缘 ${geo.card.rl}`);
+  check('1366×768 L3：卡片在舞台内且页面无横向溢出',
+    geo.extras.y >= geo.stage.y && geo.extras.bt <= geo.stage.bt + 0.5 && geo.extras.rl <= geo.stage.rl + 0.5 && geo.doc.sw <= geo.doc.iw + 1,
+    `card ${geo.extras.w}×${geo.extras.h} @(${geo.extras.x},${geo.extras.y}) ｜ 页宽 ${geo.doc.sw}/${geo.doc.iw}`);
+  await page.screenshot({ path: path.join(SHOTS, '30-l3-city-1366.png') });
+
+  await clickMapPoint(page, 'l3', [76.73, 39.49]);               // → L4
+  check('1366×768：进入 L4', await waitLayer(page, 4));
+  await waitIdle(page); await page.waitForTimeout(2200);
+  await page.mouse.move(6, 6); await sleep(200);
+  await page.screenshot({ path: path.join(SHOTS, '31-l4-1366.png') });
+  await ctx.close();
+}
+
 /* ============================ 1920×1080 ============================ */
 async function desktop1920(browser) {
   const { ctx, page } = await newPage(browser, { width: 1920, height: 1080 });
@@ -519,6 +569,7 @@ const browser = await chromium.launch(exe ? { executablePath: exe } : {});
 const ONLY = process.env.ONLY || '';
 try {
   if (!ONLY || ONLY === '1440') await desktop1440(browser);
+  if (!ONLY || ONLY === '1366') { console.log('\n---- 1366×768 ----'); await desktop1366(browser); }
   if (!ONLY || ONLY === '1920') { console.log('\n---- 1920×1080 ----'); await desktop1920(browser); }
   if (!ONLY || ONLY === 'mobile') { console.log('\n---- 390×844 ----'); await mobile(browser); }
 } finally {
@@ -529,7 +580,7 @@ const failed = results.filter(r => !r.ok);
 fs.writeFileSync(path.join(root, 'test', 'report-visual.md'), [
   '# 农链 AgriLink · 视觉 / 布局验收报告', '',
   `运行时间：${new Date().toISOString()}`, '',
-  `视口：1440×900 · 1920×1080 · 390×844 ｜ 加载：本地单文件 \`file://\`（拦截全部外部请求）`, '',
+  `视口：1366×768 · 1440×900 · 1920×1080 · 390×844 ｜ 加载：本地单文件 \`file://\`（拦截全部外部请求）`, '',
   `## 结果：${results.length - failed.length} / ${results.length} 通过`, '',
   '| # | 检查项 | 结果 | 实测 |', '| --- | --- | --- | --- |',
   ...results.map((r, i) => `| ${i + 1} | ${r.name} | ${r.ok ? '✅' : '❌'} | ${(r.detail || '').replace(/\|/g, '/')} |`), ''

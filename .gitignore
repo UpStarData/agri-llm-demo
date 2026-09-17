@@ -1,4 +1,6 @@
-node_modules/
-shots/
-.DS_Store
 node_modules
+shots/
+shots-r3/
+.DS_Store
+.env
+.probe/

@@ -138,7 +138,8 @@ button{font-family:inherit;cursor:pointer}
 .scene-legend.direct-on .lg-line.direct{opacity:1}
 .scene-legend.direct-on .lg-item.lg-toggle{color:var(--direct-ink);font-weight:600}
 /* 地球悬浮卡 */
-#globe{display:block;width:100%;height:100%;cursor:grab}
+#globe{display:block;width:100%;height:100%;cursor:grab;touch-action:none;
+  -webkit-user-select:none;user-select:none}
 .g-tip{position:absolute;z-index:9;pointer-events:none;background:rgba(255,255,255,.98);border:1px solid var(--line);
   border-radius:11px;padding:9px 12px;font-size:.75rem;box-shadow:0 10px 26px -14px rgba(15,23,42,.4);display:none;max-width:280px;line-height:1.6}
 .g-tip b{font-size:.875rem;display:block;margin-bottom:3px}
@@ -146,17 +147,20 @@ button{font-family:inherit;cursor:pointer}
 .g-tip .t-num{font-weight:700;color:var(--ink);font-size:.875rem;font-variant-numeric:tabular-nums}
 .g-tip .t-cal{color:var(--dim);font-size:.75rem;margin-top:5px;padding-top:5px;border-top:1px dashed var(--hair)}
 .map{position:absolute;inset:0;width:100%;height:100%}
-/* L3 分析卡片栏：位于操作提示之上，不与提示条重叠；非当前层不吃手势 */
-.l3-extras{position:absolute;left:var(--s4);bottom:52px;z-index:8;pointer-events:none;max-width:min(560px,72%)}
+/* L3 分析卡片栏：位于操作提示之上，不与提示条重叠；非当前层不吃手势
+   内容一律在卡内自适应重排（不再有超出卡右缘 78px 的「要点」列）*/
+.l3-extras{position:absolute;left:var(--s4);bottom:52px;z-index:8;pointer-events:none;
+  width:min(680px,calc(100% - 2 * var(--s4)));max-height:calc(100% - 96px);display:flex;flex-direction:column}
 .scene.cur .l3-extras{pointer-events:auto}
 .l3-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:13px;padding:var(--s3) var(--s4);
-  backdrop-filter:blur(6px)}
+  backdrop-filter:blur(6px);min-width:0;overflow:auto}
 .l3-rail-head{display:flex;align-items:baseline;gap:var(--s2);flex-wrap:wrap;padding-bottom:var(--s2);border-bottom:1px dashed var(--hair)}
 .l3-rail-head .lv{font-size:.75rem;letter-spacing:.12em;color:#1d4ed8;background:var(--accent-soft);border-radius:6px;padding:2px 7px;font-weight:700}
 .l3-rail-head b{font-size:.875rem}
 .l3-rail-head .l3-obj-note{font-size:.75rem;color:var(--dim)}
-.l3-rail-body{display:flex;gap:var(--s5);align-items:flex-start;margin-top:var(--s3)}
-.l3-bars-wrap{min-width:230px}
+/* 窄了就换行重排，而不是溢出卡外 */
+.l3-rail-body{display:flex;flex-wrap:wrap;gap:var(--s3) var(--s5);align-items:flex-start;margin-top:var(--s3)}
+.l3-bars-wrap{flex:1 1 230px;min-width:0}
 .l3-card h4{font-size:.75rem;color:var(--mut);font-weight:600;margin-bottom:var(--s2);letter-spacing:.04em}
 .l3-rows{display:flex;flex-direction:column;gap:7px}
 .l3-row{display:grid;grid-template-columns:62px 1fr 42px;align-items:center;gap:var(--s2);font-size:.75rem;color:var(--mut)}
@@ -169,11 +173,40 @@ button{font-family:inherit;cursor:pointer}
 .radar-box{background:#fff;border:1px solid var(--hair);border-radius:11px;padding:4px 8px 6px}
 .radar-cap{font-size:.75rem;color:var(--dim);margin-top:2px}
 .radar-box h4{margin:2px 0 0 2px}
-.l3-facts{list-style:none;display:flex;flex-direction:column;gap:6px;min-width:132px}
+.l3-facts{list-style:none;display:flex;flex-direction:column;gap:6px;flex:1 1 140px;min-width:0}
 .l3-facts li{display:flex;justify-content:space-between;gap:var(--s2);font-size:.75rem;color:var(--dim);
   padding-bottom:5px;border-bottom:1px dashed var(--hair)}
 .l3-facts li:last-child{border-bottom:none;padding-bottom:0}
 .l3-facts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+/* 一键演示路径（L1 右上）：选择贯穿 L1→L4，起点在境外产区 */
+.demo-paths{position:absolute;right:var(--s4);top:var(--s3);z-index:9;display:flex;flex-direction:column;gap:6px;
+  max-width:min(248px,48vw);background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;
+  padding:var(--s2) var(--s3);backdrop-filter:blur(6px)}
+.demo-paths .dp-title{font-size:.75rem;letter-spacing:.1em;color:var(--dim);font-weight:600}
+.demo-paths button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;
+  border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;transition:border-color .2s,background .2s}
+.demo-paths button b{font-size:.78125rem;color:var(--ink)}
+.demo-paths button small{font-size:.75rem;color:var(--dim)}
+.demo-paths button:hover{border-color:#bfd3f7;background:#f8fbff}
+/* 红星在营进口品类 / 部位切换（L4）*/
+.hub-cats{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.hub-cats .hc-title{font-size:.75rem;letter-spacing:.1em;color:var(--dim);font-weight:600;white-space:nowrap}
+.hub-cats .hc{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;
+  border:1px solid var(--line);background:#fff;border-radius:11px;padding:6px 11px;transition:border-color .2s,background .2s}
+.hub-cats .hc b{font-size:.8125rem}
+.hub-cats .hc small{font-size:.75rem;color:var(--dim)}
+.hub-cats .hc:hover{border-color:#bfd3f7}
+.hub-cats .hc.on{border-color:var(--accent);background:#fbfdff;box-shadow:0 10px 26px -18px rgba(29,78,216,.8)}
+.hub-cats .hc-note{font-size:.75rem;color:var(--dim);flex:1 1 220px;line-height:1.6}
+.chain-axis.axis-5{grid-template-columns:repeat(5,1fr)}
+/* L2 集散枢纽标记 —— 红色与品类色阶区分；名称常显 */
+.lg-hub{width:14px;height:14px;border-radius:50%;background:#b91c1c;box-shadow:0 0 0 3px rgba(185,28,28,.18)}
+/* AI 模式徽标：真实模型已连接 / 规则演示 / 加载中 / 错误后降级 */
+.ai .ai-head{flex-wrap:wrap}
+.ai .ai-mode{margin-left:auto;font-size:.75rem;line-height:1.6;border-radius:6px;padding:1px 7px;font-weight:600;white-space:nowrap}
+.ai .ai-mode.live{color:var(--veg-ink);background:#f3fbf5;border:1px solid rgba(22,163,74,.4)}
+.ai .ai-mode.rule,.ai .ai-mode.detecting{color:var(--dim);background:var(--panel-2);border:1px solid var(--hair)}
+.ai .ai-mode.degraded{color:var(--warn);background:var(--warn-bg);border:1px solid #fde68a}
 /* L4 全链路 */
 #scene-l4{display:flex;flex-direction:column;padding:58px var(--s5) var(--s4);gap:var(--s3)}
 .chain-head{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap}
@@ -309,6 +342,23 @@ button{font-family:inherit;cursor:pointer}
   font-size:.8125rem;padding:9px 16px;border-radius:11px;opacity:0;transition:.3s;z-index:200;pointer-events:none;max-width:88vw}
 .toast.on{opacity:1;transform:translateX(-50%)}
 
+/* ================= 矮屏 / 笔记本（≤860px 高）：保证地图上的数据节点不被卡片盖住 ================= */
+@media (min-width:1081px) and (max-height:860px){
+  /* 首页：压缩纵向节奏，1366×768 也能一屏装下 */
+  .land-wrap{padding:28px 32px 22px}
+  .land-hero{padding:var(--s4) 0}
+  .land-title{font-size:clamp(34px,4.6vw,52px)}
+  .land-sub{margin-top:var(--s3);line-height:1.75}
+  .land-struct{margin-top:var(--s4);gap:var(--s2)}
+  .kicker{margin-bottom:var(--s4)}
+  .land-cta{margin-top:var(--s4)}
+  /* L3 卡片：雷达降为缩略（数值仍在要点列与右侧面板），把地图中央让出来 */
+  .l3-rail-body{gap:var(--s2) var(--s5)}
+  .radar-box canvas{width:136px;height:120px}
+  .l3-rows{gap:5px}
+  .l3-card{padding:10px var(--s3)}
+}
+
 /* ================= 移动端 / 窄屏 ================= */
 @media (max-width:1080px){
   #app.on{height:auto;min-height:100vh;overflow:visible}
@@ -325,8 +375,8 @@ button{font-family:inherit;cursor:pointer}
   .scene-legend .lg-item .tag{flex-shrink:0}
   .lg-item.lg-toggle{padding-top:0;border-top:none;margin-top:0;flex-shrink:0;min-height:44px}
   /* L3 分析卡片：紧凑横滚条，不再占掉地图（移动端隐藏雷达，明细保留在右侧面板） */
-  .l3-extras{position:absolute;left:0;right:0;bottom:52px;max-width:none;width:100%;padding:0 var(--s2)}
-  .l3-card{padding:7px var(--s3);overflow-x:auto}
+  .l3-extras{position:absolute;left:0;right:0;bottom:52px;max-width:none;width:100%;padding:0 var(--s2);max-height:calc(100% - 88px)}
+  .l3-card{padding:7px var(--s3);overflow:auto}
   .l3-rail-body{margin-top:6px}
   .l3-rows{gap:5px}
   .l3-row{font-size:.75rem}
@@ -343,7 +393,14 @@ button{font-family:inherit;cursor:pointer}
   .scene.cur .l3-extras{pointer-events:auto}
   #scene-l4{padding:54px var(--s3) var(--s3);overflow-y:auto}
   .chain-axis{grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+  .chain-axis.axis-5{grid-template-columns:repeat(3,1fr)}
   .chip + .chip::before{display:none}
+  .demo-paths{max-width:none;flex-direction:column;gap:5px;padding:6px var(--s2)}
+  .demo-paths .dp-title,.demo-paths button small{display:none}
+  .hub-cats{gap:var(--s2)}
+  .hub-cats .hc{min-height:44px}
+  .hub-cats .hc-note{flex:1 1 100%}
+  .ai .ai-qs button{min-height:44px}
   /* 小屏：环节轴与卡片一起纵向滚动，卡片不再被压扁裁切 */
   .chain-body{grid-template-columns:1fr;flex:none;min-height:0;overflow:visible}
   .price-head{display:none}
@@ -367,6 +424,7 @@ button{font-family:inherit;cursor:pointer}
   .scene-hint{display:none}
   .scene-legend{bottom:var(--s2)}
   .chain-axis{grid-template-columns:repeat(2,1fr)}
+  .chain-axis.axis-5{grid-template-columns:repeat(2,1fr)}
   .metrics{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr 1fr}
   .price-row{grid-template-columns:58px 52px 40px minmax(0,1fr)}
@@ -395,7 +453,7 @@ button{font-family:inherit;cursor:pointer}
       </ul>
       <div class="land-cta">
         <button class="btn-primary" id="enterBtn">进入系统</button>
-        <span class="cta-note">全部数字为示意数据，用于确认展示形态与信息结构</span>
+        <span class="cta-note">全部数字为示意数据，用于确认展示形态与信息结构；进入后右上角有三条一键演示路径</span>
       </div>
     </div>
     <div class="land-foot">
@@ -417,7 +475,13 @@ button{font-family:inherit;cursor:pointer}
       <!-- L1 -->
       <section class="scene" id="scene-l1" data-layer="1">
         <canvas id="globe"></canvas>
-        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外来源国 → 中国</span></div>
+        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外产区/国家 → 中国</span></div>
+        <div class="demo-paths" id="demoPaths">
+          <span class="dp-title">一键演示路径 · 选择贯穿 L1→L4</span>
+          <button data-demo="durian-my"><b>🇲🇾 马来西亚 · 猫山王</b><small>彭亨劳勿 → 长沙红星</small></button>
+          <button data-demo="cherry-cl"><b>🇨🇱 智利 · 车厘子</b><small>中部山谷 → 长沙红星</small></button>
+          <button data-demo="beef-br"><b>🇧🇷 巴西 · 牛肉 / 牛前腱</b><small>马托格罗索 → 长沙红星</small></button>
+        </div>
         <div class="scene-legend" id="legendL1">
           <span class="lg-title">品类 · 图例</span>
           <span class="lg-item"><span class="tag fruit">🍇 水果</span></span>
@@ -472,7 +536,7 @@ button{font-family:inherit;cursor:pointer}
       </section>
       <!-- L4 -->
       <section class="scene" id="scene-l4" data-layer="4" inert>
-        <div class="scene-head"><span class="lv">L4</span><b>城市代表单品全链路</b><span id="l4Sub">六环节：规模 / 成本 / 价格 / 风险</span></div>
+        <div class="scene-head"><span class="lv">L4</span><b>城市代表单品全链路 / 红星品类·部位</b><span id="l4Sub">六环节：规模 / 成本 / 价格 / 风险</span></div>
         <div class="chain-head">
           <h2 id="chainTitle">—</h2>
           <span class="sub" id="chainSub"></span>
@@ -486,7 +550,7 @@ button{font-family:inherit;cursor:pointer}
             <div class="tip-note" id="stageRisk"></div>
           </div>
           <div class="card">
-            <h3>田头 → 批发 → 零售 价格链路<small>元/kg · 示意</small></h3>
+            <h3><span id="priceTitle">田头 → 批发 → 零售 价格链路</span><small>元/kg · 示意</small></h3>
             <div id="priceChain"></div>
             <div class="price-sum" id="priceSum"></div>
           </div>
@@ -507,6 +571,7 @@ button{font-family:inherit;cursor:pointer}
 </div>
 <div class="toast" id="toast"></div>
 
+<script>window.__AGRI_BUILD={"hash":"c89c8836a4f2","git":"c503a8b","builtAt":"2026-09-17T03:43:11.408Z"};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -569,44 +634,93 @@ window.AGRI_DATA = (function () {
     inter: '省际调运量 = 批发市场到货台账折算',
     market: '批发市场到货量，按来源地归并',
     chain: '产区调研 + 环节台账，单季均值',
-    price: '田头价 / 批发均价 / 零售价，元·kg'
+    price: '田头价 / 批发均价 / 零售价，元·kg',
+    slice: '市场经营 / 交易台账层级的品类·部位切片 —— 不冒充海关公开统计口径',
+    hub: '企业 / 媒体表述；红星实业公开资料，本页不作「全国第一」类断言，口径待核'
   };
+
+  /* ---------- 演示中心：湖南 · 长沙红星大市场 ---------- */
+  // 数据骨架统一为：境外产区/国家 → 中国进口与消费 → 湖南集散与消费 → 湖南红星大市场 → 渠道/终端
+  const HONGXING = {
+    key: '长沙',
+    name: '长沙·红星全球农批中心',
+    short: '红星大市场',
+    prov: '湖南', city: '长沙', lat: 28.19, lng: 112.98,
+    role: '湖南及中南区域农副产品集散枢纽',
+    caliber: cal.hub,
+    skeleton: ['境外产区/国家', '中国进口与消费', '湖南集散与消费', '湖南红星大市场', '渠道/终端']
+  };
+
+  /* ---------- 数据口径表（最终评论与 README 同步引用） ---------- */
+  const caliber = [
+    { k: '海关进口量', v: '海关总署公开月度统计，按品类归并（可立即实数化）', use: '数据骨架 第 1–2 段 / L1 全球货源流向', level: '国家' },
+    { k: '批发市场交易量', v: '市场经营 / 交易台账，按来源地归并', use: 'L2 进口直达市场 · L3 湖南集散 · L4 红星', level: '市场' },
+    { k: '产区供给规模', v: '产量 + 外调净流入，折万吨', use: 'L2 全国产区与省际流通', level: '省 / 市' },
+    { k: '省际调运量', v: '批发市场到货台账折算', use: 'L2 省际流通', level: '省际' },
+    { k: '环节台账 / 单季均值', v: '产区调研 + 环节台账', use: 'L4 城市代表单品全链路', level: '环节' },
+    { k: '部位级切片（牛前腱等）', v: cal.slice, use: 'L4 品类 · 部位', level: '市场' },
+    { k: '红星口径', v: cal.hub, use: 'L3 湖南 / 红星节点 · 演示中心', level: '企业' }
+  ];
 
   /* ---------- L1 境外来源国 → 中国 ---------- */
   // vol: 万吨/年（示意） cat: 品类大类 months: 近 12 月节奏（万吨，示意）
   const flows = [
     { id: 'CL', country: '智利', region: '南美', lat: -33.4, lng: -70.6, vol: 128, cat: 'fruit',
-      item: '车厘子 · 西梅', yoy: 18.4, mom: 6.2, mode: '海运冷链', port: '上海 · 广州',
+      item: '车厘子 · 西梅', yoy: 18.4, mom: 6.2, mode: '海运冷链（旺季少量空运）', port: '上海 · 广州',
       months: [3, 2, 2, 1, 1, 3, 9, 21, 26, 24, 14, 6],
-      client: '华东 / 华南 一级批发' },
+      client: '华东 / 华南 一级批发 → 长沙红星等内地一级市场',
+      origins: [{ name: '中部山谷 · 奥希金斯', item: '车厘子' }, { name: '马乌莱', item: '车厘子' }, { name: '阿塔卡马', item: '西梅' }],
+      season: '11 月 – 次年 2 月（南半球夏季，反季供应）',
+      note: '车厘子以智利为国内进口主要来源；旺季走海运，早期批次以空运抢窗口' },
     { id: 'TH', country: '泰国', region: '东南亚', lat: 13.7, lng: 100.5, vol: 96, cat: 'fresh',
       item: '榴莲 · 山竹 · 椰青', yoy: 12.1, mom: 3.4, mode: '公路冷链 + 海运', port: '广州 · 凭祥',
       months: [8, 7, 7, 8, 9, 9, 8, 9, 8, 8, 7, 8],
-      client: '华南 / 华中 批发市场' },
+      client: '华南 / 华中 批发市场',
+      origins: [{ name: '尖竹汶', item: '金枕榴莲' }, { name: '罗勇', item: '金枕榴莲' }, { name: '南部产区', item: '山竹 · 椰青' }],
+      season: '4 月 – 8 月为主季，全年有货',
+      note: '榴莲品类中国进口以泰国为主流量级来源' },
     { id: 'VN', country: '越南', region: '东南亚', lat: 21.0, lng: 105.8, vol: 82, cat: 'fruit',
-      item: '火龙果 · 香蕉 · 芒果', yoy: 9.6, mom: 2.1, mode: '陆运冷链', port: '凭祥 · 东兴',
+      item: '榴莲（Ri6）· 火龙果 · 香蕉', yoy: 9.6, mom: 2.1, mode: '陆运冷链', port: '凭祥 · 东兴',
       months: [6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7],
-      client: '华中 / 西南 批发市场' },
+      client: '华中 / 西南 批发市场',
+      origins: [{ name: '前江 · 隆庆', item: 'Ri6 榴莲' }, { name: '平顺', item: '火龙果' }, { name: '多乐', item: '香蕉' }],
+      season: 'Ri6 主季 5 月 – 8 月，陆运时效优势明显',
+      note: '陆运口岸半径短，是华中到货的时效来源' },
     { id: 'US', country: '美国', region: '北美', lat: 39.0, lng: -98.0, vol: 74, cat: 'fruit',
       item: '柑橘 · 坚果 · 苹果', yoy: -3.2, mom: -1.1, mode: '海运', port: '上海 · 天津',
       months: [7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 5],
-      client: '华东 商超直采' },
+      client: '华东 商超直采',
+      origins: [{ name: '加利福尼亚', item: '柑橘 · 坚果' }, { name: '华盛顿州', item: '苹果' }],
+      season: '柑橘 12 月 – 次年 4 月',
+      note: '以商超直采渠道为主' },
     { id: 'BR', country: '巴西', region: '南美', lat: -23.4, lng: -47.0, vol: 66, cat: 'fresh',
-      item: '冻肉 · 大豆 · 咖啡', yoy: 4.8, mom: 0.8, mode: '海运冷柜', port: '天津 · 青岛',
+      item: '牛肉 · 大豆 · 咖啡', yoy: 4.8, mom: 0.8, mode: '海运冷柜', port: '天津 · 青岛',
       months: [5, 5, 6, 6, 5, 5, 6, 6, 5, 6, 5, 6],
-      client: '全国 加工 / 批发' },
+      client: '全国 加工 / 批发 → 长沙红星等一级市场',
+      origins: [{ name: '马托格罗索', item: '牛肉' }, { name: '戈亚斯', item: '牛肉' }, { name: '南大河', item: '大豆' }],
+      season: '全年均衡到货（南半球产季与北半球互补）',
+      note: '牛肉品类中国进口以巴西为重要 / 主导来源；阿根廷、乌拉圭、澳、新为对照来源' },
     { id: 'NZ', country: '新西兰', region: '大洋洲', lat: -41.2, lng: 174.7, vol: 58, cat: 'fruit',
       item: '猕猴桃 · 牛羊肉', yoy: 7.5, mom: 4.0, mode: '海运冷链', port: '上海 · 深圳',
       months: [6, 6, 5, 4, 4, 4, 4, 4, 5, 5, 5, 6],
-      client: '华东 / 华南 商超' },
+      client: '华东 / 华南 商超',
+      origins: [{ name: '丰盛湾', item: '猕猴桃' }, { name: '坎特伯雷', item: '牛羊肉' }],
+      season: '猕猴桃 4 月 – 10 月',
+      note: '牛肉品类对照来源（草饲为主）' },
     { id: 'AU', country: '澳大利亚', region: '大洋洲', lat: -33.8, lng: 151.2, vol: 52, cat: 'fresh',
       item: '牛肉 · 柑橘 · 燕麦', yoy: -1.4, mom: -2.2, mode: '海运冷柜', port: '上海 · 广州',
       months: [5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5],
-      client: '华东 商超 / 加工' },
+      client: '华东 商超 / 加工',
+      origins: [{ name: '昆士兰', item: '牛肉' }, { name: '新南威尔士', item: '柑橘' }],
+      season: '全年均衡到货',
+      note: '牛肉品类对照来源（谷饲比例较高）' },
     { id: 'MY', country: '马来西亚', region: '东南亚', lat: 3.1, lng: 101.6, vol: 46, cat: 'fresh',
-      item: '棕榈油 · 榴莲 · 燕窝', yoy: 5.2, mom: 1.6, mode: '海运', port: '广州 · 厦门',
+      item: '棕榈油 · 榴莲 · 燕窝', yoy: 5.2, mom: 1.6, mode: '海运 / 空运冷柜', port: '广州 · 厦门',
       months: [4, 4, 4, 4, 3, 4, 4, 4, 4, 4, 3, 4],
-      client: '华南 加工 / 批发' }
+      client: '华南 加工 / 批发 · 华中高端果渠道',
+      origins: [{ name: '彭亨 · 劳勿', item: '猫山王（D197）' }, { name: '彭亨 · 文冬', item: '猫山王' }, { name: '沙巴 / 砂拉越', item: '棕榈油' }],
+      season: '猫山王 6 月 – 8 月与 12 月 – 1 月两个窗口（冷冻果全年）',
+      note: '榴莲品类为小份额高价值来源 —— 不是中国最大的榴莲供应国，量级上远低于泰国、越南' }
   ];
 
   /* ---------- L2 全国产区供给 ---------- */
@@ -711,10 +825,11 @@ window.AGRI_DATA = (function () {
           comp: { 规模: 54, 品质: 84, 成本: 66, 品牌: 78, 冷链: 80 }, feature: '杨梅空运窗口极短，冷链决定溢价' }
       ] },
     '湖南': { supply: 68, cat: 'fresh', lat: 27.6, lng: 111.7, yoy: 3.9, out: 46, in: 74,
-      feature: '一级批发枢纽：长沙红星覆盖中南五省，是本项目内部数据的核心节点',
+      hub: '长沙',
+      feature: '湖南集散枢纽：省会长沙为一级批发集散地，红星全球农批中心（红星大市场）总部与核心市场位于湖南，作为湖南及中南区域农副产品集散枢纽（企业 / 媒体表述，口径待核）；本项目内部数据的核心节点',
       cities: [
-        { name: '长沙', lat: 28.19, lng: 112.98, out: 22, cat: 'fresh', main: '一级批发集散', lead: '红星全球农批中心所在地',
-          comp: { 规模: 84, 品质: 62, 成本: 80, 品牌: 72, 冷链: 76 }, feature: '全国进口果与南菜北运的交汇节点，到货结构最完整' },
+        { name: '长沙', lat: 28.19, lng: 112.98, out: 22, cat: 'fresh', main: '一级批发集散 · 红星大市场', lead: '红星全球农批中心所在地（湖南及中南区域集散枢纽）',
+          comp: { 规模: 84, 品质: 62, 成本: 80, 品牌: 72, 冷链: 76 }, feature: '全国进口果与南菜北运的交汇节点，到货结构最完整；榴莲 / 车厘子 / 牛肉等进口品类在此汇聚再分拨到中南五省渠道' },
         { name: '永州江永', lat: 25.27, lng: 111.34, out: 12, cat: 'fruit', main: '香柚 · 夏橙', lead: '湘南特色产区',
           comp: { 规模: 56, 品质: 74, 成本: 74, 品牌: 60, 冷链: 56 }, feature: '香柚秋冬上市，外调以华中为主' }
       ] },
@@ -764,12 +879,22 @@ window.AGRI_DATA = (function () {
     { from: '广西', to: '北京', vol: 14, cat: 'fruit', item: '火龙果 · 沃柑', yoy: 4.4 }
   ];
 
-  /* ---------- L2 进口货源直达市场（图层开关，示意） ---------- */
+  /* ---------- L2 进口货源直达市场（图层开关，示意）---------- */
+  // 红星（长沙）作为演示中心，承接三条一键演示路径的进口直达
   const directFlows = [
-    { id: 'D1', country: '越南', lat: 21.0, lng: 105.8, market: '长沙·红星', mProv: '湖南', mLat: 28.19, mLng: 112.98, vol: 18, cat: 'fruit', item: '火龙果 · 芒果', yoy: 11.2 },
+    { id: 'D1', country: '越南', lat: 21.0, lng: 105.8, market: '长沙·红星', mProv: '湖南', mLat: 28.19, mLng: 112.98, vol: 18, cat: 'fruit', item: '火龙果 · 芒果', yoy: 11.2, hub: true },
     { id: 'D2', country: '智利', lat: -33.4, lng: -70.6, market: '上海·辉展', mProv: '上海', mLat: 31.23, mLng: 121.47, vol: 24, cat: 'fruit', item: '车厘子', yoy: 16.8 },
     { id: 'D3', country: '泰国', lat: 13.7, lng: 100.5, market: '广州·江南', mProv: '广东', mLat: 23.13, mLng: 113.26, vol: 16, cat: 'fresh', item: '榴莲 · 椰青', yoy: 13.5 },
-    { id: 'D4', country: '新西兰', lat: -41.2, lng: 174.7, market: '北京·新发地', mProv: '北京', mLat: 39.9, mLng: 116.4, vol: 12, cat: 'fruit', item: '猕猴桃', yoy: 6.2 }
+    { id: 'D4', country: '新西兰', lat: -41.2, lng: 174.7, market: '北京·新发地', mProv: '北京', mLat: 39.9, mLng: 116.4, vol: 12, cat: 'fruit', item: '猕猴桃', yoy: 6.2 },
+    { id: 'D5', country: '马来西亚', lat: 3.1, lng: 101.6, market: '长沙·红星', mProv: '湖南', mLat: 28.19, mLng: 112.98, vol: 4.2, cat: 'fruit', item: '猫山王（冷冻整果）', yoy: 21.6, hub: true, caliber: cal.market },
+    { id: 'D6', country: '智利', lat: -33.4, lng: -70.6, market: '长沙·红星', mProv: '湖南', mLat: 28.19, mLng: 112.98, vol: 6.8, cat: 'fruit', item: '车厘子', yoy: 18.4, hub: true, caliber: cal.market },
+    { id: 'D7', country: '巴西', lat: -23.4, lng: -47.0, market: '长沙·红星', mProv: '湖南', mLat: 28.19, mLng: 112.98, vol: 9.6, cat: 'fresh', item: '牛肉 · 牛前腱', yoy: 7.4, hub: true, caliber: cal.slice }
+  ];
+
+  /* ---------- L2 集散枢纽标记（演示中心）---------- */
+  const hubs = [
+    { id: 'HX', name: '长沙·红星', prov: '湖南', lat: HONGXING.lat, lng: HONGXING.lng,
+      role: HONGXING.role, caliber: HONGXING.caliber, note: '企业 / 媒体表述，口径待核' }
   ];
 
   /* ---------- L4 城市代表单品全链路（示意 / 待标定） ---------- */
@@ -859,8 +984,122 @@ window.AGRI_DATA = (function () {
         4: [{ n: '长沙·红星全球农批中心', t: '一级批发', v: '峰值日到货 5200 吨', p: '批发 7.1 元/kg', c: '二级市场 / 社区店' }],
         5: [{ n: '社区店 + 电商渠道', t: '零售', v: '周销 9.8 吨', p: '零售 11.6 元/kg', c: '终端消费者' }]
       }
+    },
+    /* ---------- 演示中心：红星大市场（品类 / 部位 + 终端建议）---------- */
+    '长沙': {
+      kind: 'hub', city: '长沙', prov: '湖南', product: '红星大市场 · 进口品类集散', emoji: '🏛️',
+      season: '全年',
+      headline: HONGXING.role + '（企业 / 媒体表述，口径待核）；本页以红星为演示中心，把「境外产区 → 中国进口 → 湖南集散 → 红星 → 渠道/终端」串成一条可核对的链',
+      caliber: HONGXING.caliber,
+      catalog: ['durian-my', 'cherry-cl', 'beef-br']
     }
   };
+
+  /* ---------- 进口品类 · 部位全链路（5 段 = 数据骨架）---------- */
+  // 每条的 stages 严格对应数据骨架：境外产区/国家 → 中国进口与消费 → 湖南集散与消费 → 湖南红星大市场 → 渠道/终端
+  const H = (name, icon, scale, cost, price, risk, caliber) => ({ name, icon, scale, cost, price, risk, caliber });
+  const imports = {
+    'durian-my': {
+      id: 'durian-my', title: '榴莲 · 猫山王', emoji: '🥭', cat: 'fruit',
+      origin: '马来西亚 · 彭亨（劳勿 / 文冬）', item: '猫山王（D197）',
+      shareNote: '马来西亚在中国榴莲进口中属**小份额高价值**来源：量级上远低于泰国（金枕）与越南（Ri6），不可写成中国最大的榴莲供应国。',
+      caliber: [cal.trade, cal.market],
+      stages: [
+        H('境外产区/国家', '🌏', '彭亨州劳勿 / 文冬连片果园（示意）；猫山王主季 6–8 月，次季 12–1 月',
+          '园口收购 18–26 元/kg', '园口价 22 元/kg',
+          '产量与上市窗口高度集中；单园果规格波动大，树熟落果模式决定不能长距离鲜运', cal.trade),
+        H('中国进口与消费', '🛃', '以小份额高价值形态进入：冷冻整果为主，广州 / 厦门等口岸入境（示意）',
+          '关税 + 冷链海运 6–9 元/kg', '到岸成本 31 元/kg',
+          '空运窗口舱位紧、冷冻果解冻损耗；消费者对「树熟 / 冷冻」认知不统一', cal.trade),
+        H('湖南集散与消费', '🚚', '到岸后经一级口岸市场转运至长沙一级集散，再向中南五省分拨（示意）',
+          '干线 + 城市配送 3.4 元/kg', '长沙集散成本 36 元/kg',
+          '跨省干线温控与时效；到货批次不一致会放大终端价差', cal.market),
+        H('湖南红星大市场', '🏛️', '红星全球农批中心：中南区域集散枢纽（企业 / 媒体表述，口径待核）；猫山王日到货为小批量高频次（示意）',
+          '档口费用 1.8 元/kg', '红星批发价 46 元/kg',
+          '小批量高频次带来价格跳动；若按黄金位置价叙事，易让客户对量级产生误解', cal.hub),
+        H('渠道/终端', '🛒', '会员店 / 精品果连锁 / 电商与甜品渠道（示意）',
+          '零售环节成本 5.2 元/kg', '零售价 68 元/kg',
+          '终端对规格一致性要求高，二级果转冻果 / 果肉渠道不畅', cal.price)
+      ],
+      price: [{ k: '境外园口', v: 22, note: '彭亨劳勿 / 文冬' }, { k: '口岸到岸', v: 31, note: '冷冻整果' },
+        { k: '长沙集散', v: 36, note: '一级集散' }, { k: '红星批发', v: 46, note: '小批量高频次' }, { k: '终端零售', v: 68, note: '会员店 / 精品果' }],
+      advice: [
+        '渠道分层：冷冻整果走精品商超与会员店，贴「树熟落果 + D197 溯源」；果肉/切果走电商与甜品渠道',
+        '定价：以规格一致性（单果重 / 房数）设分级价，不用产地名称代替等级',
+        '口径：马来西亚是**小份额高价值**来源，叙事上不要暗示它是主量供应国；量级结论靠海关公开统计' ],
+      peers: [{ k: '泰国 · 金枕', v: '主流量级来源' }, { k: '越南 · Ri6', v: '陆运时效来源' }, { k: '马来西亚 · 猫山王', v: '小份额高价值（本页选择）' }]
+    },
+    'cherry-cl': {
+      id: 'cherry-cl', title: '车厘子', emoji: '🍒', cat: 'fruit',
+      origin: '智利 · 中部山谷（奥希金斯 / 马乌莱）', item: '车厘子',
+      shareNote: '车厘子以智利为国内进口的**主要来源**；南半球夏季反季供应，与国产大樱桃形成季节互补。',
+      caliber: [cal.trade, cal.market],
+      stages: [
+        H('境外产区/国家', '🌏', '奥希金斯 / 马乌莱为主产区，采收 11 月 – 次年 1 月（示意）',
+          '园口收购 12–20 元/kg', '园口价 16 元/kg',
+          '采收窗口短、雨季裂果；品种（桑娜/拉宾斯/瑞姬娜）成熟期错开是缓解手段', cal.trade),
+        H('中国进口与消费', '🚢', '旺市海运冷链为主（航程 3–4 周），早期高品质批次走空运抢窗口；上海 / 广州入境（示意）',
+          '海运冷链 5–8 元/kg（空运 25+ 元/kg）', '到岸成本 24 元/kg',
+          '海运时效与到货集中度：春节前到货叠加导致价格踩踏；空运抢早窗口但成本高', cal.trade),
+        H('湖南集散与消费', '🚚', '从上海 / 广州一级口岸转长沙一级集散，向中南五省分拨（示意）',
+          '干线 + 城市配送 2.8 元/kg', '长沙集散成本 28 元/kg',
+          '冷链断链会直接表现为果柄干缩、软果率上升', cal.market),
+        H('湖南红星大市场', '🏛️', '春节前 4–6 周为到货与价格高峰；红星作为一级集散完成分规格与分渠道（示意）',
+          '档口费用 1.6 元/kg', '红星批发价 34 元/kg',
+          '到货节奏与终端需求错配是最大风险，价格波动大于成本波动', cal.hub),
+        H('渠道/终端', '🛒', '商超 / 会员店 / 电商与社区团购（示意）',
+          '零售环节成本 4.0 元/kg', '零售价 56 元/kg',
+          '零售端按 J / JJ / 3J 分级定价，规格与新鲜度决定溢价', cal.price)
+      ],
+      price: [{ k: '境外园口', v: 16, note: '中部山谷' }, { k: '口岸到岸', v: 24, note: '海运冷链' },
+        { k: '长沙集散', v: 28, note: '一级集散' }, { k: '红星批发', v: 34, note: '春节窗口' }, { k: '终端零售', v: 56, note: '会员店 / 电商' }],
+      advice: [
+        '节奏：把采购窗口对齐春节前 4–6 周，避开到货叠加期',
+        '分级：按 J / JJ / 3J + 品种标签定价，不把「智利」当成等级',
+        '对口渠道：商超与会员店主推大果径高等级；电商与社区团购承接二级果' ],
+      peers: [{ k: '智利', v: '主要来源（本页选择）' }, { k: '新西兰 / 澳洲', v: '空运抢早窗口' }, { k: '国产大樱桃（山东 / 大连）', v: '夏季互补，不构成同季竞争' }]
+    },
+    'beef-br': {
+      id: 'beef-br', title: '牛肉 · 牛前腱', emoji: '🥩', cat: 'fresh',
+      origin: '巴西 · 马托格罗索 / 戈亚斯', item: '牛肉（部位级：牛前腱）',
+      cut: '牛前腱（前腿腱子肉）',
+      sliceNote: cal.slice,
+      shareNote: '牛肉品类中国进口以**巴西为重要 / 主导来源**；阿根廷、乌拉圭、澳大利亚、新西兰为合理对照来源。',
+      caliber: [cal.trade, cal.slice, cal.market],
+      stages: [
+        H('境外产区/国家', '🌏', '马托格罗索 / 戈亚斯为主产州，全年均衡出栏（示意）',
+          '产区采购成本 26–32 元/kg', '产区价 30 元/kg',
+          '草饲谷饲差异、疫病与检验检疫准入变动是主要变量', cal.trade),
+        H('中国进口与消费', '🚢', '海运冷柜经天津 / 青岛等口岸入境，全程冷冻（示意）',
+          '海运冷柜 + 关税 8–12 元/kg', '到岸成本 42 元/kg',
+          '冻转鲜仍发生；准入政策与关税变动会直接改变到货结构', cal.trade),
+        H('湖南集散与消费', '🚚', '从口岸冷库转长沙一级集散，再向中南五省分拨（示意）',
+          '干线冷柜 + 城配 2.6 元/kg', '长沙集散成本 45 元/kg',
+          '冷链断链导致胴体表面氧化与反复冻融', cal.market),
+        H('湖南红星大市场', '🏛️', '红星档口按部位切分交易，牛前腱是餐饮 / 卤味渠道的常备部位（示意）',
+          '档口费用 1.4 元/kg', '红星批发价 49 元/kg',
+          '部位级行情波动大：同一胴体不同部位价差可达 2–3 倍，不能用一个均价代替部位价', cal.slice),
+        H('渠道/终端', '🛒', '餐饮供应 / 卤味加工 / 商超零售（示意）',
+          '零售环节成本 4.4 元/kg', '零售价 66 元/kg',
+          '卤味与餐饮渠道对部位稳定性要求高，换部位比换国别影响更大', cal.price)
+      ],
+      price: [{ k: '境外产区', v: 30, note: '马托格罗索' }, { k: '口岸到岸', v: 42, note: '海运冷柜' },
+        { k: '长沙集散', v: 45, note: '一级集散' }, { k: '红星批发', v: 49, note: '牛前腱部位价' }, { k: '终端零售', v: 66, note: '商超 / 卤味' }],
+      advice: [
+        '口径：牛前腱是**市场经营 / 交易台账层级的品类·部位切片**，不冒充海关公开统计口径；对外汇报需分开标注',
+        '对照：巴西为主，阿根廷 / 乌拉圭 / 澳大利亚 / 新西兰作为品质与价格对照来源',
+        '渠道：卤味与餐饮主推部位稳定性；商超零售用部位标签替代笼统的「进口牛肉」' ],
+      peers: [{ k: '巴西', v: '重要 / 主导来源（本页选择）' }, { k: '阿根廷', v: '草饲对照' }, { k: '乌拉圭', v: '草饲对照' },
+        { k: '澳大利亚', v: '谷饲对照' }, { k: '新西兰', v: '草饲对照' }]
+    }
+  };
+
+  /* ---------- 一键演示路径 ---------- */
+  const demoPaths = [
+    { id: 'durian-my', flowId: 'MY', country: '马来西亚', label: '猫山王', sub: '彭亨 · 劳勿', prov: '湖南', city: '长沙' },
+    { id: 'cherry-cl', flowId: 'CL', country: '智利', label: '车厘子', sub: '中部山谷', prov: '湖南', city: '长沙' },
+    { id: 'beef-br', flowId: 'BR', country: '巴西', label: '牛肉 / 牛前腱', sub: '马托格罗索', prov: '湖南', city: '长沙' }
+  ];
 
   /* ---------- 关联变量推演（跨层，示意） ---------- */
   const drivers = [
@@ -881,7 +1120,8 @@ window.AGRI_DATA = (function () {
   ];
 
   return {
-    PERIOD, ORG, cal, flows, provinces, interProv, directFlows, chains, drivers, scenarios,
+    PERIOD, ORG, cal, caliber, HONGXING, imports, demoPaths,
+    flows, provinces, interProv, directFlows, hubs, chains, drivers, scenarios,
     CAT: { fruit: '#f97316', veg: '#17a34a', fresh: '#2563eb' },
     CATN: { fruit: '水果', veg: '蔬菜', fresh: '生鲜·粮油' },
     CHINA: { lat: 35, lng: 104, name: '中国' },
@@ -902,13 +1142,16 @@ window.AGRI_GLOBE = (function () {
   let cv, ctx, W = 0, H = 0, R = 0, cx = 0, cy = 0, dpr = 1;
   let rings = [];                 // [[ [lon,lat]... ], ...]
   let arcs = [], nodes = [];
-  let rot = -100, tilt = 16, spin = 0.055;   // rot: 中央经度（度/帧步）
+  let rot = -100, tilt = 16, spin = 0.055;   // rot: 中央经度（度）  tilt: 相机纬度（度，即纵向视角）
+  const LAT_MIN = -80, LAT_MAX = 80;         // 纬度 clamp：不过极点、不翻转
+  const DRAG_LON = 0.28, DRAG_LAT = 0.22;    // 拖动灵敏度（px → 度）
   let raf = null, running = false, last = 0;
   let phase = 'idle', phaseT = 0;
   let sel = null, hover = null, focusLon = null, focusTween = null;
   let hit = { nodes: [], arcs: [] };         // 每帧重建的屏幕命中表
   let onSelect = () => {}, onHover = () => {};
   let dragging = false, dragMoved = 0, pauseSpin = 0;
+  const drag = { id: null, x: 0, y: 0 };     // 自追踪的指针位置（不再依赖 movementX/Y，触摸也能二维旋转）
 
   /* ---------- 投影 ---------- */
   function proj(lon, lat, lift) {
@@ -1176,7 +1419,7 @@ window.AGRI_GLOBE = (function () {
       hit.nodes.push({ id: nd.id, x: p.x, y: p.y, r: Math.max(12, sz + 6), china: !!nd.china });
       ctx.globalAlpha = 1;
     });
-    state.rot = rot; state.phase = phase;
+    state.rot = rot; state.lat = tilt; state.phase = phase;
   }
 
   /* ---------- 交互 ---------- */
@@ -1187,14 +1430,26 @@ window.AGRI_GLOBE = (function () {
     if (best) return { kind: 'arc', id: best };
     return null;
   }
+  /* 二维旋转：经度 + 纬度；鼠标与触控走同一条 pointer 路径 */
+  function dragBy(dx, dy) {
+    rot -= dx * DRAG_LON;
+    tilt = clamp(tilt + dy * DRAG_LAT, LAT_MIN, LAT_MAX);
+    focusTween = null;
+    if (rot > 180) rot -= 360; if (rot < -180) rot += 360;
+  }
   function bind() {
     const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-    cv.addEventListener('pointerdown', e => { dragging = true; dragMoved = 0; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointerdown', e => {
+      dragging = true; dragMoved = 0; drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY;
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* 已被释放 */ }
+    });
     cv.addEventListener('pointermove', e => {
       const p = pos(e);
       if (dragging) {
-        dragMoved += Math.abs(e.movementX || 0);
-        rot -= (e.movementX || 0) * 0.28; focusTween = null;
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        drag.x = e.clientX; drag.y = e.clientY;
+        // movementX/Y 在触摸 pointer 事件上通常是 0，所以一律用自追踪的坐标差
+        if (dx || dy) { dragBy(dx, dy); dragMoved += Math.abs(dx) + Math.abs(dy); }
         return;
       }
       const h = pick(p.x, p.y);
@@ -1207,18 +1462,19 @@ window.AGRI_GLOBE = (function () {
       }
     });
     cv.addEventListener('pointerup', e => {
-      const wasDrag = dragMoved > 6; dragging = false; pauseSpin = 2400;
+      const wasDrag = dragMoved > 6; dragging = false; drag.id = null; pauseSpin = 2400;
       if (wasDrag) return;
       const p = pos(e); const h = pick(p.x, p.y);
       if (!h) { onSelect(null); return; }
       onSelect(h);   // 由 app 决定：选中 / 再次点击进入 L2
     });
-    cv.addEventListener('pointerleave', () => { dragging = false; hover = null; onHover(null, null); });
+    cv.addEventListener('pointercancel', () => { dragging = false; drag.id = null; });
+    cv.addEventListener('pointerleave', () => { dragging = false; drag.id = null; hover = null; onHover(null, null); });
     cv.addEventListener('touchstart', () => { pauseSpin = 3000; }, { passive: true });
   }
 
   const DATA = { CAT: {} };
-  const state = { rot: 0, phase: 'idle', grownOrder: [], grownCount: 0 };
+  const state = { rot: 0, lat: 16, phase: 'idle', grownOrder: [], grownCount: 0 };
 
   const api = {
     mount, start, stop, playIntro, state,
@@ -1236,9 +1492,97 @@ window.AGRI_GLOBE = (function () {
     clearHover() { hover = null; },
     pick,
     hits: () => ({ nodes: hit.nodes.map(n => ({ id: n.id, x: n.x, y: n.y, china: n.china })), arcs: hit.arcs.slice(0, 60) }),
-    debug: () => ({ rot, phase, sel, grownOrder: state.grownOrder.slice(), grownCount: state.grownOrder.length, arcs: arcs.map(a => ({ id: a.id, grow: +a.grow.toFixed(2) })) })
+    /* 供验收断言：二维旋转后的实际投影坐标（视角真的变了，而不是只改了状态位） */
+    project: (lon, lat) => { const p = proj(lon, lat); return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(4) }; },
+    debug: () => ({ rot, lat: tilt, latRange: [LAT_MIN, LAT_MAX], phase, sel,
+      grownOrder: state.grownOrder.slice(), grownCount: state.grownOrder.length,
+      arcs: arcs.map(a => ({ id: a.id, grow: +a.grow.toFixed(2) })) })
   };
   return api;
+})();
+
+</script>
+<script>
+/* ============================================================
+   AI chat provider adapter —— 统一「真实模型 / 规则演示」两条通路
+   - 凭证永远只在服务端（server.mjs）读取环境变量，前端 bundle 不含任何 key
+   - file:// 静态版（GitHub Pages / 双击打开）没有同源代理 → 直接进入规则演示，
+     不发起任何网络请求（离线可用 + 零控制台错误）
+   - 模式：加载中(detecting) / 真实模型已连接(live) / 规则演示(rule) / 错误后降级(degraded)
+   ============================================================ */
+window.AGRI_PROVIDER = (function () {
+  const HTTP = typeof location !== 'undefined' && /^https?:$/.test(location.protocol);
+  const LABEL = {
+    detecting: '加载中 · 正在检测模型服务',
+    live: '真实模型已连接',
+    rule: '规则演示',
+    degraded: '错误后降级 · 规则演示'
+  };
+  const st = {
+    mode: 'rule', liveAvailable: false, busy: false,
+    model: '', baseUrl: '', keyConfigured: false, lastError: '',
+    reason: HTTP ? '' : '静态离线版没有同源代理（/api/chat）'
+  };
+  const subs = [];
+
+  function snapshot() {
+    return {
+      mode: st.mode, label: LABEL[st.mode], model: st.model, baseUrl: st.baseUrl,
+      keyConfigured: st.keyConfigured, busy: st.busy, lastError: st.lastError, reason: st.reason,
+      detail: LABEL[st.mode] + (st.mode === 'live' && st.model ? ' · ' + st.model : (st.reason ? ' · ' + st.reason : ''))
+    };
+  }
+  function emit() { const s = snapshot(); subs.forEach(f => { try { f(s); } catch (e) { /* 订阅者异常不影响主流程 */ } }); }
+
+  async function probe() {
+    if (!HTTP) { st.mode = 'rule'; emit(); return snapshot(); }
+    st.mode = 'detecting'; emit();
+    try {
+      const r = await fetch('api/health', { headers: { accept: 'application/json' }, cache: 'no-store' });
+      const j = await r.json().catch(() => ({}));
+      st.model = (j && j.model) || ''; st.baseUrl = (j && j.baseUrl) || '';
+      st.keyConfigured = !!(j && j.keyConfigured);
+      if (r.ok && j && j.ok && st.keyConfigured) {
+        st.mode = 'live'; st.liveAvailable = true; st.reason = '';
+      } else {
+        st.mode = 'rule'; st.liveAvailable = false;
+        st.reason = (j && j.reason) || '服务端未配置模型凭证（AGRI_LLM_API_KEY / LM_API_TOKEN）';
+      }
+    } catch (e) {
+      st.mode = 'rule'; st.liveAvailable = false;
+      st.reason = '未检测到本地演示服务（/api/health 不可达）';
+    }
+    emit(); return snapshot();
+  }
+
+  /* 返回 {content, model}；失败返回 null，并把面板切到「错误后降级」 */
+  async function chat(messages, context) {
+    if (!HTTP || !st.liveAvailable) return null;
+    st.busy = true; if (st.mode !== 'degraded') st.mode = 'live'; emit();
+    try {
+      const r = await fetch('api/chat', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: messages || [], context: context || {} })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j || !j.ok) throw new Error((j && j.error) || ('HTTP ' + r.status));
+      st.busy = false; st.lastError = ''; st.mode = 'live'; emit();
+      return { content: String(j.content || ''), model: j.model || st.model };
+    } catch (e) {
+      st.busy = false; st.lastError = String((e && e.message) || e);
+      st.mode = 'degraded';                       // 显示降级；liveAvailable 保持 true，下次提问可重试
+      emit();
+      return null;
+    }
+  }
+
+  return {
+    onChange(f) { subs.push(f); },
+    probe, chat,
+    get state() { return snapshot(); },
+    get mode() { return st.mode; },
+    get live() { return st.mode === 'live' && st.liveAvailable; }
+  };
 })();
 
 </script>
@@ -1267,7 +1611,7 @@ window.AGRI_AI = (function () {
   }
 
   /* -------- 应答主体 -------- */
-  function ask(o, q) {
+  function askCore(o, q) {
     if (!o) return { a: '**尚未选中对象**\n\n在左侧点击一个数据对象（贸易弧、国家节点、省份气泡、调运线、城市节点、环节卡片），我会基于这个对象回答——回答内容随对象变化。\n\n口径：全部为示意数据 · 待标定。', tags: ['示意 · 待标定'] };
     const d = D(), P = d.PERIOD, tag = ['示意 · 待标定'];
     const head = `**${o.label}** ｜ 周期 ${P} ｜ 口径：${o.cal || '示意'}`;
@@ -1344,7 +1688,7 @@ window.AGRI_AI = (function () {
   }
 
   /* -------- 自由提问：关键词 → 对象化推演 -------- */
-  function free(o, q) {
+  function freeCore(o, q) {
     const d = D();
     const name = o ? o.label : '当前对象';
     const base = `**${name}** ｜ 自由提问 ｜ 周期 ${d.PERIOD}`;
@@ -1364,6 +1708,76 @@ window.AGRI_AI = (function () {
     return { a: `${base}\n\n- 我能基于当前对象回答：量价节奏、成本拆解、链条卡点、关联变量推演（油价 / 汇率 / 天气 / 政策）、6–12 个月方向性判断。\n- 当前对象口径：${o && o.cal ? o.cal : d.cal.supply}。\n- 口径：示意 · 待标定。`, tags: ['示意 · 待标定'] };
   }
 
+  /* ============================================================
+     上下文封套：每条回答（含真实模型回答）必须携带
+     当前层级 / 当前选择 / 红星市场 / 品类 / 数据口径 —— 并把模拟数据标注为示意·待标定
+     ============================================================ */
+  const LAYER_NAME = { 1: 'L1 全球货源流向', 2: 'L2 全国产区与省际流通', 3: 'L3 省区产业分析', 4: 'L4 城市代表单品全链路' };
+  function layerNo() {
+    if (window.AGRI && window.AGRI.layer) return window.AGRI.layer;
+    if (window.AGRI_DEBUG) { try { return window.AGRI_DEBUG.state().layer; } catch (e) { /* 启动中 */ } }
+    return 1;
+  }
+  function hongxing() { return (D() && D().HONGXING) || { name: '长沙·红星全球农批中心', prov: '湖南', role: '湖南及中南区域集散枢纽', caliber: '' }; }
+  function catOf(o) {
+    if (!o) return '未指定';
+    const d = D();
+    if (o.type === 'flow' || o.type === 'market' || o.type === 'prov') return d.CATN[o.raw.cat] || '未指定';
+    if (o.type === 'city') return o.raw.main || (d.CATN[o.raw.cat] || '未指定');
+    if (o.type === 'chain') return o.raw.product || '未指定';
+    if (o.type === 'hub') return '进口品类 · 部位（可切换）';
+    return d.CATN[o.raw && o.raw.cat] || o.label || '未指定';
+  }
+  function ctxOf(o) {
+    const d = D(), n = layerNo(), hx = hongxing();
+    return {
+      layer: `${n} · ${LAYER_NAME[n] || '—'}`,
+      selection: o ? `${o.label}（${o.type}）` : '未选中对象',
+      hongxing: `${hx.name} · ${hx.prov} · ${hx.role}（企业 / 媒体表述，口径待核）`,
+      category: catOf(o),
+      caliber: (o && o.cal) || d.cal.supply,
+      nature: `全部为示意数据 · ${d.ORG} · 周期 ${d.PERIOD}`
+    };
+  }
+  function ctxLine(c) {
+    return `**上下文**｜层级 ${c.layer}｜选择 ${c.selection}｜红星 ${c.hongxing}｜品类 ${c.category}｜口径 ${c.caliber}｜数据属性 ${c.nature}`;
+  }
+  function withCtx(res, o) {
+    const c = ctxOf(o);
+    const tags = (res.tags || []).concat(['示意 · 待标定']);
+    return { a: ctxLine(c) + '\n\n' + res.a, tags: tags.filter((t, i) => tags.indexOf(t) === i), ctx: c };
+  }
+
+  const SYS = [
+    '你是「农链 AgriLink」的产业分析师，服务于湖南红星大市场（长沙·红星全球农批中心）为中心的农产品进口与集散分析。',
+    '硬约束：',
+    '1) 本页所有数值都是示意数据（待标定），不是官方统计；回答里凡引用数值必须显式标注「示意 · 待标定」。',
+    '2) 不得编造或暗示官方口径，不得声称红星是「全国第一」；「中南最大」类表述只能注明为企业 / 媒体表述。',
+    '3) 马来西亚猫山王是中国榴莲进口中的小份额高价值来源，不得写成中国最大榴莲供应国；牛肉以巴西为重要 / 主导来源；车厘子以智利为主要来源。',
+    '4) 部位级品类（如牛前腱）属于市场经营 / 交易台账层级的切片，不得冒充海关公开统计口径。',
+    '5) 数据骨架：境外产区/国家 → 中国进口与消费 → 湖南集散与消费 → 湖南红星大市场 → 渠道/终端。',
+    '输出：中文，先给判断，再给依据，最后给口径提示；控制在 220 字以内，可用短列表。'
+  ].join('\n');
+
+  /* 真实模型通路：失败返回 null（由调用方降级到规则回答，不白屏） */
+  async function live(o, q) {
+    const P = window.AGRI_PROVIDER;
+    if (!P || !P.live) return null;
+    const c = ctxOf(o);
+    const res = await P.chat(
+      [{ role: 'system', content: SYS }, { role: 'user', content: `【当前上下文】\n层级：${c.layer}\n选择：${c.selection}\n红星市场：${c.hongxing}\n品类：${c.category}\n口径：${c.caliber}\n数据属性：${c.nature}\n\n【问题】${q}` }],
+      c
+    );
+    if (!res) return null;
+    return withCtx({
+      a: `**真实模型回答**（${res.model}）\n\n${res.content}\n\n— 口径复核：${c.caliber}；数值均为示意 · 待标定，引用前需标定。`,
+      tags: ['真实模型']
+    }, o);
+  }
+
+  function ask(o, q) { return withCtx(askCore(o, q), o); }
+  function free(o, q) { return withCtx(freeCore(o, q), o); }
+
   function peak(m) { const mx = Math.max.apply(null, m), i = m.indexOf(mx); return `${i + 1} 月（峰值 ${mx} 万吨/月）`; }
   function altCat(c) { return c === 'fruit' ? '国产同季柑橘 / 苹果' : c === 'veg' ? '国产设施蔬菜' : '国产粳稻 / 粮油'; }
   function riskScore(s) { let n = 0; if (/霜冻|冻|阴雨|病|天气/.test(s.risk)) n++; if (/损耗|集中|踩踏|波动/.test(s.risk)) n++; if (/依赖|不足|紧张|缺口|空载|窗口/.test(s.risk)) n++; return n; }
@@ -1373,7 +1787,7 @@ window.AGRI_AI = (function () {
     return Object.entries(comp).sort((a, b) => a[1] - b[1])[0][0];
   }
 
-  return { presets, ask, free };
+  return { presets, ask, free, live, ctxOf, hongxing, layerNo };
 })();
 
 </script>
@@ -1475,12 +1889,15 @@ window.createChinaMap = function (elId) {
   /* ---------- L2 ---------- */
   function l2Option() {
     const provs = Object.keys(D.provinces);
+    const hubs = D.hubs || [];
     // 窄屏地图小：只给"规模较大"的产区常显名称，其余靠悬浮/右侧列表，避免标签压住气泡
     const compact = !!(chart && chart.getWidth() < 560);
     const directs = directOn ? D.directFlows.map(f => ({
       coords: [[f.lng, f.lat], [f.mLng, f.mLat]], value: f.vol, f: f,
       lineStyle: { width: 1 + f.vol / 12, color: '#7c3aed', opacity: .8, curveness: .34, type: 'dashed' }
     })) : [];
+    // 同一市场的多个来源只画一个市场标记，避免同名标签叠在一起
+    const markets = Object.values(D.directFlows.reduce((a, f) => { if (!a[f.market]) a[f.market] = f; return a; }, {}));
     return {
       backgroundColor: 'transparent',
       geo: baseGeo({ regions: provinceRegions(null) }),
@@ -1493,12 +1910,18 @@ window.createChinaMap = function (elId) {
           effect: directs.length ? { show: true, period: 6, trailLength: .3, symbol: 'circle', symbolSize: 3, color: '#fff' } : { show: false },
           lineStyle: { curveness: .34 } },
         { id: 'dmkt', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 4,
-          data: directOn ? D.directFlows.map(f => ({ name: f.market, value: [f.mLng, f.mLat], f: f })) : [],
+          data: directOn ? markets.map(f => ({ name: f.market, value: [f.mLng, f.mLat], f: f })) : [],
           symbolSize: 9, rippleEffect: { scale: 2.4, brushType: 'stroke' }, itemStyle: { color: '#7c3aed' },
-          // 直达市场只有 4 个且是图层主角：名称必须常显（此前被 hideOverlap 静默隐藏，
+          // 直达市场数量少且是图层主角：名称必须常显（此前被 hideOverlap 静默隐藏，
           // 画面上只剩没有名字的空环）。加浅底避免与省份名重叠时读不清。
           label: { show: true, formatter: p => p.data.name, position: 'right', color: '#5b21b6', fontSize: 11, fontWeight: 600,
             backgroundColor: 'rgba(255,255,255,.86)', padding: [1, 4], borderRadius: 4 } },
+        // 集散枢纽（演示中心）：红星的常显标记，与品类色阶区分开
+        { id: 'hub', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 6,
+          data: hubs.map(h => ({ name: h.name, value: [h.lng, h.lat], h: h })),
+          symbolSize: 15, rippleEffect: { scale: 3.2, brushType: 'stroke' }, itemStyle: { color: '#b91c1c', borderColor: '#fff', borderWidth: 2 },
+          label: { show: true, formatter: p => p.data.name + ' · 集散枢纽', position: 'right', color: '#7f1d1d',
+            fontSize: 11, fontWeight: 700, backgroundColor: 'rgba(255,255,255,.92)', padding: [2, 5], borderRadius: 4 } },
         { id: 'prov', type: 'scatter', coordinateSystem: 'geo', zlevel: 5,
           data: provs.map(p => ({ name: p, value: [D.provinces[p].lng, D.provinces[p].lat], sup: D.provinces[p].supply, cat: D.provinces[p].cat })),
           symbolSize: (v, p) => supSize(p.data.sup),
@@ -1543,6 +1966,16 @@ window.createChinaMap = function (elId) {
     });
     return best;
   }
+  function hitHub(x, y) {
+    const hs = D.hubs || [];
+    let best = null, bd = 16;
+    hs.forEach(h => {
+      const p = px(h.lng, h.lat); if (!p) return;
+      const d = Math.hypot(p[0] - x, p[1] - y);
+      if (d < bd) { bd = d; best = h; }
+    });
+    return best;
+  }
   function hitMarket(x, y) {
     let best = null, bd = 14;
     D.directFlows.forEach(f => {
@@ -1572,6 +2005,7 @@ window.createChinaMap = function (elId) {
   }
   function hitTest(x, y) {
     if (mode === 'l2') {
+      const h = hitHub(x, y); if (h) { window.AGRI_UI.onHubClick(h); return true; }
       const p = hitProvince(x, y); if (p) { window.AGRI_UI.onProvinceClick(p); return true; }
       if (directOn) { const f = hitMarket(x, y); if (f) { window.AGRI_UI.onDirectClick(f); return true; } }
       const l = hitLine(x, y); if (l) { window.AGRI_UI.onPlineClick(l); return true; }
@@ -1607,6 +2041,7 @@ window.createChinaMap = function (elId) {
     if (p.seriesId === 'pline') { const x = p.data.x; return `<b>${x.from} → ${x.to}</b> ｜ ${x.item}<br>调运量 ${x.vol} 万吨（示意）｜ 同比 ${x.yoy > 0 ? '+' : ''}${x.yoy}%`; }
     if (p.seriesId === 'direct') { const f = p.data.f; return `<b>${f.country} → ${f.market}</b>（进口直达）<br>${f.item} ｜ ${f.vol} 万吨（示意）`; }
     if (p.seriesId === 'dmkt') { const f = p.data.f; return `<b>${f.market}</b><br>进口直达 ${f.vol} 万吨（${f.country}，${f.item}）`; }
+    if (p.seriesId === 'hub') { const h = p.data.h; return `<b>${h.name} · 集散枢纽</b><br>${h.role}<br><span style="color:#98a2b3">${h.note} · 再次点击进入 ${h.prov} 省区层</span>`; }
     return p.name || '';
   }
   // 气泡与连线重叠时：优先把点击算给省份气泡（避免点不动产区）
@@ -1633,6 +2068,7 @@ window.createChinaMap = function (elId) {
         if (near) { markHandled(); window.AGRI_UI.onProvinceClick(near); return; }
       }
       if (p.seriesId === 'prov') { markHandled(); window.AGRI_UI.onProvinceClick(p.name); }
+      else if (p.seriesId === 'hub') { markHandled(); window.AGRI_UI.onHubClick(p.data.h); }
       else if (p.seriesId === 'pline') { markHandled(); window.AGRI_UI.onPlineClick(p.data.x); }
       else if (p.seriesId === 'direct' || p.seriesId === 'dmkt') { markHandled(); window.AGRI_UI.onDirectClick(p.data.f); }
       else if (p.componentType === 'geo' && D.provinces[p.name]) { markHandled(); window.AGRI_UI.onProvinceClick(p.name); }
@@ -1754,6 +2190,8 @@ window.createChinaMap = function (elId) {
     getPose: () => ({ center: pose.center.slice(), zoom: pose.zoom }),
     getLit: () => litCount, getDirect: () => directOn, getMode: () => mode, getSel: () => selProv,
     gestureConsumed: () => consumedByFallback(),
+    hubPoint: () => { const h = (D.hubs || [])[0]; if (!h) return null; const p = px(h.lng, h.lat); const r = chart.getDom().getBoundingClientRect();
+      return p ? { x: r.x + p[0], y: r.y + p[1] } : null; },
     resize() { if (chart) chart.resize(); }
   };
 };
@@ -1769,6 +2207,7 @@ window.AGRI_CHAIN = (function () {
   const D = window.AGRI_DATA;
   const $ = id => document.getElementById(id);
   let cur = null, stage = 0, hooks = {}, timers = [], radarRaf = null;
+  let curImportId = null;
   let l3 = { prov: null, city: null, avg: {}, mode: 'prov' };
 
   /* ---------------- 结构条（渐进出现，绑定当前对象） ---------------- */
@@ -1881,10 +2320,27 @@ window.AGRI_CHAIN = (function () {
   }
 
   /* ---------------- L4 ---------------- */
-  function render(key, cfg) {
+  const hubChain = () => (D.chains[cur] && D.chains[cur].kind === 'hub') ? D.chains[cur] : null;
+  const hubIm = () => { const ch = hubChain(); return ch ? (D.imports[curImportId] || D.imports[ch.catalog[0]]) : null; };
+  const stagesOf = () => { const im = hubIm(); if (im) return im.stages; const ch = D.chains[cur]; return (ch && ch.stages) || []; };
+  const entsOf = i => { if (hubIm()) return []; const ch = D.chains[cur]; return (ch && ch.entities[i]) || []; };
+
+  function render(key, cfg, importId) {
     hooks = cfg || {}; cur = key; stage = 0;
     const ch = D.chains[key];
     if (!ch) return false;
+    if (ch.kind === 'hub') return renderHub(ch, importId || (hubChain() && curImportId) || ch.catalog[0]);
+    curImportId = null;
+    const hubRow = document.getElementById('hubCats');
+    if (hubRow) hubRow.remove();
+    return renderCity(key, ch);
+  }
+
+  /* 城市代表单品全链路（原有链路，不变） */
+  function renderCity(key, ch) {
+    const pt = document.getElementById('priceTitle');
+    if (pt) pt.textContent = '田头 → 批发 → 零售 价格链路';
+    $('chainAxis').classList.remove('axis-5');
     $('chainTitle').innerHTML = `${ch.city} · ${ch.emoji} ${ch.product}<span class="mark">示意/待标定</span>`;
     $('chainSub').textContent = `${ch.prov} ｜ 上市季 ${ch.season} ｜ ${ch.headline}`;
     // 环节轴：序号角标（旧版 .stage .no）+ 本环节成本，形成"流程 + 数值"的连续叙事
@@ -1906,18 +2362,69 @@ window.AGRI_CHAIN = (function () {
     selectStage(0);
     return true;
   }
+
+  /* L4 · 红星大市场：品类 / 部位 + 终端建议（五段 = 数据骨架） */
+  function renderHub(ch, importId) {
+    const hx = D.HONGXING;
+    const im = D.imports[importId] || D.imports[ch.catalog[0]];
+    curImportId = im.id;
+    const pt = document.getElementById('priceTitle');
+    if (pt) pt.textContent = '境外园口 → 口岸 → 集散 → 红星 → 终端 价格链路';
+    $('chainTitle').innerHTML = `${hx.short} · ${im.emoji} ${im.title}<span class="mark">示意/待标定</span>`;
+    $('chainSub').textContent = `${hx.prov}·${hx.city} ｜ ${im.origin} ｜ ${im.item}${im.cut ? '（' + im.cut + '）' : ''} ｜ 数据骨架：${hx.skeleton.join(' → ')}`;
+    $('chainAxis').classList.add('axis-5');
+    let row = document.getElementById('hubCats');
+    if (!row) {
+      row = document.createElement('div');
+      row.id = 'hubCats'; row.className = 'hub-cats';
+      $('chainAxis').parentElement.insertBefore(row, $('chainAxis'));
+    }
+    row.innerHTML = `<span class="hc-title">红星在营进口品类 · 部位</span>`
+      + ch.catalog.map(k => { const x = D.imports[k];
+        return `<button class="hc${k === im.id ? ' on' : ''}" data-imp="${k}"><b>${x.emoji} ${x.title}</b><small>${x.origin}</small></button>`; }).join('')
+      + `<span class="hc-note">口径：${im.caliber.join(' ｜ ')}${im.sliceNote ? '；' + im.sliceNote : ''}</span>`;
+    row.querySelectorAll('button.hc').forEach(b => b.onclick = () => pickImport(b.dataset.imp));
+    // 五段环节轴 = 数据骨架（境外产区 → 中国进口 → 湖南集散 → 红星 → 渠道/终端）
+    $('chainAxis').innerHTML = im.stages.map((s, i) =>
+      `<div class="chip" data-i="${i}"><span class="no">${i + 1}/${im.stages.length}</span><div class="ic">${s.icon}</div><b>${s.name}</b><span class="cv">${s.price}</span></div>`).join('');
+    $('chainAxis').querySelectorAll('.chip').forEach(el => { el.onclick = () => { selectStage(+el.dataset.i); }; });
+    // 价格链路：段值 + 对源头价的倍数 + 加价最大的一段高亮
+    const base = im.price[0].v, top = im.price[im.price.length - 1].v;
+    let hot = { r: 0, i: 0 };
+    im.price.forEach((p, i) => { if (!i) return; const r = p.v / im.price[i - 1].v; if (r > hot.r) hot = { r, i }; });
+    $('priceChain').innerHTML = `<div class="price-head"><span>环节</span><span>价格</span><span>×对源头</span><span>占零售价</span><span>环节说明</span></div>`
+      + im.price.map((p, i) => {
+        const pct = Math.round(p.v / top * 100);
+        return `<div class="price-row${i === hot.i ? ' hot' : ''}"><span class="pk">${p.k}</span><span class="pv">${p.v}</span><span class="px">×${(p.v / base).toFixed(2)}</span><div class="pbar"><i data-w="${pct}%"></i></div><span class="pn">${p.note}</span></div>`;
+      }).join('');
+    $('priceSum').innerHTML = `源头 → 零售累计 <b>×${(top / base).toFixed(2)}</b>（${base} → ${top} 元/kg，示意）；加价最大的一段是 <b>${im.price[hot.i - 1].k} → ${im.price[hot.i].k}（×${hot.r.toFixed(2)}）</b>；口径：${im.caliber.join(' ｜ ')}。`;
+    selectStage(0);
+    return true;
+  }
+
+  /* 切换红星在营品类 / 部位（一个选择贯穿全链路） */
+  function pickImport(id) {
+    const ch = hubChain();
+    if (!ch || ch.catalog.indexOf(id) < 0) return false;
+    renderHub(ch, id);
+    if (hooks.onPickImport) hooks.onPickImport(id);
+    light();
+    return true;
+  }
   function selectStage(i) {
-    const ch = D.chains[cur];
-    if (!ch) return;
+    const st = stagesOf();
+    if (!st.length) return;
+    const n = st.length, im = hubIm();
     stage = i;
     $('chainAxis').querySelectorAll('.chip').forEach(el => el.classList.toggle('on', +el.dataset.i === i));
-    const s = ch.stages[i];
-    $('stageName').textContent = `${i + 1}/6 · ${s.name}`;
-    const dots = Array.from({ length: 6 }, (_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('');
-    $('stageMetrics').innerHTML = [['规模', s.scale], ['成本', s.cost], ['价格', s.price], ['链路位置', `<span class="dots">${dots}</span>`]]
-      .map(([k, v]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}${k === '链路位置' ? '' : '<span class="mark">示意</span>'}</div></div>`).join('');
+    const s = st[i];
+    $('stageName').textContent = `${i + 1}/${n} · ${s.name}`;
+    const dots = Array.from({ length: n }, (_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('');
+    $('stageMetrics').innerHTML = [['规模', s.scale], ['成本', s.cost], ['价格', s.price],
+      ['口径', im ? (s.caliber || D.cal.market) : `<span class="dots">${dots}</span>`, true]]
+      .map(([k, v, plain]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}${plain ? '' : '<span class="mark">示意</span>'}</div></div>`).join('');
     $('stageRisk').innerHTML = `<b>风险敞口：</b>${s.risk}`;
-    const ents = ch.entities[i] || [];
+    const ents = entsOf(i);
     const old = document.getElementById('stageEnts');
     if (old) old.remove();
     if (ents.length) {
@@ -1966,8 +2473,8 @@ window.AGRI_CHAIN = (function () {
   }
   function drawerOpen() { return $('drawer').classList.contains('open'); }
 
-  return { renderProvinceL3, l3Focus, render, selectStage, light, openDrawer, closeDrawer, drawerOpen,
-    get stage() { return stage; }, get city() { return cur; }, get l3Mode() { return l3.mode; } };
+  return { renderProvinceL3, l3Focus, render, selectStage, light, openDrawer, closeDrawer, drawerOpen, pickImport,
+    get stage() { return stage; }, get city() { return cur; }, get l3Mode() { return l3.mode; }, get importId() { return curImportId; } };
 })();
 
 </script>
@@ -1985,14 +2492,15 @@ window.AGRI_CHAIN = (function () {
   const S = window.AGRI = {
     layer: 0, sel: null, flying: false, seen: {}, log: [],
     l1: { flow: null },
-    l2: { prov: null, line: null, direct: null },
+    l2: { prov: null, line: null, direct: null, hub: null },
     l3: { prov: null, city: null },
-    l4: { city: null, stage: 0 },
+    l4: { city: null, stage: 0, importId: null },
     cam: { 2: null, 3: { prov: null, pose: null } }
   };
   const UI = window.AGRI_UI = {};
 
   let map2 = null, map3 = null, wheelOut = 0, lastWheel = 0;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   /* ---------------- 工具 ---------------- */
   const sceneEl = l => $('scene-l' + l);
@@ -2049,7 +2557,7 @@ window.AGRI_CHAIN = (function () {
     if (n === 2) {
       if (!S.seen[2]) { map2.renderL2(); S.pendingFocusChina = S.l1.flow; }
       else map2.setPose(S.cam[2] || map2.home());
-      S.l2.prov = null; S.l2.line = null;
+      S.l2.prov = null; S.l2.line = null; S.l2.hub = null;
       map2.selectProvince(null);            // 回到 L2 = 恢复未选中态（与上层位姿一致）
     }
     if (n === 3) {
@@ -2063,7 +2571,12 @@ window.AGRI_CHAIN = (function () {
     if (n === 4) {
       const key = S.l4.city || chainKeyFor(S.l3.prov) || '伽师';
       S.l4.city = key;
-      window.AGRI_CHAIN.render(key, chainHooks());
+      const ch = D.chains[key];
+      if (ch && ch.kind === 'hub') {
+        const cat = ch.catalog.slice();
+        if (cat.indexOf(S.l4.importId) < 0) S.l4.importId = cat[0];   // 保住当前选择，否则回到第一个品类
+      } else S.l4.importId = null;
+      window.AGRI_CHAIN.render(key, chainHooks(), S.l4.importId);
       window.AGRI_CHAIN.closeDrawer();
     }
   }
@@ -2130,7 +2643,7 @@ window.AGRI_CHAIN = (function () {
     if (!c) return;
     if (S.l3.city === city) {                                  // 再次点击 → L4
       if (D.chains[city]) { S.l4.city = city; goTo(4); }
-      else toast('该产区代表单品链路待标定；当前已标定产区：伽师 · 红河蒙自 · 洛川 · 武鸣');
+      else toast('该产区代表单品链路待标定；当前已标定：伽师 · 红河蒙自 · 洛川 · 武鸣 · 长沙（红星）');
       return;
     }
     S.l3.city = city;
@@ -2138,14 +2651,50 @@ window.AGRI_CHAIN = (function () {
     setSel({ type: 'city', id: city, label: `${city}（${prov}）`, raw: c, cal: D.cal.supply });
     window.AGRI_CHAIN.l3Focus(prov, city);          // 左侧分析卡片切换到该产区口径
   };
+  /* L2 集散枢纽（演示中心）：一次点击看口径，再次点击进入该省 L3 */
+  UI.onHubClick = h => {
+    if (S.l2.hub === h.id) { S.l3.prov = h.prov; S.l3.city = h.name.indexOf('·') > 0 ? h.name.split('·')[1] : null; goTo(3); return; }
+    S.l2.hub = h.id; S.l2.prov = null; S.l2.line = null; S.l2.direct = null;
+    if (map2) map2.selectProvince(null);
+    setSel({ type: 'market', id: 'hub:' + h.id, label: `${h.name} · 集散枢纽`, raw: {
+      country: h.name.split('·')[0], market: h.name, mProv: h.prov, vol: null, cat: 'fresh',
+      item: D.HONGXING.role, yoy: null, hub: true, caliber: h.caliber, note: h.note
+    }, cal: h.caliber, hub: h });
+  };
   function chainHooks() {
-    const ch = () => D.chains[S.l4.city];
     return {
-      onStage: i => setSel({ type: 'stage', id: S.l4.city + '-' + i, label: `${ch().city}·${ch().product} ｜ ${ch().stages[i].name}`, raw: ch().stages[i], cal: D.cal.chain }, true),
-      onEntity: e => setSel({ type: 'entity', id: e.n, label: e.n, raw: e, cal: D.cal.chain }, true)
+      onStage: i => {
+        const o = hubOrCityObj(i);
+        if (o) setSel(o, true);
+      },
+      onEntity: e => setSel({ type: 'entity', id: e.n, label: e.n, raw: e, cal: D.cal.chain }, true),
+      onPickImport: id => {
+        S.l4.importId = id;
+        window.AGRI_CHAIN.render(S.l4.city, chainHooks(), id);
+        setSel(hubSelObj(id));
+      }
     };
   }
-  const chainSelObj = () => ({ type: 'chain', id: S.l4.city, label: `${D.chains[S.l4.city].city}·${D.chains[S.l4.city].product} 全链路`, raw: D.chains[S.l4.city], cal: D.cal.price });
+  const hubChain = () => (D.chains[S.l4.city] && D.chains[S.l4.city].kind === 'hub') ? D.chains[S.l4.city] : null;
+  const curImport = () => { const ch = hubChain(); return ch ? (D.imports[S.l4.importId] || D.imports[ch.catalog[0]]) : null; };
+  function hubOrCityObj(i) {
+    const im = curImport();
+    if (im) {
+      const s = im.stages[i];
+      return { type: 'hubstage', id: im.id + '-' + i, label: `${D.HONGXING.short} · ${im.title} ｜ ${s.name}`, raw: s,
+        cal: s.caliber || D.cal.market, import: im, calibers: im.caliber };
+    }
+    const ch = D.chains[S.l4.city];
+    return { type: 'stage', id: S.l4.city + '-' + i, label: `${ch.city}·${ch.product} ｜ ${ch.stages[i].name}`, raw: ch.stages[i], cal: D.cal.chain };
+  }
+  function hubSelObj(id) {
+    const im = D.imports[id] || curImport();
+    return { type: 'hub', id: S.l4.city + ':' + im.id, label: `${D.HONGXING.short} · ${im.title}`, raw: im,
+      cal: [im.caliber.join(' / '), im.sliceNote].filter(Boolean).join(' ｜ ') };
+  }
+  const chainSelObj = () => hubChain() ? hubSelObj(S.l4.importId) : {
+    type: 'chain', id: S.l4.city, label: `${D.chains[S.l4.city].city}·${D.chains[S.l4.city].product} 全链路`,
+    raw: D.chains[S.l4.city], cal: D.cal.price };
 
   function onBlank() {
     if (S.layer === 1) { setSel(null); window.AGRI_GLOBE.clearSelect(); return; }
@@ -2160,7 +2709,7 @@ window.AGRI_CHAIN = (function () {
     const c = [{ l: 1, t: '全球' }];
     if (S.layer >= 2) c.push({ l: 2, t: '中国' });
     if (S.layer >= 3) c.push({ l: 3, t: S.l3.prov || '省区' });
-    if (S.layer >= 4) c.push({ l: 4, t: (D.chains[S.l4.city] ? D.chains[S.l4.city].city : '城市') + '·单品' });
+    if (S.layer >= 4) c.push({ l: 4, t: hubChain() ? '红星·品类' : (D.chains[S.l4.city] ? D.chains[S.l4.city].city : '城市') + '·单品' });
     return c;
   }
   function renderCrumbs() {
@@ -2275,6 +2824,21 @@ window.AGRI_CHAIN = (function () {
           <div class="tip-note">线宽 = 调运量，颜色 = 品类；点击省份气泡可继续下钻到 L3。</div>
         </div>`;
         html += relatedPanel('其他调运线（按量级）', D.interProv.slice().sort((a, b) => b.vol - a.vol).filter(y => y !== x).slice(0, 8).map(y => relLi('p:' + y.from + '>' + y.to, `${y.from} → ${y.to}`, `${y.vol} 万吨`)).join(''));
+      } else if (sel && sel.type === 'market' && sel.hub) {
+        // 集散枢纽（演示中心）：体量不是重点，位置与口径才是
+        const h = sel.hub;
+        html += `<div class="panel">
+          <div class="phead"><span class="lv">L2 全国</span><span class="kind">集散枢纽 · 演示中心</span></div>
+          <h2><span class="h2-txt">${h.name}</span><span class="tag plain">集散枢纽</span><span class="mark">示意/待标定</span></h2>
+          ${sec('定位', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">角色</div><div class="v" style="font-size:.84375rem;font-weight:400;line-height:1.8">${h.role}</div></div>
+            <div class="metric"><div class="k">所属省 / 市</div><div class="v" style="font-size:.84375rem;font-weight:400;line-height:1.8">${h.prov} · ${D.HONGXING.city}</div></div>
+            <div class="metric"><div class="k">数据骨架位置</div><div class="v" style="font-size:.84375rem;font-weight:400;line-height:1.8">${D.HONGXING.skeleton.join(' → ')}</div></div>
+          </div>`)}
+          <div class="caliber">口径：${h.caliber}</div>
+          <div class="tip-note">本页以红星大市场为演示中心：一条选择从头到尾贯穿 L1 境外产区 → L2 中国进口 → L3 湖南 / 红星 → L4 品类·部位与终端建议。<b>再次点击该枢纽 → 进入 L3 湖南</b>。</div>
+        </div>`;
+        html += relatedPanel('以此为终端的进口直达品类', D.directFlows.filter(x => x.market === h.name).map(x => relLi('m:' + x.id, `${x.country} → ${x.item}`, `${x.vol} 万吨 · 示意`)).join('') || '<li style="cursor:default"><small>暂无标注的直达线</small></li>');
       } else if (sel && sel.type === 'market') {
         const f = sel.raw;
         html += `<div class="panel">
@@ -2286,11 +2850,10 @@ window.AGRI_CHAIN = (function () {
             ${kpi('同比', '+' + f.yoy + '%', 'pos')}
             ${kpi('所在省', f.mProv)}
           </div>`)}
-          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.market} ｜ 来源：${D.ORG}</div>
+          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${f.caliber || D.cal.market} ｜ 来源：${D.ORG}</div>
           <div class="tip-note">进口货源直达销地一级市场，与国内产区的调运线形成直接竞争（可在左侧图例栏勾选叠加 / 关闭该图层）。</div>
         </div>`;
-        html += relatedPanel('全部进口直达线', D.directFlows.map(y => relLi('m:' + y.id, `${y.country} → ${y.market}`, `${y.vol} 万吨 · ${y.item}`)).join(''));
-      } else {
+        html += relatedPanel('全部进口直达线', D.directFlows.map(y => relLi('m:' + y.id, `${y.country} → ${y.market}`, `${y.vol} 万吨 · ${y.item}`)).join(''));      } else {
         const totalInter = D.interProv.reduce((a, b) => a + b.vol, 0);
         html += `<div class="panel">
           <div class="phead"><span class="lv">L2 全国</span><span class="kind">未选中对象 · 全国概览</span></div>
@@ -2342,8 +2905,12 @@ window.AGRI_CHAIN = (function () {
           ${sec('产业特征', `<div class="metrics" style="grid-template-columns:1fr">
             <div class="metric"><div class="k">特征</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${d.feature}</div></div>
           </div>`)}
-          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">点城市节点 → 看该产区的产量、主导品类、竞争力五维与区域特征；<b>左侧分析卡片会同步切换为该产区口径</b>；再次点击 → 进入 L4 单品全链路。</div>
+          ${d.hub ? sec('本省集散枢纽（演示中心）', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">枢纽</div><div class="v" style="font-size:.84375rem">${D.HONGXING.name}</div></div>
+            <div class="metric"><div class="k">角色</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${D.HONGXING.role}（企业 / 媒体表述，口径待核）</div></div>
+          </div>`) : ''}
+          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply}${d.hub ? ' / ' + D.cal.hub : ''} ｜ 来源：${D.ORG}</div>
+          <div class="tip-note">点城市节点 → 看该产区的产量、主导品类、竞争力五维与区域特征；<b>左侧分析卡片会同步切换为该产区口径</b>；${d.hub ? `点${D.HONGXING.city}（红星）→ 进入 L4 进口品类 · 部位与终端建议。` : '再次点击 → 进入 L4 单品全链路。'}</div>
         </div>`;
         html += relatedPanel('省内产区', d.cities.map(c => relLi('city:' + c.name, c.name, `${c.out} 万吨 · ${c.main}`, D.chains[c.name] ? '<span class="chain-tag">全链路</span>' : '')).join(''));
       }
@@ -2351,7 +2918,8 @@ window.AGRI_CHAIN = (function () {
 
     if (S.layer === 4) {
       const key = S.l4.city, ch = D.chains[key];
-      if (ch) {
+      if (ch && ch.kind === 'hub') html += hubPanel(ch);
+      else if (ch) {
         html += `<div class="panel">
           <div class="phead"><span class="lv">L4 单品</span><span class="kind">${ch.prov} · ${ch.city}</span></div>
           <h2><span class="h2-txt">${ch.emoji} ${ch.product}</span><span class="mark">示意/待标定</span></h2>
@@ -2368,12 +2936,54 @@ window.AGRI_CHAIN = (function () {
       }
     }
 
-    html += aiPanel();
-    side.innerHTML = html;
+    html += aiPanel();    side.innerHTML = html;
     // 换对象 = 换面板：滚动位置必须回到顶部，否则新面板的标题会被上一次的滚动位置截掉
     // （同一对象内重绘，例如环节/主体切换，保留当前位置）
     if (!keepScroll) side.scrollTop = 0;
     wireSide();
+  }
+
+  /* L4 · 红星大市场：品类 / 部位 + 终端建议（数据骨架五段） */
+  function hubPanel(ch) {
+    const im = curImport();
+    const hx = D.HONGXING;
+    const skel = hx.skeleton.map((s, i) => {
+      const st = im.stages[i];
+      return `<li><span><b>${i + 1}. ${s}</b> <small>${st.name}</small></span><small>${st.price}</small></li>`;
+    }).join('');
+    const cut = im.sliceNote ? `<div class="metric"><div class="k">部位 / 口径提示</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${im.cut ? im.cut + ' —— ' : ''}${im.sliceNote}</div></div>` : '';
+    return `<div class="panel">
+      <div class="phead"><span class="lv">L4 品类·部位</span><span class="kind">${hx.prov} · ${hx.short}</span></div>
+      <h2><span class="h2-txt">${im.emoji} ${im.title}</span>${catTag(im.cat)}<span class="mark">示意/待标定</span></h2>
+      ${sec('境外产区 / 国家', `<div class="metrics" style="grid-template-columns:1fr">
+        <div class="metric"><div class="k">产区</div><div class="v" style="font-size:.84375rem">${im.origin}</div></div>
+        <div class="metric"><div class="k">品类 / 部位</div><div class="v" style="font-size:.84375rem">${im.item}</div></div>
+        ${cut}
+        <div class="metric"><div class="k">量级口径提示</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${im.shareNote}</div></div>
+      </div>`)}
+      ${sec('数据骨架五段（选择一路贯穿）', `<ul class="rel">${skel}</ul>`)}
+      ${sec('对照来源', `<ul class="rel">${im.peers.map(p => `<li style="cursor:default"><span>${p.k}</span><small>${p.v}</small></li>`).join('')}</ul>`)}
+      ${sec('终端建议', `<div class="metrics" style="grid-template-columns:1fr">${im.advice.map((a, i) => `<div class="metric"><div class="k">建议 ${i + 1}</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${a}</div></div>`).join('')}</div>`)}
+      <div class="caliber">周期：${D.PERIOD} ｜ 口径：${im.caliber.join(' ｜ ')} ｜ 来源：${D.ORG}</div>
+      <div class="tip-note">红星口径：${hx.caliber}</div>
+    </div>` +
+    relatedPanel('红星在营进口品类（切换）', ch.catalog.map(k => relLi('imp:' + k, `${D.imports[k].emoji} ${D.imports[k].title}`,
+      k === im.id ? '当前' : D.imports[k].origin.split(' · ')[0] + ' · 点击切换')).join(''));
+  }
+
+  /* AI 模式徽标：真实模型已连接 / 规则演示 / 加载中 / 错误后降级 */
+  function aiModeBadge() {
+    const P = window.AGRI_PROVIDER;
+    const st = P ? P.state : { mode: 'rule', detail: '规则演示' };
+    return `<span class="ai-mode ${st.mode}" id="aiMode" title="${st.reason || st.lastError || ''}">${st.detail}</span>`;
+  }
+  function refreshAiMode() {
+    const el = $('aiMode');
+    if (!el || !window.AGRI_PROVIDER) return;
+    const st = window.AGRI_PROVIDER.state;
+    el.className = 'ai-mode ' + st.mode;
+    el.textContent = st.detail;
+    el.title = st.reason || st.lastError || '';
   }
 
   function aiPanel() {
@@ -2382,7 +2992,7 @@ window.AGRI_CHAIN = (function () {
     const label = o ? `${o.label} ｜ ${o.cal}` : '尚未选中对象';
     const first = window.AGRI_AI.ask(o, qs[0].q);
     return `<div class="panel ai">
-      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small></div>
+      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small>${aiModeBadge()}</div>
       <div class="ai-obj">当前对象：${label}</div>
       <div class="ai-qs">${qs.map((x, i) => `<button data-q="${i}">${x.q}</button>`).join('')}</div>
       <div class="ai-a">${md(first.a)}</div>
@@ -2407,27 +3017,84 @@ window.AGRI_CHAIN = (function () {
       } else if (id.indexOf('m:') === 0) {
         const f = D.directFlows.find(y => y.id === id.slice(2));
         if (f) UI.onDirectClick(f);
+      } else if (id.indexOf('imp:') === 0) {
+        window.AGRI_CHAIN.pickImport(id.slice(4));
       } else if (id.indexOf('city:') === 0) { UI.onCityClick(S.l3.prov, id.slice(5)); }
       else if (id.indexOf('chain:') === 0) { S.l4.city = id.slice(6); prepare(4); layerEnter(4); renderSide(); }
     });
     side.querySelectorAll('.ai-qs button').forEach(b => b.onclick = () => {
       const o = S.sel, qs = window.AGRI_AI.presets(o);
-      showAnswer(window.AGRI_AI.ask(o, qs[+b.dataset.q].q));
+      askCurrent(qs[+b.dataset.q].q);
     });
     const input = side.querySelector('#aiInput'), send = side.querySelector('#aiSend');
     if (input && send) {
-      const go = () => { const q = input.value.trim(); if (!q) return; showAnswer(window.AGRI_AI.free(S.sel, q)); input.value = ''; };
+      const go = () => { const q = input.value.trim(); if (!q) return; askCurrent(q, { free: true }); input.value = ''; };
       send.onclick = go;
       input.onkeydown = e => { if (e.key === 'Enter') go(); };
     }
   }
-  function showAnswer(res) {
+
+  /* ---------- 提问：有同源代理走真实模型，否则回落到规则演示（不白屏） ---------- */
+  let aiBusy = false;
+  async function askCurrent(q, opts) {
+    const o = S.sel;
+    if (!o || aiBusy) return;
+    const rule = () => (opts && opts.free) ? window.AGRI_AI.free(o, q) : window.AGRI_AI.ask(o, q);
+    const P = window.AGRI_PROVIDER;
+    if (!P || !P.live) { showAnswer(rule()); return; }
+    const selId = o.id;
+    aiBusy = true;
+    showLoading(o, q);
+    const res = await window.AGRI_AI.live(o, q);
+    aiBusy = false;
+    if (S.sel && S.sel.id !== selId) return;            // 请求期间换了对象，丢弃这次结果
+    if (res) { showAnswer(res); refreshAiMode(); return; }
+    showAnswer(rule());
+    refreshAiMode();                                     // 徽标切到「错误后降级」
+  }
+
+  function showLoading(o, q) {
+    const a = $('side').querySelector('.ai-a');
+    if (!a) return;
+    const c = window.AGRI_AI.ctxOf(o);
+    a.innerHTML = md(`**加载中**｜正在请求真实模型…\n\n问题：${q}\n上下文：层级 ${c.layer} ｜ 选择 ${c.selection} ｜ 品类 ${c.category}`);
+    const t = $('side').querySelector('.ai-tags');
+    if (t) t.innerHTML = '<span>加载中</span>';
+  }
+  function showAnswer(res, extraTag) {
     const a = $('side').querySelector('.ai-a');
     if (!a) return;
     a.innerHTML = md(res.a);
     const t = $('side').querySelector('.ai-tags');
-    if (t) t.innerHTML = res.tags.map(x => `<span>${x}</span>`).join('');
+    if (t) t.innerHTML = res.tags.concat(extraTag ? [extraTag] : []).map(x => `<span>${x}</span>`).join('');
     S.lastAnswer = res.a;
+  }
+
+  /* ---------------- 一键演示路径（选择贯穿 L1→L2→L3→L4） ---------------- */
+  let demoRunning = false;
+  async function runDemoPath(id) {
+    const p = (D.demoPaths || []).find(x => x.id === id);
+    if (!p || demoRunning) return false;
+    demoRunning = true;
+    S.demoPath = id;
+    try {
+      if (S.layer !== 1) { toast(`一键演示：${p.country} · ${p.label} → ${D.HONGXING.prov}${D.HONGXING.short}`); goTo(1, { force: true }); await sleep(FLIGHT + 300); }
+      const f = D.flows.find(x => x.id === p.flowId);
+      if (f) { S.l1.flow = f.id; window.AGRI_GLOBE.clearSelect(); window.AGRI_GLOBE.select(f.id); setSel(flowObj(f)); }
+      toast(`① 境外产区：${p.country} · ${p.label}（${p.sub}）`);
+      await sleep(1500);
+      goTo(2, { force: true }); await sleep(FLIGHT + 500);
+      S.l2.prov = p.prov; S.l2.line = null; S.l2.direct = null; S.l2.hub = null;
+      map2.selectProvince(p.prov); setSel(provObj(p.prov));
+      toast(`② 中国进口与消费 → ③ ${D.HONGXING.prov}集散（长沙→中南五省）`);
+      await map2.flyTo([D.HONGXING.lng, D.HONGXING.lat], 2.6, 1100); await sleep(420);
+      S.l3.prov = p.prov; S.l3.city = p.city;
+      goTo(3, { force: true }); await sleep(FLIGHT + 1500);
+      S.l4.city = p.city; S.l4.importId = p.id;
+      toast(`④ ${D.HONGXING.name} → ⑤ 品类 / 部位与终端建议`);
+      goTo(4, { force: true }); await sleep(FLIGHT + 1200);
+      return true;
+    } finally { demoRunning = false; }
   }
 
   /* ---------------- 全局交互 ---------------- */
@@ -2463,6 +3130,9 @@ window.AGRI_CHAIN = (function () {
       $('legendL2').classList.toggle('direct-on', e.target.checked);
     });
     if ($('drawerClose')) $('drawerClose').onclick = () => window.AGRI_CHAIN.closeDrawer();
+    document.querySelectorAll('#demoPaths button').forEach(b => {
+      b.onclick = () => runDemoPath(b.dataset.demo);
+    });
   }
 
   /* ---------------- 启动 ---------------- */
@@ -2478,6 +3148,11 @@ window.AGRI_CHAIN = (function () {
     if (map3.el) map3.el.getZr().on('click', e => { if (!e.target && S.layer === 3 && !map3.gestureConsumed()) onBlank(); });
     bindGlobal();
     renderSide();
+    // AI provider：有同源代理就探测真实模型，否则直接用规则演示（不发起任何网络请求）
+    if (window.AGRI_PROVIDER) {
+      window.AGRI_PROVIDER.onChange(() => refreshAiMode());
+      window.AGRI_PROVIDER.probe().then(() => refreshAiMode());
+    }
   }
 
   function enterSystem() {
@@ -2504,7 +3179,22 @@ window.AGRI_CHAIN = (function () {
     sideText: () => $('side').innerText,
     selLabel: () => (S.sel ? `${S.sel.type}:${S.sel.label}` : null),
     aiText: () => { const a = $('side').querySelector('.ai-a'); return a ? a.innerText : ''; },
+    aiTags: () => Array.from($('side').querySelectorAll('.ai-tags span')).map(x => x.textContent),
+    aiMode: () => (window.AGRI_PROVIDER ? window.AGRI_PROVIDER.state : null),
+    aiCtx: () => window.AGRI_AI.ctxOf(S.sel),
     ask: q => { const r = window.AGRI_AI.ask(S.sel, q); showAnswer(r); return r.a; },
+    askLive: q => askCurrent(q),
+    demoPaths: () => (D.demoPaths || []).map(p => ({ id: p.id, country: p.country, label: p.label, sub: p.sub })),
+    demoPath: id => runDemoPath(id),
+    build: () => window.__AGRI_BUILD || null,
+    caliber: () => D.caliber,
+    hub: () => D.HONGXING,
+    hubMarkers: () => (D.hubs || []).map(h => ({ id: h.id, name: h.name, role: h.role })),
+    hubCatalog: () => { const ch = hubChain(); const keys = ch ? ch.catalog : Object.keys(D.imports); return keys.map(k => { const im = D.imports[k];
+      return { id: k, title: im.title, origin: im.origin, item: im.item, cut: im.cut || '', stages: im.stages.map(s => s.name),
+        text: im.stages.map(s => [s.scale, s.cost, s.price, s.risk].join(' ')).join(' ') + ' ' + im.price.map(p => p.k + p.note).join(' '),
+        advice: im.advice, sliceNote: im.sliceNote || '' }; }); },
+    currentImport: () => { const im = curImport(); return im ? { id: im.id, title: im.title, origin: im.origin, item: im.item, cut: im.cut || '', shareNote: im.shareNote, sliceNote: im.sliceNote || '' } : null; },
     globePick: (x, y) => window.AGRI_GLOBE.pick(x, y),
     globeHits: () => window.AGRI_GLOBE.hits(),
     globeBox: () => { const r = $('globe').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; },

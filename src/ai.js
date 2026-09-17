@@ -22,7 +22,7 @@ window.AGRI_AI = (function () {
   }
 
   /* -------- 应答主体 -------- */
-  function ask(o, q) {
+  function askCore(o, q) {
     if (!o) return { a: '**尚未选中对象**\n\n在左侧点击一个数据对象（贸易弧、国家节点、省份气泡、调运线、城市节点、环节卡片），我会基于这个对象回答——回答内容随对象变化。\n\n口径：全部为示意数据 · 待标定。', tags: ['示意 · 待标定'] };
     const d = D(), P = d.PERIOD, tag = ['示意 · 待标定'];
     const head = `**${o.label}** ｜ 周期 ${P} ｜ 口径：${o.cal || '示意'}`;
@@ -99,7 +99,7 @@ window.AGRI_AI = (function () {
   }
 
   /* -------- 自由提问：关键词 → 对象化推演 -------- */
-  function free(o, q) {
+  function freeCore(o, q) {
     const d = D();
     const name = o ? o.label : '当前对象';
     const base = `**${name}** ｜ 自由提问 ｜ 周期 ${d.PERIOD}`;
@@ -119,6 +119,76 @@ window.AGRI_AI = (function () {
     return { a: `${base}\n\n- 我能基于当前对象回答：量价节奏、成本拆解、链条卡点、关联变量推演（油价 / 汇率 / 天气 / 政策）、6–12 个月方向性判断。\n- 当前对象口径：${o && o.cal ? o.cal : d.cal.supply}。\n- 口径：示意 · 待标定。`, tags: ['示意 · 待标定'] };
   }
 
+  /* ============================================================
+     上下文封套：每条回答（含真实模型回答）必须携带
+     当前层级 / 当前选择 / 红星市场 / 品类 / 数据口径 —— 并把模拟数据标注为示意·待标定
+     ============================================================ */
+  const LAYER_NAME = { 1: 'L1 全球货源流向', 2: 'L2 全国产区与省际流通', 3: 'L3 省区产业分析', 4: 'L4 城市代表单品全链路' };
+  function layerNo() {
+    if (window.AGRI && window.AGRI.layer) return window.AGRI.layer;
+    if (window.AGRI_DEBUG) { try { return window.AGRI_DEBUG.state().layer; } catch (e) { /* 启动中 */ } }
+    return 1;
+  }
+  function hongxing() { return (D() && D().HONGXING) || { name: '长沙·红星全球农批中心', prov: '湖南', role: '湖南及中南区域集散枢纽', caliber: '' }; }
+  function catOf(o) {
+    if (!o) return '未指定';
+    const d = D();
+    if (o.type === 'flow' || o.type === 'market' || o.type === 'prov') return d.CATN[o.raw.cat] || '未指定';
+    if (o.type === 'city') return o.raw.main || (d.CATN[o.raw.cat] || '未指定');
+    if (o.type === 'chain') return o.raw.product || '未指定';
+    if (o.type === 'hub') return '进口品类 · 部位（可切换）';
+    return d.CATN[o.raw && o.raw.cat] || o.label || '未指定';
+  }
+  function ctxOf(o) {
+    const d = D(), n = layerNo(), hx = hongxing();
+    return {
+      layer: `${n} · ${LAYER_NAME[n] || '—'}`,
+      selection: o ? `${o.label}（${o.type}）` : '未选中对象',
+      hongxing: `${hx.name} · ${hx.prov} · ${hx.role}（企业 / 媒体表述，口径待核）`,
+      category: catOf(o),
+      caliber: (o && o.cal) || d.cal.supply,
+      nature: `全部为示意数据 · ${d.ORG} · 周期 ${d.PERIOD}`
+    };
+  }
+  function ctxLine(c) {
+    return `**上下文**｜层级 ${c.layer}｜选择 ${c.selection}｜红星 ${c.hongxing}｜品类 ${c.category}｜口径 ${c.caliber}｜数据属性 ${c.nature}`;
+  }
+  function withCtx(res, o) {
+    const c = ctxOf(o);
+    const tags = (res.tags || []).concat(['示意 · 待标定']);
+    return { a: ctxLine(c) + '\n\n' + res.a, tags: tags.filter((t, i) => tags.indexOf(t) === i), ctx: c };
+  }
+
+  const SYS = [
+    '你是「农链 AgriLink」的产业分析师，服务于湖南红星大市场（长沙·红星全球农批中心）为中心的农产品进口与集散分析。',
+    '硬约束：',
+    '1) 本页所有数值都是示意数据（待标定），不是官方统计；回答里凡引用数值必须显式标注「示意 · 待标定」。',
+    '2) 不得编造或暗示官方口径，不得声称红星是「全国第一」；「中南最大」类表述只能注明为企业 / 媒体表述。',
+    '3) 马来西亚猫山王是中国榴莲进口中的小份额高价值来源，不得写成中国最大榴莲供应国；牛肉以巴西为重要 / 主导来源；车厘子以智利为主要来源。',
+    '4) 部位级品类（如牛前腱）属于市场经营 / 交易台账层级的切片，不得冒充海关公开统计口径。',
+    '5) 数据骨架：境外产区/国家 → 中国进口与消费 → 湖南集散与消费 → 湖南红星大市场 → 渠道/终端。',
+    '输出：中文，先给判断，再给依据，最后给口径提示；控制在 220 字以内，可用短列表。'
+  ].join('\n');
+
+  /* 真实模型通路：失败返回 null（由调用方降级到规则回答，不白屏） */
+  async function live(o, q) {
+    const P = window.AGRI_PROVIDER;
+    if (!P || !P.live) return null;
+    const c = ctxOf(o);
+    const res = await P.chat(
+      [{ role: 'system', content: SYS }, { role: 'user', content: `【当前上下文】\n层级：${c.layer}\n选择：${c.selection}\n红星市场：${c.hongxing}\n品类：${c.category}\n口径：${c.caliber}\n数据属性：${c.nature}\n\n【问题】${q}` }],
+      c
+    );
+    if (!res) return null;
+    return withCtx({
+      a: `**真实模型回答**（${res.model}）\n\n${res.content}\n\n— 口径复核：${c.caliber}；数值均为示意 · 待标定，引用前需标定。`,
+      tags: ['真实模型']
+    }, o);
+  }
+
+  function ask(o, q) { return withCtx(askCore(o, q), o); }
+  function free(o, q) { return withCtx(freeCore(o, q), o); }
+
   function peak(m) { const mx = Math.max.apply(null, m), i = m.indexOf(mx); return `${i + 1} 月（峰值 ${mx} 万吨/月）`; }
   function altCat(c) { return c === 'fruit' ? '国产同季柑橘 / 苹果' : c === 'veg' ? '国产设施蔬菜' : '国产粳稻 / 粮油'; }
   function riskScore(s) { let n = 0; if (/霜冻|冻|阴雨|病|天气/.test(s.risk)) n++; if (/损耗|集中|踩踏|波动/.test(s.risk)) n++; if (/依赖|不足|紧张|缺口|空载|窗口/.test(s.risk)) n++; return n; }
@@ -128,5 +198,5 @@ window.AGRI_AI = (function () {
     return Object.entries(comp).sort((a, b) => a[1] - b[1])[0][0];
   }
 
-  return { presets, ask, free };
+  return { presets, ask, free, live, ctxOf, hongxing, layerNo };
 })();

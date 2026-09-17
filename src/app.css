@@ -130,7 +130,8 @@ button{font-family:inherit;cursor:pointer}
 .scene-legend.direct-on .lg-line.direct{opacity:1}
 .scene-legend.direct-on .lg-item.lg-toggle{color:var(--direct-ink);font-weight:600}
 /* 地球悬浮卡 */
-#globe{display:block;width:100%;height:100%;cursor:grab}
+#globe{display:block;width:100%;height:100%;cursor:grab;touch-action:none;
+  -webkit-user-select:none;user-select:none}
 .g-tip{position:absolute;z-index:9;pointer-events:none;background:rgba(255,255,255,.98);border:1px solid var(--line);
   border-radius:11px;padding:9px 12px;font-size:.75rem;box-shadow:0 10px 26px -14px rgba(15,23,42,.4);display:none;max-width:280px;line-height:1.6}
 .g-tip b{font-size:.875rem;display:block;margin-bottom:3px}
@@ -138,17 +139,20 @@ button{font-family:inherit;cursor:pointer}
 .g-tip .t-num{font-weight:700;color:var(--ink);font-size:.875rem;font-variant-numeric:tabular-nums}
 .g-tip .t-cal{color:var(--dim);font-size:.75rem;margin-top:5px;padding-top:5px;border-top:1px dashed var(--hair)}
 .map{position:absolute;inset:0;width:100%;height:100%}
-/* L3 分析卡片栏：位于操作提示之上，不与提示条重叠；非当前层不吃手势 */
-.l3-extras{position:absolute;left:var(--s4);bottom:52px;z-index:8;pointer-events:none;max-width:min(560px,72%)}
+/* L3 分析卡片栏：位于操作提示之上，不与提示条重叠；非当前层不吃手势
+   内容一律在卡内自适应重排（不再有超出卡右缘 78px 的「要点」列）*/
+.l3-extras{position:absolute;left:var(--s4);bottom:52px;z-index:8;pointer-events:none;
+  width:min(680px,calc(100% - 2 * var(--s4)));max-height:calc(100% - 96px);display:flex;flex-direction:column}
 .scene.cur .l3-extras{pointer-events:auto}
 .l3-card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:13px;padding:var(--s3) var(--s4);
-  backdrop-filter:blur(6px)}
+  backdrop-filter:blur(6px);min-width:0;overflow:auto}
 .l3-rail-head{display:flex;align-items:baseline;gap:var(--s2);flex-wrap:wrap;padding-bottom:var(--s2);border-bottom:1px dashed var(--hair)}
 .l3-rail-head .lv{font-size:.75rem;letter-spacing:.12em;color:#1d4ed8;background:var(--accent-soft);border-radius:6px;padding:2px 7px;font-weight:700}
 .l3-rail-head b{font-size:.875rem}
 .l3-rail-head .l3-obj-note{font-size:.75rem;color:var(--dim)}
-.l3-rail-body{display:flex;gap:var(--s5);align-items:flex-start;margin-top:var(--s3)}
-.l3-bars-wrap{min-width:230px}
+/* 窄了就换行重排，而不是溢出卡外 */
+.l3-rail-body{display:flex;flex-wrap:wrap;gap:var(--s3) var(--s5);align-items:flex-start;margin-top:var(--s3)}
+.l3-bars-wrap{flex:1 1 230px;min-width:0}
 .l3-card h4{font-size:.75rem;color:var(--mut);font-weight:600;margin-bottom:var(--s2);letter-spacing:.04em}
 .l3-rows{display:flex;flex-direction:column;gap:7px}
 .l3-row{display:grid;grid-template-columns:62px 1fr 42px;align-items:center;gap:var(--s2);font-size:.75rem;color:var(--mut)}
@@ -161,11 +165,40 @@ button{font-family:inherit;cursor:pointer}
 .radar-box{background:#fff;border:1px solid var(--hair);border-radius:11px;padding:4px 8px 6px}
 .radar-cap{font-size:.75rem;color:var(--dim);margin-top:2px}
 .radar-box h4{margin:2px 0 0 2px}
-.l3-facts{list-style:none;display:flex;flex-direction:column;gap:6px;min-width:132px}
+.l3-facts{list-style:none;display:flex;flex-direction:column;gap:6px;flex:1 1 140px;min-width:0}
 .l3-facts li{display:flex;justify-content:space-between;gap:var(--s2);font-size:.75rem;color:var(--dim);
   padding-bottom:5px;border-bottom:1px dashed var(--hair)}
 .l3-facts li:last-child{border-bottom:none;padding-bottom:0}
 .l3-facts b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+/* 一键演示路径（L1 右上）：选择贯穿 L1→L4，起点在境外产区 */
+.demo-paths{position:absolute;right:var(--s4);top:var(--s3);z-index:9;display:flex;flex-direction:column;gap:6px;
+  max-width:min(248px,48vw);background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;
+  padding:var(--s2) var(--s3);backdrop-filter:blur(6px)}
+.demo-paths .dp-title{font-size:.75rem;letter-spacing:.1em;color:var(--dim);font-weight:600}
+.demo-paths button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;
+  border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 10px;transition:border-color .2s,background .2s}
+.demo-paths button b{font-size:.78125rem;color:var(--ink)}
+.demo-paths button small{font-size:.75rem;color:var(--dim)}
+.demo-paths button:hover{border-color:#bfd3f7;background:#f8fbff}
+/* 红星在营进口品类 / 部位切换（L4）*/
+.hub-cats{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.hub-cats .hc-title{font-size:.75rem;letter-spacing:.1em;color:var(--dim);font-weight:600;white-space:nowrap}
+.hub-cats .hc{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;
+  border:1px solid var(--line);background:#fff;border-radius:11px;padding:6px 11px;transition:border-color .2s,background .2s}
+.hub-cats .hc b{font-size:.8125rem}
+.hub-cats .hc small{font-size:.75rem;color:var(--dim)}
+.hub-cats .hc:hover{border-color:#bfd3f7}
+.hub-cats .hc.on{border-color:var(--accent);background:#fbfdff;box-shadow:0 10px 26px -18px rgba(29,78,216,.8)}
+.hub-cats .hc-note{font-size:.75rem;color:var(--dim);flex:1 1 220px;line-height:1.6}
+.chain-axis.axis-5{grid-template-columns:repeat(5,1fr)}
+/* L2 集散枢纽标记 —— 红色与品类色阶区分；名称常显 */
+.lg-hub{width:14px;height:14px;border-radius:50%;background:#b91c1c;box-shadow:0 0 0 3px rgba(185,28,28,.18)}
+/* AI 模式徽标：真实模型已连接 / 规则演示 / 加载中 / 错误后降级 */
+.ai .ai-head{flex-wrap:wrap}
+.ai .ai-mode{margin-left:auto;font-size:.75rem;line-height:1.6;border-radius:6px;padding:1px 7px;font-weight:600;white-space:nowrap}
+.ai .ai-mode.live{color:var(--veg-ink);background:#f3fbf5;border:1px solid rgba(22,163,74,.4)}
+.ai .ai-mode.rule,.ai .ai-mode.detecting{color:var(--dim);background:var(--panel-2);border:1px solid var(--hair)}
+.ai .ai-mode.degraded{color:var(--warn);background:var(--warn-bg);border:1px solid #fde68a}
 /* L4 全链路 */
 #scene-l4{display:flex;flex-direction:column;padding:58px var(--s5) var(--s4);gap:var(--s3)}
 .chain-head{display:flex;align-items:baseline;gap:var(--s3);flex-wrap:wrap}
@@ -301,6 +334,23 @@ button{font-family:inherit;cursor:pointer}
   font-size:.8125rem;padding:9px 16px;border-radius:11px;opacity:0;transition:.3s;z-index:200;pointer-events:none;max-width:88vw}
 .toast.on{opacity:1;transform:translateX(-50%)}
 
+/* ================= 矮屏 / 笔记本（≤860px 高）：保证地图上的数据节点不被卡片盖住 ================= */
+@media (min-width:1081px) and (max-height:860px){
+  /* 首页：压缩纵向节奏，1366×768 也能一屏装下 */
+  .land-wrap{padding:28px 32px 22px}
+  .land-hero{padding:var(--s4) 0}
+  .land-title{font-size:clamp(34px,4.6vw,52px)}
+  .land-sub{margin-top:var(--s3);line-height:1.75}
+  .land-struct{margin-top:var(--s4);gap:var(--s2)}
+  .kicker{margin-bottom:var(--s4)}
+  .land-cta{margin-top:var(--s4)}
+  /* L3 卡片：雷达降为缩略（数值仍在要点列与右侧面板），把地图中央让出来 */
+  .l3-rail-body{gap:var(--s2) var(--s5)}
+  .radar-box canvas{width:136px;height:120px}
+  .l3-rows{gap:5px}
+  .l3-card{padding:10px var(--s3)}
+}
+
 /* ================= 移动端 / 窄屏 ================= */
 @media (max-width:1080px){
   #app.on{height:auto;min-height:100vh;overflow:visible}
@@ -317,8 +367,8 @@ button{font-family:inherit;cursor:pointer}
   .scene-legend .lg-item .tag{flex-shrink:0}
   .lg-item.lg-toggle{padding-top:0;border-top:none;margin-top:0;flex-shrink:0;min-height:44px}
   /* L3 分析卡片：紧凑横滚条，不再占掉地图（移动端隐藏雷达，明细保留在右侧面板） */
-  .l3-extras{position:absolute;left:0;right:0;bottom:52px;max-width:none;width:100%;padding:0 var(--s2)}
-  .l3-card{padding:7px var(--s3);overflow-x:auto}
+  .l3-extras{position:absolute;left:0;right:0;bottom:52px;max-width:none;width:100%;padding:0 var(--s2);max-height:calc(100% - 88px)}
+  .l3-card{padding:7px var(--s3);overflow:auto}
   .l3-rail-body{margin-top:6px}
   .l3-rows{gap:5px}
   .l3-row{font-size:.75rem}
@@ -335,7 +385,14 @@ button{font-family:inherit;cursor:pointer}
   .scene.cur .l3-extras{pointer-events:auto}
   #scene-l4{padding:54px var(--s3) var(--s3);overflow-y:auto}
   .chain-axis{grid-template-columns:repeat(3,1fr);gap:var(--s3)}
+  .chain-axis.axis-5{grid-template-columns:repeat(3,1fr)}
   .chip + .chip::before{display:none}
+  .demo-paths{max-width:none;flex-direction:column;gap:5px;padding:6px var(--s2)}
+  .demo-paths .dp-title,.demo-paths button small{display:none}
+  .hub-cats{gap:var(--s2)}
+  .hub-cats .hc{min-height:44px}
+  .hub-cats .hc-note{flex:1 1 100%}
+  .ai .ai-qs button{min-height:44px}
   /* 小屏：环节轴与卡片一起纵向滚动，卡片不再被压扁裁切 */
   .chain-body{grid-template-columns:1fr;flex:none;min-height:0;overflow:visible}
   .price-head{display:none}
@@ -359,6 +416,7 @@ button{font-family:inherit;cursor:pointer}
   .scene-hint{display:none}
   .scene-legend{bottom:var(--s2)}
   .chain-axis{grid-template-columns:repeat(2,1fr)}
+  .chain-axis.axis-5{grid-template-columns:repeat(2,1fr)}
   .metrics{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr 1fr}
   .price-row{grid-template-columns:58px 52px 40px minmax(0,1fr)}

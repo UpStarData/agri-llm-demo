@@ -10,13 +10,16 @@ window.AGRI_GLOBE = (function () {
   let cv, ctx, W = 0, H = 0, R = 0, cx = 0, cy = 0, dpr = 1;
   let rings = [];                 // [[ [lon,lat]... ], ...]
   let arcs = [], nodes = [];
-  let rot = -100, tilt = 16, spin = 0.055;   // rot: 中央经度（度/帧步）
+  let rot = -100, tilt = 16, spin = 0.055;   // rot: 中央经度（度）  tilt: 相机纬度（度，即纵向视角）
+  const LAT_MIN = -80, LAT_MAX = 80;         // 纬度 clamp：不过极点、不翻转
+  const DRAG_LON = 0.28, DRAG_LAT = 0.22;    // 拖动灵敏度（px → 度）
   let raf = null, running = false, last = 0;
   let phase = 'idle', phaseT = 0;
   let sel = null, hover = null, focusLon = null, focusTween = null;
   let hit = { nodes: [], arcs: [] };         // 每帧重建的屏幕命中表
   let onSelect = () => {}, onHover = () => {};
   let dragging = false, dragMoved = 0, pauseSpin = 0;
+  const drag = { id: null, x: 0, y: 0 };     // 自追踪的指针位置（不再依赖 movementX/Y，触摸也能二维旋转）
 
   /* ---------- 投影 ---------- */
   function proj(lon, lat, lift) {
@@ -284,7 +287,7 @@ window.AGRI_GLOBE = (function () {
       hit.nodes.push({ id: nd.id, x: p.x, y: p.y, r: Math.max(12, sz + 6), china: !!nd.china });
       ctx.globalAlpha = 1;
     });
-    state.rot = rot; state.phase = phase;
+    state.rot = rot; state.lat = tilt; state.phase = phase;
   }
 
   /* ---------- 交互 ---------- */
@@ -295,14 +298,26 @@ window.AGRI_GLOBE = (function () {
     if (best) return { kind: 'arc', id: best };
     return null;
   }
+  /* 二维旋转：经度 + 纬度；鼠标与触控走同一条 pointer 路径 */
+  function dragBy(dx, dy) {
+    rot -= dx * DRAG_LON;
+    tilt = clamp(tilt + dy * DRAG_LAT, LAT_MIN, LAT_MAX);
+    focusTween = null;
+    if (rot > 180) rot -= 360; if (rot < -180) rot += 360;
+  }
   function bind() {
     const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-    cv.addEventListener('pointerdown', e => { dragging = true; dragMoved = 0; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointerdown', e => {
+      dragging = true; dragMoved = 0; drag.id = e.pointerId; drag.x = e.clientX; drag.y = e.clientY;
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* 已被释放 */ }
+    });
     cv.addEventListener('pointermove', e => {
       const p = pos(e);
       if (dragging) {
-        dragMoved += Math.abs(e.movementX || 0);
-        rot -= (e.movementX || 0) * 0.28; focusTween = null;
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        drag.x = e.clientX; drag.y = e.clientY;
+        // movementX/Y 在触摸 pointer 事件上通常是 0，所以一律用自追踪的坐标差
+        if (dx || dy) { dragBy(dx, dy); dragMoved += Math.abs(dx) + Math.abs(dy); }
         return;
       }
       const h = pick(p.x, p.y);
@@ -315,18 +330,19 @@ window.AGRI_GLOBE = (function () {
       }
     });
     cv.addEventListener('pointerup', e => {
-      const wasDrag = dragMoved > 6; dragging = false; pauseSpin = 2400;
+      const wasDrag = dragMoved > 6; dragging = false; drag.id = null; pauseSpin = 2400;
       if (wasDrag) return;
       const p = pos(e); const h = pick(p.x, p.y);
       if (!h) { onSelect(null); return; }
       onSelect(h);   // 由 app 决定：选中 / 再次点击进入 L2
     });
-    cv.addEventListener('pointerleave', () => { dragging = false; hover = null; onHover(null, null); });
+    cv.addEventListener('pointercancel', () => { dragging = false; drag.id = null; });
+    cv.addEventListener('pointerleave', () => { dragging = false; drag.id = null; hover = null; onHover(null, null); });
     cv.addEventListener('touchstart', () => { pauseSpin = 3000; }, { passive: true });
   }
 
   const DATA = { CAT: {} };
-  const state = { rot: 0, phase: 'idle', grownOrder: [], grownCount: 0 };
+  const state = { rot: 0, lat: 16, phase: 'idle', grownOrder: [], grownCount: 0 };
 
   const api = {
     mount, start, stop, playIntro, state,
@@ -344,7 +360,11 @@ window.AGRI_GLOBE = (function () {
     clearHover() { hover = null; },
     pick,
     hits: () => ({ nodes: hit.nodes.map(n => ({ id: n.id, x: n.x, y: n.y, china: n.china })), arcs: hit.arcs.slice(0, 60) }),
-    debug: () => ({ rot, phase, sel, grownOrder: state.grownOrder.slice(), grownCount: state.grownOrder.length, arcs: arcs.map(a => ({ id: a.id, grow: +a.grow.toFixed(2) })) })
+    /* 供验收断言：二维旋转后的实际投影坐标（视角真的变了，而不是只改了状态位） */
+    project: (lon, lat) => { const p = proj(lon, lat); return { x: +p.x.toFixed(2), y: +p.y.toFixed(2), z: +p.z.toFixed(4) }; },
+    debug: () => ({ rot, lat: tilt, latRange: [LAT_MIN, LAT_MAX], phase, sel,
+      grownOrder: state.grownOrder.slice(), grownCount: state.grownOrder.length,
+      arcs: arcs.map(a => ({ id: a.id, grow: +a.grow.toFixed(2) })) })
   };
   return api;
 })();

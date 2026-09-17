@@ -1,13 +1,16 @@
 {
   "name": "agri-llm-demo",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "农链 AgriLink — 中国农产品产业地图（阶段性领导演示 Demo，示意数据）",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "serve": "node server.mjs",
     "test": "node test/e2e.mjs",
-    "test:visual": "node test/visual.mjs"
+    "test:visual": "node test/visual.mjs",
+    "test:round3": "node test/round3.mjs",
+    "test:all": "node test/e2e.mjs && node test/visual.mjs && node test/round3.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

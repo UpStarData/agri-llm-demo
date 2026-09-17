@@ -7,6 +7,7 @@ window.AGRI_CHAIN = (function () {
   const D = window.AGRI_DATA;
   const $ = id => document.getElementById(id);
   let cur = null, stage = 0, hooks = {}, timers = [], radarRaf = null;
+  let curImportId = null;
   let l3 = { prov: null, city: null, avg: {}, mode: 'prov' };
 
   /* ---------------- 结构条（渐进出现，绑定当前对象） ---------------- */
@@ -119,10 +120,27 @@ window.AGRI_CHAIN = (function () {
   }
 
   /* ---------------- L4 ---------------- */
-  function render(key, cfg) {
+  const hubChain = () => (D.chains[cur] && D.chains[cur].kind === 'hub') ? D.chains[cur] : null;
+  const hubIm = () => { const ch = hubChain(); return ch ? (D.imports[curImportId] || D.imports[ch.catalog[0]]) : null; };
+  const stagesOf = () => { const im = hubIm(); if (im) return im.stages; const ch = D.chains[cur]; return (ch && ch.stages) || []; };
+  const entsOf = i => { if (hubIm()) return []; const ch = D.chains[cur]; return (ch && ch.entities[i]) || []; };
+
+  function render(key, cfg, importId) {
     hooks = cfg || {}; cur = key; stage = 0;
     const ch = D.chains[key];
     if (!ch) return false;
+    if (ch.kind === 'hub') return renderHub(ch, importId || (hubChain() && curImportId) || ch.catalog[0]);
+    curImportId = null;
+    const hubRow = document.getElementById('hubCats');
+    if (hubRow) hubRow.remove();
+    return renderCity(key, ch);
+  }
+
+  /* 城市代表单品全链路（原有链路，不变） */
+  function renderCity(key, ch) {
+    const pt = document.getElementById('priceTitle');
+    if (pt) pt.textContent = '田头 → 批发 → 零售 价格链路';
+    $('chainAxis').classList.remove('axis-5');
     $('chainTitle').innerHTML = `${ch.city} · ${ch.emoji} ${ch.product}<span class="mark">示意/待标定</span>`;
     $('chainSub').textContent = `${ch.prov} ｜ 上市季 ${ch.season} ｜ ${ch.headline}`;
     // 环节轴：序号角标（旧版 .stage .no）+ 本环节成本，形成"流程 + 数值"的连续叙事
@@ -144,18 +162,69 @@ window.AGRI_CHAIN = (function () {
     selectStage(0);
     return true;
   }
+
+  /* L4 · 红星大市场：品类 / 部位 + 终端建议（五段 = 数据骨架） */
+  function renderHub(ch, importId) {
+    const hx = D.HONGXING;
+    const im = D.imports[importId] || D.imports[ch.catalog[0]];
+    curImportId = im.id;
+    const pt = document.getElementById('priceTitle');
+    if (pt) pt.textContent = '境外园口 → 口岸 → 集散 → 红星 → 终端 价格链路';
+    $('chainTitle').innerHTML = `${hx.short} · ${im.emoji} ${im.title}<span class="mark">示意/待标定</span>`;
+    $('chainSub').textContent = `${hx.prov}·${hx.city} ｜ ${im.origin} ｜ ${im.item}${im.cut ? '（' + im.cut + '）' : ''} ｜ 数据骨架：${hx.skeleton.join(' → ')}`;
+    $('chainAxis').classList.add('axis-5');
+    let row = document.getElementById('hubCats');
+    if (!row) {
+      row = document.createElement('div');
+      row.id = 'hubCats'; row.className = 'hub-cats';
+      $('chainAxis').parentElement.insertBefore(row, $('chainAxis'));
+    }
+    row.innerHTML = `<span class="hc-title">红星在营进口品类 · 部位</span>`
+      + ch.catalog.map(k => { const x = D.imports[k];
+        return `<button class="hc${k === im.id ? ' on' : ''}" data-imp="${k}"><b>${x.emoji} ${x.title}</b><small>${x.origin}</small></button>`; }).join('')
+      + `<span class="hc-note">口径：${im.caliber.join(' ｜ ')}${im.sliceNote ? '；' + im.sliceNote : ''}</span>`;
+    row.querySelectorAll('button.hc').forEach(b => b.onclick = () => pickImport(b.dataset.imp));
+    // 五段环节轴 = 数据骨架（境外产区 → 中国进口 → 湖南集散 → 红星 → 渠道/终端）
+    $('chainAxis').innerHTML = im.stages.map((s, i) =>
+      `<div class="chip" data-i="${i}"><span class="no">${i + 1}/${im.stages.length}</span><div class="ic">${s.icon}</div><b>${s.name}</b><span class="cv">${s.price}</span></div>`).join('');
+    $('chainAxis').querySelectorAll('.chip').forEach(el => { el.onclick = () => { selectStage(+el.dataset.i); }; });
+    // 价格链路：段值 + 对源头价的倍数 + 加价最大的一段高亮
+    const base = im.price[0].v, top = im.price[im.price.length - 1].v;
+    let hot = { r: 0, i: 0 };
+    im.price.forEach((p, i) => { if (!i) return; const r = p.v / im.price[i - 1].v; if (r > hot.r) hot = { r, i }; });
+    $('priceChain').innerHTML = `<div class="price-head"><span>环节</span><span>价格</span><span>×对源头</span><span>占零售价</span><span>环节说明</span></div>`
+      + im.price.map((p, i) => {
+        const pct = Math.round(p.v / top * 100);
+        return `<div class="price-row${i === hot.i ? ' hot' : ''}"><span class="pk">${p.k}</span><span class="pv">${p.v}</span><span class="px">×${(p.v / base).toFixed(2)}</span><div class="pbar"><i data-w="${pct}%"></i></div><span class="pn">${p.note}</span></div>`;
+      }).join('');
+    $('priceSum').innerHTML = `源头 → 零售累计 <b>×${(top / base).toFixed(2)}</b>（${base} → ${top} 元/kg，示意）；加价最大的一段是 <b>${im.price[hot.i - 1].k} → ${im.price[hot.i].k}（×${hot.r.toFixed(2)}）</b>；口径：${im.caliber.join(' ｜ ')}。`;
+    selectStage(0);
+    return true;
+  }
+
+  /* 切换红星在营品类 / 部位（一个选择贯穿全链路） */
+  function pickImport(id) {
+    const ch = hubChain();
+    if (!ch || ch.catalog.indexOf(id) < 0) return false;
+    renderHub(ch, id);
+    if (hooks.onPickImport) hooks.onPickImport(id);
+    light();
+    return true;
+  }
   function selectStage(i) {
-    const ch = D.chains[cur];
-    if (!ch) return;
+    const st = stagesOf();
+    if (!st.length) return;
+    const n = st.length, im = hubIm();
     stage = i;
     $('chainAxis').querySelectorAll('.chip').forEach(el => el.classList.toggle('on', +el.dataset.i === i));
-    const s = ch.stages[i];
-    $('stageName').textContent = `${i + 1}/6 · ${s.name}`;
-    const dots = Array.from({ length: 6 }, (_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('');
-    $('stageMetrics').innerHTML = [['规模', s.scale], ['成本', s.cost], ['价格', s.price], ['链路位置', `<span class="dots">${dots}</span>`]]
-      .map(([k, v]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}${k === '链路位置' ? '' : '<span class="mark">示意</span>'}</div></div>`).join('');
+    const s = st[i];
+    $('stageName').textContent = `${i + 1}/${n} · ${s.name}`;
+    const dots = Array.from({ length: n }, (_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join('');
+    $('stageMetrics').innerHTML = [['规模', s.scale], ['成本', s.cost], ['价格', s.price],
+      ['口径', im ? (s.caliber || D.cal.market) : `<span class="dots">${dots}</span>`, true]]
+      .map(([k, v, plain]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}${plain ? '' : '<span class="mark">示意</span>'}</div></div>`).join('');
     $('stageRisk').innerHTML = `<b>风险敞口：</b>${s.risk}`;
-    const ents = ch.entities[i] || [];
+    const ents = entsOf(i);
     const old = document.getElementById('stageEnts');
     if (old) old.remove();
     if (ents.length) {
@@ -204,6 +273,6 @@ window.AGRI_CHAIN = (function () {
   }
   function drawerOpen() { return $('drawer').classList.contains('open'); }
 
-  return { renderProvinceL3, l3Focus, render, selectStage, light, openDrawer, closeDrawer, drawerOpen,
-    get stage() { return stage; }, get city() { return cur; }, get l3Mode() { return l3.mode; } };
+  return { renderProvinceL3, l3Focus, render, selectStage, light, openDrawer, closeDrawer, drawerOpen, pickImport,
+    get stage() { return stage; }, get city() { return cur; }, get l3Mode() { return l3.mode; }, get importId() { return curImportId; } };
 })();

@@ -95,12 +95,15 @@ window.createChinaMap = function (elId) {
   /* ---------- L2 ---------- */
   function l2Option() {
     const provs = Object.keys(D.provinces);
+    const hubs = D.hubs || [];
     // 窄屏地图小：只给"规模较大"的产区常显名称，其余靠悬浮/右侧列表，避免标签压住气泡
     const compact = !!(chart && chart.getWidth() < 560);
     const directs = directOn ? D.directFlows.map(f => ({
       coords: [[f.lng, f.lat], [f.mLng, f.mLat]], value: f.vol, f: f,
       lineStyle: { width: 1 + f.vol / 12, color: '#7c3aed', opacity: .8, curveness: .34, type: 'dashed' }
     })) : [];
+    // 同一市场的多个来源只画一个市场标记，避免同名标签叠在一起
+    const markets = Object.values(D.directFlows.reduce((a, f) => { if (!a[f.market]) a[f.market] = f; return a; }, {}));
     return {
       backgroundColor: 'transparent',
       geo: baseGeo({ regions: provinceRegions(null) }),
@@ -113,12 +116,18 @@ window.createChinaMap = function (elId) {
           effect: directs.length ? { show: true, period: 6, trailLength: .3, symbol: 'circle', symbolSize: 3, color: '#fff' } : { show: false },
           lineStyle: { curveness: .34 } },
         { id: 'dmkt', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 4,
-          data: directOn ? D.directFlows.map(f => ({ name: f.market, value: [f.mLng, f.mLat], f: f })) : [],
+          data: directOn ? markets.map(f => ({ name: f.market, value: [f.mLng, f.mLat], f: f })) : [],
           symbolSize: 9, rippleEffect: { scale: 2.4, brushType: 'stroke' }, itemStyle: { color: '#7c3aed' },
-          // 直达市场只有 4 个且是图层主角：名称必须常显（此前被 hideOverlap 静默隐藏，
+          // 直达市场数量少且是图层主角：名称必须常显（此前被 hideOverlap 静默隐藏，
           // 画面上只剩没有名字的空环）。加浅底避免与省份名重叠时读不清。
           label: { show: true, formatter: p => p.data.name, position: 'right', color: '#5b21b6', fontSize: 11, fontWeight: 600,
             backgroundColor: 'rgba(255,255,255,.86)', padding: [1, 4], borderRadius: 4 } },
+        // 集散枢纽（演示中心）：红星的常显标记，与品类色阶区分开
+        { id: 'hub', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 6,
+          data: hubs.map(h => ({ name: h.name, value: [h.lng, h.lat], h: h })),
+          symbolSize: 15, rippleEffect: { scale: 3.2, brushType: 'stroke' }, itemStyle: { color: '#b91c1c', borderColor: '#fff', borderWidth: 2 },
+          label: { show: true, formatter: p => p.data.name + ' · 集散枢纽', position: 'right', color: '#7f1d1d',
+            fontSize: 11, fontWeight: 700, backgroundColor: 'rgba(255,255,255,.92)', padding: [2, 5], borderRadius: 4 } },
         { id: 'prov', type: 'scatter', coordinateSystem: 'geo', zlevel: 5,
           data: provs.map(p => ({ name: p, value: [D.provinces[p].lng, D.provinces[p].lat], sup: D.provinces[p].supply, cat: D.provinces[p].cat })),
           symbolSize: (v, p) => supSize(p.data.sup),
@@ -163,6 +172,16 @@ window.createChinaMap = function (elId) {
     });
     return best;
   }
+  function hitHub(x, y) {
+    const hs = D.hubs || [];
+    let best = null, bd = 16;
+    hs.forEach(h => {
+      const p = px(h.lng, h.lat); if (!p) return;
+      const d = Math.hypot(p[0] - x, p[1] - y);
+      if (d < bd) { bd = d; best = h; }
+    });
+    return best;
+  }
   function hitMarket(x, y) {
     let best = null, bd = 14;
     D.directFlows.forEach(f => {
@@ -192,6 +211,7 @@ window.createChinaMap = function (elId) {
   }
   function hitTest(x, y) {
     if (mode === 'l2') {
+      const h = hitHub(x, y); if (h) { window.AGRI_UI.onHubClick(h); return true; }
       const p = hitProvince(x, y); if (p) { window.AGRI_UI.onProvinceClick(p); return true; }
       if (directOn) { const f = hitMarket(x, y); if (f) { window.AGRI_UI.onDirectClick(f); return true; } }
       const l = hitLine(x, y); if (l) { window.AGRI_UI.onPlineClick(l); return true; }
@@ -227,6 +247,7 @@ window.createChinaMap = function (elId) {
     if (p.seriesId === 'pline') { const x = p.data.x; return `<b>${x.from} → ${x.to}</b> ｜ ${x.item}<br>调运量 ${x.vol} 万吨（示意）｜ 同比 ${x.yoy > 0 ? '+' : ''}${x.yoy}%`; }
     if (p.seriesId === 'direct') { const f = p.data.f; return `<b>${f.country} → ${f.market}</b>（进口直达）<br>${f.item} ｜ ${f.vol} 万吨（示意）`; }
     if (p.seriesId === 'dmkt') { const f = p.data.f; return `<b>${f.market}</b><br>进口直达 ${f.vol} 万吨（${f.country}，${f.item}）`; }
+    if (p.seriesId === 'hub') { const h = p.data.h; return `<b>${h.name} · 集散枢纽</b><br>${h.role}<br><span style="color:#98a2b3">${h.note} · 再次点击进入 ${h.prov} 省区层</span>`; }
     return p.name || '';
   }
   // 气泡与连线重叠时：优先把点击算给省份气泡（避免点不动产区）
@@ -253,6 +274,7 @@ window.createChinaMap = function (elId) {
         if (near) { markHandled(); window.AGRI_UI.onProvinceClick(near); return; }
       }
       if (p.seriesId === 'prov') { markHandled(); window.AGRI_UI.onProvinceClick(p.name); }
+      else if (p.seriesId === 'hub') { markHandled(); window.AGRI_UI.onHubClick(p.data.h); }
       else if (p.seriesId === 'pline') { markHandled(); window.AGRI_UI.onPlineClick(p.data.x); }
       else if (p.seriesId === 'direct' || p.seriesId === 'dmkt') { markHandled(); window.AGRI_UI.onDirectClick(p.data.f); }
       else if (p.componentType === 'geo' && D.provinces[p.name]) { markHandled(); window.AGRI_UI.onProvinceClick(p.name); }
@@ -374,6 +396,8 @@ window.createChinaMap = function (elId) {
     getPose: () => ({ center: pose.center.slice(), zoom: pose.zoom }),
     getLit: () => litCount, getDirect: () => directOn, getMode: () => mode, getSel: () => selProv,
     gestureConsumed: () => consumedByFallback(),
+    hubPoint: () => { const h = (D.hubs || [])[0]; if (!h) return null; const p = px(h.lng, h.lat); const r = chart.getDom().getBoundingClientRect();
+      return p ? { x: r.x + p[0], y: r.y + p[1] } : null; },
     resize() { if (chart) chart.resize(); }
   };
 };

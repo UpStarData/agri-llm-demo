@@ -29,7 +29,7 @@
       </ul>
       <div class="land-cta">
         <button class="btn-primary" id="enterBtn">进入系统</button>
-        <span class="cta-note">全部数字为示意数据，用于确认展示形态与信息结构</span>
+        <span class="cta-note">全部数字为示意数据，用于确认展示形态与信息结构；进入后右上角有三条一键演示路径</span>
       </div>
     </div>
     <div class="land-foot">
@@ -51,7 +51,13 @@
       <!-- L1 -->
       <section class="scene" id="scene-l1" data-layer="1">
         <canvas id="globe"></canvas>
-        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外来源国 → 中国</span></div>
+        <div class="scene-head"><span class="lv">L1</span><b>全球货源流向</b><span>境外产区/国家 → 中国</span></div>
+        <div class="demo-paths" id="demoPaths">
+          <span class="dp-title">一键演示路径 · 选择贯穿 L1→L4</span>
+          <button data-demo="durian-my"><b>🇲🇾 马来西亚 · 猫山王</b><small>彭亨劳勿 → 长沙红星</small></button>
+          <button data-demo="cherry-cl"><b>🇨🇱 智利 · 车厘子</b><small>中部山谷 → 长沙红星</small></button>
+          <button data-demo="beef-br"><b>🇧🇷 巴西 · 牛肉 / 牛前腱</b><small>马托格罗索 → 长沙红星</small></button>
+        </div>
         <div class="scene-legend" id="legendL1">
           <span class="lg-title">品类 · 图例</span>
           <span class="lg-item"><span class="tag fruit">🍇 水果</span></span>
@@ -106,7 +112,7 @@
       </section>
       <!-- L4 -->
       <section class="scene" id="scene-l4" data-layer="4" inert>
-        <div class="scene-head"><span class="lv">L4</span><b>城市代表单品全链路</b><span id="l4Sub">六环节：规模 / 成本 / 价格 / 风险</span></div>
+        <div class="scene-head"><span class="lv">L4</span><b>城市代表单品全链路 / 红星品类·部位</b><span id="l4Sub">六环节：规模 / 成本 / 价格 / 风险</span></div>
         <div class="chain-head">
           <h2 id="chainTitle">—</h2>
           <span class="sub" id="chainSub"></span>
@@ -120,7 +126,7 @@
             <div class="tip-note" id="stageRisk"></div>
           </div>
           <div class="card">
-            <h3>田头 → 批发 → 零售 价格链路<small>元/kg · 示意</small></h3>
+            <h3><span id="priceTitle">田头 → 批发 → 零售 价格链路</span><small>元/kg · 示意</small></h3>
             <div id="priceChain"></div>
             <div class="price-sum" id="priceSum"></div>
           </div>
@@ -141,6 +147,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<!--BUILD-->
 <!--LIBS-->
 <!--DATA-->
 <!--APP_JS-->

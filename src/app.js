@@ -11,14 +11,15 @@
   const S = window.AGRI = {
     layer: 0, sel: null, flying: false, seen: {}, log: [],
     l1: { flow: null },
-    l2: { prov: null, line: null, direct: null },
+    l2: { prov: null, line: null, direct: null, hub: null },
     l3: { prov: null, city: null },
-    l4: { city: null, stage: 0 },
+    l4: { city: null, stage: 0, importId: null },
     cam: { 2: null, 3: { prov: null, pose: null } }
   };
   const UI = window.AGRI_UI = {};
 
   let map2 = null, map3 = null, wheelOut = 0, lastWheel = 0;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   /* ---------------- 工具 ---------------- */
   const sceneEl = l => $('scene-l' + l);
@@ -75,7 +76,7 @@
     if (n === 2) {
       if (!S.seen[2]) { map2.renderL2(); S.pendingFocusChina = S.l1.flow; }
       else map2.setPose(S.cam[2] || map2.home());
-      S.l2.prov = null; S.l2.line = null;
+      S.l2.prov = null; S.l2.line = null; S.l2.hub = null;
       map2.selectProvince(null);            // 回到 L2 = 恢复未选中态（与上层位姿一致）
     }
     if (n === 3) {
@@ -89,7 +90,12 @@
     if (n === 4) {
       const key = S.l4.city || chainKeyFor(S.l3.prov) || '伽师';
       S.l4.city = key;
-      window.AGRI_CHAIN.render(key, chainHooks());
+      const ch = D.chains[key];
+      if (ch && ch.kind === 'hub') {
+        const cat = ch.catalog.slice();
+        if (cat.indexOf(S.l4.importId) < 0) S.l4.importId = cat[0];   // 保住当前选择，否则回到第一个品类
+      } else S.l4.importId = null;
+      window.AGRI_CHAIN.render(key, chainHooks(), S.l4.importId);
       window.AGRI_CHAIN.closeDrawer();
     }
   }
@@ -156,7 +162,7 @@
     if (!c) return;
     if (S.l3.city === city) {                                  // 再次点击 → L4
       if (D.chains[city]) { S.l4.city = city; goTo(4); }
-      else toast('该产区代表单品链路待标定；当前已标定产区：伽师 · 红河蒙自 · 洛川 · 武鸣');
+      else toast('该产区代表单品链路待标定；当前已标定：伽师 · 红河蒙自 · 洛川 · 武鸣 · 长沙（红星）');
       return;
     }
     S.l3.city = city;
@@ -164,14 +170,50 @@
     setSel({ type: 'city', id: city, label: `${city}（${prov}）`, raw: c, cal: D.cal.supply });
     window.AGRI_CHAIN.l3Focus(prov, city);          // 左侧分析卡片切换到该产区口径
   };
+  /* L2 集散枢纽（演示中心）：一次点击看口径，再次点击进入该省 L3 */
+  UI.onHubClick = h => {
+    if (S.l2.hub === h.id) { S.l3.prov = h.prov; S.l3.city = h.name.indexOf('·') > 0 ? h.name.split('·')[1] : null; goTo(3); return; }
+    S.l2.hub = h.id; S.l2.prov = null; S.l2.line = null; S.l2.direct = null;
+    if (map2) map2.selectProvince(null);
+    setSel({ type: 'market', id: 'hub:' + h.id, label: `${h.name} · 集散枢纽`, raw: {
+      country: h.name.split('·')[0], market: h.name, mProv: h.prov, vol: null, cat: 'fresh',
+      item: D.HONGXING.role, yoy: null, hub: true, caliber: h.caliber, note: h.note
+    }, cal: h.caliber, hub: h });
+  };
   function chainHooks() {
-    const ch = () => D.chains[S.l4.city];
     return {
-      onStage: i => setSel({ type: 'stage', id: S.l4.city + '-' + i, label: `${ch().city}·${ch().product} ｜ ${ch().stages[i].name}`, raw: ch().stages[i], cal: D.cal.chain }, true),
-      onEntity: e => setSel({ type: 'entity', id: e.n, label: e.n, raw: e, cal: D.cal.chain }, true)
+      onStage: i => {
+        const o = hubOrCityObj(i);
+        if (o) setSel(o, true);
+      },
+      onEntity: e => setSel({ type: 'entity', id: e.n, label: e.n, raw: e, cal: D.cal.chain }, true),
+      onPickImport: id => {
+        S.l4.importId = id;
+        window.AGRI_CHAIN.render(S.l4.city, chainHooks(), id);
+        setSel(hubSelObj(id));
+      }
     };
   }
-  const chainSelObj = () => ({ type: 'chain', id: S.l4.city, label: `${D.chains[S.l4.city].city}·${D.chains[S.l4.city].product} 全链路`, raw: D.chains[S.l4.city], cal: D.cal.price });
+  const hubChain = () => (D.chains[S.l4.city] && D.chains[S.l4.city].kind === 'hub') ? D.chains[S.l4.city] : null;
+  const curImport = () => { const ch = hubChain(); return ch ? (D.imports[S.l4.importId] || D.imports[ch.catalog[0]]) : null; };
+  function hubOrCityObj(i) {
+    const im = curImport();
+    if (im) {
+      const s = im.stages[i];
+      return { type: 'hubstage', id: im.id + '-' + i, label: `${D.HONGXING.short} · ${im.title} ｜ ${s.name}`, raw: s,
+        cal: s.caliber || D.cal.market, import: im, calibers: im.caliber };
+    }
+    const ch = D.chains[S.l4.city];
+    return { type: 'stage', id: S.l4.city + '-' + i, label: `${ch.city}·${ch.product} ｜ ${ch.stages[i].name}`, raw: ch.stages[i], cal: D.cal.chain };
+  }
+  function hubSelObj(id) {
+    const im = D.imports[id] || curImport();
+    return { type: 'hub', id: S.l4.city + ':' + im.id, label: `${D.HONGXING.short} · ${im.title}`, raw: im,
+      cal: [im.caliber.join(' / '), im.sliceNote].filter(Boolean).join(' ｜ ') };
+  }
+  const chainSelObj = () => hubChain() ? hubSelObj(S.l4.importId) : {
+    type: 'chain', id: S.l4.city, label: `${D.chains[S.l4.city].city}·${D.chains[S.l4.city].product} 全链路`,
+    raw: D.chains[S.l4.city], cal: D.cal.price };
 
   function onBlank() {
     if (S.layer === 1) { setSel(null); window.AGRI_GLOBE.clearSelect(); return; }
@@ -186,7 +228,7 @@
     const c = [{ l: 1, t: '全球' }];
     if (S.layer >= 2) c.push({ l: 2, t: '中国' });
     if (S.layer >= 3) c.push({ l: 3, t: S.l3.prov || '省区' });
-    if (S.layer >= 4) c.push({ l: 4, t: (D.chains[S.l4.city] ? D.chains[S.l4.city].city : '城市') + '·单品' });
+    if (S.layer >= 4) c.push({ l: 4, t: hubChain() ? '红星·品类' : (D.chains[S.l4.city] ? D.chains[S.l4.city].city : '城市') + '·单品' });
     return c;
   }
   function renderCrumbs() {
@@ -301,6 +343,21 @@
           <div class="tip-note">线宽 = 调运量，颜色 = 品类；点击省份气泡可继续下钻到 L3。</div>
         </div>`;
         html += relatedPanel('其他调运线（按量级）', D.interProv.slice().sort((a, b) => b.vol - a.vol).filter(y => y !== x).slice(0, 8).map(y => relLi('p:' + y.from + '>' + y.to, `${y.from} → ${y.to}`, `${y.vol} 万吨`)).join(''));
+      } else if (sel && sel.type === 'market' && sel.hub) {
+        // 集散枢纽（演示中心）：体量不是重点，位置与口径才是
+        const h = sel.hub;
+        html += `<div class="panel">
+          <div class="phead"><span class="lv">L2 全国</span><span class="kind">集散枢纽 · 演示中心</span></div>
+          <h2><span class="h2-txt">${h.name}</span><span class="tag plain">集散枢纽</span><span class="mark">示意/待标定</span></h2>
+          ${sec('定位', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">角色</div><div class="v" style="font-size:.84375rem;font-weight:400;line-height:1.8">${h.role}</div></div>
+            <div class="metric"><div class="k">所属省 / 市</div><div class="v" style="font-size:.84375rem;font-weight:400;line-height:1.8">${h.prov} · ${D.HONGXING.city}</div></div>
+            <div class="metric"><div class="k">数据骨架位置</div><div class="v" style="font-size:.84375rem;font-weight:400;line-height:1.8">${D.HONGXING.skeleton.join(' → ')}</div></div>
+          </div>`)}
+          <div class="caliber">口径：${h.caliber}</div>
+          <div class="tip-note">本页以红星大市场为演示中心：一条选择从头到尾贯穿 L1 境外产区 → L2 中国进口 → L3 湖南 / 红星 → L4 品类·部位与终端建议。<b>再次点击该枢纽 → 进入 L3 湖南</b>。</div>
+        </div>`;
+        html += relatedPanel('以此为终端的进口直达品类', D.directFlows.filter(x => x.market === h.name).map(x => relLi('m:' + x.id, `${x.country} → ${x.item}`, `${x.vol} 万吨 · 示意`)).join('') || '<li style="cursor:default"><small>暂无标注的直达线</small></li>');
       } else if (sel && sel.type === 'market') {
         const f = sel.raw;
         html += `<div class="panel">
@@ -312,11 +369,10 @@
             ${kpi('同比', '+' + f.yoy + '%', 'pos')}
             ${kpi('所在省', f.mProv)}
           </div>`)}
-          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.market} ｜ 来源：${D.ORG}</div>
+          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${f.caliber || D.cal.market} ｜ 来源：${D.ORG}</div>
           <div class="tip-note">进口货源直达销地一级市场，与国内产区的调运线形成直接竞争（可在左侧图例栏勾选叠加 / 关闭该图层）。</div>
         </div>`;
-        html += relatedPanel('全部进口直达线', D.directFlows.map(y => relLi('m:' + y.id, `${y.country} → ${y.market}`, `${y.vol} 万吨 · ${y.item}`)).join(''));
-      } else {
+        html += relatedPanel('全部进口直达线', D.directFlows.map(y => relLi('m:' + y.id, `${y.country} → ${y.market}`, `${y.vol} 万吨 · ${y.item}`)).join(''));      } else {
         const totalInter = D.interProv.reduce((a, b) => a + b.vol, 0);
         html += `<div class="panel">
           <div class="phead"><span class="lv">L2 全国</span><span class="kind">未选中对象 · 全国概览</span></div>
@@ -368,8 +424,12 @@
           ${sec('产业特征', `<div class="metrics" style="grid-template-columns:1fr">
             <div class="metric"><div class="k">特征</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${d.feature}</div></div>
           </div>`)}
-          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply} ｜ 来源：${D.ORG}</div>
-          <div class="tip-note">点城市节点 → 看该产区的产量、主导品类、竞争力五维与区域特征；<b>左侧分析卡片会同步切换为该产区口径</b>；再次点击 → 进入 L4 单品全链路。</div>
+          ${d.hub ? sec('本省集散枢纽（演示中心）', `<div class="metrics" style="grid-template-columns:1fr">
+            <div class="metric"><div class="k">枢纽</div><div class="v" style="font-size:.84375rem">${D.HONGXING.name}</div></div>
+            <div class="metric"><div class="k">角色</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${D.HONGXING.role}（企业 / 媒体表述，口径待核）</div></div>
+          </div>`) : ''}
+          <div class="caliber">周期：${D.PERIOD} ｜ 口径：${D.cal.supply}${d.hub ? ' / ' + D.cal.hub : ''} ｜ 来源：${D.ORG}</div>
+          <div class="tip-note">点城市节点 → 看该产区的产量、主导品类、竞争力五维与区域特征；<b>左侧分析卡片会同步切换为该产区口径</b>；${d.hub ? `点${D.HONGXING.city}（红星）→ 进入 L4 进口品类 · 部位与终端建议。` : '再次点击 → 进入 L4 单品全链路。'}</div>
         </div>`;
         html += relatedPanel('省内产区', d.cities.map(c => relLi('city:' + c.name, c.name, `${c.out} 万吨 · ${c.main}`, D.chains[c.name] ? '<span class="chain-tag">全链路</span>' : '')).join(''));
       }
@@ -377,7 +437,8 @@
 
     if (S.layer === 4) {
       const key = S.l4.city, ch = D.chains[key];
-      if (ch) {
+      if (ch && ch.kind === 'hub') html += hubPanel(ch);
+      else if (ch) {
         html += `<div class="panel">
           <div class="phead"><span class="lv">L4 单品</span><span class="kind">${ch.prov} · ${ch.city}</span></div>
           <h2><span class="h2-txt">${ch.emoji} ${ch.product}</span><span class="mark">示意/待标定</span></h2>
@@ -394,12 +455,54 @@
       }
     }
 
-    html += aiPanel();
-    side.innerHTML = html;
+    html += aiPanel();    side.innerHTML = html;
     // 换对象 = 换面板：滚动位置必须回到顶部，否则新面板的标题会被上一次的滚动位置截掉
     // （同一对象内重绘，例如环节/主体切换，保留当前位置）
     if (!keepScroll) side.scrollTop = 0;
     wireSide();
+  }
+
+  /* L4 · 红星大市场：品类 / 部位 + 终端建议（数据骨架五段） */
+  function hubPanel(ch) {
+    const im = curImport();
+    const hx = D.HONGXING;
+    const skel = hx.skeleton.map((s, i) => {
+      const st = im.stages[i];
+      return `<li><span><b>${i + 1}. ${s}</b> <small>${st.name}</small></span><small>${st.price}</small></li>`;
+    }).join('');
+    const cut = im.sliceNote ? `<div class="metric"><div class="k">部位 / 口径提示</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${im.cut ? im.cut + ' —— ' : ''}${im.sliceNote}</div></div>` : '';
+    return `<div class="panel">
+      <div class="phead"><span class="lv">L4 品类·部位</span><span class="kind">${hx.prov} · ${hx.short}</span></div>
+      <h2><span class="h2-txt">${im.emoji} ${im.title}</span>${catTag(im.cat)}<span class="mark">示意/待标定</span></h2>
+      ${sec('境外产区 / 国家', `<div class="metrics" style="grid-template-columns:1fr">
+        <div class="metric"><div class="k">产区</div><div class="v" style="font-size:.84375rem">${im.origin}</div></div>
+        <div class="metric"><div class="k">品类 / 部位</div><div class="v" style="font-size:.84375rem">${im.item}</div></div>
+        ${cut}
+        <div class="metric"><div class="k">量级口径提示</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${im.shareNote}</div></div>
+      </div>`)}
+      ${sec('数据骨架五段（选择一路贯穿）', `<ul class="rel">${skel}</ul>`)}
+      ${sec('对照来源', `<ul class="rel">${im.peers.map(p => `<li style="cursor:default"><span>${p.k}</span><small>${p.v}</small></li>`).join('')}</ul>`)}
+      ${sec('终端建议', `<div class="metrics" style="grid-template-columns:1fr">${im.advice.map((a, i) => `<div class="metric"><div class="k">建议 ${i + 1}</div><div class="v" style="font-size:.78125rem;font-weight:400;line-height:1.8">${a}</div></div>`).join('')}</div>`)}
+      <div class="caliber">周期：${D.PERIOD} ｜ 口径：${im.caliber.join(' ｜ ')} ｜ 来源：${D.ORG}</div>
+      <div class="tip-note">红星口径：${hx.caliber}</div>
+    </div>` +
+    relatedPanel('红星在营进口品类（切换）', ch.catalog.map(k => relLi('imp:' + k, `${D.imports[k].emoji} ${D.imports[k].title}`,
+      k === im.id ? '当前' : D.imports[k].origin.split(' · ')[0] + ' · 点击切换')).join(''));
+  }
+
+  /* AI 模式徽标：真实模型已连接 / 规则演示 / 加载中 / 错误后降级 */
+  function aiModeBadge() {
+    const P = window.AGRI_PROVIDER;
+    const st = P ? P.state : { mode: 'rule', detail: '规则演示' };
+    return `<span class="ai-mode ${st.mode}" id="aiMode" title="${st.reason || st.lastError || ''}">${st.detail}</span>`;
+  }
+  function refreshAiMode() {
+    const el = $('aiMode');
+    if (!el || !window.AGRI_PROVIDER) return;
+    const st = window.AGRI_PROVIDER.state;
+    el.className = 'ai-mode ' + st.mode;
+    el.textContent = st.detail;
+    el.title = st.reason || st.lastError || '';
   }
 
   function aiPanel() {
@@ -408,7 +511,7 @@
     const label = o ? `${o.label} ｜ ${o.cal}` : '尚未选中对象';
     const first = window.AGRI_AI.ask(o, qs[0].q);
     return `<div class="panel ai">
-      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small></div>
+      <div class="ai-head"><span class="dot"></span>AI 分析助手<small>基于当前选中对象</small>${aiModeBadge()}</div>
       <div class="ai-obj">当前对象：${label}</div>
       <div class="ai-qs">${qs.map((x, i) => `<button data-q="${i}">${x.q}</button>`).join('')}</div>
       <div class="ai-a">${md(first.a)}</div>
@@ -433,27 +536,84 @@
       } else if (id.indexOf('m:') === 0) {
         const f = D.directFlows.find(y => y.id === id.slice(2));
         if (f) UI.onDirectClick(f);
+      } else if (id.indexOf('imp:') === 0) {
+        window.AGRI_CHAIN.pickImport(id.slice(4));
       } else if (id.indexOf('city:') === 0) { UI.onCityClick(S.l3.prov, id.slice(5)); }
       else if (id.indexOf('chain:') === 0) { S.l4.city = id.slice(6); prepare(4); layerEnter(4); renderSide(); }
     });
     side.querySelectorAll('.ai-qs button').forEach(b => b.onclick = () => {
       const o = S.sel, qs = window.AGRI_AI.presets(o);
-      showAnswer(window.AGRI_AI.ask(o, qs[+b.dataset.q].q));
+      askCurrent(qs[+b.dataset.q].q);
     });
     const input = side.querySelector('#aiInput'), send = side.querySelector('#aiSend');
     if (input && send) {
-      const go = () => { const q = input.value.trim(); if (!q) return; showAnswer(window.AGRI_AI.free(S.sel, q)); input.value = ''; };
+      const go = () => { const q = input.value.trim(); if (!q) return; askCurrent(q, { free: true }); input.value = ''; };
       send.onclick = go;
       input.onkeydown = e => { if (e.key === 'Enter') go(); };
     }
   }
-  function showAnswer(res) {
+
+  /* ---------- 提问：有同源代理走真实模型，否则回落到规则演示（不白屏） ---------- */
+  let aiBusy = false;
+  async function askCurrent(q, opts) {
+    const o = S.sel;
+    if (!o || aiBusy) return;
+    const rule = () => (opts && opts.free) ? window.AGRI_AI.free(o, q) : window.AGRI_AI.ask(o, q);
+    const P = window.AGRI_PROVIDER;
+    if (!P || !P.live) { showAnswer(rule()); return; }
+    const selId = o.id;
+    aiBusy = true;
+    showLoading(o, q);
+    const res = await window.AGRI_AI.live(o, q);
+    aiBusy = false;
+    if (S.sel && S.sel.id !== selId) return;            // 请求期间换了对象，丢弃这次结果
+    if (res) { showAnswer(res); refreshAiMode(); return; }
+    showAnswer(rule());
+    refreshAiMode();                                     // 徽标切到「错误后降级」
+  }
+
+  function showLoading(o, q) {
+    const a = $('side').querySelector('.ai-a');
+    if (!a) return;
+    const c = window.AGRI_AI.ctxOf(o);
+    a.innerHTML = md(`**加载中**｜正在请求真实模型…\n\n问题：${q}\n上下文：层级 ${c.layer} ｜ 选择 ${c.selection} ｜ 品类 ${c.category}`);
+    const t = $('side').querySelector('.ai-tags');
+    if (t) t.innerHTML = '<span>加载中</span>';
+  }
+  function showAnswer(res, extraTag) {
     const a = $('side').querySelector('.ai-a');
     if (!a) return;
     a.innerHTML = md(res.a);
     const t = $('side').querySelector('.ai-tags');
-    if (t) t.innerHTML = res.tags.map(x => `<span>${x}</span>`).join('');
+    if (t) t.innerHTML = res.tags.concat(extraTag ? [extraTag] : []).map(x => `<span>${x}</span>`).join('');
     S.lastAnswer = res.a;
+  }
+
+  /* ---------------- 一键演示路径（选择贯穿 L1→L2→L3→L4） ---------------- */
+  let demoRunning = false;
+  async function runDemoPath(id) {
+    const p = (D.demoPaths || []).find(x => x.id === id);
+    if (!p || demoRunning) return false;
+    demoRunning = true;
+    S.demoPath = id;
+    try {
+      if (S.layer !== 1) { toast(`一键演示：${p.country} · ${p.label} → ${D.HONGXING.prov}${D.HONGXING.short}`); goTo(1, { force: true }); await sleep(FLIGHT + 300); }
+      const f = D.flows.find(x => x.id === p.flowId);
+      if (f) { S.l1.flow = f.id; window.AGRI_GLOBE.clearSelect(); window.AGRI_GLOBE.select(f.id); setSel(flowObj(f)); }
+      toast(`① 境外产区：${p.country} · ${p.label}（${p.sub}）`);
+      await sleep(1500);
+      goTo(2, { force: true }); await sleep(FLIGHT + 500);
+      S.l2.prov = p.prov; S.l2.line = null; S.l2.direct = null; S.l2.hub = null;
+      map2.selectProvince(p.prov); setSel(provObj(p.prov));
+      toast(`② 中国进口与消费 → ③ ${D.HONGXING.prov}集散（长沙→中南五省）`);
+      await map2.flyTo([D.HONGXING.lng, D.HONGXING.lat], 2.6, 1100); await sleep(420);
+      S.l3.prov = p.prov; S.l3.city = p.city;
+      goTo(3, { force: true }); await sleep(FLIGHT + 1500);
+      S.l4.city = p.city; S.l4.importId = p.id;
+      toast(`④ ${D.HONGXING.name} → ⑤ 品类 / 部位与终端建议`);
+      goTo(4, { force: true }); await sleep(FLIGHT + 1200);
+      return true;
+    } finally { demoRunning = false; }
   }
 
   /* ---------------- 全局交互 ---------------- */
@@ -489,6 +649,9 @@
       $('legendL2').classList.toggle('direct-on', e.target.checked);
     });
     if ($('drawerClose')) $('drawerClose').onclick = () => window.AGRI_CHAIN.closeDrawer();
+    document.querySelectorAll('#demoPaths button').forEach(b => {
+      b.onclick = () => runDemoPath(b.dataset.demo);
+    });
   }
 
   /* ---------------- 启动 ---------------- */
@@ -504,6 +667,11 @@
     if (map3.el) map3.el.getZr().on('click', e => { if (!e.target && S.layer === 3 && !map3.gestureConsumed()) onBlank(); });
     bindGlobal();
     renderSide();
+    // AI provider：有同源代理就探测真实模型，否则直接用规则演示（不发起任何网络请求）
+    if (window.AGRI_PROVIDER) {
+      window.AGRI_PROVIDER.onChange(() => refreshAiMode());
+      window.AGRI_PROVIDER.probe().then(() => refreshAiMode());
+    }
   }
 
   function enterSystem() {
@@ -530,7 +698,22 @@
     sideText: () => $('side').innerText,
     selLabel: () => (S.sel ? `${S.sel.type}:${S.sel.label}` : null),
     aiText: () => { const a = $('side').querySelector('.ai-a'); return a ? a.innerText : ''; },
+    aiTags: () => Array.from($('side').querySelectorAll('.ai-tags span')).map(x => x.textContent),
+    aiMode: () => (window.AGRI_PROVIDER ? window.AGRI_PROVIDER.state : null),
+    aiCtx: () => window.AGRI_AI.ctxOf(S.sel),
     ask: q => { const r = window.AGRI_AI.ask(S.sel, q); showAnswer(r); return r.a; },
+    askLive: q => askCurrent(q),
+    demoPaths: () => (D.demoPaths || []).map(p => ({ id: p.id, country: p.country, label: p.label, sub: p.sub })),
+    demoPath: id => runDemoPath(id),
+    build: () => window.__AGRI_BUILD || null,
+    caliber: () => D.caliber,
+    hub: () => D.HONGXING,
+    hubMarkers: () => (D.hubs || []).map(h => ({ id: h.id, name: h.name, role: h.role })),
+    hubCatalog: () => { const ch = hubChain(); const keys = ch ? ch.catalog : Object.keys(D.imports); return keys.map(k => { const im = D.imports[k];
+      return { id: k, title: im.title, origin: im.origin, item: im.item, cut: im.cut || '', stages: im.stages.map(s => s.name),
+        text: im.stages.map(s => [s.scale, s.cost, s.price, s.risk].join(' ')).join(' ') + ' ' + im.price.map(p => p.k + p.note).join(' '),
+        advice: im.advice, sliceNote: im.sliceNote || '' }; }); },
+    currentImport: () => { const im = curImport(); return im ? { id: im.id, title: im.title, origin: im.origin, item: im.item, cut: im.cut || '', shareNote: im.shareNote, sliceNote: im.sliceNote || '' } : null; },
     globePick: (x, y) => window.AGRI_GLOBE.pick(x, y),
     globeHits: () => window.AGRI_GLOBE.hits(),
     globeBox: () => { const r = $('globe').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; },
