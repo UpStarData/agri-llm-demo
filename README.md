@@ -196,10 +196,13 @@ node test/live-check.mjs # 对**正在运行的真实服务**做真实连通性�
 `node build.mjs` 会输出确定性构建指纹并写入 `build-meta.json`：
 
 ```
-index.html  2325 KB  single-file / offline-ready  build=<sha256:12> git=<short sha>
+index.html  2399 KB  single-file / offline-ready  build=<sha256:12> git=<short sha>
 ```
 
-线上核对：
+> 核对**以 `hash` 为准**：它只由构建输入内容决定（确定性）。`git` 是**构建时的 HEAD**，
+> 而构建发生在提交之前，所以它比发布的那一次提交早一位 —— 不要用 `git` 字段判版。
+
+线上核对（本地 `build-meta.json` 的 `hash` 应与线上一字不差）：
 
 ```bash
 curl -s https://upstardata.github.io/agri-llm-demo/ | grep -o 'window.__AGRI_BUILD={[^}]*}' | head -1
