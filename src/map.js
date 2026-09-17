@@ -115,8 +115,10 @@ window.createChinaMap = function (elId) {
         { id: 'dmkt', type: 'effectScatter', coordinateSystem: 'geo', zlevel: 4,
           data: directOn ? D.directFlows.map(f => ({ name: f.market, value: [f.mLng, f.mLat], f: f })) : [],
           symbolSize: 9, rippleEffect: { scale: 2.4, brushType: 'stroke' }, itemStyle: { color: '#7c3aed' },
-          labelLayout: { hideOverlap: true },
-          label: { show: true, formatter: p => p.data.name, position: 'right', color: '#5b21b6', fontSize: 11, fontWeight: 600 } },
+          // 直达市场只有 4 个且是图层主角：名称必须常显（此前被 hideOverlap 静默隐藏，
+          // 画面上只剩没有名字的空环）。加浅底避免与省份名重叠时读不清。
+          label: { show: true, formatter: p => p.data.name, position: 'right', color: '#5b21b6', fontSize: 11, fontWeight: 600,
+            backgroundColor: 'rgba(255,255,255,.86)', padding: [1, 4], borderRadius: 4 } },
         { id: 'prov', type: 'scatter', coordinateSystem: 'geo', zlevel: 5,
           data: provs.map(p => ({ name: p, value: [D.provinces[p].lng, D.provinces[p].lat], sup: D.provinces[p].supply, cat: D.provinces[p].cat })),
           symbolSize: (v, p) => supSize(p.data.sup),
