@@ -723,7 +723,7 @@ svg{display:block}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"363ff044c8fc","git":"c6fe7b0","builtAt":"2026-09-21T16:06:46.334Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"c2a48ba6baa8","git":"da42575","builtAt":"2026-09-21T16:10:28.580Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -3170,7 +3170,7 @@ window.V03Fact = (function () {
               <div class="kv"><span>影响等级</span><b>${IMPACT_LABEL[f.impact]}</b></div>
               <div class="kv"><span>生效日期</span><b>${f.date}</b></div>
               <div class="kv"><span>空间层级</span><b>${f.level === 'global' ? '全球' : f.level === 'china' ? '全国' : '省区'}</b></div>
-              <div class="kv"><span>经纬度</span><b>${f.lng.toFixed(2)}, ${f.lat.toFixed(2)}</b></div>
+              <div class="kv"><span>经纬度</span><b>东经 ${f.lng.toFixed(2)}° / 北纬 ${f.lat.toFixed(2)}°</b></div>
               <div class="kv"><span>影响半径</span><b>${f.radius} km</b></div>
             </div>
           </div>
@@ -3550,7 +3550,7 @@ window.V03Relation = (function () {
         <h3><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dm.c};margin-right:7px"></span>${o.name}</h3>
         <div class="fd-id">${o.id} · ${dm.e || ''} ${dm.n} · ${o.geo === false ? '非地理本体（不在地图定位）' : '可定位本体'}</div>
       </div></div>
-      <div class="fd-chips">${chip(dm.n)}${chip(o.geo === false ? '无坐标' : '经纬度 ' + o.lng.toFixed(2) + ', ' + o.lat.toFixed(2))}${chip(rels.length + ' 条关系')}${chip(allFacts.length + ' 条支撑事实')}</div>
+      <div class="fd-chips">${chip(dm.n)}${chip(o.geo === false ? '无坐标' : '坐标 ' + o.lng.toFixed(2) + '°E / ' + o.lat.toFixed(2) + '°N')}${chip(rels.length + ' 条关系')}${chip(allFacts.length + ' 条支撑事实')}</div>
       <div class="fd-grid">
         <div class="fd-col">
           <div class="fd-sec"><h4>对象说明 <small>${o.sub}</small></h4><p>${o.sub}。本体对象由事实抽离而来，关系与打分自动完成，不设人工审核入口。</p></div>
