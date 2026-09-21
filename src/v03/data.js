@@ -28,6 +28,80 @@ window.V03Data = (function () {
   ];
 
   /* ---------- 事实：地图对象 + 影响范围 + 证据 ---------- */
+  /* ---------- 榴莲份额用户故事：事实（最近 30 天 · 交易量口径，演示样例） ---------- */
+  const DURIAN_FACTS = [
+    { id: 'F-DU-01', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '马来西亚榴莲',
+      lat: 28.19, lng: 112.98, cred: 'high', impact: 'high', radius: 160, media: 'image', mediaNote: '冷库到货台账 4 张',
+      title: '最近 30 天湖南接收马来西亚榴莲 4,800 吨（交易量口径）',
+      summary: '按到货台账归并：湖南接收马来西亚榴莲 4,800 吨；其中红星市场接收 1,680 吨，流入占比 35%（演示样例基线）。',
+      evidence: [{ t: '湖南进口商到货台账（示意）', k: '台账', q: '最近 30 天湖南接收马来西亚榴莲 4,800 吨；红星 1,680 吨。' },
+                 { t: '口径说明（示意）', k: '口径', q: '统一采用交易量口径（吨），时间范围最近 30 天。' }],
+      objects: ['O-REG-MY', 'O-VAR-DURIAN', 'O-MKT-HX', 'O-MET-DUSHR'], relations: ['R-DU-01', 'R-DU-02'] },
+
+    { id: 'F-DU-02', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '红星榴莲到货',
+      lat: 28.19, lng: 112.98, cred: 'high', impact: 'mid', radius: 120, media: 'image', mediaNote: '交易区到货照片 3 张',
+      title: '红星市场接收马来西亚榴莲 1,680 吨，日均到货 56 吨',
+      summary: '红星为湖南主要落地市场之一；日均到货约 56 吨，凌晨竞价为主。',
+      evidence: [{ t: '红星市场到货台账（示意）', k: '台账', q: '最近 30 天接收马来西亚榴莲 1,680 吨，日均约 56 吨。' }],
+      objects: ['O-MKT-HX', 'O-VAR-DURIAN', 'O-COM-IMP'], relations: ['R-DU-02'] },
+
+    { id: 'F-DU-03', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '湖南榴莲交易量',
+      lat: 28.10, lng: 112.90, cred: 'high', impact: 'mid', radius: 150, media: 'text', mediaNote: '市场交易台账摘录',
+      title: '湖南全部来源榴莲交易量 6,600 吨，红星占 2,310 吨',
+      summary: '含马来西亚、泰国、越南等全部来源；红星交易量 2,310 吨，市场份额 35%（演示样例基线）。',
+      evidence: [{ t: '全省主要批发市场交易台账（示意）', k: '台账', q: '湖南榴莲交易量 6,600 吨；红星 2,310 吨。' }],
+      objects: ['O-MKT-HX', 'O-MKT-GZ', 'O-MET-DUSHR'], relations: ['R-DU-07', 'R-DU-08'] },
+
+    { id: 'F-DU-04', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '红星交易量',
+      lat: 28.17, lng: 113.01, cred: 'high', impact: 'mid', radius: 120, media: 'image', mediaNote: '交易区价牌 2 张',
+      title: '红星市场榴莲交易量 2,310 吨，占湖南市场份额 35%',
+      summary: '红星份额以「红星交易量 ÷ 湖南总交易量」计算，基线 35%。',
+      evidence: [{ t: '红星市场交易台账（示意）', k: '台账', q: '榴莲交易量 2,310 吨，占全省 35%。' }],
+      objects: ['O-MKT-HX', 'O-MET-DUSHR'], relations: ['R-DU-07'] },
+
+    { id: 'F-DU-05', cat: 'price', date: '2026-09-20', level: 'province', region: '湖南 · 长沙', short: '红星榴莲价',
+      lat: 28.19, lng: 112.98, cred: 'high', impact: 'mid', radius: 110, media: 'image', mediaNote: '价牌照片 2 张',
+      title: '红星榴莲平均批发价 32 元／公斤（最近 30 天）',
+      summary: '按品类归并的批发均价；价格弹性为模型估计参数（降级项）。',
+      evidence: [{ t: '红星市场挂牌价（示意）', k: '市场', q: '榴莲批发均价 32 元／公斤。' }],
+      objects: ['O-MKT-HX', 'O-MET-PRICE', 'O-VAR-DURIAN'], relations: ['R-DU-05'] },
+
+    { id: 'F-DU-06', cat: 'logistics', date: '2026-09-20', level: 'province', region: '湖南 · 长沙', short: '库存周转',
+      lat: 28.19, lng: 112.98, cred: 'mid', impact: 'low', radius: 90, media: 'text', mediaNote: '库存台账摘录',
+      title: '红星榴莲库存周转天数 3.8 天，冷链分拨能力接近上限',
+      summary: '库容与分拨线接近能力上限，周转天数对到货增量较敏感。',
+      evidence: [{ t: '冷库进出库台账（示意）', k: '台账', q: '库存周转 3.8 天，分拨利用率 87%。' }],
+      objects: ['O-MKT-HX', 'O-FAC-PORT'], relations: ['R-DU-03'] },
+
+    { id: 'F-DU-07', cat: 'trade', date: '2026-09-15', level: 'global', region: '马来西亚 · 彭亨劳勿', short: '彭亨产量',
+      lat: 3.50, lng: 101.80, cred: 'mid', impact: 'high', radius: 220, media: 'image', mediaNote: '果园测产 3 张',
+      title: '彭亨劳勿产季增产，对湖南可供量预计提升 20%',
+      summary: '产季增产叠加专线运力恢复；「增长 20%」在本推演中作为用户假设，不写成现实事实。',
+      evidence: [{ t: '产区测产与出口计划（示意）', k: '测产', q: '对湖南可供量预计提升 20%（作为推演假设）。' }],
+      objects: ['O-REG-MY', 'O-COM-MY', 'O-VAR-DURIAN'], relations: ['R-DU-01'] },
+
+    { id: 'F-DU-08', cat: 'trade', date: '2026-09-12', level: 'province', region: '广东 · 广州', short: '竞争采购',
+      lat: 23.13, lng: 113.26, cred: 'low', impact: 'mid', radius: 200, media: 'text', mediaNote: '市场访谈记录（待核）',
+      title: '竞争市场加强榴莲采购，采购能力缺现实台账（标记待核）',
+      summary: '广州江南等竞争市场提高采购报价与订单量；采购能力缺少现实数据，本推演按模拟参数处理。',
+      evidence: [{ t: '市场访谈（示意 · 待核）', k: '访谈', q: '竞争市场采购报价上调，订单量增加；台账缺失。' }],
+      objects: ['O-MKT-GZ', 'O-COM-IMP', 'O-MET-DUSHR'], relations: ['R-DU-04', 'R-DU-08'] }
+  ];
+
+  /* ---------- 榴莲份额用户故事：新增本体对象（无坐标对象不显示为地图点） ---------- */
+  const DURIAN_OBJECTS = [
+    { id: 'O-REG-MY', domain: 'region', name: '马来西亚·彭亨劳勿产区', sub: '境外榴莲主产带',
+      lat: 3.50, lng: 101.80, geo: true, props: [['品类', '猫山王 · 黑刺'], ['对湖南可供量', '+20%（推演假设）']] },
+    { id: 'O-COM-IMP', domain: 'company', name: '湖南榴莲进口商', sub: '口岸到市场分拨主体',
+      lat: 28.23, lng: 112.94, geo: true, props: [['角色', '采购与市场分配'], ['依赖', '口岸与冷链能力']] },
+    { id: 'O-FAC-PORT', domain: 'facility', name: '黄花机场生鲜口岸', sub: '空运冷链通关与分拨',
+      lat: 28.19, lng: 113.22, geo: true, props: [['能力', '冷链分拨利用率 87%（示意）'], ['时效', '48 小时直达']] },
+    { id: 'O-FAC-RETAIL', domain: 'facility', name: '湖南零售渠道', sub: '商超与水果连锁',
+      lat: 28.20, lng: 112.95, geo: true, props: [['行为', '按价格与库存补货'], ['关注', '动销与损耗']] },
+    { id: 'O-MET-DUSHR', domain: 'metric', name: '榴莲份额指标', sub: '流入占比 · 市场份额',
+      geo: false, props: [['口径', '交易量（吨）· 最近 30 天'], ['基线', '35% / 35%']] }
+  ];
+
   const FACTS = [
     { id: 'F-CL-01', cat: 'trade', date: '2026-09-14', level: 'global', region: '智利 · 中部山谷', short: '智利',
       lat: -34.6, lng: -70.9, cred: 'high', impact: 'mid', radius: 260, media: 'video', mediaNote: '央视财经 · 产区走访 2:14',
@@ -151,7 +225,7 @@ window.V03Data = (function () {
       summary: '凌晨 2–5 点直播场次周环比 +23%，线上询价向线下成交转化约 18%（平台口径，待核）。',
       evidence: [{ t: '平台公开场次统计（示意）', k: '平台', q: '直播场次 +23%，询价转化 18%（口径待核）。' }],
       objects: ['O-MKT-HX', 'O-PER-BUYER', 'O-MET-PRICE'], relations: ['R-18'] }
-  ];
+  ].concat(DURIAN_FACTS);
 
   /* ---------- 本体对象：九类对象域（无坐标对象不显示为地图点） ---------- */
   const OBJECTS = [
@@ -216,6 +290,26 @@ window.V03Data = (function () {
       lat: 29.37, lng: 113.13, geo: true, props: [['冷库', '1.2 万吨'], ['分拨线', '8 条']] },
     { id: 'O-FAC-CORRIDOR', domain: 'facility', name: '京港澳冷链干线（郑州节点）', sub: '干线运力通道',
       lat: 34.75, lng: 113.62, geo: true, props: [['路径', '郑州 → 长沙'], ['运价指数', '+4.1%（示意）']] }
+  ].concat(DURIAN_OBJECTS);
+
+  const DURIAN_RELATIONS = [
+
+    { id: 'R-DU-01', from: 'O-REG-MY', to: 'O-COM-MY', type: '产区供给', strength: 0.88, confidence: 0.84, formed: '2026-05',
+      changedBy: 'F-DU-07', factIds: ['F-DU-07', 'F-DU-01'], note: '彭亨劳勿产季增产直接改变对湖南可供量；「+20%」为用户假设。' },
+    { id: 'R-DU-02', from: 'O-COM-IMP', to: 'O-MKT-HX', type: '供应流向', strength: 0.83, confidence: 0.78, formed: '2026-06',
+      changedBy: 'F-DU-02', factIds: ['F-DU-02', 'F-DU-01'], note: '进口商向红星分配货量，决定流入占比的分子。' },
+    { id: 'R-DU-03', from: 'O-FAC-PORT', to: 'O-COM-IMP', type: '设施服务', strength: 0.71, confidence: 0.69, formed: '2026-06',
+      changedBy: 'F-DU-06', factIds: ['F-DU-06'], note: '口岸冷链能力约束进口商可分配上限。' },
+    { id: 'R-DU-04', from: 'O-COM-IMP', to: 'O-MKT-GZ', type: '供应流向', strength: 0.66, confidence: 0.58, formed: '2026-07',
+      changedBy: 'F-DU-08', factIds: ['F-DU-08', 'F-DU-03'], note: '竞争市场加价采购分流；该关系支撑材料可信度低，标记待观察。' },
+    { id: 'R-DU-05', from: 'O-VAR-DURIAN', to: 'O-MET-PRICE', type: '价格构成', strength: 0.77, confidence: 0.8, formed: '2026-05',
+      changedBy: 'F-DU-05', factIds: ['F-DU-05'], note: '供应增加经该关系传导至批发价。' },
+    { id: 'R-DU-06', from: 'O-FAC-RETAIL', to: 'O-MKT-HX', type: '渠道关系', strength: 0.62, confidence: 0.6, formed: '2026-08',
+      changedBy: 'F-DU-03', factIds: ['F-DU-03'], note: '零售渠道补货节奏影响红星交易量。' },
+    { id: 'R-DU-07', from: 'O-MKT-HX', to: 'O-VAR-DURIAN', type: '价格发现', strength: 0.8, confidence: 0.76, formed: '2026-05',
+      changedBy: 'F-DU-04', factIds: ['F-DU-04', 'F-DU-05'], note: '红星竞价形成区域参考价，促销与锁量影响份额。' },
+    { id: 'R-DU-08', from: 'O-MKT-GZ', to: 'O-MET-DUSHR', type: '份额分流', strength: 0.64, confidence: 0.52, formed: '2026-08',
+      changedBy: 'F-DU-08', factIds: ['F-DU-08'], note: '竞争市场采购强度是红星份额下降的主要解释变量（置信度偏低）。' }
   ];
 
   /* ---------- 关系：强度 / 置信度 / 形成时间 / 最近由哪条事实改变 / 支撑事实 ---------- */
@@ -268,7 +362,7 @@ window.V03Data = (function () {
       changedBy: 'F-HN-10', factIds: ['F-HN-10', 'F-HN-15'], note: '补贴额度决定改造是否落地。' },
     { id: 'R-24', from: 'O-MKT-HX', to: 'O-VAR-FISH', type: '价格发现', strength: 0.79, confidence: 0.74, formed: '2026-06',
       changedBy: 'F-HN-11', factIds: ['F-HN-11', 'F-HN-17'], note: '批发市场竞价形成区域参考价。' }
-  ];
+  ].concat(DURIAN_RELATIONS);
 
   /* ---------- 底部流水：事实层「数据接入与处理」/ 关联层「本体抽离与关联处理」 ---------- */
   const STREAM = {

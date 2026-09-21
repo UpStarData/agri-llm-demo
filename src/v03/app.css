@@ -3,7 +3,7 @@
    视觉沿用 AgriLink：浅色、克制、数据叙事；不用暗色仪表盘
    ============================================================ */
 :root{
-  --bg:#f4f6fa;--panel:#fff;--panel-2:#fbfcff;--line:rgba(15,23,42,.10);--hair:rgba(20,30,55,.08);
+  --bg:#f4f6fa;--panel:#fff;--panel-2:#fbfcff;--line:rgba(15,23,42,.10);--hair:rgba(20,30,55,.11);
   --ink:#10151f;--mut:#4d586a;--dim:#64707f;--hint:#5f6b7d;
   --accent:#1d4ed8;--accent-soft:#eaf0fd;--green:#16a34a;--orange:#f97316;--purple:#7c3aed;--red:#dc2626;
   --policy:#7c3aed;--price:#dc2626;--weather:#0891b2;--logistics:#0d9488;--trade:#1d4ed8;

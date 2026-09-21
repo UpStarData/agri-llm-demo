@@ -67,27 +67,37 @@ async function main() {
   await page.click('#relBody .rel-link[data-rel]'); await sleep(600);
   await shot(page, 'v03-07-relation-detail.png'); made.push('v03-07-relation-detail.png');
 
-  // 8 推演过程（阶段 + 轮次）
-  await page.click('#tabs button[data-tab="sim"]'); await sleep(900);
+  // 8 推演层：五阶段十二步骤 + 两个核心指标（推进到第 6 轮）
+  await page.click('#tabs button[data-tab="sim"]'); await sleep(1000);
   await page.click('#layer-sim .sim-ctl button:has-text("开始推演")'); await sleep(2600);
   await page.click('#layer-sim .sim-ctl button:has-text("暂停")'); await sleep(400);
-  for (let i = 0; i < 10; i++) { await page.click('#layer-sim .sim-ctl button:has-text("单步一轮")').catch(() => {}); await sleep(160); }
-  await shot(page, 'v03-08-sim-process.png'); made.push('v03-08-sim-process.png');
+  for (let i = 0; i < 24; i++) {
+    const b = page.locator('#layer-sim .sim-ctl button:has-text("单步推进")');
+    if (await b.count() === 0) break;
+    await b.click(); await sleep(90);
+  }
+  await shot(page, 'v03-08-sim-steps.png'); made.push('v03-08-sim-steps.png');
 
-  // 9 报告与引用（推到完成）
-  for (let i = 0; i < 6; i++) { await page.click('#layer-sim .sim-ctl button:has-text("单步一轮")').catch(() => {}); await sleep(200); }
-  await page.evaluate(() => window.V03_DEBUG.set({ sim: { stage: 6, report: 3, status: 'done' } })); await sleep(700);
-  await page.locator('#layer-sim .sim-card:has-text("推演报告")').scrollIntoViewIfNeeded(); await sleep(300);
-  await shot(page, 'v03-09-sim-report-cites.png'); made.push('v03-09-sim-report-cites.png');
+  // 9 推演报告（四类标签 + 引用）
+  await page.evaluate(() => window.V03_DEBUG.set({ sim: { tick: 60, report: 4, status: 'done' } })); await sleep(900);
+  await page.locator('#layer-sim .sim-rep').scrollIntoViewIfNeeded(); await sleep(300);
+  await shot(page, 'v03-09-sim-report.png'); made.push('v03-09-sim-report.png');
 
-  // 10 旁路模型失败（降级）
-  await page.click('#layer-sim .sim-ctl button:has-text("模拟旁路失败")'); await sleep(600);
+  // 10 深度追问（新假设 → 新 run）
+  await page.click('#layer-sim .qa-q:has-text("供应增幅从 20% 改为 10%")'); await sleep(700);
+  await page.locator('#layer-sim .qa-item').first().scrollIntoViewIfNeeded(); await sleep(300);
+  await shot(page, 'v03-10-sim-qa-newrun.png'); made.push('v03-10-sim-qa-newrun.png');
+
+  // 11 Jev 旁路降级
+  await page.click('#layer-sim .sim-ctl button:has-text("模拟 Jev 失败")'); await sleep(600);
   await page.locator('#layer-sim .sim-side').scrollIntoViewIfNeeded(); await sleep(300);
-  await shot(page, 'v03-10-sim-sidecar-degraded.png'); made.push('v03-10-sim-sidecar-degraded.png');
+  await shot(page, 'v03-11-sim-jev-degraded.png'); made.push('v03-11-sim-jev-degraded.png');
 
-  // 11 离线回放
+  // 12 离线回放
   await page.click('#layer-sim .sim-ctl button:has-text("离线回放")'); await sleep(600);
-  await shot(page, 'v03-11-sim-offline-replay.png'); made.push('v03-11-sim-offline-replay.png');
+  await shot(page, 'v03-12-sim-offline.png'); made.push('v03-12-sim-offline.png');
+  await page.click('#layer-sim .sim-ctl button:has-text("关闭离线回放")'); await sleep(300);
+
   await ctx.close();
 
   // 窄屏 390

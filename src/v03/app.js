@@ -25,7 +25,7 @@
   const TABS = [
     { id: 'fact', n: '事实层', hasCards: '事实卡片', d: '事实地图 · 空间下钻与筛选 · 事实详情与证据' },
     { id: 'relation', n: '关联层', hasCards: '对象清单', d: '关系图谱 / 地理关联双视图 · 本体对象与关系详情' },
-    { id: 'sim', n: '推演层', hasCards: null, d: '七阶段推演 · 轮次过程 · 报告与引用（报告属于本层）' }
+    { id: 'sim', n: '推演层', hasCards: null, d: '五阶段承载十二步骤 · 两个核心指标 · 报告与引用（报告属于本层）' }
   ];
   const tabMeta = id => TABS.find(t => t.id === id) || TABS[0];
 
@@ -59,7 +59,7 @@
       ? '事实层：地图即主体，点在点/卡片上进入详情；点国家或省份标记下钻'
       : st.tab === 'relation'
         ? '关联层：分类栏切换九类对象域；图谱与地理关联共用同一批事实'
-        : '推演层：报告是推演结果页，随轮次逐步生成';
+        : '推演层：五阶段承载十二步骤 · 报告是推演结果页，逐步生成并带引用';
     $('railToggle').textContent = (st.rail ? '☰ ' : '☰ ') + '分类栏';
     $('railToggle').classList.toggle('on', st.rail);
     $('railToggle').setAttribute('aria-expanded', String(st.rail));
@@ -139,12 +139,19 @@
       note.textContent = '本体抽离、关系建立与打分由规则与评分机制自动完成，不设人工审核入口。无坐标对象不在地图上伪造点位，只在清单中列出。';
       box.appendChild(note);
     } else {
-      const h = document.createElement('h4'); h.textContent = '推演场景（三条样例）'; box.appendChild(h);
-      const SCN = D.SCENARIOS || [];
-      SCN.forEach(sc => box.appendChild(railItem(sc.name, st.sim.scenario === sc.id, null, '#1d4ed8',
-        () => S.set({ sim: { scenario: sc.id, stage: 0, round: 0, status: 'idle', seedIds: [] } }), sc.goal)));
+      const h = document.createElement('h4'); h.textContent = '五阶段 · 十二步骤'; box.appendChild(h);
+      const dv = (window.V03Sim && V03Sim.progress) ? V03Sim.progress() : { stage: 0, step: 1, round: 0 };
+      (D.STAGES || []).forEach((sg, i) => {
+        const on = i === dv.stage;
+        box.appendChild(railItem(sg.n, on, sg.steps.length + ' 步', i < dv.stage ? '#16a34a' : on ? '#1d4ed8' : null,
+          () => {
+            const node = document.querySelector('#layer-sim .sim-stageblk:nth-child(' + (i + 1) + ')');
+            if (node) node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            S.emit('toast', '阶段 ' + (i + 1) + '：' + sg.n + ' · ' + sg.d);
+          }, sg.d));
+      });
       const note = document.createElement('div'); note.className = 'r-note';
-      note.textContent = '三条场景均为样例，用于演示推演过程与证据回溯；离线推演为示意引擎，不是真实 MiroFish 后端运行。';
+      note.textContent = '统一用户故事：马来西亚榴莲 → 红星市场份额。进度 ' + dv.step + '/12 步 · 第 ' + dv.round + '/12 轮；全部为演示样例，离线推演为示意引擎，不是真实 MiroFish 后端运行。';
       box.appendChild(note);
     }
     rail.classList.toggle('closed', !st.rail);

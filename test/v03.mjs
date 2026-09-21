@@ -26,6 +26,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function open(browser, w = 1440, h = 900) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h } });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(8000);
   page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   page.on('pageerror', e => pageErrors.push(String(e)));
   page.on('request', r => { if (!r.url().startsWith('file://')) external.push(r.url()); });
@@ -175,52 +176,90 @@ async function run() {
   await sleep(500);
   check('清除携带后回到全量', (await st(page)).carry.length === 0 && (await relDbg(page)).nodes === rg.nodes);
 
-  /* ---------- 6. 推演层：七阶段 / 种子 / 轮次 / 报告 / 旁路 ---------- */
+  /* ---------- 6. 推演层：五阶段十二步骤 / 两个核心指标 / 轮次 / 报告 / 追问 / Jev ---------- */
   await page.click('#tabs button[data-tab="sim"]');
-  await sleep(700);
+  await sleep(900);
   const s0 = await simDbg(page);
-  check('推演层为第三个 TAB 且报告属于本层', s0.renderedStages === 7 && (await page.locator('#layer-sim :text("推演报告")').count()) >= 1);
-  check('七阶段流水线完整', (await page.locator('#layer-sim .sim-stage').count()) === 7);
-  check('种子含场景默认 + 携带事实', s0.seeds >= 4, s0.seeds + ' 条');
-  check('未开始时报告显示「待生成」', (await page.locator('#layer-sim .sim-pending').count()) >= 1);
-  check('推演层明确标注示意引擎（非真实 MiroFish）', (await page.locator('#layer-sim .sim-badge.engine').innerText()).includes('非真实 MiroFish'));
+  const simText = async () => await page.locator('#layer-sim').innerText();
+  check('推演层为第三个 TAB 且报告属于本层', s0.renderedStages === 5 && (await simText()).includes('决策报告'), JSON.stringify(s0));
+  check('五阶段承载十二步骤', s0.renderedStages === 5 && s0.steps === 12 && s0.renderedSteps === 12, JSON.stringify({ stages: s0.renderedStages, steps: s0.renderedSteps }));
+  check('五阶段名称与确认口径一致', await page.evaluate(() => ['图谱构建', '环境搭建', '开始模拟', '报告生成', '深度互动'].every(n => document.getElementById('layer-sim').innerText.includes(n))));
+  check('当前步骤展示输入/处理/输出/页面承载/下一步', await page.evaluate(() => ['输入', '处理', '输出', '页面承载', '下一步'].every(n => document.getElementById('simCur').innerText.includes(n))));
+  check('两个核心指标：分子/分母/时间范围/口径/演示基线', await page.evaluate(() => {
+    const t = document.getElementById('simInd').innerText;
+    return document.querySelectorAll('#layer-sim .sim-ind').length === 2 &&
+      t.includes('分子') && t.includes('分母') && t.includes('最近 30 天') && t.includes('交易量口径') && t.includes('35%');
+  }));
+  check('统一用户故事替换旧三条样例', (await simText()).includes('马来西亚榴莲') && !(await simText()).includes('水产补贴套利'));
+  check('旧泛化样例不再出现在页面', await page.evaluate(() => !/水产补贴套利|价格影响链|基地—湖南—红星/.test(document.body.innerText)));
+  check('种子为榴莲基线事实（含 4,800/1,680 吨）', s0.seeds >= 6 && (await simText()).includes('4,800 吨') && (await simText()).includes('1,680 吨'));
+  check('规则与参数区分现实基线/规则参数/模拟参数/用户假设', await page.evaluate(() => {
+    const t = document.getElementById('simParams').innerText;
+    return ['现实基线', '规则参数', '模拟参数', '用户假设'].every(x => t.includes(x));
+  }));
+  check('十二轮计划（12 轮 × 2.5 天 = 30 天）', s0.rounds === 12 && (await page.locator('#layer-sim .sim-round').count()) === 12 && (await simText()).includes('12 轮 × 2.5 天'));
+  check('未开始时报告与追问为待生成', (await page.locator('#layer-sim .sim-pending').count()) >= 1);
+  check('推演层标注示意引擎 + 演示样例', (await page.locator('#layer-sim .sim-badge.engine').innerText()).includes('非真实 MiroFish') && (await page.locator('#layer-sim .sim-badge.sample').innerText()).includes('演示样例'));
 
   await page.click('#layer-sim .sim-ctl button:has-text("开始推演")');
-  await sleep(2400);
+  await sleep(2600);
   const sRun = await simDbg(page);
-  check('开始推演后阶段真实推进（计时器驱动）', sRun.status === 'running' && sRun.stage >= 1, JSON.stringify({ stage: sRun.stage, status: sRun.status }));
+  check('开始推演后步骤真实推进（计时器驱动）', sRun.status === 'running' && sRun.step >= 2, JSON.stringify({ step: sRun.step, tick: sRun.tick }));
   await page.click('#layer-sim .sim-ctl button:has-text("暂停")');
   await sleep(400);
   check('暂停真实写回状态', (await st(page)).sim.status === 'paused');
   await page.click('#layer-sim .sim-ctl button:has-text("继续")');
   await sleep(300);
 
-  for (let i = 0; i < 14; i++) { await page.click('#layer-sim .sim-ctl button:has-text("单步一轮")').catch(() => {}); await sleep(180); }
-  const sStep = await simDbg(page);
-  check('单步推进至轮次与报告生成', sStep.round >= 1 && sStep.report >= 1, JSON.stringify({ round: sStep.round, report: sStep.report, stage: sStep.stage }));
-  check('轮次详情含动作/发现/信号/引用', (await page.locator('#layer-sim .sim-round .rb').first().innerText()).includes('动作') && (await page.locator('#layer-sim .sim-cite').count()) >= 1);
-  check('报告要点带引用胶囊', (await page.locator('#layer-sim .sim-rep .sim-cite').count()) >= 1);
-  await shot(page, 'v03-07-sim-run.png');
-
+  const stepBtn = page.locator('#layer-sim .sim-ctl button:has-text("单步推进")');
+  for (let i = 0; i < 60; i++) {
+    if ((await st(page)).sim.status === 'done') break;
+    if (await stepBtn.count() === 0) break;
+    await stepBtn.click();
+    await sleep(110);
+  }
+  const sEnd = await simDbg(page);
+  check('推进至 12 轮并生成报告', sEnd.round === 12 && sEnd.step === 12 && sEnd.status === 'done', JSON.stringify({ round: sEnd.round, step: sEnd.step, status: sEnd.status }));
+  check('轮次详情含事件/指标值/引用', await page.evaluate(() => {
+    const t = document.querySelector('#layer-sim .sim-round .rb').innerText;
+    return t.includes('动作') && t.includes('事件') && t.includes('流入占比') && t.includes('市场份额');
+  }));
+  await shot(page, 'v03-07-sim-steps.png');
+  check('报告分离现实基线/模型推断/模拟结果/建议', await page.evaluate(() => {
+    const t = document.getElementById('simReport').innerText;
+    return ['现实基线', '模型推断', '模拟结果', '建议'].every(x => t.includes(x));
+  }));
+  check('报告要点带引用胶囊', (await page.locator('#layer-sim .sim-rep-sec .sim-cite').count()) >= 1);
+  await shot(page, 'v03-08-sim-report.png');
   await page.click('#layer-sim .sim-cite:has-text("事实")');
   await sleep(700);
-  check('报告引用可回链事实', (await st(page)).tab === 'fact' && !!(await st(page)).factId);
-  await page.click('#tabs button[data-tab="sim"]');
-  await sleep(500);
+  check('报告引用可回链事实层', (await st(page)).tab === 'fact' && !!(await st(page)).factId);
 
-  await page.click('#layer-sim .sim-ctl button:has-text("模拟旁路失败")');
-  await sleep(400);
-  check('旁路模型信号可降级并写明原因', (await st(page)).sim.sidecar === 'degraded' && (await page.locator('#layer-sim .sim-side').innerText()).includes('降级'));
-  check('旁路面板声明不参与事实入层/不构成预测', (await page.locator('#layer-sim .sim-side').innerText()).includes('不参与事实入层') || (await page.locator('#layer-sim .sim-side').innerText()).includes('不构成价格或产量预测'));
-  await shot(page, 'v03-08-sim-sidecar-degraded.png');
-  await page.click('#layer-sim .sim-ctl button:has-text("恢复旁路信号")');
-  await sleep(300);
+  await page.click('#tabs button[data-tab="sim"]');
+  await sleep(700);
+  await page.click('#layer-sim .qa-q:has-text("供应增幅从 20% 改为 10%")');
+  await sleep(600);
+  const sQa = await st(page);
+  check('深度追问改关键假设创建新 run 且原 run 保留', sQa.sim.run === 'AGRI-DURIAN-HX-002' && (sQa.sim.runs || []).includes('AGRI-DURIAN-HX-001') && sQa.sim.assumption.supply === 10, JSON.stringify({ run: sQa.sim.run, runs: sQa.sim.runs }));
+  check('追问回答标识为当前 run / 新 run 语义', (await simText()).includes('原 run 与原报告保持不变') || (await simText()).includes('新假设产生新 run'));
+  await shot(page, 'v03-09-sim-qa-newrun.png');
+
+  await page.click('#layer-sim .sim-ctl button:has-text("模拟 Jev 失败")');
+  await sleep(500);
+  check('Jev 旁路信号可降级并写明原因', (await st(page)).sim.sidecar === 'degraded' && (await page.locator('#layer-sim .sim-side').innerText()).includes('降级'));
+  check('Jev 面板声明不参与事实入层、不做预测、密钥只在服务端', await page.evaluate(() => {
+    const t = document.getElementById('simSide').innerText;
+    return t.includes('不参与事实入层') && t.includes('不构成价格或产量预测') && t.includes('不接收、不记录、不提交任何密钥');
+  }));
+  await shot(page, 'v03-10-sim-jev-degraded.png');
 
   await page.click('#layer-sim .sim-ctl button:has-text("离线回放")');
   await sleep(400);
   check('离线回放可开启并明示', (await st(page)).sim.offline === true && (await page.locator('#layer-sim #simStatus').innerText()).includes('离线回放'));
-  await page.click('#layer-sim .sim-ctl button:has-text("关闭离线回放")');
-  await sleep(300);
+  await shot(page, 'v03-11-sim-offline.png');
+
+  check('全页统一写 Jev，不出现 Jev-like', await page.evaluate(() => /Jev/.test(document.body.innerText) && !/Jev-like/i.test(document.body.innerText)));
+  check('页面不接收任何密钥输入', (await page.locator('input[type="password"]').count()) === 0 && await page.evaluate(() => !/api[_ ]?key|密钥输入|粘贴密钥/i.test(document.body.innerText) || /不接收、不记录、不提交任何密钥/.test(document.body.innerText)));
 
   /* ---------- 7. 窄屏 390 ---------- */
   const m = await open(browser, 390, 844);

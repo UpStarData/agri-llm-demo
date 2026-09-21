@@ -97,18 +97,22 @@ window.V03Filter = (function () {
 
   /* 推演种子：场景默认种子（可被取消）+ 携带事实 + 手动加入的种子，三处唯一口径 */
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
+  /* 默认种子：统一用户故事的 6 条基线事实（或旧结构的场景种子） */
+  const defaultSeeds = sim => {
+    const sc = (D.SCENARIOS || []).find(x => x.id === (sim || {}).scenario);
+    return sc ? sc.seeds : (D.BASELINE || []).map(b => b.fact);
+  };
   function seeds(s) {
     s = s || window.V03Store.state;
     const sim = s.sim || {};
-    const sc = (D.SCENARIOS || []).find(x => x.id === sim.scenario);
     const off = sim.seedOff || [];
-    const base = (sc ? sc.seeds : []).filter(id => !off.includes(id));
+    const base = defaultSeeds(sim).filter(id => !off.includes(id));
     return uniq(base.concat(s.carry || []).concat(sim.seedIds || []));
   }
   /* 种子勾选：默认种子被取消时记入 seedOff，手动种子记入 seedIds */
   function toggleSeed(s, id, on) {
-    const sim = s.sim || {}, sc = (D.SCENARIOS || []).find(x => x.id === sim.scenario);
-    const isDefault = !!sc && sc.seeds.includes(id);
+    const sim = s.sim || {};
+    const isDefault = defaultSeeds(sim).includes(id);
     let ids = (sim.seedIds || []).filter(x => x !== id), off = (sim.seedOff || []).filter(x => x !== id);
     if (on) { ids = uniq(ids.concat([id])); }
     else if (isDefault) off = uniq(off.concat([id]));
