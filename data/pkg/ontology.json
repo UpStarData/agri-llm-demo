@@ -1,0 +1,906 @@
+{
+ "ontologyVersion": "ont-v1.1",
+ "dataMode": "mixed(real+generated)",
+ "note": "9 个展示对象域 + 3 个事实投影类型；Person 为本包新增类型（契约 V0.1 未定义，见报告缺口 G1）",
+ "displayDomains": [
+  {
+   "typeCode": "Market",
+   "name": "市场",
+   "idPrefix": "mkt"
+  },
+  {
+   "typeCode": "Enterprise",
+   "name": "公司",
+   "idPrefix": "ent"
+  },
+  {
+   "typeCode": "Base",
+   "name": "基地",
+   "idPrefix": "base"
+  },
+  {
+   "typeCode": "Commodity",
+   "name": "品种",
+   "idPrefix": "cmd"
+  },
+  {
+   "typeCode": "Organization",
+   "name": "政策机构",
+   "idPrefix": "org"
+  },
+  {
+   "typeCode": "Region",
+   "name": "区域",
+   "idPrefix": "rgn"
+  },
+  {
+   "typeCode": "Person",
+   "name": "人物角色",
+   "idPrefix": "person"
+  },
+  {
+   "typeCode": "MetricObservation",
+   "name": "指标",
+   "idPrefix": "met"
+  },
+  {
+   "typeCode": "LogisticsNode",
+   "name": "设施渠道",
+   "idPrefix": "fac"
+  }
+ ],
+ "types": [
+  {
+   "typeCode": "Market",
+   "idPrefix": "mkt",
+   "name": "市场",
+   "isGeographic": true,
+   "isScenarioActor": true,
+   "isDisplayDomain": true,
+   "definition": "批零市场：有固定交易场所与场内交易台账的对象",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "红星农副产品大市场",
+    "长沙海吉星农产品物流园",
+    "广州江南果菜批发市场",
+    "深圳海吉星国际农产品物流园",
+    "北京新发地农产品批发市场"
+   ]
+  },
+  {
+   "typeCode": "Enterprise",
+   "idPrefix": "ent",
+   "name": "公司",
+   "isGeographic": true,
+   "isScenarioActor": true,
+   "isDisplayDomain": true,
+   "definition": "经营主体：可交易、可签合同的供应商/加工/贸易/物流公司",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "红星实业集团有限公司",
+    "湖南绿叶水果有限公司",
+    "湖南果之友农业科技有限公司",
+    "和金胜果品",
+    "云辉果业"
+   ]
+  },
+  {
+   "typeCode": "Base",
+   "idPrefix": "base",
+   "name": "基地",
+   "isGeographic": true,
+   "isScenarioActor": true,
+   "isDisplayDomain": true,
+   "definition": "基地/产地：有明确行政归属与种养活动的生产单元",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "湖南麻阳冰糖橙产区",
+    "湖南江永香柚产区",
+    "湖南安化黑茶产区",
+    "湖南靖州杨梅产区",
+    "湖南永兴冰糖橙产区"
+   ]
+  },
+  {
+   "typeCode": "Commodity",
+   "idPrefix": "cmd",
+   "name": "品种",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": true,
+   "definition": "可交易的农产品品类（不落地图）",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "榴莲",
+    "猫山王榴莲",
+    "车厘子",
+    "龙眼",
+    "山竹"
+   ]
+  },
+  {
+   "typeCode": "Organization",
+   "idPrefix": "org",
+   "name": "政策机构",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": true,
+   "definition": "政府机构、行业协会、国际组织等非经营主体",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "中共中央",
+    "农业农村部",
+    "海关总署",
+    "商务部",
+    "湖南省人民政府"
+   ]
+  },
+  {
+   "typeCode": "Region",
+   "idPrefix": "rgn",
+   "name": "区域",
+   "isGeographic": true,
+   "isScenarioActor": true,
+   "isDisplayDomain": true,
+   "definition": "国家/省/市/县行政区域",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "中国",
+    "马来西亚",
+    "巴西",
+    "智利",
+    "美国"
+   ]
+  },
+  {
+   "typeCode": "Person",
+   "idPrefix": "person",
+   "name": "人物角色",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": true,
+   "definition": "公开人物或职务角色（不落地图）",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "韩文秀",
+    "Ivan Marambio",
+    "Claudia Soler",
+    "Tracey Allen",
+    "蔡兆生"
+   ]
+  },
+  {
+   "typeCode": "MetricObservation",
+   "idPrefix": "met",
+   "name": "指标",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": true,
+   "definition": "可度量的统计指标对象（价格指数/产量/进出口额等）",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "FAO 食品价格指数",
+    "世界银行粮食生产指数",
+    "谷物产量（世界银行序列）",
+    "大商所玉米期货结算价",
+    "大商所豆粕期货结算价"
+   ]
+  },
+  {
+   "typeCode": "LogisticsNode",
+   "idPrefix": "fac",
+   "name": "设施渠道",
+   "isGeographic": true,
+   "isScenarioActor": true,
+   "isDisplayDomain": true,
+   "definition": "港口/机场/冷链/口岸等物流设施节点",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": [
+    "上海港",
+    "宁波舟山港",
+    "青岛港",
+    "天津港",
+    "大连港"
+   ]
+  },
+  {
+   "typeCode": "Policy",
+   "idPrefix": "pol",
+   "name": "政策",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": false,
+   "definition": "政策文件对象（事实投影节点）",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": []
+  },
+  {
+   "typeCode": "WeatherEvent",
+   "idPrefix": "wev",
+   "name": "天气事件",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": false,
+   "definition": "天气与灾害事件（随事实地理投影）",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": []
+  },
+  {
+   "typeCode": "IndustryEvent",
+   "idPrefix": "iev",
+   "name": "产业事件",
+   "isGeographic": false,
+   "isScenarioActor": false,
+   "isDisplayDomain": false,
+   "definition": "产业事件（随事实地理投影）",
+   "attributesSchema": [
+    {
+     "key": "countryIso3",
+     "valueType": "string",
+     "required": false,
+     "note": "ISO 3166-1 alpha-3"
+    },
+    {
+     "key": "geoPrecision",
+     "valueType": "enum",
+     "required": false,
+     "note": "exact|approx|region_only|none"
+    }
+   ],
+   "exampleNames": []
+  }
+ ],
+ "relationConstraints": [
+  {
+   "relationType": "SUPPLIES_TO",
+   "fromTypes": [
+    "Base",
+    "Enterprise",
+    "Region"
+   ],
+   "toTypes": [
+    "Market",
+    "Enterprise"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "FLOWS_INTO",
+   "fromTypes": [
+    "Base",
+    "Region",
+    "Market",
+    "LogisticsNode"
+   ],
+   "toTypes": [
+    "Market",
+    "Region"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "FLOWS_OUT_OF",
+   "fromTypes": [
+    "Market",
+    "Region"
+   ],
+   "toTypes": [
+    "Market",
+    "Region",
+    "Enterprise"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "TRADES",
+   "fromTypes": [
+    "Enterprise"
+   ],
+   "toTypes": [
+    "Market",
+    "Enterprise"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "LOCATED_IN",
+   "fromTypes": [
+    "Base",
+    "Market",
+    "Enterprise",
+    "LogisticsNode",
+    "Region"
+   ],
+   "toTypes": [
+    "Region"
+   ],
+   "isQuantifiable": false
+  },
+  {
+   "relationType": "PRODUCES",
+   "fromTypes": [
+    "Base",
+    "Region"
+   ],
+   "toTypes": [
+    "Commodity"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "AFFECTS",
+   "fromTypes": [
+    "Organization",
+    "Person",
+    "MetricObservation",
+    "Region"
+   ],
+   "toTypes": [
+    "Commodity",
+    "Market",
+    "Region",
+    "Base"
+   ],
+   "isQuantifiable": false
+  },
+  {
+   "relationType": "PRICE_TRANSMITS_TO",
+   "fromTypes": [
+    "Market",
+    "MetricObservation"
+   ],
+   "toTypes": [
+    "Market",
+    "MetricObservation"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "SUBSTITUTES",
+   "fromTypes": [
+    "Commodity"
+   ],
+   "toTypes": [
+    "Commodity"
+   ],
+   "isQuantifiable": false
+  },
+  {
+   "relationType": "DEPENDS_ON",
+   "fromTypes": [
+    "Commodity",
+    "Enterprise"
+   ],
+   "toTypes": [
+    "Commodity",
+    "LogisticsNode"
+   ],
+   "isQuantifiable": false
+  },
+  {
+   "relationType": "COVERS",
+   "fromTypes": [
+    "Market",
+    "Enterprise",
+    "LogisticsNode"
+   ],
+   "toTypes": [
+    "Region"
+   ],
+   "isQuantifiable": true
+  },
+  {
+   "relationType": "SHIPS_THROUGH",
+   "fromTypes": [
+    "Base",
+    "Market",
+    "Enterprise",
+    "Region"
+   ],
+   "toTypes": [
+    "LogisticsNode"
+   ],
+   "isQuantifiable": true
+  }
+ ],
+ "taxonomy": {
+  "price": {
+   "name": "价格",
+   "l2": [
+    {
+     "name": "批发价",
+     "l3": [
+      {
+       "id": "price.wholesale.daily",
+       "title": "批发价"
+      }
+     ]
+    },
+    {
+     "name": "产地收购价",
+     "l3": [
+      {
+       "id": "price.wholesale.daily",
+       "title": "产地收购价"
+      }
+     ]
+    },
+    {
+     "name": "零售价",
+     "l3": [
+      {
+       "id": "price.wholesale.daily",
+       "title": "零售价"
+      }
+     ]
+    }
+   ]
+  },
+  "news": {
+   "name": "舆情与新闻",
+   "l2": [
+    {
+     "name": "行业新闻",
+     "l3": [
+      {
+       "id": "news.industry.daily",
+       "title": "行业新闻"
+      }
+     ]
+    },
+    {
+     "name": "舆情",
+     "l3": [
+      {
+       "id": "news.industry.daily",
+       "title": "舆情"
+      }
+     ]
+    },
+    {
+     "name": "风险信号",
+     "l3": [
+      {
+       "id": "news.industry.daily",
+       "title": "风险信号"
+      }
+     ]
+    }
+   ]
+  },
+  "natural": {
+   "name": "天气与自然灾害",
+   "l2": [
+    {
+     "name": "气象预警",
+     "l3": [
+      {
+       "id": "natural.alert.daily",
+       "title": "气象预警"
+      }
+     ]
+    },
+    {
+     "name": "灾害事件",
+     "l3": [
+      {
+       "id": "natural.alert.daily",
+       "title": "灾害事件"
+      }
+     ]
+    },
+    {
+     "name": "气候统计",
+     "l3": [
+      {
+       "id": "natural.alert.daily",
+       "title": "气候统计"
+      }
+     ]
+    }
+   ]
+  },
+  "supply": {
+   "name": "产量与库存",
+   "l2": [
+    {
+     "name": "产量",
+     "l3": [
+      {
+       "id": "supply.production.weekly",
+       "title": "产量"
+      }
+     ]
+    },
+    {
+     "name": "库存",
+     "l3": [
+      {
+       "id": "supply.production.weekly",
+       "title": "库存"
+      }
+     ]
+    }
+   ]
+  },
+  "circulation": {
+   "name": "流通与交易",
+   "l2": [
+    {
+     "name": "市场到货",
+     "l3": [
+      {
+       "id": "circulation.market_arrival.daily",
+       "title": "市场到货"
+      }
+     ]
+    },
+    {
+     "name": "批发交易",
+     "l3": [
+      {
+       "id": "circulation.market_arrival.daily",
+       "title": "批发交易"
+      }
+     ]
+    },
+    {
+     "name": "损耗",
+     "l3": [
+      {
+       "id": "circulation.market_arrival.daily",
+       "title": "损耗"
+      }
+     ]
+    }
+   ]
+  },
+  "policy": {
+   "name": "政策与监管",
+   "l2": [
+    {
+     "name": "法规规章",
+     "l3": [
+      {
+       "id": "policy.notice.general",
+       "title": "法规规章"
+      }
+     ]
+    },
+    {
+     "name": "补贴与扶持",
+     "l3": [
+      {
+       "id": "policy.notice.general",
+       "title": "补贴与扶持"
+      }
+     ]
+    },
+    {
+     "name": "标准与监管",
+     "l3": [
+      {
+       "id": "policy.notice.general",
+       "title": "标准与监管"
+      }
+     ]
+    },
+    {
+     "name": "进出口政策",
+     "l3": [
+      {
+       "id": "policy.notice.general",
+       "title": "进出口政策"
+      }
+     ]
+    }
+   ]
+  },
+  "production": {
+   "name": "产地与基地",
+   "l2": [
+    {
+     "name": "基地动态",
+     "l3": [
+      {
+       "id": "production.base.daily",
+       "title": "基地动态"
+      }
+     ]
+    },
+    {
+     "name": "产地认证",
+     "l3": [
+      {
+       "id": "production.base.daily",
+       "title": "产地认证"
+      }
+     ]
+    },
+    {
+     "name": "种养面积",
+     "l3": [
+      {
+       "id": "production.base.daily",
+       "title": "种养面积"
+      }
+     ]
+    }
+   ]
+  },
+  "logistics": {
+   "name": "物流与交通",
+   "l2": [
+    {
+     "name": "运输",
+     "l3": [
+      {
+       "id": "logistics.route.status",
+       "title": "运输"
+      }
+     ]
+    },
+    {
+     "name": "仓储",
+     "l3": [
+      {
+       "id": "logistics.route.status",
+       "title": "仓储"
+      }
+     ]
+    },
+    {
+     "name": "通关与延误",
+     "l3": [
+      {
+       "id": "logistics.route.status",
+       "title": "通关与延误"
+      }
+     ]
+    }
+   ]
+  },
+  "customs": {
+   "name": "海关与进出口",
+   "l2": [
+    {
+     "name": "进口",
+     "l3": [
+      {
+       "id": "customs.flow.monthly",
+       "title": "进口"
+      }
+     ]
+    },
+    {
+     "name": "出口",
+     "l3": [
+      {
+       "id": "customs.flow.monthly",
+       "title": "出口"
+      }
+     ]
+    },
+    {
+     "name": "检验检疫",
+     "l3": [
+      {
+       "id": "customs.flow.monthly",
+       "title": "检验检疫"
+      }
+     ]
+    }
+   ]
+  },
+  "industry_event": {
+   "name": "产业事件",
+   "l2": [
+    {
+     "name": "疫病",
+     "l3": [
+      {
+       "id": "industry_event.general",
+       "title": "疫病"
+      }
+     ]
+    },
+    {
+     "name": "事故",
+     "l3": [
+      {
+       "id": "industry_event.general",
+       "title": "事故"
+      }
+     ]
+    },
+    {
+     "name": "地缘与冲突",
+     "l3": [
+      {
+       "id": "industry_event.general",
+       "title": "地缘与冲突"
+      }
+     ]
+    },
+    {
+     "name": "行业整治",
+     "l3": [
+      {
+       "id": "industry_event.general",
+       "title": "行业整治"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "controlledL1": [
+  "price",
+  "news",
+  "natural",
+  "supply",
+  "circulation",
+  "policy",
+  "production",
+  "logistics",
+  "customs",
+  "industry_event"
+ ],
+ "lookup": {
+  "Market": "市场",
+  "Enterprise": "公司",
+  "Base": "基地",
+  "Commodity": "品种",
+  "Organization": "政策机构",
+  "Region": "区域",
+  "Person": "人物角色",
+  "MetricObservation": "指标",
+  "LogisticsNode": "设施渠道",
+  "Policy": "政策",
+  "WeatherEvent": "天气事件",
+  "IndustryEvent": "产业事件"
+ }
+}

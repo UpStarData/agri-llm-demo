@@ -280,74 +280,84 @@
     body.appendChild(s3);
   }
 
-  /* ---------- 底部终端流水（纯黑 / 无标题 / 不均匀节奏 / 单 Tab + 预留） ---------- */
-  const ST = { i: 0, timer: null, lastTab: null, paused: false };
-  function rnd(a, b) { return a + Math.random() * (b - a); }
-  function streamPool() {
-    const st = S.state;
-    if (st.tab === 'sim' && window.V03Sim && V03Sim.streamLines) return V03Sim.streamLines();
-    const base = (D.STREAM && D.STREAM[st.tab]) || [];
-    const list = F.facts(st).slice(0, 60);
-    if (!list.length) return base;
-    const gen = list.map(f => [f.cat === 'policy' ? '标定' : f.cat === 'logistics' ? '接入' : '抽取',
-      (st.tab === 'relation' ? '本体抽离：' : '') + f.short + ' · ' + f.region + ' 已入库', f.id]);
-    return base.concat(gen);
+  /* ---------- 底部终端流水（纯黑 / 无标题 / 数据包 stream.sequence 驱动） ----------
+     事件内容、顺序、批次、新星标记全部来自数据包 agrilink-demo-v1：
+     1135 条事件按 seq 批次分组播放（一批 7–8 行），批之间留停顿，天然形成不均匀节奏（B3）。 */
+  const ST = { i: 0, timer: null, lastTab: null };
+  const REL_STAGES = { link: 1, graph: 1, resolve: 1, score: 1 };   // 关联层只播「本体抽离与关联处理」相关阶段
+  function seqBatches(events) {
+    const out = [];
+    events.forEach(e => {
+      const b = String(e.seq || '').split('.')[0];
+      if (!out.length || out[out.length - 1].b !== b) out.push({ b, t: e.t, items: [] });
+      out[out.length - 1].items.push(e);
+    });
+    return out;
   }
-  function pushStreamLine() {
-    const body = $('streamBody'), lines = streamPool();
-    if (!lines.length) return;
-    const [k, text, fid] = lines[ST.i % lines.length];
-    ST.i++;
+  const SEQ_ALL = (D.STREAM_SEQ || []).filter(e => e.stage !== 'warn' || Math.random() < 1);
+  const BATCHES = { fact: seqBatches(SEQ_ALL), relation: seqBatches(SEQ_ALL.filter(e => REL_STAGES[e.stage])) };
+  const STREAM_SPEED = 2.6;                     // 数据包一个循环 454s → 演示约 175s
+  function pushStreamLine(e) {
+    const body = $('streamBody');
+    if (!body || !e) return;
     const row = el('div', 'st-line');
-    const kk = el('span', 'k' + (/降级|告警|失败|待核|挂账|异常/.test(k) ? ' warn' : ''), k);
-    const tt = el('span', 't', new Date().toTimeString().slice(0, 8));
-    const tx = el('span', 'tx', text);
-    row.appendChild(kk); row.appendChild(tt); row.appendChild(tx);
-    if (fid) {
-      const c = el('span', 'f', '[' + fid + ']');
-      c.onclick = () => S.set({ tab: 'fact', factId: fid });
+    row.appendChild(el('span', 'k' + (e.stage === 'warn' ? ' warn' : ''), e.k || e.stage));
+    row.appendChild(el('span', 't', new Date().toTimeString().slice(0, 8)));
+    row.appendChild(el('span', 'tx', e.text));
+    if (e.factId) {
+      const c = el('span', 'f', '[' + e.factId + ']');
+      c.onclick = () => S.set({ tab: 'fact', factId: e.factId });
       row.appendChild(c);
     }
     body.appendChild(row);
     while (body.children.length > 70) body.removeChild(body.firstChild);
     body.scrollTop = body.scrollHeight;
-    /* 新数据接入 → 地图对应位置亮星（M15） */
-    if (fid) { const f = D.factById(fid); if (f) S.emit('stream:line', { fact: f }); }
+    /* 新数据接入 → 地图对应位置亮星（M15，亮星/微弱星由数据包 star.level 决定） */
+    if (e.star) {
+      const f = D.factById(e.star.factId);
+      if (f) S.emit('stream:line', { fact: f, level: e.star.level, severity: e.star.severity });
+    }
   }
-  /* 节奏不均匀（指令 B3）：成批连吐 → 快刷 → 停顿 → 偶发卡住，模拟真实的数据处理节奏 */
   function scheduleStream() {
     clearTimeout(ST.timer);
     if (!$('streamBox').classList.contains('on')) return;
-    const roll = Math.random();
-    let wait;
-    if (roll < .04) {                                  // 偶发卡住：像编译等待
-      pushStreamLine(); wait = rnd(3200, 4800);
-    } else if (roll < .26) {                           // 成批连吐：一次解析出一批记录
-      const n = 3 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < n; i++) pushStreamLine();
-      wait = rnd(1500, 3000);
-    } else if (roll < .72) {                           // 快刷
-      pushStreamLine(); wait = rnd(180, 650);
-    } else {                                           // 慢一拍
-      pushStreamLine(); wait = rnd(700, 1500);
-    }
-    ST.timer = setTimeout(scheduleStream, wait);
+    const list = BATCHES[S.state.tab === 'relation' ? 'relation' : 'fact'];
+    if (!list.length) return;
+    const idx = ST.i % list.length, batch = list[idx];
+    ST.i++;
+    batch.items.forEach(pushStreamLine);
+    const next = list[(idx + 1) % list.length];
+    const raw = next ? Math.max(400, next.t - batch.t) : 1800;
+    /* 节奏整形（演示用）：内容 / 顺序 / 批次 / 新星全部来自数据包，只把批间停顿拉出快慢差 ——
+       每 5 批一次「重批次」长停顿，每 5 批一次「追赶」连吐，其余为数据包原生批次间隔（B3）。 */
+    const roll = ST.i % 5;
+    let gap = Math.max(360, Math.min(2600, raw / STREAM_SPEED)) + Math.random() * 180;
+    if (roll === 0) gap = gap * 2.4 + 1200;
+    else if (roll === 2) gap = 140;
+    ST.timer = setTimeout(scheduleStream, gap);
+  }
+  function streamPool() {   /* 兼容旧调用：返回当前批次文本 */
+    const list = BATCHES[S.state.tab === 'relation' ? 'relation' : 'fact'];
+    return list.length ? list[ST.i % list.length].items : [];
   }
   function syncStream() {
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
     document.documentElement.style.setProperty('--stream-h', on ? '124px' : '0px');
+    /* 地图浮层避让右侧卡片面板（面板宽度写进 CSS 变量，窄屏由媒体查询覆盖） */
+    document.documentElement.style.setProperty('--side-w', st.tab !== 'sim' && st.panels.cards ? '432px' : '0px');
     $('stTabName').textContent = st.tab === 'fact' ? '输入流' : '抽离流';
-    $('streamMeta').textContent = st.tab === 'fact'
-      ? '已接入 ' + D.FACTS.length + ' 条事实'
-      : '抽离 ' + D.OBJECTS.length + ' 个本体对象 · ' + D.RELATIONS.length + ' 条关系 · 自动评分';
+    const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];
+    $('streamMeta').textContent = '数据包 agrilink-demo-v1 · ' + (D.STREAM_SEQ || []).length + ' 条时序事件 · ' +
+      seq.length + ' 个接入批次';
     if (ST.lastTab !== st.tab || !on) {
       ST.lastTab = st.tab; ST.i = 0; $('streamBody').innerHTML = '';
-      for (let i = 0; i < 7; i++) pushStreamLine();
+      const first = seq[0];
+      if (first) { first.items.forEach(pushStreamLine); ST.i = 1; }
     }
     if (on && !ST.timer) scheduleStream();
-    if (!on) clearTimeout(ST.timer), ST.timer = null;
+    if (!on) { clearTimeout(ST.timer); ST.timer = null; }
   }
 
   /* ---------- 弹窗（事实 / 本体 / 关系详情统一容器） ---------- */
@@ -479,37 +489,61 @@
     window.V03_DEBUG = {
       state: () => JSON.parse(JSON.stringify(S.state)),
       set: p => S.set(p),
-      counts: () => ({
-        facts: F.facts().length,
-        factsAtLevel: F.factsAtLevel().length,
-        objects: F.objects().length,
-        relations: F.relations().length,
-        cards: document.querySelectorAll('#layer-fact .fcard, #layer-fact .fcard-full').length,
-        mapSk: document.querySelectorAll('#mapSk .sk').length,
-        menuSk: document.querySelectorAll('#menuBody .mn-sk .sk').length,
-        dictL3: document.querySelectorAll('#menuBody .l3').length,
-        l3On: document.querySelectorAll('#menuBody .l3.on').length,
-        regions: window.V03Atlas ? V03Atlas.REGIONS.length : 0,
-        gates: window.V03Atlas ? V03Atlas.GATES.length : 0,
-        packedFacts: F.totalFacts(),
-        graphNodes: (window.V03Relation && V03Relation.debug) ? V03Relation.debug().nodes : null
-      }),
-      /* 数据来源标识：真实公开 / 人工编写 / 补齐生成的内部识别方式，不在普通界面暴露
-         public      真实公开可查证的产区与口岸经纬度（REGIONS / GATES）
-         curated     人工编写的事实、本体与关系（data.js）
-         synthesized 数据包按同一 schema 补齐生成的事实、本体与关系 */
+      counts: () => {
+        const lv = S.state.geo.level;
+        return {
+          /* 数据包口径（验收指纹） */
+          dataset: D.counts,
+          facts: D.FACTS.length,
+          objects: D.OBJECTS.length,
+          relations: D.RELATIONS.length,
+          regions: D.REGIONS.length,
+          ports: D.GATES.filter(g => g.kind === 'port').length,
+          airports: D.GATES.filter(g => g.kind === 'airport').length,
+          nodes: D.GATES.filter(g => g.kind === 'node').length,
+          streamEvents: (D.STREAM_SEQ || []).length,
+          /* 当前视野 / 筛选口径 */
+          visibleFacts: F.facts().length,
+          factsAtLevel: F.factsAtLevel().length,
+          mappableAtLevel: F.mappable(F.factsAtLevel()).length,
+          level: lv,
+          byLevel: {
+            L1: D.FACTS.filter(f => f.level === 'L1').length,
+            L2: D.FACTS.filter(f => f.level === 'L2').length,
+            L3: D.FACTS.filter(f => f.level === 'L3').length
+          },
+          objectsShown: F.objects().length,
+          relationsShown: F.relations().length,
+          cards: document.querySelectorAll('#layer-fact .fcard').length,
+          mapSk: document.querySelectorAll('#mapSk .sk').length,
+          menuSk: document.querySelectorAll('#menuBody .mn-sk .sk').length,
+          dictL3: document.querySelectorAll('#menuBody .l3').length,
+          l3On: document.querySelectorAll('#menuBody .l3.on').length,
+          graphNodes: (window.V03Relation && V03Relation.debug) ? V03Relation.debug().nodes : null
+        };
+      },
+      /* 数据来源标识（内部验收口径，普通界面不展示任何来源文案）
+         provenanceMeta.dataMode：real（真实公开来源，带 sourceUrl / evidence）/ generated（按同一 schema 生成）
+         geo/*.geojson 的经纬度全部为真实公开数据（产区 / 港口 / 机场 / 节点） */
       provSummary: () => {
         const groups = {
           facts: D.FACTS, objects: D.OBJECTS, relations: D.RELATIONS,
-          regions: (D.REGIONS || []), gates: (D.GATES || [])
+          regions: D.REGIONS || [], ports: (D.GATES || []).filter(g => g.kind === 'port'),
+          airports: (D.GATES || []).filter(g => g.kind === 'airport'), nodes: (D.GATES || []).filter(g => g.kind === 'node')
         };
         const counts = {}, byType = {};
         Object.keys(groups).forEach(k => {
           const m = {};
-          groups[k].forEach(x => { const p = x.prov || 'synthesized'; m[p] = (m[p] || 0) + 1; counts[p] = (counts[p] || 0) + 1; });
+          groups[k].forEach(x => { const p = x.prov || 'generated'; m[p] = (m[p] || 0) + 1; counts[p] = (counts[p] || 0) + 1; });
           byType[k] = m;
         });
-        return { counts, byType, realGeoIds: (D.REGIONS || []).concat(D.GATES || []).filter(r => r.prov === 'public').map(r => r.id) };
+        return {
+          datasetId: (D.manifest || {}).datasetId, datasetVersion: (D.manifest || {}).datasetVersion,
+          collectedAt: (D.manifest || {}).collectedAt, dataMode: (D.manifest || {}).dataMode,
+          counts, byType,
+          sources: (D.PKG && D.PKG.SOURCES ? D.PKG.SOURCES.length : 0),
+          evidence: (D.PKG && D.PKG.EVIDENCE ? D.PKG.EVIDENCE.length : 0)
+        };
       },
       text: sel => { const n = document.querySelector(sel); return n ? n.textContent : ''; },
       tab: () => (document.querySelector('#tabs button.on') || {}).dataset ? document.querySelector('#tabs button.on').dataset.tab : null,

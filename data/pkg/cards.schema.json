@@ -1,0 +1,93 @@
+{
+ "note": "六类事实卡片模板字段（对齐页面修改指令 R2）；card.type 决定卡片模板，card.fields 为展示字段",
+ "templates": {
+  "news": {
+   "required": [
+    "title",
+    "summary",
+    "sourceName",
+    "publishedAt"
+   ],
+   "optional": [
+    "imageUrl"
+   ],
+   "desc": "标题 + 摘要 + 来源 + 时间，可附图"
+  },
+  "policy": {
+   "required": [
+    "policyTitle",
+    "issuer",
+    "effectiveDate",
+    "impactSummary"
+   ],
+   "desc": "政策标题 + 发布机构 + 影响摘要，配色区分"
+  },
+  "price": {
+   "required": [
+    "commodityName",
+    "priceValue",
+    "priceUnit",
+    "changePct"
+   ],
+   "optional": [
+    "trend",
+    "caliber"
+   ],
+   "desc": "品种名 + 价格变动 + 趋势迷你图/涨跌箭头"
+  },
+  "weather": {
+   "required": [
+    "regionName",
+    "weatherIconCode",
+    "alertLevel",
+    "impactText"
+   ],
+   "desc": "地区 + 天气图标 + 影响描述（alertLevel ∈ red|orange|yellow|blue）"
+  },
+  "video": {
+   "required": [
+    "mediaTitle",
+    "embedUrl",
+    "provider",
+    "isLive",
+    "embeddable"
+   ],
+   "optional": [
+    "fallbackReason"
+   ],
+   "desc": "视频/直播卡片；embeddable=no|unknown 时必须给降级原因"
+  },
+  "market": {
+   "required": [
+    "instrumentName",
+    "symbol",
+    "lastPrice",
+    "unit",
+    "changePct",
+    "exchange"
+   ],
+   "optional": [
+    "kline"
+   ],
+   "desc": "公开市场数据（期货/指数），迷你 K 线或涨跌指标"
+  }
+ },
+ "mapping": {
+  "l1->cardType": {
+   "price": "price",
+   "policy": "policy",
+   "natural": "weather",
+   "news": "news",
+   "supply": "news",
+   "production": "news",
+   "circulation": "price",
+   "logistics": "news",
+   "customs": "news",
+   "industry_event": "news"
+  },
+  "explicit": {
+   "video": "视频/直播类事实显式 cardType=video",
+   "market": "期货/指数类事实显式 cardType=market"
+  }
+ }
+}

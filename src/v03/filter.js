@@ -1,91 +1,107 @@
 /* ============================================================
    V0.4 过滤 + 分类字典：事实层 / 关联层共用的唯一过滤实现
-   分类字典为三级结构（一级纯文字标题 → 二级文字子标题 → 三级 emoji 方块卡片）
-   三级卡片的选中集合直接决定地图与卡片的可见数据；默认全选。
-   过滤条件全部来自 V03Store.state（时间 / 可信度 / 影响 / 搜索 / 三级分类）
+   分类字典直接来自数据包 ontology.json（taxonomy）与 displayDomains，
+   三级卡片（一级文字标题 → 二级文字子标题 → 三级 emoji 方块）决定地图与卡片的可见数据。
+   空间层级按数据包 geo.scopeLayer（L1 全球 / L2 中国 / L3 省区），下钻到 L3 时按省份收敛。
    ============================================================ */
 window.V03Filter = (function () {
   const D = window.V03Data;
-  const A = window.V03Atlas || { REGIONS: [], GATES: [], PACK: { facts: [], objects: [], relations: [] } };
+  const PKG = D.PKG || null;
 
-  /* ---------- 事实层三级分类字典 ---------- */
-  const FACT_TREE = [
+  /* ---------- 事实层三级分类字典（数据包 taxonomy；无包时退回自带字典） ---------- */
+  const LEGACY_FACT_TREE = [
     { n: '供给与生产', subs: [
       { n: '产区与品种', items: [
-        { key: 'grain',   n: '粮油产区', e: '🌾', c: 'trade',     t: /水稻|小麦|玉米|大豆|油菜|薯|粮|油料/ },
-        { key: 'fruitveg', n: '果蔬产区', e: '🍊', c: 'trade',    t: /果|蔬|菜|柑|橙|苹果|车厘子|榴莲|香蕉|葡萄|猕猴桃/ },
-        { key: 'livestock', n: '畜牧水产', e: '🐄', c: 'trade',   t: /牛|猪|羊|禽|肉|乳|水产|虾|鱼|蟹/ }
+        { key: 'grain', n: '粮油产区', e: '🌾', c: 'trade', t: /水稻|小麦|玉米|大豆|油菜|薯|粮|油料/ },
+        { key: 'fruitveg', n: '果蔬产区', e: '🍊', c: 'trade', t: /果|蔬|菜|柑|橙|苹果|车厘子|榴莲|香蕉|葡萄|猕猴桃/ },
+        { key: 'livestock', n: '畜牧水产', e: '🐄', c: 'trade', t: /牛|猪|羊|禽|肉|乳|水产|虾|鱼|蟹/ }
       ] },
       { n: '气象与灾害', items: [
         { key: 'disaster', n: '气象灾害', e: '🌪️', c: 'weather', t: /台风|暴雨|洪|干旱|冻害|霜冻|冰雹|灾害/ },
-        { key: 'extreme',  n: '极端天气', e: '🌡️', c: 'weather', t: /高温|热浪|寒潮|低温|气温|降水/ }
+        { key: 'extreme', n: '极端天气', e: '🌡️', c: 'weather', t: /高温|热浪|寒潮|低温|气温|降水/ }
       ] }
     ] },
     { n: '流通与政策', subs: [
       { n: '通道与口岸', items: [
-        { key: 'gate',   n: '口岸物流', e: '🛳️', c: 'logistics', t: /口岸|港口|机场|海关|通关|班列|航线/ },
+        { key: 'gate', n: '口岸物流', e: '🛳️', c: 'logistics', t: /口岸|港口|机场|海关|通关|班列|航线/ },
         { key: 'freight', n: '干线运价', e: '🚚', c: 'logistics', t: /运价|运费|干线|空驶|物流成本|运输/ },
-        { key: 'cold',   n: '冷链仓储', e: '❄️', c: 'logistics', t: /冷库|冷链|库存|仓储|损耗|周转/ }
+        { key: 'cold', n: '冷链仓储', e: '❄️', c: 'logistics', t: /冷库|冷链|库存|仓储|损耗|周转/ }
       ] },
       { n: '政策与监管', items: [
         { key: 'poltrade', n: '贸易政策', e: '📜', c: 'policy', t: /关税|自贸|协定|配额|进出口|贸易政策|采购/ },
-        { key: 'polsupp',  n: '地方扶持', e: '🏛️', c: 'policy', t: /补贴|扶持|专项|资金|目录|示范|奖补/ },
+        { key: 'polsupp', n: '地方扶持', e: '🏛️', c: 'policy', t: /补贴|扶持|专项|资金|目录|示范|奖补/ },
         { key: 'quarantine', n: '检疫通关', e: '🛡️', c: 'policy', t: /检疫|检验|通关|备案|许可|标准|准入/ }
       ] }
     ] },
     { n: '市场与交易', subs: [
       { n: '价格行情', items: [
         { key: 'wholesale', n: '批发价格', e: '🏷️', c: 'price', t: /批发|均价|收购价|价格|元／公斤|元\/公斤/ },
-        { key: 'index',     n: '价格指数', e: '📈', c: 'price', t: /指数|环比|同比|涨幅/ }
+        { key: 'index', n: '价格指数', e: '📈', c: 'price', t: /指数|环比|同比|涨幅/ }
       ] },
       { n: '交易与库存', items: [
-        { key: 'deal',  n: '成交动态', e: '🤝', c: 'trade', t: /成交|交易|竞价|订单|签约|到货量|成交量/ },
+        { key: 'deal', n: '成交动态', e: '🤝', c: 'trade', t: /成交|交易|竞价|订单|签约|到货量|成交量/ },
         { key: 'stock', n: '库存周转', e: '📦', c: 'logistics', t: /库存|周转|压港|集港|库容|出入库/ }
       ] }
     ] }
   ];
 
-  /* ---------- 关联层三级分类字典（九类本体对象域） ---------- */
-  const REL_TREE = [
-    { n: '地理实体', subs: [
-      { n: '交易与物流节点', items: [
-        { key: 'market',   n: '市场', e: '🏬' },
-        { key: 'facility', n: '设施渠道', e: '🚉' }
+  const FACT_TREE = (() => {
+    const tax = (PKG && PKG.ONTOLOGY && PKG.ONTOLOGY.taxonomy) || null;
+    if (!tax) return LEGACY_FACT_TREE;
+    /* L3 方块卡片的 emoji：按二级类别语义就近取，保证每张卡片可辨识 */
+    const EMOJI_RULES = [
+      [/批发价|产地收购价|零售价/, '🏷️'], [/指数|价格传导|行情/, '📈'],
+      [/行业新闻|舆情|风险/, '📰'], [/气象预警|灾害/, '🌪️'], [/气候/, '🌡️'],
+      [/产量|种养面积/, '📦'], [/库存/, '🗄️'], [/基地|产地认证/, '🌱'],
+      [/市场到货|批发交易/, '🚚'], [/损耗/, '🧊'],
+      [/法规|补贴|标准/, '📜'], [/进出口政策/, '🛃'], [/通关|延误|运输|仓储/, '🚢'],
+      [/进口|出口|检验/, '🛃'], [/疫病|事故|地缘|整治/, '⚠️']
+    ];
+    const emojiOf = (name, cat) => {
+      const hit = EMOJI_RULES.find(([re]) => re.test(name));
+      return hit ? hit[1] : (D.CATS[cat] ? D.CATS[cat].e : '📌');
+    };
+    return Object.keys(tax).map(cat => ({
+      n: tax[cat].name || cat, cat,
+      subs: (tax[cat].l2 || []).map(l2 => ({
+        n: l2.name,
+        items: (l2.l3 || []).map(x => ({
+          key: cat + '|' + l2.name + '|' + x.id, n: x.title || l2.name,
+          e: emojiOf(l2.name + ' ' + (x.title || ''), cat), c: cat, l2: l2.name, l3: x.id
+        }))
+      }))
+    }));
+  })();
+
+  /* ---------- 关联层三级分类字典（数据包 ontology.displayDomains，九类本体对象域） ---------- */
+  const REL_TREE = (() => {
+    const dom = pk => (D.DOMAINS.find(d => d.id === pk) || { n: pk, e: '📌' });
+    const mk = (key, label) => ({ key, n: dom(key).n, e: dom(key).e, c: key });
+    return [
+      { n: '地理实体', subs: [
+        { n: '交易与物流节点', items: [mk('market'), mk('facility')] },
+        { n: '生产与区域', items: [mk('base'), mk('region')] }
       ] },
-      { n: '生产与区域', items: [
-        { key: 'base',   n: '基地', e: '🌱' },
-        { key: 'region', n: '区域', e: '🗺️' }
-      ] }
-    ] },
-    { n: '经营主体', subs: [
-      { n: '企业与机构', items: [
-        { key: 'company', n: '公司', e: '🏢' },
-        { key: 'agency',  n: '政策机构', e: '🏛️' }
+      { n: '经营主体', subs: [
+        { n: '企业与机构', items: [mk('company'), mk('agency')] },
+        { n: '角色', items: [mk('person')] }
       ] },
-      { n: '角色', items: [
-        { key: 'person', n: '人物角色', e: '🧑‍🌾' }
+      { n: '抽象对象', subs: [
+        { n: '品种与指标', items: [mk('variety'), mk('metric')] }
       ] }
-    ] },
-    { n: '抽象对象', subs: [
-      { n: '品种与指标', items: [
-        { key: 'variety', n: '品种', e: '🍎' },
-        { key: 'metric',  n: '指标', e: '📊' }
-      ] }
-    ] }
-  ];
+    ];
+  })();
 
   const flat = tree => tree.reduce((a, g) => a.concat(g.subs.reduce((b, s) => b.concat(s.items), [])), []);
   const FACT_ITEMS = flat(FACT_TREE), REL_ITEMS = flat(REL_TREE);
   const itemBy = (items, key) => items.find(x => x.key === key) || null;
   const allKeys = items => items.map(x => x.key);
 
-  /* 选中集合：null = 默认全选 */
   const selected = (state, field, items) => {
     const raw = state[field];
     const list = Array.isArray(raw) ? raw.filter(k => itemBy(items, k)) : allKeys(items);
     return new Set(list.length ? list : []);
   };
-
   function toggleLeaf(state, field, items, key) {
     const cur = selected(state, field, items);
     if (cur.has(key)) cur.delete(key); else cur.add(key);
@@ -95,28 +111,32 @@ window.V03Filter = (function () {
   const relLeafOn = (state, key) => selected(state, 'relKeys', REL_ITEMS).has(key);
 
   /* ---------- 事实过滤 ---------- */
-  /* cred / infl 为「阈值」语义：高 = 仅高；中 = 高 + 中；低 = 不限 */
+  /* cred / infl 为「阈值」语义：高 = 仅高；中 = 高 + 中；低/不限 = 全部 */
+  const RANK = { high: 3, medium: 2, mid: 2, low: 1 };
+  const BAND = { high: 'high', medium: 'mid', mid: 'mid', low: 'low' };
   const minOf = v => ({ high: 3, mid: 2, low: 1 }[v] || 1);
-  const RANK = { high: 3, mid: 2, low: 1 };
-  const credOk = (f, v) => RANK[f.cred] >= minOf(v);
-  const inflOk = (f, v) => RANK[f.impact] >= minOf(v);
+  const credOk = (f, v) => (RANK[f.cred] || 1) >= minOf(v);
+  const inflOk = (f, v) => (RANK[f.impact] || 1) >= minOf(v);
 
   const hit = (f, q) => {
     if (!q) return true;
     const s = q.toLowerCase();
-    return (f.title + f.summary + f.region + f.short).toLowerCase().includes(s);
+    return (f.title + f.summary + f.region + (f.card && f.card.commodityName ? f.card.commodityName : '')).toLowerCase().includes(s);
   };
+
   /* 三级卡片 → 事实：
-     · 本事实所属分类的叶子全部选中 → 不做细分过滤（全选 = 不筛）
-     · 只选中了部分叶子 → 按选中叶子的细分规则取并集（取消一张即立即生效）
-     · 该分类一张都没选 → 本类事实不显示 */
+     · 该分类下的叶子全选 → 不细分过滤
+     · 只选中部分叶子 → 按数据包 taxonomy（二级 + 三级 id）精确取并集
+     · 该分类一张都没选 → 本类事实不显示
+     无数据包时退回自带字典的正则细分规则。 */
   function matched(f, set, items) {
-    const all = items.filter(it => it.c === f.cat);
-    if (!all.length) return false;
-    const on = all.filter(it => set.has(it.key));
+    const catItems = items.filter(it => it.c === f.cat);
+    if (!catItems.length) return false;
+    const on = catItems.filter(it => set.has(it.key));
     if (!on.length) return false;
-    if (on.length === all.length) return true;
-    return on.some(it => !it.t || it.t.test(f.title + ' ' + f.summary));
+    if (on.length === catItems.length) return true;
+    const l2 = (f.taxonomy || {}).l2, l3 = (f.taxonomy || {}).l3;
+    return on.some(it => (it.l3 ? it.l2 === l2 && it.l3 === l3 : (!it.t || it.t.test(f.title + ' ' + f.summary))));
   }
 
   function facts(s) {
@@ -131,48 +151,53 @@ window.V03Filter = (function () {
     );
   }
 
-  /* 事实层地图：视线漏斗 —— 地图看到哪里就显示哪里的数据（M0 / M13）
-     L1 全球：全部事实（整个世界铺开）
-     L2 全国：中国范围以内的事实（远处事实退出视野）
-     L3 省区：聚焦省区范围内的事实（区域内更密） */
-  const provOf = f => String(f.region || '').split('·')[0].trim();
-  const inBox = (f, b) => f.lng >= b.lng[0] && f.lng <= b.lng[1] && f.lat >= b.lat[0] && f.lat <= b.lat[1];
-  const PAD = { lng: 2.8, lat: 2.2 };
+  /* ---------- 空间层级（数据包 scopeLayer 为准） ---------- */
+  const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
+  const DEFAULT_FOCUS = '湖南';
 
   function factsAtLevel(s) {
     s = s || window.V03Store.state;
     const all = facts(s);
     const lv = s.geo.level;
     let list;
-    if (lv === 'L1') list = all;
-    else if (lv === 'L2') list = all.filter(f => inBox(f, D.CHINA_BOX));
-    else {
-      const focus = s.geo.focus, c = (D.PROV_CENTER || {})[focus];
-      list = all.filter(f => provOf(f) === focus ||
-        (c && Math.abs(f.lng - c[0]) <= PAD.lng && Math.abs(f.lat - c[1]) <= PAD.lat));
+    if (PKG) {
+      if (lv === 'L1') list = all.filter(f => f.level === 'L1');
+      else if (lv === 'L2') list = all.filter(f => f.level === 'L2');
+      else {
+        const focus = shortProv(s.geo.focus || DEFAULT_FOCUS);
+        const prov = (PKG.PROV_BY_SHORT || {})[focus] || {};
+        list = all.filter(f => f.level === 'L3' &&
+          (f.provinceCode === prov.code || shortProv(f.province) === focus || shortProv(f.region) === focus));
+      }
+    } else {
+      /* 无数据包：按视野盒兜底 */
+      const prov = (D.PROV_CENTER || {})[shortProv(s.geo.focus || DEFAULT_FOCUS)] || null;
+      list = lv === 'L1' ? all
+        : lv === 'L2' ? all.filter(f => f.lng >= D.CHINA_BOX.lng[0] && f.lng <= D.CHINA_BOX.lng[1] && f.lat >= D.CHINA_BOX.lat[0] && f.lat <= D.CHINA_BOX.lat[1])
+          : all.filter(f => shortProv(f.region) === shortProv(s.geo.focus || DEFAULT_FOCUS) ||
+            (prov && Math.abs(f.lng - prov[0]) <= 2.8 && Math.abs(f.lat - prov[1]) <= 2.2));
     }
-    /* 携带进来的事实始终可见，避免「带了上下文却看不到」 */
+    /* 地理精度为 none 的事实（无坐标）不上地图，但保留在卡片列表 */
     const carry = s.carry || [];
     carry.forEach(id => {
       const f = D.factById(id);
-      if (f && !list.includes(f) && facts(s).some(x => x.id === id)) list = list.concat(f);
+      if (f && !list.includes(f) && all.some(x => x.id === id)) list = list.concat(f);
     });
-    /* 本层被筛空时，退回到「全部层级里符合筛选的事实」，并在界面上明说 */
     if (!list.length) list = all;
     return list;
   }
+  /* 地图上可渲染的点（有坐标） */
+  const mappable = list => list.filter(f => f.lng != null && f.lat != null);
+
   function levelMixed(s) {
     s = s || window.V03Store.state;
     const all = facts(s);
-    return all.length > 0 && factsAtLevel(s).length === all.length && s.geo.level !== 'L1' &&
-      !all.some(f => s.geo.level === 'L2' ? inBox(f, D.CHINA_BOX) : provOf(f) === s.geo.focus);
+    if (!all.length || s.geo.level === 'L1') return false;
+    const atLevel = factsAtLevel(s);
+    return atLevel.length === all.length;
   }
-  /* 整体（不受层级限制）符合筛选的事实：地图星点做「全局可见、逐层加密」用 */
-  const factsAll = s => facts(s);
 
   /* ---------- 关联层对象 / 关系 ---------- */
-  /* 对象：按三级字典（=九类对象域）+ 导航域 + 搜索过滤；时间窗口下无支撑事实的对象退出视野
-     （品种 / 指标 / 政策机构 / 角色为结构性对象，不因窗口缺失而消失） */
   const STRUCTURAL = { variety: 1, metric: 1, agency: 1, person: 1 };
   function objects(s) {
     s = s || window.V03Store.state;
@@ -183,10 +208,9 @@ window.V03Filter = (function () {
 
     let list = D.OBJECTS.filter(o => set.has(o.domain));
     if (rel.domain && rel.domain !== 'all') list = list.filter(o => o.domain === rel.domain);
-    if (s.q) { const q = s.q.toLowerCase(); list = list.filter(o => (o.name + o.sub + (D.domain(o.domain) || {}).n).toLowerCase().includes(q)); }
-    if (s.time && s.time !== 'all') {
-      list = list.filter(o => STRUCTURAL[o.domain] || carried.has(o.id) ||
-        D.factsOfObject(o.id).some(f => D.inWindow(f.date, s.time)));
+    if (s.q) {
+      const q = s.q.toLowerCase();
+      list = list.filter(o => (o.name + ' ' + (o.sub || '') + ' ' + (D.domain(o.domain) || {}).n).toLowerCase().includes(q));
     }
     if (rel.onlyCarry) list = list.filter(o => carried.has(o.id));
     if (rel.focusFact) {
@@ -217,20 +241,20 @@ window.V03Filter = (function () {
       const hi = rels.filter(r => r.confidence >= .6).length;
       const dist = {};
       D.DOMAINS.forEach(d => { dist[d.id] = objs.filter(o => o.domain === d.id).length; });
-      const maxDate = D.OBJECTS.length ? D.latestDate(objs.reduce((a, o) => a.concat(D.factsOfObject(o.id)), [])) : null;
+      const landed = objs.filter(o => o.geo !== false && o.lat != null);
       return {
         rows: [
           ['本体对象', objs.length + ' 个'],
+          ['可定位 / 无坐标', landed.length + ' / ' + (objs.length - landed.length)],
           ['关联关系', rels.length + ' 条'],
           ['高置信关系', (rels.length ? Math.round(hi / rels.length * 100) : 0) + '%'],
-          ['支撑事实', factIds.size + ' 条'],
-          ['最近更新', maxDate || D.TODAY]
+          ['最近更新', D.TODAY]
         ],
         distTitle: '本体类型分布',
         dist: D.DOMAINS.map(d => ({ n: d.n, e: d.e, v: dist[d.id], c: d.c }))
       };
     }
-    const list = facts(s);
+    const list = factsAtLevel(s), all = facts(s);
     const objIds = new Set();
     list.forEach(f => (f.objects || []).forEach(o => objIds.add(o)));
     const dist = {};
@@ -243,14 +267,15 @@ window.V03Filter = (function () {
         ['高影响事实', list.filter(f => f.impact === 'high').length + ' 条'],
         ['最近更新时间', D.latestDate(list) || D.TODAY]
       ],
+      note: all.length > list.length ? '当前筛选共 ' + all.length + ' 条，本层视野内 ' + list.length + ' 条' : '',
       distTitle: '事实类型分布',
-      dist: Object.keys(D.CATS).map(k => ({ n: D.CATS[k].n, e: D.CATS[k].e, v: dist[k], c: D.CATS[k].c }))
+      dist: Object.keys(D.CATS).map(k => ({ n: D.CATS[k].n, e: D.CATS[k].e, v: dist[k], c: D.CATS[k].c })).filter(x => x.v > 0)
     };
   }
 
   const counts = (s, arr) => arr.reduce((m, x) => (m[x.cat || x.domain] = (m[x.cat || x.domain] || 0) + 1, m), {});
 
-  /* ---------- 推演种子（推演层沿用，口径不变） ---------- */
+  /* ---------- 推演种子（推演层沿用，口径不变：种子 id 走自带数据别名） ---------- */
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
   const defaultSeeds = sim => {
     const sc = (D.SCENARIOS || []).find(x => x.id === (sim || {}).scenario);
@@ -274,8 +299,8 @@ window.V03Filter = (function () {
 
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, itemBy, selected, toggleLeaf, factLeafOn, relLeafOn,
-    facts, factsAll, factsAtLevel, levelMixed, objects, relations, overview, counts, seeds, toggleSeed,
+    facts, factsAll: facts, factsAtLevel, mappable, levelMixed, objects, relations, overview, counts, seeds, toggleSeed,
     totalFacts: () => D.FACTS.length,
-    prov: x => (x && x.prov) || 'synthesized'
+    prov: x => (x && x.prov) || 'generated'
   };
 })();
