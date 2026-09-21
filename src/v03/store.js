@@ -26,11 +26,16 @@ window.V03Store = (function () {
     rel: { view: 'graph', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false },
 
     sim: {
-      scenario: 'S1', stage: 0, status: 'idle',   // idle | running | paused | done | failed
-      round: 0, rounds: 0, report: 0, paused: false, replay: false, hotRound: null, failRound: null,
-      offline: false,                             // 离线回放
-      sidecar: 'ok',                              // ok | degraded | offline | error：Jev-like 旁路信号
-      speed: 1, seedIds: [], seedOff: [], autoRun: false
+      /* 统一用户故事：马来西亚榴莲 → 红星市场份额；五阶段承载十二步骤 */
+      scenario: 'DURIAN', tick: 0, status: 'idle',   // idle | running | paused | done | failed
+      report: 0, paused: false, replay: false, hotRound: null, failRound: null,
+      offline: false,                               // 离线回放
+      sidecar: 'ok',                                // ok | degraded：Jev 旁路模型信号
+      speed: 1, seedIds: [], seedOff: [],
+      run: 'AGRI-DURIAN-HX-001', runs: ['AGRI-DURIAN-HX-001'],
+      assumption: { supply: 20, compete: 15 },      // 供应增幅 / 竞争采购强度
+      qa: [],                                       // 已追问的问题（步骤十二）
+      contextVersion: 'ctx-2026-09-21-1'
     }
   };
 

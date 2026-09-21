@@ -361,6 +361,14 @@ window.V03Fact = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
+    /* 从推演层/关联层打开省级事实时，把地图同步到该省区，避免「详情在别的层级」 */
+    if (st.factId) {
+      const f = D.factById(st.factId);
+      if (f && f.level === 'province') {
+        const p = provOf(f);
+        if (st.geo.level !== 'L3' || st.geo.focus !== p) { S.set({ geo: { level: 'L3', focus: p } }); return; }
+      }
+    }
     const key = JSON.stringify([st.time, st.cat, st.sub, st.src, st.cred, st.infl, st.q, st.geo.level, st.geo.focus, st.factId, st.panels.cards, st.logOpen, st.carry, (st.sim || {}).seedIds]);
     if (key === sig) return; sig = key;
 

@@ -11,7 +11,7 @@
    视觉沿用 AgriLink：浅色、克制、数据叙事；不用暗色仪表盘
    ============================================================ */
 :root{
-  --bg:#f4f6fa;--panel:#fff;--panel-2:#fbfcff;--line:rgba(15,23,42,.10);--hair:rgba(20,30,55,.08);
+  --bg:#f4f6fa;--panel:#fff;--panel-2:#fbfcff;--line:rgba(15,23,42,.10);--hair:rgba(20,30,55,.11);
   --ink:#10151f;--mut:#4d586a;--dim:#64707f;--hint:#5f6b7d;
   --accent:#1d4ed8;--accent-soft:#eaf0fd;--green:#16a34a;--orange:#f97316;--purple:#7c3aed;--red:#dc2626;
   --policy:#7c3aed;--price:#dc2626;--weather:#0891b2;--logistics:#0d9488;--trade:#1d4ed8;
@@ -353,8 +353,8 @@ button{cursor:pointer}
 .sim-rep li:before{content:'·';position:absolute;left:2px;color:var(--accent)}
 .sim-pending{font-size:.8125rem;color:var(--hint);border:1px dashed var(--hair);border-radius:9px;padding:8px 10px;background:#f8fafd}
 .sim-side{display:flex;flex-direction:column;gap:8px}
-.sim-side .kv{display:flex;justify-content:space-between;gap:8px;font-size:.8125rem;color:var(--mut)}
-.sim-side .kv b{color:var(--ink)}
+.sim-kv{display:flex;justify-content:space-between;gap:8px;font-size:.8125rem;color:var(--mut);align-items:baseline;padding:2px 0}
+.sim-kv b{color:var(--ink);font-weight:600;text-align:right}
 .sim-side .unc{margin-top:4px}
 .sim-side .unc .b{height:8px;border-radius:6px;background:#eef2f8;position:relative;overflow:hidden}
 .sim-side .unc .b i{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#f59e0b,#ef4444);opacity:.55}
@@ -371,6 +371,83 @@ button{cursor:pointer}
   .sim-body{flex-direction:column}
   .sim-col.a,.sim-col.c{flex:0 0 auto}
 }
+
+/* ================= 五阶段 · 十二步骤 ================= */
+.sim-stageblk{border:1px solid var(--line);border-radius:12px;padding:10px 11px;margin-bottom:8px;background:var(--panel)}
+.sim-stageblk.cur{border-color:#c7d7f5;background:#fbfdff;box-shadow:0 8px 22px -20px rgba(29,78,216,.6)}
+.sim-stageblk .sb-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:7px}
+.sim-stageblk .sb-head .ix{width:20px;height:20px;border-radius:6px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:.71875rem;font-weight:700}
+.sim-stageblk .sb-head b{font-size:.84375rem}
+.sim-stageblk .sb-head small{font-size:.71875rem;color:var(--dim)}
+.sim-stageblk .sb-steps{display:flex;flex-direction:column;gap:3px}
+.sim-step{display:flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:9px;padding:5px 7px;font-size:.78125rem;color:var(--dim)}
+.sim-step .st-n{width:18px;height:18px;flex:0 0 18px;border-radius:50%;background:#eef2f8;color:var(--dim);display:grid;place-items:center;font-size:.6875rem;font-weight:700}
+.sim-step .st-t{flex:1;min-width:0;color:var(--mut)}
+.sim-step .st-s{font-size:.71875rem;color:var(--dim);white-space:nowrap}
+.sim-step.done{background:#f7fdf9;border-color:#e2f4e8}
+.sim-step.done .st-n{background:#ecfdf3;color:#15803d}
+.sim-step.done .st-t{color:var(--ink)}
+.sim-step.run{background:var(--accent-soft);border-color:#c7d7f5}
+.sim-step.run .st-n{background:var(--accent);color:#fff}
+.sim-step.run .st-t{color:var(--accent);font-weight:600}
+.sim-step.fail{background:#fef2f2;border-color:#fecaca}
+.sim-step.fail .st-n{background:#fee2e2;color:#b91c1c}
+.sim-stageblk .sb-d{font-size:.71875rem;color:var(--dim);margin-top:7px;padding-top:6px;border-top:1px dashed var(--hair)}
+.sim-stephead{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.sim-stephead b{font-size:.875rem}
+.sim-sub{margin-top:7px}
+.sim-sub h6{font-size:.75rem;letter-spacing:.1em;color:var(--dim);font-weight:600;margin-bottom:4px}
+.sim-ul{list-style:none;display:flex;flex-direction:column;gap:3px}
+.sim-ul li{position:relative;padding-left:11px;font-size:.78125rem;color:var(--mut);line-height:1.75}
+.sim-ul li:before{content:'·';position:absolute;left:2px;color:var(--accent)}
+.sim-ul.out li:before{content:'✓';color:#16a34a;font-size:.6875rem}
+
+/* ================= 核心指标 ================= */
+.sim-ind{border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:9px;background:var(--panel)}
+.sim-ind .ind-h{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.sim-ind .ind-h b{font-size:.84375rem}
+.ind-grid{display:grid;gap:2px}
+.ind-value{display:flex;align-items:baseline;gap:9px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--hair);flex-wrap:wrap}
+.ind-value .iv{font-size:1.5rem;font-weight:700;color:#12203a;font-variant-numeric:tabular-nums}
+.ind-delta{font-size:.75rem;color:var(--dim)}
+.ind-delta.down{color:#b45309}.ind-delta.up{color:#15803d}
+.ind-cites{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.ind-trend{display:flex;align-items:flex-end;gap:3px;height:42px;margin-top:9px;position:relative;padding-bottom:0}
+.ind-trend i{flex:1;background:#eef2f8;border-radius:3px 3px 0 0;min-height:4px;border:1px solid #e2e8f0}
+.ind-trend i.on{background:linear-gradient(180deg,#60a5fa,#1d4ed8);border-color:#1d4ed8}
+.ind-trend .trend-cap{position:absolute;right:0;top:-2px;font-size:.6875rem;color:var(--dim)}
+
+/* ================= 标签（现实基线 / 模型推断 / 模拟结果 / 建议） ================= */
+.sim-tag{display:inline-block;font-size:.6875rem;line-height:1.6;padding:0 6px;border-radius:7px;border:1px solid var(--line);
+  color:var(--mut);background:#fff;margin-right:5px;white-space:nowrap;font-weight:600}
+.sim-tag.base{color:#1d4ed8;border-color:#c7d7f5;background:#f2f7ff}
+.sim-tag.rule{color:#0f766e;border-color:#b8e6df;background:#f1fbf9}
+.sim-tag.simfmt{color:#b45309;border-color:#fde68a;background:#fffbeb}
+.sim-tag.assume{color:#7c3aed;border-color:#ddd0fb;background:#f7f3ff}
+.sim-tag.infer{color:#0891b2;border-color:#c3e9f1;background:#f1fbfe}
+.sim-tag.val{color:#15803d;border-color:#bbf7d0;background:#f1fdf5}
+.sim-tag.advice{color:#b91c1c;border-color:#fecaca;background:#fdf3f3}
+.sim-tag.review{color:#64707f;border-color:var(--line);background:#f7f9fd}
+
+/* ================= 轮次数值 / 报告 / 追问 ================= */
+.rvals{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rvals span{font-size:.71875rem;color:var(--mut);background:var(--panel-2);border:1px solid var(--hair);border-radius:7px;padding:2px 7px;
+  font-variant-numeric:tabular-nums}
+.sim-rep-sec{margin-bottom:10px}
+.sim-rep-sec h5{font-size:.8125rem;margin-bottom:5px}
+.sim-rep-sec h5.dim{color:#94a3b8}
+.sim-rep-sec ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.sim-rep-sec li{font-size:.78125rem;color:var(--mut);line-height:1.8;padding-left:2px}
+.qa-item{border:1px solid var(--line);border-radius:10px;margin-bottom:7px;background:var(--panel);overflow:hidden}
+.qa-item .qa-q{display:flex;align-items:center;gap:7px;width:100%;text-align:left;border:none;background:none;padding:9px 10px;
+  font-size:.78125rem;color:var(--mut);line-height:1.6}
+.qa-item .qa-q:hover:not([disabled]){background:#f8fbff;color:var(--accent)}
+.qa-item .qa-q[disabled]{color:#94a3b8;cursor:not-allowed}
+.qa-item .qa-a{padding:0 11px 10px;font-size:.78125rem;color:var(--mut);line-height:1.85;border-top:1px dashed var(--hair)}
+.qa-item.open{border-color:#c7d7f5}
+.sim-sec{margin-top:9px;padding-top:8px;border-top:1px dashed var(--hair)}
+.sig.fail{color:#b91c1c}
 </style>
 </head>
 <body>
@@ -427,7 +504,7 @@ button{cursor:pointer}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"920c9028503f","git":"46be371","builtAt":"2026-09-21T08:52:53.235Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"d09d7a06ad4f","git":"b3e469d","builtAt":"2026-09-21T10:04:15.046Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -507,6 +584,80 @@ window.V03Data = (function () {
   ];
 
   /* ---------- 事实：地图对象 + 影响范围 + 证据 ---------- */
+  /* ---------- 榴莲份额用户故事：事实（最近 30 天 · 交易量口径，演示样例） ---------- */
+  const DURIAN_FACTS = [
+    { id: 'F-DU-01', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '马来西亚榴莲',
+      lat: 28.19, lng: 112.98, cred: 'high', impact: 'high', radius: 160, media: 'image', mediaNote: '冷库到货台账 4 张',
+      title: '最近 30 天湖南接收马来西亚榴莲 4,800 吨（交易量口径）',
+      summary: '按到货台账归并：湖南接收马来西亚榴莲 4,800 吨；其中红星市场接收 1,680 吨，流入占比 35%（演示样例基线）。',
+      evidence: [{ t: '湖南进口商到货台账（示意）', k: '台账', q: '最近 30 天湖南接收马来西亚榴莲 4,800 吨；红星 1,680 吨。' },
+                 { t: '口径说明（示意）', k: '口径', q: '统一采用交易量口径（吨），时间范围最近 30 天。' }],
+      objects: ['O-REG-MY', 'O-VAR-DURIAN', 'O-MKT-HX', 'O-MET-DUSHR'], relations: ['R-DU-01', 'R-DU-02'] },
+
+    { id: 'F-DU-02', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '红星榴莲到货',
+      lat: 28.19, lng: 112.98, cred: 'high', impact: 'mid', radius: 120, media: 'image', mediaNote: '交易区到货照片 3 张',
+      title: '红星市场接收马来西亚榴莲 1,680 吨，日均到货 56 吨',
+      summary: '红星为湖南主要落地市场之一；日均到货约 56 吨，凌晨竞价为主。',
+      evidence: [{ t: '红星市场到货台账（示意）', k: '台账', q: '最近 30 天接收马来西亚榴莲 1,680 吨，日均约 56 吨。' }],
+      objects: ['O-MKT-HX', 'O-VAR-DURIAN', 'O-COM-IMP'], relations: ['R-DU-02'] },
+
+    { id: 'F-DU-03', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '湖南榴莲交易量',
+      lat: 28.10, lng: 112.90, cred: 'high', impact: 'mid', radius: 150, media: 'text', mediaNote: '市场交易台账摘录',
+      title: '湖南全部来源榴莲交易量 6,600 吨，红星占 2,310 吨',
+      summary: '含马来西亚、泰国、越南等全部来源；红星交易量 2,310 吨，市场份额 35%（演示样例基线）。',
+      evidence: [{ t: '全省主要批发市场交易台账（示意）', k: '台账', q: '湖南榴莲交易量 6,600 吨；红星 2,310 吨。' }],
+      objects: ['O-MKT-HX', 'O-MKT-GZ', 'O-MET-DUSHR'], relations: ['R-DU-07', 'R-DU-08'] },
+
+    { id: 'F-DU-04', cat: 'trade', date: '2026-09-19', level: 'province', region: '湖南 · 长沙', short: '红星交易量',
+      lat: 28.17, lng: 113.01, cred: 'high', impact: 'mid', radius: 120, media: 'image', mediaNote: '交易区价牌 2 张',
+      title: '红星市场榴莲交易量 2,310 吨，占湖南市场份额 35%',
+      summary: '红星份额以「红星交易量 ÷ 湖南总交易量」计算，基线 35%。',
+      evidence: [{ t: '红星市场交易台账（示意）', k: '台账', q: '榴莲交易量 2,310 吨，占全省 35%。' }],
+      objects: ['O-MKT-HX', 'O-MET-DUSHR'], relations: ['R-DU-07'] },
+
+    { id: 'F-DU-05', cat: 'price', date: '2026-09-20', level: 'province', region: '湖南 · 长沙', short: '红星榴莲价',
+      lat: 28.19, lng: 112.98, cred: 'high', impact: 'mid', radius: 110, media: 'image', mediaNote: '价牌照片 2 张',
+      title: '红星榴莲平均批发价 32 元／公斤（最近 30 天）',
+      summary: '按品类归并的批发均价；价格弹性为模型估计参数（降级项）。',
+      evidence: [{ t: '红星市场挂牌价（示意）', k: '市场', q: '榴莲批发均价 32 元／公斤。' }],
+      objects: ['O-MKT-HX', 'O-MET-PRICE', 'O-VAR-DURIAN'], relations: ['R-DU-05'] },
+
+    { id: 'F-DU-06', cat: 'logistics', date: '2026-09-20', level: 'province', region: '湖南 · 长沙', short: '库存周转',
+      lat: 28.19, lng: 112.98, cred: 'mid', impact: 'low', radius: 90, media: 'text', mediaNote: '库存台账摘录',
+      title: '红星榴莲库存周转天数 3.8 天，冷链分拨能力接近上限',
+      summary: '库容与分拨线接近能力上限，周转天数对到货增量较敏感。',
+      evidence: [{ t: '冷库进出库台账（示意）', k: '台账', q: '库存周转 3.8 天，分拨利用率 87%。' }],
+      objects: ['O-MKT-HX', 'O-FAC-PORT'], relations: ['R-DU-03'] },
+
+    { id: 'F-DU-07', cat: 'trade', date: '2026-09-15', level: 'global', region: '马来西亚 · 彭亨劳勿', short: '彭亨产量',
+      lat: 3.50, lng: 101.80, cred: 'mid', impact: 'high', radius: 220, media: 'image', mediaNote: '果园测产 3 张',
+      title: '彭亨劳勿产季增产，对湖南可供量预计提升 20%',
+      summary: '产季增产叠加专线运力恢复；「增长 20%」在本推演中作为用户假设，不写成现实事实。',
+      evidence: [{ t: '产区测产与出口计划（示意）', k: '测产', q: '对湖南可供量预计提升 20%（作为推演假设）。' }],
+      objects: ['O-REG-MY', 'O-COM-MY', 'O-VAR-DURIAN'], relations: ['R-DU-01'] },
+
+    { id: 'F-DU-08', cat: 'trade', date: '2026-09-12', level: 'province', region: '广东 · 广州', short: '竞争采购',
+      lat: 23.13, lng: 113.26, cred: 'low', impact: 'mid', radius: 200, media: 'text', mediaNote: '市场访谈记录（待核）',
+      title: '竞争市场加强榴莲采购，采购能力缺现实台账（标记待核）',
+      summary: '广州江南等竞争市场提高采购报价与订单量；采购能力缺少现实数据，本推演按模拟参数处理。',
+      evidence: [{ t: '市场访谈（示意 · 待核）', k: '访谈', q: '竞争市场采购报价上调，订单量增加；台账缺失。' }],
+      objects: ['O-MKT-GZ', 'O-COM-IMP', 'O-MET-DUSHR'], relations: ['R-DU-04', 'R-DU-08'] }
+  ];
+
+  /* ---------- 榴莲份额用户故事：新增本体对象（无坐标对象不显示为地图点） ---------- */
+  const DURIAN_OBJECTS = [
+    { id: 'O-REG-MY', domain: 'region', name: '马来西亚·彭亨劳勿产区', sub: '境外榴莲主产带',
+      lat: 3.50, lng: 101.80, geo: true, props: [['品类', '猫山王 · 黑刺'], ['对湖南可供量', '+20%（推演假设）']] },
+    { id: 'O-COM-IMP', domain: 'company', name: '湖南榴莲进口商', sub: '口岸到市场分拨主体',
+      lat: 28.23, lng: 112.94, geo: true, props: [['角色', '采购与市场分配'], ['依赖', '口岸与冷链能力']] },
+    { id: 'O-FAC-PORT', domain: 'facility', name: '黄花机场生鲜口岸', sub: '空运冷链通关与分拨',
+      lat: 28.19, lng: 113.22, geo: true, props: [['能力', '冷链分拨利用率 87%（示意）'], ['时效', '48 小时直达']] },
+    { id: 'O-FAC-RETAIL', domain: 'facility', name: '湖南零售渠道', sub: '商超与水果连锁',
+      lat: 28.20, lng: 112.95, geo: true, props: [['行为', '按价格与库存补货'], ['关注', '动销与损耗']] },
+    { id: 'O-MET-DUSHR', domain: 'metric', name: '榴莲份额指标', sub: '流入占比 · 市场份额',
+      geo: false, props: [['口径', '交易量（吨）· 最近 30 天'], ['基线', '35% / 35%']] }
+  ];
+
   const FACTS = [
     { id: 'F-CL-01', cat: 'trade', date: '2026-09-14', level: 'global', region: '智利 · 中部山谷', short: '智利',
       lat: -34.6, lng: -70.9, cred: 'high', impact: 'mid', radius: 260, media: 'video', mediaNote: '央视财经 · 产区走访 2:14',
@@ -630,7 +781,7 @@ window.V03Data = (function () {
       summary: '凌晨 2–5 点直播场次周环比 +23%，线上询价向线下成交转化约 18%（平台口径，待核）。',
       evidence: [{ t: '平台公开场次统计（示意）', k: '平台', q: '直播场次 +23%，询价转化 18%（口径待核）。' }],
       objects: ['O-MKT-HX', 'O-PER-BUYER', 'O-MET-PRICE'], relations: ['R-18'] }
-  ];
+  ].concat(DURIAN_FACTS);
 
   /* ---------- 本体对象：九类对象域（无坐标对象不显示为地图点） ---------- */
   const OBJECTS = [
@@ -695,6 +846,26 @@ window.V03Data = (function () {
       lat: 29.37, lng: 113.13, geo: true, props: [['冷库', '1.2 万吨'], ['分拨线', '8 条']] },
     { id: 'O-FAC-CORRIDOR', domain: 'facility', name: '京港澳冷链干线（郑州节点）', sub: '干线运力通道',
       lat: 34.75, lng: 113.62, geo: true, props: [['路径', '郑州 → 长沙'], ['运价指数', '+4.1%（示意）']] }
+  ].concat(DURIAN_OBJECTS);
+
+  const DURIAN_RELATIONS = [
+
+    { id: 'R-DU-01', from: 'O-REG-MY', to: 'O-COM-MY', type: '产区供给', strength: 0.88, confidence: 0.84, formed: '2026-05',
+      changedBy: 'F-DU-07', factIds: ['F-DU-07', 'F-DU-01'], note: '彭亨劳勿产季增产直接改变对湖南可供量；「+20%」为用户假设。' },
+    { id: 'R-DU-02', from: 'O-COM-IMP', to: 'O-MKT-HX', type: '供应流向', strength: 0.83, confidence: 0.78, formed: '2026-06',
+      changedBy: 'F-DU-02', factIds: ['F-DU-02', 'F-DU-01'], note: '进口商向红星分配货量，决定流入占比的分子。' },
+    { id: 'R-DU-03', from: 'O-FAC-PORT', to: 'O-COM-IMP', type: '设施服务', strength: 0.71, confidence: 0.69, formed: '2026-06',
+      changedBy: 'F-DU-06', factIds: ['F-DU-06'], note: '口岸冷链能力约束进口商可分配上限。' },
+    { id: 'R-DU-04', from: 'O-COM-IMP', to: 'O-MKT-GZ', type: '供应流向', strength: 0.66, confidence: 0.58, formed: '2026-07',
+      changedBy: 'F-DU-08', factIds: ['F-DU-08', 'F-DU-03'], note: '竞争市场加价采购分流；该关系支撑材料可信度低，标记待观察。' },
+    { id: 'R-DU-05', from: 'O-VAR-DURIAN', to: 'O-MET-PRICE', type: '价格构成', strength: 0.77, confidence: 0.8, formed: '2026-05',
+      changedBy: 'F-DU-05', factIds: ['F-DU-05'], note: '供应增加经该关系传导至批发价。' },
+    { id: 'R-DU-06', from: 'O-FAC-RETAIL', to: 'O-MKT-HX', type: '渠道关系', strength: 0.62, confidence: 0.6, formed: '2026-08',
+      changedBy: 'F-DU-03', factIds: ['F-DU-03'], note: '零售渠道补货节奏影响红星交易量。' },
+    { id: 'R-DU-07', from: 'O-MKT-HX', to: 'O-VAR-DURIAN', type: '价格发现', strength: 0.8, confidence: 0.76, formed: '2026-05',
+      changedBy: 'F-DU-04', factIds: ['F-DU-04', 'F-DU-05'], note: '红星竞价形成区域参考价，促销与锁量影响份额。' },
+    { id: 'R-DU-08', from: 'O-MKT-GZ', to: 'O-MET-DUSHR', type: '份额分流', strength: 0.64, confidence: 0.52, formed: '2026-08',
+      changedBy: 'F-DU-08', factIds: ['F-DU-08'], note: '竞争市场采购强度是红星份额下降的主要解释变量（置信度偏低）。' }
   ];
 
   /* ---------- 关系：强度 / 置信度 / 形成时间 / 最近由哪条事实改变 / 支撑事实 ---------- */
@@ -747,7 +918,7 @@ window.V03Data = (function () {
       changedBy: 'F-HN-10', factIds: ['F-HN-10', 'F-HN-15'], note: '补贴额度决定改造是否落地。' },
     { id: 'R-24', from: 'O-MKT-HX', to: 'O-VAR-FISH', type: '价格发现', strength: 0.79, confidence: 0.74, formed: '2026-06',
       changedBy: 'F-HN-11', factIds: ['F-HN-11', 'F-HN-17'], note: '批发市场竞价形成区域参考价。' }
-  ];
+  ].concat(DURIAN_RELATIONS);
 
   /* ---------- 底部流水：事实层「数据接入与处理」/ 关联层「本体抽离与关联处理」 ---------- */
   const STREAM = {
@@ -812,166 +983,327 @@ window.V03Data = (function () {
 </script>
 <script>
 /* ============================================================
-   推演层数据：三条样例场景 · 七阶段 · 轮次计划 · 报告 · Jev-like 旁路信号
-   全部为样例/示意数据；离线推演为示意引擎，不是真实 MiroFish 后端运行
+   推演层数据：统一用户故事「马来西亚榴莲 → 红星市场份额」
+   五阶段承载十二步骤（每步：输入 / 处理 / 输出 / 页面承载与下一步）
+   两个核心指标均给出分子、分母、时间范围与口径；数值全部为演示样例
+   另含：Jev 旁路模型信号（产品名统一为 Jev；本页不接收、不记录、不提交任何密钥）
    ============================================================ */
 Object.assign(window.V03Data, (function () {
+  /* 五阶段 = 十二步骤的分组（与用户确认文档一致） */
   const STAGES = [
-    { id: 'onto',   n: '本体关系确认', d: '确认参与推演的本体对象与关系（只读，不写回现实图谱）' },
-    { id: 'rag',    n: 'GraphRAG 检索', d: '在事实—对象—关系图上做子图检索，形成可引用上下文' },
-    { id: 'env',    n: '环境搭建',      d: '按 run_id 隔离的推演环境（示意沙箱）' },
-    { id: 'agent',  n: 'Agent 配置',    d: '配置农业角色 Agent 与各自输入来源' },
-    { id: 'boot',   n: '初始激活',      d: '激活种子事实，作为第 0 轮输入' },
-    { id: 'rounds', n: '多轮时序模拟',  d: '按时序推进多轮，每轮产出动作、发现与信号' },
-    { id: 'report', n: '报告逐步生成',  d: '随轮次逐步生成结论，每个要点带引用' }
+    { id: 'graph',  n: '图谱构建', d: '形成可执行、可回溯的推演输入包',            steps: [1, 2, 3] },
+    { id: 'env',    n: '环境搭建', d: '形成与现实数据隔离的农业模拟环境',          steps: [4, 5, 6] },
+    { id: 'sim',    n: '开始模拟', d: '得到按轮次记录的状态变化和结果集',          steps: [7, 8, 9, 10] },
+    { id: 'report', n: '报告生成', d: '形成带证据、假设和不确定性的报告',          steps: [11] },
+    { id: 'deep',   n: '深度互动', d: '围绕报告或模拟主体继续提问，必要时创建新 run', steps: [12] }
   ];
 
+  /* 十二步骤（输入 / 处理 / 输出 / 页面承载与下一步 —— 逐条来自用户确认文档） */
+  const STEPS = [
+    { n: 1, stage: 'graph', t: '确定推演目标',
+      input: ['用户问题：未来 30 天马来西亚榴莲供应增长 20%，红星市场的流入占比和湖南市场份额如何变化？',
+              '观察范围：湖南省、红星全球农批中心、马来西亚榴莲、未来 30 天。',
+              '关注指标：流入占比、市场份额、批发价、库存周转和采购量。'],
+      process: ['LLM 将自然语言问题拆成推演对象、时间范围、空间范围、变量、约束和预期输出。',
+                '系统检查两个「份额」指标是否具有明确分子、分母、时间和单位。',
+                '把「供应增长 20%」标记为模拟假设，不写成现实事实。'],
+      output: ['推演目标：预测红星市场在供应增加与竞争采购增强条件下的份额变化。',
+               '主指标 A：红星接收的马来西亚榴莲量 ÷ 湖南接收的马来西亚榴莲总量。',
+               '主指标 B：红星榴莲交易量 ÷ 湖南榴莲总交易量。',
+               '成功条件：两个主指标均形成基线值、逐轮变化和最终值，并能解释变化原因。'],
+      page: '页面展示【推演目标】【范围】【核心指标】【假设】四个区域。',
+      next: '用户确认后进入【准备推演种子】；指标口径不完整时停留本步补充。' },
+
+    { n: 2, stage: 'graph', t: '准备推演种子',
+      input: ['事实层已选事实：湖南马来西亚榴莲到货量、红星到货量、湖南榴莲总交易量、红星交易量、价格和库存。',
+              '关联层已选对象与关系：产区、出口商、口岸、进口商、红星市场、竞争市场、零售渠道及其供应、运输、交易关系。',
+              '用户补充的 PDF、MD、TXT 或表格材料。'],
+      process: ['对材料分块，抽取事实、时间、地点、数量、单位、对象和来源。',
+                '去重并处理冲突；同一指标存在不同口径时并列保存，不擅自合并。',
+                '标记事实可信度、更新时间和是否可以参与计算。'],
+      output: ['6 条基线事实、若干本体对象与关系及对应证据。',
+               '可计算基线：4,800 吨、1,680 吨、6,600 吨、2,310 吨、32 元／公斤、3.8 天。',
+               '缺失提示：竞争市场采购能力没有现实数据时标记为「模拟参数」，不伪装为事实。'],
+      page: '页面显示种子卡片、来源、有效时间、采用／排除状态和缺失项。',
+      next: '种子达到最低可计算条件后进入【形成推演上下文】。' },
+
+    { n: 3, stage: 'graph', t: '形成推演上下文',
+      input: ['已采用的事实、对象、关系、材料分块和推演目标。', '农业受控本体及允许的关系类型。'],
+      process: ['GraphRAG 将事实与对象建立可回溯连接，并生成本次任务的上下文子图。',
+                '计算现实基线：流入红星占比 35%，红星市场份额 35%（最近 30 天，交易量口径）。',
+                '为每条关系保留支撑事实、有效期和来源；不满足农业本体规则的关系不进入推演上下文。'],
+      output: ['上下文子图：马来西亚产区 → 出口商 → 口岸 → 进口商 → 红星／竞争市场 → 湖南零售渠道。',
+               '指标基线、关系链、证据索引、缺失数据和待模拟参数。',
+               'context_version：用于记录本次推演采用的现实数据快照。'],
+      page: '左侧显示图谱和类型图例，右侧显示节点／关系详情、支撑事实和构建日志。',
+      next: '上下文构建完成后进入【建立独立推演世界】。' },
+
+    { n: 4, stage: 'env', t: '建立独立推演世界',
+      input: ['上下文子图、基线指标、推演目标和 context_version。'],
+      process: ['创建独立 run_id，把现实事实、本体对象和关系以只读引用方式载入推演世界。',
+                '建立推演专属的对象、关系、事件和状态空间。',
+                '设置隔离规则：推演增删改查只作用于当前 run，不写回现实图谱。'],
+      output: ['run_id：AGRI-DURIAN-HX-001。', '初始状态与现实基线一致；后续变化都带 run_id、轮次和来源。'],
+      page: '页面常驻显示 run_id、现实图谱只读、推演图谱可变和上下文版本。',
+      next: '隔离检查通过后进入【生成农业专业 Agent】。' },
+
+    { n: 5, stage: 'env', t: '生成农业专业 Agent',
+      input: ['本次推演中的可行动对象、对象属性、角色、关系、事实和农业行为规则。'],
+      process: ['只有具有决策或行动能力的对象才生成 Agent；榴莲品种、地理区域和价格指标不生成 Agent。',
+                '为各 Agent 生成经营目标、可执行行为、资源约束、决策阈值和观察范围。',
+                '参数无法生成时显式标记降级，不使用自由人格或 MBTI 等无关字段。'],
+      output: ['供应方／进口商／红星采购／竞争市场采购／湖南零售渠道 五类农业 Agent 及其目标与行为。'],
+      page: 'Agent 卡片展示角色、目标、行为、约束、初始状态及支撑事实。',
+      next: 'Agent 装配完成后进入【设置推演规则和参数】。' },
+
+    { n: 6, stage: 'env', t: '设置推演规则和参数',
+      input: ['用户设定、现实基线、农业规则、Agent 参数和缺失数据。'],
+      process: ['设置 12 轮，每轮 2.5 天，总计 30 天，最高不得超过 40 轮。',
+                '设置供应增幅 20%、竞争采购强度、物流能力、库存容量、价格弹性和补货阈值。',
+                '区分事实参数、规则参数、模型估计参数和用户假设；完成单位、范围、冲突和缺失检查。'],
+      output: ['推演配置、参数来源表、初始状态快照和异常／降级项。',
+               '例如「供应增长 20%」标记为用户假设，「基线价格 32 元／公斤」关联事实 ID。'],
+      page: '页面显示轮数、时间单位、参数及来源标签，允许在启动前修改。',
+      next: '配置校验通过后进入【启动初始事件】。' },
+
+    { n: 7, stage: 'sim', t: '启动初始事件',
+      input: ['已准备的推演世界、Agent、规则和参数。'],
+      process: ['注入事件：「未来 30 天马来西亚对湖南榴莲供应量预计增长 20%」。',
+                '根据关系距离、业务相关性和行为规则确定首批激活主体。',
+                '生成初始热点、激活顺序和每个主体收到的信息。'],
+      output: ['激活顺序：供应方 → 进口商 → 红星与竞争市场采购方 → 零售渠道。', '初始事件、触达对象和激活理由。'],
+      page: '页面展示事件卡、激活序列和运行前状态。',
+      next: '点击【开始模拟】后进入【进行多轮推演】。' },
+
+    { n: 8, stage: 'sim', t: '进行多轮推演',
+      input: ['当前轮状态、Agent 观察、规则、记忆和前序事件。'],
+      process: ['每轮按「观察 → 判断 → 行动 → 规则结算 → 事件传播」执行。',
+                'Agent 可调整供应、采购报价、订单量、库存、批发价和补货策略。',
+                '每个动作记录主体、原因、输入、输出、规则和轮次。'],
+      output: ['第 1 轮：进口商上调湖南分配量；竞争市场提高采购报价。',
+               '第 4 轮：红星到货增加但增幅低于湖南整体增幅，流入占比开始下降。',
+               '第 8 轮：库存周转放缓，红星启动价格调整或促销。'],
+      page: '页面展示当前轮次、事件流、Agent 动作、运行日志和暂停／继续／停止。',
+      next: '每轮完成后进入【更新推演状态】，再决定是否进入下一轮。' },
+
+    { n: 9, stage: 'sim', t: '更新推演状态',
+      input: ['本轮所有 Agent 动作、规则计算结果和外部事件。'],
+      process: ['更新推演对象属性、关系、指标和时序记忆。',
+                '重新计算两个份额、价格、库存和周转天数。',
+                '把变化写入 run_id 推演图谱并保留前后值、原因和证据链。',
+                '检查异常、规则冲突和记忆写入失败。'],
+      output: ['本轮状态差：红星到货量 +3%，湖南总到货量 +5%，流入占比下降 0.7 个百分点（示例）。',
+               '新关系或关系强度变化：进口商对竞争市场的分配关系增强。',
+               '时序记忆：记录红星调整采购价和库存策略的原因。'],
+      page: '页面显示指标趋势、状态差、推演图谱和记忆写入状态。',
+      next: '未达到终止条件则返回【进行多轮推演】；达到终止条件后进入【形成推演结果】。' },
+
+    { n: 10, stage: 'sim', t: '形成推演结果',
+      input: ['全部轮次、最终状态、指标轨迹、事件、Agent 动作、异常和记忆。'],
+      process: ['汇总基线值、最终值、峰值、拐点和主要影响链。',
+                '分离现实基线、推断、模拟结果和建议候选。',
+                '识别导致份额变化的主要因素，并计算其贡献或解释强度。',
+                '对缺失数据、降级参数和不确定性进行标记。'],
+      output: ['红星流入占比由 35% 变化至模拟值；红星市场份额由 35% 变化至模拟值。',
+               '主要原因：竞争市场采购增强、进口商重新分配、红星库存约束和价格策略。',
+               '结果包包含指标轨迹、关键轮次、影响链和待复核项。'],
+      page: '页面展示结果摘要和关键变化，所有模拟值明确标识「模拟结果」。',
+      next: '用户选择【生成报告】进入下一步。' },
+
+    { n: 11, stage: 'report', t: '生成决策报告',
+      input: ['推演结果包、现实事实、关系链、轮次、规则、假设和不确定性。'],
+      process: ['ReportAgent 先生成报告目录，再逐章调用事实、关系、轮次和计算工具。',
+                '每一节分别组织事实、推断、模拟结果和建议。',
+                '每个关键数字绑定事实 ID、关系 ID、轮次 ID 或规则与输入参数。',
+                '单章失败时保留失败占位，不把报告伪装成完整状态。'],
+      output: ['现实基线与统计口径；两个份额指标的模拟轨迹与结果；主要驱动因素、价格与库存影响；采购、锁量、库存和渠道策略建议；章节级依据、假设、缺失信息和待复核项。'],
+      page: '页面展示目录、章节生成状态、生成时间轴、正文和本节依据。',
+      next: '报告完成后进入【深度追问】。' },
+
+    { n: 12, stage: 'deep', t: '深度追问',
+      input: ['当前报告、run_id、用户选择的章节、指标、事实或 Agent。'],
+      process: ['ReportAgent 根据报告和证据回答解释性问题。',
+                '用户可以与指定农业 Agent 对话，了解其在当前 run 中的行动原因；回答标识为「模拟角色观点」。',
+                '如果追问只要求解释，继续使用当前 run；如果改变供应增幅、竞争强度等关键假设，则复制上下文创建新 run。'],
+      output: ['「为什么供应增加，红星流入占比反而下降？」',
+               '「如果红星提前锁定进口商货源，市场份额会怎样变化？」',
+               '「把供应增幅从 20% 改为 10%，创建对比推演。」',
+               '「哪些结论来自现实事实，哪些只是模拟结果？」'],
+      page: '展示对话历史、当前上下文、引用卡片和返回原报告／事实／轮次的入口。',
+      next: '新假设产生新 run，原推演和原报告保持不变。' }
+  ];
+
+  /* 两个核心指标：分子 / 分母 / 时间范围 / 口径 / 演示基线 全部显式 */
+  const INDICATORS = [
+    { id: 'A', n: '马来西亚榴莲流入红星市场的占比', short: '流入红星占比',
+      num: '红星市场接收的马来西亚榴莲量', numV: 1680, den: '湖南接收的马来西亚榴莲总量', denV: 4800,
+      unit: '吨', window: '最近 30 天（2026-08-22 — 2026-09-20）', caliber: '交易量口径（到货量 · 吨）',
+      base: 0.35, baseText: '35%（演示样例基线）', facts: ['F-DU-01', 'F-DU-02'] },
+    { id: 'B', n: '红星市场的湖南榴莲市场份额', short: '红星市场份额',
+      num: '红星市场榴莲交易量', numV: 2310, den: '湖南榴莲市场总交易量', denV: 6600,
+      unit: '吨', window: '最近 30 天（2026-08-22 — 2026-09-20）', caliber: '交易量口径（交易量 · 吨）',
+      base: 0.35, baseText: '35%（演示样例基线）', facts: ['F-DU-03', 'F-DU-04'] }
+  ];
+
+  /* 现实基线（步骤二的可计算基线） */
+  const BASELINE = [
+    { k: '湖南接收马来西亚榴莲', v: '4,800 吨', fact: 'F-DU-01' },
+    { k: '红星市场接收马来西亚榴莲', v: '1,680 吨', fact: 'F-DU-02' },
+    { k: '湖南全部来源榴莲交易量', v: '6,600 吨', fact: 'F-DU-03' },
+    { k: '红星市场全部榴莲交易量', v: '2,310 吨', fact: 'F-DU-04' },
+    { k: '红星榴莲平均批发价', v: '32 元／公斤', fact: 'F-DU-05' },
+    { k: '红星库存周转天数', v: '3.8 天', fact: 'F-DU-06' }
+  ];
+
+  /* 规则与参数：类型标签区分现实基线 / 规则参数 / 模拟参数 / 用户假设 */
+  const PARAMS = [
+    { k: '轮数 × 每轮时长', v: '12 轮 × 2.5 天 = 30 天（上限 40 轮）', type: '规则参数' },
+    { k: '供应增幅', v: '+20%（马来西亚对湖南）', type: '用户假设', key: 'supply' },
+    { k: '竞争采购强度', v: '+15%（广州江南等竞争市场）', type: '模拟参数' },
+    { k: '基线批发价', v: '32 元／公斤', type: '现实基线', fact: 'F-DU-05' },
+    { k: '库存周转基线', v: '3.8 天', type: '现实基线', fact: 'F-DU-06' },
+    { k: '价格弹性 / 补货阈值', v: '模型估计（降级项，标注不确定性）', type: '模型推断' }
+  ];
+
+  /* 农业角色 Agent（只有可行动对象生成 Agent） */
   const AGENTS = [
-    { id: 'policy', n: '政策分析 Agent', role: '解析补贴、目录、备案口径与时间窗口', src: '政策类事实 + 政策机构对象' },
-    { id: 'supply', n: '供给 Agent',     role: '测算供给规模、到货节奏与成活率影响', src: '基地/品种事实 + 指标对象' },
-    { id: 'channel', n: '渠道谈判 Agent', role: '比较替代来源与通道能力，给出议价位势', src: '市场/公司/设施对象 + 交易事实' },
-    { id: 'price',  n: '价格传导 Agent',  role: '沿关系链推演价格与成本传导', src: '价格事实 + 价格类关系' },
-    { id: 'risk',   n: '风险 Agent',      role: '列出降级条件、证据缺口与待观察关系', src: '低置信关系 + 待核事实' }
+    { id: 'supply',  n: '马来西亚供应方 Agent', role: '平衡销售与履约', behav: '调整可供量与报价', cons: '产能与船期约束', src: 'F-DU-01 / F-DU-07' },
+    { id: 'imp',     n: '进口商 Agent',        role: '平衡利润与库存风险', behav: '调整采购量与市场分配', cons: '口岸与冷链能力', src: 'F-DU-02 / O-FAC-PORT' },
+    { id: 'hongxing', n: '红星市场采购 Agent', role: '平衡份额、毛利与周转', behav: '锁量、调价、促销', cons: '库容与资金', src: 'F-DU-04 / F-DU-06' },
+    { id: 'compete', n: '竞争市场采购 Agent',  role: '争取货源与客流', behav: '提高采购报价与订单量', cons: '预算与库容', src: 'F-DU-08' },
+    { id: 'retail',  n: '湖南零售渠道 Agent',  role: '按价格、需求与库存补货', behav: '调整补货节奏', cons: '终端需求', src: 'F-DU-03' }
   ];
 
-  const R = (n, title, agents, action, finding, cites, opts) => Object.assign({
-    n, title, agents, action, finding, cites,
-    signal: { status: '旁路信号正常', uncertainty: 0.3 + n * 0.02, provider: 'jev-like', note: '' }
-  }, opts || {});
-
-  const SCENARIOS = [
-    {
-      id: 'S1', name: '水产补贴套利', sample: true,
-      goal: '判断洞庭湖区水产基地在绿色补贴与农机补贴叠加下的改造套利窗口与可持续性。',
-      seeds: ['F-HN-10', 'F-HN-15', 'F-HN-14', 'F-HN-11'],
-      rounds: [
-        R(1, '政策条款解析', ['policy', 'risk'],
-          '拆解《绿色养殖补贴细则》与农机目录的补贴对象、比例、上限与备案窗口。',
-          '循环水养殖、增氧与尾水处理设备可按投资额 30% 补贴，单场上限 120 万元；备案截止 11 月 30 日。',
-          { facts: ['F-HN-10', 'F-HN-15'], relations: ['R-10', 'R-23'] }),
-        R(2, '成本—收益测算', ['policy', 'supply'],
-          '以洞庭湖区 3 个设施化基地为样本，测算改造投资与补贴回收。',
-          '样本基地改造投资合计约 380 万元，可申报补贴约 114 万元（30%，未触上限）；静态回本周期约 2.6 年。',
-          { facts: ['F-HN-10', 'F-HN-15'], relations: ['R-23'] }),
-        R(3, '供给与价格响应', ['supply', 'price'],
-          '推演改造后成活率提升对到货量与批发价的影响。',
-          '成活率回升 6 个百分点，红星水产区到货量预计 +8%，黄颡鱼批发价回落约 1.4 元/kg。',
-          { facts: ['F-HN-14', 'F-HN-11'], relations: ['R-17', 'R-24'] }),
-        R(4, '套利可持续性', ['risk', 'price'],
-          '检验套利窗口的时间条件与资金到位节奏。',
-          '套利窗口依赖 11 月 30 日前的备案；补贴到账存在约 2 个季度滞后，若价格回落超过 6% 则套利空间收窄至临界。',
-          { facts: ['F-HN-10', 'F-HN-11'], relations: ['R-10'] })
-      ],
-      report: [
-        { h: '一、机会与前提', at: 1, bullets: [
-          { t: '设备补贴按投资额 30% 直补，单场上限 120 万元，可与农机目录叠加申报。', cite: { fact: 'F-HN-10' } },
-          { t: '绿色补贴与农机补贴的关系已确认（强度 0.72 / 置信 0.85），指向同一批设施化改造。', cite: { rel: 'R-10' } } ] },
-        { h: '二、收益与窗口测算', at: 2, bullets: [
-          { t: '样本基地改造投资约 380 万元，可申报补贴约 114 万元，静态回本约 2.6 年。', cite: { round: 2 } },
-          { t: '补贴额度由投资额与上限共同决定，属可核验口径（万元 · 备案口径）。', cite: { rel: 'R-23' } } ] },
-        { h: '三、风险与边界', at: 3, bullets: [
-          { t: '备案截止 11 月 30 日，错过即关闭窗口；补贴到账滞后约 2 个季度。', cite: { fact: 'F-HN-15' } },
-          { t: '价格侧：若黄颡鱼批发价回落超过 6%，套利空间收窄至临界（含需求弹性假设，示意）。', cite: { fact: 'F-HN-11' } } ] }
-      ]
-    },
-    {
-      id: 'S2', name: '基地—湖南—红星供需与谈判', sample: true,
-      goal: '评估基地货源经湖南集散到红星的供需匹配与议价位势，比较两条通道方案。',
-      seeds: ['F-HN-13', 'F-HN-12', 'F-MY-03', 'F-CN-09'],
-      rounds: [
-        R(1, '供需盘点', ['supply', 'channel'],
-          '盘点红星日到货结构与来源地占比，识别缺口品类。',
-          '日到货 1.86 万吨，东盟水果占比升至 21%；水产到货同比 -4%，为价格支撑品类。',
-          { facts: ['F-HN-12'], relations: ['R-19', 'R-09'] }),
-        R(2, '通道能力评估', ['channel', 'supply'],
-          '比较空运冷链专线与江海联运的时效、成本与损耗。',
-          '城陵矶港 1.2 万吨冷库 + 8 条分拨线可承接部分进口货量；猫山王专线 48 小时直达，时效优势明显。',
-          { facts: ['F-HN-13', 'F-MY-03'], relations: ['R-20', 'R-11'] }),
-        R(3, '替代来源与议价位势', ['channel', 'price'],
-          '引入眉山柑橘丰产预期，测算议价空间。',
-          '眉山柑橘 11 月集中供货、产量 +11%，为红星提供同类替代来源，采购议价空间提升。',
-          { facts: ['F-CN-09'], relations: ['R-15'] }),
-        R(4, '方案比选', ['channel', 'risk'],
-          '给出组合通道建议与失败条件。',
-          '建议：高价值鲜果走空运专线保时效，大宗走江海联运压成本；若港口限作业超过 36 小时则回流空运。',
-          { facts: ['F-MY-03', 'F-HN-13'], relations: ['R-20'] })
-      ],
-      report: [
-        { h: '一、供需与结构', at: 1, bullets: [
-          { t: '红星日到货 1.86 万吨，东盟水果占比 21%，水产到货同比 -4%。', cite: { fact: 'F-HN-12' } },
-          { t: '省域集散角色由红星到货结构体现（强度 0.90 / 置信 0.87）。', cite: { rel: 'R-19' } } ] },
-        { h: '二、通道方案', at: 2, bullets: [
-          { t: '城陵矶港冷链投运后可衔接江海联运，预计损耗下降 2 个百分点。', cite: { fact: 'F-HN-13' } },
-          { t: '通道衔接关系为推断（置信 0.61），需以实际到货台账复验。', cite: { rel: 'R-11' } } ] },
-        { h: '三、谈判建议与失败条件', at: 4, bullets: [
-          { t: '眉山柑橘丰产为替代来源，议价位势提升（该关系置信 0.50，标记待观察）。', cite: { rel: 'R-15' } },
-          { t: '港口限作业超过 36 小时时，方案回流空运专线。', cite: { round: 2 } } ] }
-      ]
-    },
-    {
-      id: 'S3', name: '价格影响链', sample: true,
-      goal: '沿进口—港口—干线—批发—替代品路径推演外部冲击的价格传导与滞后期。',
-      seeds: ['F-BR-02', 'F-CN-05', 'F-CN-08', 'F-HN-11', 'F-HN-16'],
-      rounds: [
-        R(1, '外部冲击识别', ['supply', 'risk'],
-          '识别发运回升与港口限作业对到货节奏的影响。',
-          '巴西牛肉对华发运环比 +9%，叠加华南港口限作业 36 小时、冷链柜压港 1.8 天，到货节奏整体后移。',
-          { facts: ['F-BR-02', 'F-CN-05'], relations: ['R-05'] }),
-        R(2, '运价传导', ['price', 'risk'],
-          '测算干线运价上行对单位成本的影响。',
-          '京港澳冷链运价指数 +4.1%、回程空驶率 31%，折算到单位货量成本约 +0.18 元/kg。',
-          { facts: ['F-CN-08'], relations: ['R-05', 'R-14'] }),
-        R(3, '市场传导', ['price', 'supply'],
-          '推演到货量下滑对批发价与替代品的影响。',
-          '水产到货 -6%，黄颡鱼批发价 +8.4% 至 24.6 元/kg；生猪出栏与白条价差走阔至 4.1 元/kg，替代品结构变化。',
-          { facts: ['F-HN-11', 'F-HN-16'], relations: ['R-17', 'R-18'] }),
-        R(4, '影响链汇总', ['risk', 'price'],
-          '汇总五段传导路径、滞后期与置信度。',
-          '五段传导：外部发运 → 港口压港（滞后约 2 天）→ 干线运价（约 1 周）→ 批发价（约 1–2 周）→ 替代品结构（约 2–3 周）。',
-          { facts: ['F-HN-11', 'F-CN-05'], relations: ['R-18', 'R-24'] })
-      ],
-      report: [
-        { h: '一、冲击与传导路径', at: 1, bullets: [
-          { t: '外部发运回升与港口限作业同时发生，到货节奏后移。', cite: { fact: 'F-CN-05' } },
-          { t: '运价指数与干线通道的关系已由两条事实共同支撑。', cite: { rel: 'R-05' } } ] },
-        { h: '二、价格与替代品', at: 3, bullets: [
-          { t: '水产到货 -6% → 批发价 +8.4%（24.6 元/kg）。', cite: { fact: 'F-HN-11' } },
-          { t: '市场竞价关系为价格发现主路径（强度 0.79 / 置信 0.74）。', cite: { rel: 'R-24' } } ] },
-        { h: '三、滞后与置信边界', at: 4, bullets: [
-          { t: '各段滞后为示意估计，需以周度序列复验；低置信关系不参与结论追加。', cite: { round: 4 } },
-          { t: 'R-22（角色行为）置信 0.44，低于阈值，不进入本推演。', cite: { rel: 'R-22' } } ] }
-      ]
-    }
+  /* 十二轮推演（每轮 2.5 天，合计 30 天）
+     分子/分母为绝对值，占比 = 分子 ÷ 分母 —— 单一来源，页面不再做二次换算
+     A：红星接收马来西亚榴莲 ÷ 湖南接收马来西亚榴莲（4,800 → 5,760 吨）
+     B：红星榴莲交易量 ÷ 湖南榴莲总交易量（6,600 → 7,700 吨）           */
+  const R = (n, title, actions, events, numA, denA, numB, denB, price, turnover, cites, sig) => ({
+    n, day: (n * 2.5).toFixed(1), title, actions, events,
+    numA, denA, numB, denB,
+    shareA: numA / denA, shareB: numB / denB,
+    price, turnover, cites,
+    signal: sig || { status: 'Jev 信号正常', uncertainty: 0.3 + n * 0.012, provider: 'Jev', note: '' }
+  });
+  const ROUNDS = [
+    R(1, '供应方披露增量，进口商上调湖南分配量',
+      ['供应方 Agent 追加可供量，进口商 Agent 上调湖南分配比例', '竞争市场采购 Agent 提高采购报价'],
+      '红星到货 1,680 → 1,694 吨；湖南接收马来西亚榴莲 4,800 → 4,840 吨',
+      1694, 4840, 2327, 6650, 32.0, 3.8, { facts: ['F-DU-01', 'F-DU-02'], relations: ['R-DU-01'], steps: [7, 8] }),
+    R(2, '增量开始到港，红星增速略低于全省',
+      ['口岸通关与冷链分拨按能力上限放行'],
+      '红星到货 1,710 吨，湖南接收 4,900 吨；流入占比 34.9%（-0.1 个百分点）',
+      1710, 4900, 2352, 6720, 31.9, 3.9, { facts: ['F-DU-02'], relations: ['R-DU-01', 'R-DU-03'], steps: [8, 9] }),
+    R(3, '竞争市场加价抢货',
+      ['竞争市场采购 Agent 报价上调 3%，订单量 +8%'],
+      '红星增量被分流；湖南总交易量 6,800 吨，红星 2,373 吨',
+      1728, 4970, 2373, 6800, 31.8, 4.0, { facts: ['F-DU-08'], relations: ['R-DU-04'], steps: [8, 9] }),
+    R(4, '占比拐点出现',
+      ['进口商按毛利重新分配市场配额'],
+      '红星到货增加但增幅低于湖南整体增幅，流入占比开始下降（34.6%）',
+      1751, 5060, 2401, 6900, 31.7, 4.1, { facts: ['F-DU-02', 'F-DU-08'], relations: ['R-DU-02', 'R-DU-04'], steps: [8, 9] }),
+    R(5, '价格随供应增加走弱',
+      ['红星按弹性小幅下调批发价'],
+      '批发价 32.0 → 31.6 元／公斤；库存周转 4.2 天',
+      1775, 5160, 2425, 7010, 31.6, 4.2, { facts: ['F-DU-05'], relations: ['R-DU-05'], steps: [8, 9] }),
+    R(6, '零售渠道补货节奏放缓',
+      ['零售渠道 Agent 因价格下行预期减少补货'],
+      '红星交易量 2,453 吨；市场份额 34.4%',
+      1797, 5270, 2453, 7130, 31.4, 4.3, { facts: ['F-DU-03'], relations: ['R-DU-06'], steps: [8, 9] }),
+    R(7, '库存压力累积',
+      ['红星采购 Agent 暂缓加价，维持到货'],
+      '库存周转 4.5 天；流入占比 33.7%',
+      1816, 5390, 2476, 7260, 31.2, 4.5, { facts: ['F-DU-06'], relations: ['R-DU-05'], steps: [8, 9] }),
+    R(8, '红星启动价格调整与促销',
+      ['红星采购 Agent 下调毛利目标、启动促销与锁量'],
+      '库存周转放缓至 4.6 天后回落；流入占比 33.2%、市场份额 33.8%',
+      1832, 5520, 2501, 7400, 31.0, 4.6, { facts: ['F-DU-04', 'F-DU-06'], relations: ['R-DU-07'], steps: [8, 9] }),
+    R(9, '促销见效，市场份额止跌',
+      ['促销带动终端动销，红星交易量回升'],
+      '红星交易量 2,543 吨；市场份额回升至 33.9%',
+      1848, 5600, 2543, 7500, 30.9, 4.5, { facts: ['F-DU-03'], relations: ['R-DU-07'], steps: [8, 9] }),
+    R(10, '竞争市场加大锁量',
+      ['竞争市场采购 Agent 与进口商签订短期锁量'],
+      '流入占比 32.9%；湖南总交易量 7,580 吨',
+      1862, 5660, 2577, 7580, 30.8, 4.4, { facts: ['F-DU-08'], relations: ['R-DU-04', 'R-DU-08'], steps: [8, 9] }),
+    R(11, '红星以服务与账期留住商户',
+      ['红星对商户提供账期与冷链服务，稳定到货'],
+      '到货 1,876 吨；市场份额稳定在 34.0%',
+      1876, 5710, 2598, 7640, 30.8, 4.3, { facts: ['F-DU-04'], relations: ['R-DU-07'], steps: [8, 9] }),
+    R(12, '第 30 天结算，形成结果集',
+      ['按终止条件停止推演，固化 run 结果'],
+      '红星到货 1,890 吨、湖南接收 5,760 吨、红星交易 2,618 吨、湖南交易 7,700 吨',
+      1890, 5760, 2618, 7700, 30.7, 4.2, { facts: ['F-DU-01', 'F-DU-02', 'F-DU-03', 'F-DU-04'], relations: ['R-DU-01', 'R-DU-03'], steps: [9, 10] })
   ];
 
+  /* 报告：每节都分开标注 现实基线 / 模型推断 / 模拟结果 / 建议 */
+  const REPORT = [
+    { h: '一、现实基线与统计口径', at: 11, bullets: [
+      { label: '现实基线', t: '湖南接收马来西亚榴莲 4,800 吨，红星接收 1,680 吨 → 流入红星占比 35%。', cite: { fact: 'F-DU-01' } },
+      { label: '现实基线', t: '湖南全部来源榴莲交易量 6,600 吨，红星 2,310 吨 → 红星市场份额 35%。', cite: { fact: 'F-DU-03' } },
+      { label: '现实基线', t: '口径：交易量（吨），时间范围最近 30 天；批发价 32 元／公斤、库存周转 3.8 天。', cite: { fact: 'F-DU-05' } } ] },
+    { h: '二、两个份额指标的模拟轨迹', at: 12, bullets: [
+      { label: '模拟结果', t: '流入红星占比：35% → 32.8%（第 12 轮），下降 2.2 个百分点。', cite: { round: 12 } },
+      { label: '模拟结果', t: '红星市场份额：35% → 34.0%（第 12 轮），下降 1.0 个百分点；第 9 轮促销后止跌回升。', cite: { round: 9 } },
+      { label: '模型推断', t: '主要驱动：竞争市场采购强度 +15%、进口商市场分配调整（贡献强度 0.62，待复核）。', cite: { rel: 'R-DU-04' } } ] },
+    { h: '三、价格与库存影响', at: 12, bullets: [
+      { label: '模拟结果', t: '批发价 32.0 → 30.7 元／公斤（-4.1%）；库存周转 3.8 → 4.6 → 4.2 天。', cite: { round: 8 } },
+      { label: '现实基线', t: '基线价格与周转来自红星台账；价格弹性为模型估计（降级项）。', cite: { fact: 'F-DU-06' } } ] },
+    { h: '四、采购与渠道建议（候选）', at: 12, bullets: [
+      { label: '建议', t: '在供应增幅 ≥20% 窗口内对进口商提前锁量，锁定 35% 基线份额。', cite: { round: 8 } },
+      { label: '建议', t: '把库存周转目标压在 4.2 天以内；促销与账期组合用于稳住商户到货。', cite: { rel: 'R-DU-07' } },
+      { label: '待复核', t: '竞争市场采购能力缺现实数据（模拟参数）；建议下一周期补充台账后再评估。', cite: { fact: 'F-DU-08' } } ] }
+  ];
+
+  /* 深度追问（步骤十二）：解释性问题沿用当前 run；关键假设变化创建新 run */
+  const QA = [
+    { q: '为什么供应增加，红星流入占比反而下降？',
+      kind: '解释 · 当前 run',
+      a: '湖南接收量增长 20%，而红星到货只增长 12.5%，增量主要被竞争市场以更高报价分流；两份额均由「红星 ÷ 湖南」构成，分母增长快于分子，占比自然回落。',
+      cites: ['R-DU-04', 'F-DU-08'] },
+    { q: '如果红星提前锁定进口商货源，市场份额会怎样变化？',
+      kind: '解释 · 模拟角色观点',
+      a: '进口商 Agent 在毛利与库存风险之间权衡；若红星在第 4 轮前锁量，模型推断份额可维持在 34% 以上，但库存周转将上升约 0.3 天（模拟角色观点，非现实结论）。',
+      cites: ['R-DU-02'] },
+    { q: '哪些结论来自现实事实，哪些只是模拟结果？',
+      kind: '解释 · 当前 run',
+      a: '现实基线为 4,800／1,680／6,600／2,310 吨、32 元／公斤、3.8 天；35% → 32.8% 与 35% → 32.9% 属模拟结果；竞争采购强度、价格弹性为模拟参数或模型推断。',
+      cites: ['F-DU-01', 'F-DU-04'] },
+    { q: '把供应增幅从 20% 改为 10%，创建对比推演。',
+      kind: '新假设 · 创建新 run',
+      a: '已按新假设复制上下文创建 AGRI-DURIAN-HX-002（供应增幅 +10%）：流入占比 35% → 33.9%、市场份额 35% → 34.6%、批发价 31.2 元／公斤、周转 4.0 天。原 run 与原报告保持不变。',
+      cites: ['R-DU-01'], newRun: { id: 'AGRI-DURIAN-HX-002', assumption: 10, shareA: 0.339, shareB: 0.346, price: 31.2, turnover: 4.0 } }
+  ];
+
+  /* Jev 旁路模型信号（产品名统一为 Jev；页面只显示接入状态，不接收、不记录、不提交密钥） */
   const SIDECAR = {
-    n: 'Jev-like 旁路信号',
-    provider: 'jev-like 本地小模型（示意）',
-    version: '0.9.3-demo',
-    updated: '2026-09-20 21:10',
-    base: { lo: 0.28, hi: 0.41 },
-    degrade: '旁路服务未启动或超时（本地端口未监听）',
-    note: '旁路信号只作为参考信号参与轮次置信度校准，不参与事实入层、关系确认、方案种子与现实图谱写入，也不构成价格或产量预测。'
+    n: 'Jev 旁路模型信号',
+    provider: 'Jev（正式服务）',
+    version: '接入已就绪 · 运行状态示意',
+    updated: '2026-09-21 09:10',
+    base: { lo: 0.22, hi: 0.34 },
+    degrade: 'Jev 服务不可达或超时（本 Demo 离线运行，不发起真实调用）',
+    note: 'Jev 信号只作为参考信号参与轮次置信度校准，不参与事实入层、关系确认、方案种子与现实图谱写入，也不构成价格或产量预测。'
   };
 
   const STREAM_SIM = [
-    ['环境', '创建 run_id=run-demo-0912 隔离沙箱（示意）', null],
-    ['检索', 'GraphRAG 子图：本体 12 · 关系 9 · 事实 5', null],
-    ['激活', '种子事实激活完成 · 第 0 轮输入就绪', null],
-    ['轮次', '第 1 轮：政策条款解析完成', null],
-    ['旁路', 'jev-like 信号校准轮次置信度（不确定度 0.34）', null],
-    ['轮次', '第 2 轮：成本—收益测算完成', null],
-    ['报告', '生成报告小节一 · 机会与前提（含 2 条引用）', null],
-    ['轮次', '第 3 轮：供给与价格响应完成', null],
-    ['报告', '生成报告小节二 · 收益与窗口测算', null],
-    ['降级', '旁路服务超时 → 轮次置信度改用规则基线', null],
-    ['轮次', '第 4 轮：套利可持续性完成', null],
-    ['报告', '生成报告小节三 · 风险与边界', null],
-    ['校验', '结论引用完整性校验通过（每个要点均可回溯）', null],
-    ['离线', '全程离线回放可用 · 不依赖真实 MiroFish 后端', null]
+    ['目标', '解析用户问题：供应增长 20% → 两个份额变化（步骤 1）', null],
+    ['种子', '装载 6 条基线事实与 8 类本体对象（步骤 2）', null],
+    ['上下文', 'GraphRAG 生成上下文子图 · context_version=ctx-2026-09-21-1（步骤 3）', null],
+    ['隔离', '创建 run_id=AGRI-DURIAN-HX-001 · 现实图谱只读（步骤 4）', null],
+    ['Agent', '生成 5 个农业角色 Agent（步骤 5）', null],
+    ['参数', '12 轮 × 2.5 天 = 30 天 · 供应 +20% 标记为用户假设（步骤 6）', null],
+    ['事件', '注入初始事件：马来西亚对湖南供应 +20%（步骤 7）', null],
+    ['轮次', '第 1 轮：进口商上调湖南分配量；竞争市场提高报价', null],
+    ['状态', '第 4 轮：红星到货增幅低于湖南整体 → 流入占比拐点', null],
+    ['状态', '第 8 轮：库存周转放缓 → 红星价格调整与促销', null],
+    ['Jev', 'Jev 信号校准轮次置信度（不确定度 0.28）', null],
+    ['结果', '第 12 轮：流入占比 32.8% · 市场份额 32.9%', null],
+    ['报告', 'ReportAgent 逐章生成 · 每节分离事实/推断/模拟/建议', null],
+    ['追问', '深度追问可创建新 run（HX-002）· 原 run 不变', null]
   ];
 
-  return { STAGES, AGENTS, SCENARIOS, SIDECAR, STREAM_SIM };
+  return { STAGES, STEPS, INDICATORS, BASELINE, PARAMS, AGENTS, ROUNDS, REPORT, QA, SIDECAR, STREAM_SIM };
 })());
 
 </script>
@@ -1004,11 +1336,16 @@ window.V03Store = (function () {
     rel: { view: 'graph', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false },
 
     sim: {
-      scenario: 'S1', stage: 0, status: 'idle',   // idle | running | paused | done | failed
-      round: 0, rounds: 0, report: 0, paused: false, replay: false, hotRound: null, failRound: null,
-      offline: false,                             // 离线回放
-      sidecar: 'ok',                              // ok | degraded | offline | error：Jev-like 旁路信号
-      speed: 1, seedIds: [], seedOff: [], autoRun: false
+      /* 统一用户故事：马来西亚榴莲 → 红星市场份额；五阶段承载十二步骤 */
+      scenario: 'DURIAN', tick: 0, status: 'idle',   // idle | running | paused | done | failed
+      report: 0, paused: false, replay: false, hotRound: null, failRound: null,
+      offline: false,                               // 离线回放
+      sidecar: 'ok',                                // ok | degraded：Jev 旁路模型信号
+      speed: 1, seedIds: [], seedOff: [],
+      run: 'AGRI-DURIAN-HX-001', runs: ['AGRI-DURIAN-HX-001'],
+      assumption: { supply: 20, compete: 15 },      // 供应增幅 / 竞争采购强度
+      qa: [],                                       // 已追问的问题（步骤十二）
+      contextVersion: 'ctx-2026-09-21-1'
     }
   };
 
@@ -1133,18 +1470,22 @@ window.V03Filter = (function () {
 
   /* 推演种子：场景默认种子（可被取消）+ 携带事实 + 手动加入的种子，三处唯一口径 */
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
+  /* 默认种子：统一用户故事的 6 条基线事实（或旧结构的场景种子） */
+  const defaultSeeds = sim => {
+    const sc = (D.SCENARIOS || []).find(x => x.id === (sim || {}).scenario);
+    return sc ? sc.seeds : (D.BASELINE || []).map(b => b.fact);
+  };
   function seeds(s) {
     s = s || window.V03Store.state;
     const sim = s.sim || {};
-    const sc = (D.SCENARIOS || []).find(x => x.id === sim.scenario);
     const off = sim.seedOff || [];
-    const base = (sc ? sc.seeds : []).filter(id => !off.includes(id));
+    const base = defaultSeeds(sim).filter(id => !off.includes(id));
     return uniq(base.concat(s.carry || []).concat(sim.seedIds || []));
   }
   /* 种子勾选：默认种子被取消时记入 seedOff，手动种子记入 seedIds */
   function toggleSeed(s, id, on) {
-    const sim = s.sim || {}, sc = (D.SCENARIOS || []).find(x => x.id === sim.scenario);
-    const isDefault = !!sc && sc.seeds.includes(id);
+    const sim = s.sim || {};
+    const isDefault = defaultSeeds(sim).includes(id);
     let ids = (sim.seedIds || []).filter(x => x !== id), off = (sim.seedOff || []).filter(x => x !== id);
     if (on) { ids = uniq(ids.concat([id])); }
     else if (isDefault) off = uniq(off.concat([id]));
@@ -1519,6 +1860,14 @@ window.V03Fact = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
+    /* 从推演层/关联层打开省级事实时，把地图同步到该省区，避免「详情在别的层级」 */
+    if (st.factId) {
+      const f = D.factById(st.factId);
+      if (f && f.level === 'province') {
+        const p = provOf(f);
+        if (st.geo.level !== 'L3' || st.geo.focus !== p) { S.set({ geo: { level: 'L3', focus: p } }); return; }
+      }
+    }
     const key = JSON.stringify([st.time, st.cat, st.sub, st.src, st.cred, st.infl, st.q, st.geo.level, st.geo.focus, st.factId, st.panels.cards, st.logOpen, st.carry, (st.sim || {}).seedIds]);
     if (key === sig) return; sig = key;
 
@@ -1891,18 +2240,21 @@ window.V03Relation = (function () {
 </script>
 <script>
 /* ============================================================
-   推演层：七阶段流水线 · 种子确认 · 多轮时序模拟 · 报告逐步生成 · Jev-like 旁路信号
-   状态真流转（计时器/单步写入 sim.stage / sim.round / sim.report / sim.status）
-   离线推演为示意引擎，不声称真实 MiroFish 后端运行
+   推演层：五阶段承载十二步骤 · 统一用户故事「马来西亚榴莲 → 红星市场份额」
+   - 两个核心指标：分子 / 分母 / 时间范围 / 口径 / 演示基线 全部显式
+   - 现实基线 / 模型推断 / 模拟结果 / 建议 使用不同标签
+   - 状态真流转：tick 驱动步骤与轮次；报告随步骤十一定稿；步骤十二可创建新 run
+   - Jev 旁路模型信号：只显示接入状态与降级原因；本页不接收、不记录、不提交任何密钥
+   - 离线推演 · 示意引擎（非真实 MiroFish 后端）
    ============================================================ */
 window.V03Sim = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, dom = {}, sig = '', timer = null, local = { hot: null };
+  let root, dom = {}, sig = '', timer = null;
 
   const TPL = `
   <div class="sim-wrap">
     <div class="sim-head">
-      <h3><span id="simName">—</span><span class="sim-badge sample">样例场景</span></h3>
+      <h3><span id="simName">—</span><span class="sim-badge sample">演示样例</span></h3>
       <span class="goal" id="simGoal"></span>
       <span class="sim-badge engine">离线推演 · 示意引擎（非真实 MiroFish 后端）</span>
       <span class="sim-badge" id="simStatus"></span>
@@ -1910,273 +2262,382 @@ window.V03Sim = (function () {
     </div>
     <div class="sim-body">
       <div class="sim-col a">
-        <div class="sim-card"><h4>七阶段流水线 <small id="simStageMeta"></small></h4><div id="simStages"></div></div>
-        <div class="sim-card"><h4>方案输入与种子确认 <small id="simSeedMeta"></small></h4><div id="simSeeds"></div></div>
+        <div class="sim-card"><h4>五阶段 · 十二步骤 <small id="simStepMeta"></small></h4><div id="simStages"></div></div>
+        <div class="sim-card"><h4>当前步骤 <small id="simCurMeta"></small></h4><div id="simCur"></div></div>
+        <div class="sim-card"><h4>推演种子 <small id="simSeedMeta"></small></h4><div id="simSeeds"></div></div>
       </div>
       <div class="sim-col b">
-        <div class="sim-card"><h4>Agent 配置 <small>农业角色 Agent（不是自由人设）</small></h4><div id="simAgents"></div></div>
+        <div class="sim-card"><h4>两个核心指标 <small>分子 / 分母 / 时间范围 / 口径 · 演示样例</small></h4><div id="simInd"></div></div>
+        <div class="sim-card"><h4>规则与参数 <small>区分基线 / 规则 / 模拟 / 假设</small></h4><div id="simParams"></div></div>
         <div class="sim-card"><h4>轮次与过程 <small id="simRoundMeta"></small></h4><div id="simRounds"></div></div>
         <div class="sim-card"><h4>运行日志 <small>示意日志 · 逐行追加</small></h4><div class="sim-log" id="simLog"></div></div>
       </div>
       <div class="sim-col c">
-        <div class="sim-card sim-rep"><h4>推演报告 <small>随轮次逐步生成 · 报告属于推演层</small></h4><div id="simReport"></div></div>
+        <div class="sim-card sim-rep"><h4>决策报告 <small>报告属于推演层 · 每个要点带引用</small></h4><div id="simReport"></div></div>
+        <div class="sim-card"><h4>深度追问（步骤十二） <small>解释沿用当前 run；改关键假设则新建 run</small></h4><div id="simQa"></div></div>
         <div class="sim-card sim-side" id="simSide"></div>
       </div>
     </div>
   </div>`;
 
+  const AGENTS_BY_ID = id => (D.AGENTS || []).find(a => a.id === id) || { n: id };
+
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = {
       name: root.querySelector('#simName'), goal: root.querySelector('#simGoal'), status: root.querySelector('#simStatus'),
-      ctl: root.querySelector('#simCtl'), stages: root.querySelector('#simStages'), stageMeta: root.querySelector('#simStageMeta'),
-      seeds: root.querySelector('#simSeeds'), seedMeta: root.querySelector('#simSeedMeta'), agents: root.querySelector('#simAgents'),
+      ctl: root.querySelector('#simCtl'), stages: root.querySelector('#simStages'), stepMeta: root.querySelector('#simStepMeta'),
+      cur: root.querySelector('#simCur'), curMeta: root.querySelector('#simCurMeta'),
+      seeds: root.querySelector('#simSeeds'), seedMeta: root.querySelector('#simSeedMeta'),
+      ind: root.querySelector('#simInd'), params: root.querySelector('#simParams'),
       rounds: root.querySelector('#simRounds'), roundMeta: root.querySelector('#simRoundMeta'), log: root.querySelector('#simLog'),
-      report: root.querySelector('#simReport'), side: root.querySelector('#simSide')
+      report: root.querySelector('#simReport'), qa: root.querySelector('#simQa'), side: root.querySelector('#simSide')
     };
   }
 
-  const scenario = id => (D.SCENARIOS || []).find(s => s.id === id) || (D.SCENARIOS || [])[0];
-  const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
-  /* 种子口径统一由 V03Filter 提供：场景默认（可取消）+ 携带事实 + 手动种子 */
-  const seedsOf = st => window.V03Filter.seeds(st);
-
-  /* GraphRAG 子图：种子事实 → 对象 → 关系 → 追加事实（真实计算，不是写死数字） */
-  function subgraph(st, sc) {
-    const seeds = seedsOf(st).map(id => D.factById(id)).filter(Boolean);
-    const objs = new Set(), facts = new Set(seeds.map(f => f.id)), rels = new Set();
-    seeds.forEach(f => { f.objects.forEach(o => objs.add(o)); f.relations.forEach(r => rels.add(r)); });
-    D.RELATIONS.filter(r => objs.has(r.from) && objs.has(r.to)).forEach(r => { rels.add(r.id); r.factIds.forEach(f => facts.add(f)); });
-    return { seeds, objs: [...objs], rels: [...rels], facts: [...facts] };
+  /* ---------- 进度：十二步骤的程序（步骤 8/9 每轮重复一次） ---------- */
+  const ROUNDS = () => D.ROUNDS || [];
+  function program() {
+    const p = [1, 2, 3, 4, 5, 6, 7];
+    ROUNDS().forEach(r => { p.push(8); p.push(9); });
+    p.push(10); p.push(11); p.push(12);
+    return p;
   }
-
-  /* ---------- 运行控制 ---------- */
+  function derived(st) {
+    const p = program(), i = Math.min(st.sim.tick || 0, p.length);
+    const done = i >= p.length;
+    const step = done ? 12 : p[i];
+    let round = 0;
+    for (let k = 7; k < i; k++) if (p[k] === 9) round++;
+    const stage = (D.STAGES || []).findIndex(s => s.steps.includes(step));
+    return { i, done, step, round, stage: stage < 0 ? 0 : stage };
+  }
   function stop() { clearInterval(timer); timer = null; }
-  function start() {
-    stop();
-    timer = setInterval(tick, Math.round(1100 / (S.state.sim.speed || 1)));
-  }
+  function start() { stop(); timer = setInterval(tick, Math.round(1100 / (S.state.sim.speed || 1))); }
   function tick() {
-    const st = S.state, sc = scenario(st.sim.scenario);
+    const st = S.state, p = program();
     if (st.sim.status !== 'running') { stop(); return; }
-    if (st.sim.stage < 5) return S.set({ sim: { stage: st.sim.stage + 1 } });
-    if (st.sim.round < sc.rounds.length) return S.set({ sim: { round: st.sim.round + 1 } });
-    if (st.sim.stage === 5) return S.set({ sim: { stage: 6 } });
-    if (st.sim.report < sc.report.length) return S.set({ sim: { report: st.sim.report + 1 } });
-    stop();
-    S.set({ sim: { status: 'done' } });
-    S.emit('toast', '推演完成：' + sc.name + '（报告 ' + sc.report.length + ' 节，全部可回溯）');
+    if ((st.sim.tick || 0) >= p.length) { stop(); S.set({ sim: { status: 'done' } }); return; }
+    const next = (st.sim.tick || 0) + 1;
+    const patch = { tick: next };
+    if (p[next - 1] === 11) patch.report = (D.REPORT || []).length;
+    S.set({ sim: patch });
+    if (next >= p.length) { stop(); S.set({ sim: { status: 'done' } }); S.emit('toast', '推演完成：12 轮 / 30 天 · 报告 ' + (D.REPORT || []).length + ' 节，全部可回溯'); }
   }
   function play() {
-    const st = S.state, sc = scenario(st.sim.scenario);
+    const st = S.state;
     if (!seedsOf(st).length) return S.emit('toast', '请先确认至少 1 条种子事实');
-    if (st.sim.status === 'done') S.set({ sim: { stage: 0, round: 0, report: 0, status: 'running', replay: false } });
+    if (st.sim.status === 'done') S.set({ sim: { tick: 0, report: 0, status: 'running', replay: false } });
     else S.set({ sim: { status: 'running' } });
     start();
   }
-  function reset() { stop(); S.set({ sim: { stage: 0, round: 0, report: 0, status: 'idle', replay: false, failRound: null, hotRound: null } }); }
+  function reset() { stop(); S.set({ sim: { tick: 0, report: 0, status: 'idle', replay: false, failRound: null, hotRound: null } }); }
 
-  /* ---------- 阶段细节（由真实状态算出） ---------- */
-  function stageDetail(i, st, sc) {
-    const g = subgraph(st, sc);
-    switch (i) {
-      case 0: return `已确认 ${g.objs.length} 个本体对象 · ${g.rels.length} 条关系（只读，不写回现实图谱）`;
-      case 1: return `GraphRAG 子图：对象 ${g.objs.length} · 关系 ${g.rels.length} · 事实 ${g.facts.length} · 引用 ${g.facts.slice(0, 3).join(' / ')}${g.facts.length > 3 ? ' 等' : ''}`;
-      case 2: return `创建 run_id=run-${sc.id.toLowerCase()}-0912 隔离环境（示意沙箱）`;
-      case 3: return `${(D.AGENTS || []).length} 个农业角色 Agent 已配置 · 输入来源见下方`;
-      case 4: return `${seedsOf(st).length} 条种子事实激活完成，作为第 0 轮输入`;
-      case 5: return st.sim.round ? `第 ${st.sim.round}/${sc.rounds.length} 轮：${sc.rounds[st.sim.round - 1].title}` : `共 ${sc.rounds.length} 轮，等待开始`;
-      case 6: return `已生成 ${Math.min(st.sim.report, sc.report.length)}/${sc.report.length} 节报告`;
-      default: return '';
-    }
-  }
+  const seedsOf = st => window.V03Filter.seeds(st);
 
-  const STAGE_STATUS = (i, st, sc) => {
-    if (st.sim.status === 'failed' && i === st.sim.stage) return ['fail', '失败'];
-    if (st.sim.status === 'idle' && !st.sim.stage && !st.sim.round) return ['wait', '待运行'];
-    if (i < st.sim.stage || (i === 5 && st.sim.round >= sc.rounds.length && st.sim.stage > 5) || (i === 6 && st.sim.report >= sc.report.length && st.sim.status === 'done')) return ['done', '完成'];
-    if (i === st.sim.stage) return [st.sim.status === 'running' ? 'run' : st.sim.status === 'done' ? 'done' : 'wait', st.sim.status === 'running' ? '进行中' : '当前'];
-    return ['wait', '待运行'];
-  };
+  /* ---------- 引擎文案 ---------- */
+  const STATUS = { idle: ['', '待运行'], running: ['run', '运行中'], paused: ['pause', '已暂停'], done: ['done', '已完成'], failed: ['fail', '失败'] };
 
-  /* ---------- 渲染 ---------- */
-  function renderHead(st, sc) {
-    dom.name.textContent = sc.name;
-    dom.goal.textContent = sc.goal;
-    const map = { idle: ['', '待运行'], running: ['run', '运行中'], paused: ['pause', '已暂停'], done: ['done', '已完成'], failed: ['fail', '失败'] };
-    const m = map[st.sim.status] || map.idle;
+  function renderHead(st, dv) {
+    dom.name.textContent = '马来西亚榴莲 → 红星市场份额（统一用户故事）';
+    dom.goal.textContent = '推演问题：未来 30 天马来西亚榴莲进入湖南总量增长 20%、其他批发市场加强采购时，红星的流入占比与湖南市场份额将如何变化？';
+    const m = STATUS[st.sim.status] || STATUS.idle;
     dom.status.className = 'sim-badge ' + m[0];
-    dom.status.textContent = m[1] + (st.sim.offline ? ' · 离线回放' : '') + (st.sim.replay ? ' · 回放' : '') +
-      (st.sim.sidecar === 'degraded' ? ' · 旁路降级' : '');
+    dom.status.textContent = m[1] + (st.sim.offline ? ' · 离线回放' : '') + (st.sim.sidecar === 'degraded' ? ' · Jev 降级' : '');
 
-    const seeds = seedsOf(st);
-    const B = [];
+    const seeds = seedsOf(st), B = [];
     const btn = (label, cls, fn, disabled, title) => {
       const b = document.createElement('button');
       b.className = cls; b.textContent = label; b.disabled = !!disabled; if (title) b.title = title;
-      b.onclick = fn; dom.ctl.appendChild(b);
+      b.onclick = fn; B.push(b); return b;
     };
     dom.ctl.innerHTML = '';
-    if (st.sim.status === 'idle' || st.sim.status === 'done') btn(st.sim.status === 'done' ? '回放' : '开始推演', '', play, !seeds.length, seeds.length ? '' : '没有种子事实时不能开始推演');
-    if (st.sim.status === 'running') { btn('暂停', '', () => { stop(); S.set({ sim: { status: 'paused' } }); }); btn('单步一轮', 'sec', () => { step(); }); }
-    if (st.sim.status === 'paused') { btn('继续', '', () => { S.set({ sim: { status: 'running' } }); start(); }); btn('单步一轮', 'sec', () => step()); }
-    if (st.sim.status === 'failed') { btn('从第 ' + (st.sim.failRound || st.sim.round || 1) + ' 轮重试', '', () => { S.set({ sim: { status: 'running', failRound: null } }); start(); }); btn('重置', 'ter', reset); }
-    if (st.sim.status === 'running' || st.sim.status === 'paused') btn('重置', 'ter', reset);
-    btn(st.sim.offline ? '关闭离线回放' : '离线回放', 'ter', () => S.set({ sim: { offline: !st.sim.offline, speed: st.sim.offline ? 1 : 0.5 } }),
-      false, '离线回放：使用本地记录，放慢推进速度，仍真实走阶段与轮次');
-    btn(st.sim.sidecar === 'degraded' ? '恢复旁路信号' : '模拟旁路失败', 'ter', () => {
+    if (st.sim.status === 'idle') btn('开始推演', '', play, !seeds.length, seeds.length ? '' : '没有种子事实时不能开始推演');
+    if (st.sim.status === 'done') btn('回放', '', play);
+    if (st.sim.status === 'running') { btn('暂停', '', () => { stop(); S.set({ sim: { status: 'paused' } }); }); btn('单步推进', 'sec', tick); }
+    if (st.sim.status === 'paused') { btn('继续', '', () => { S.set({ sim: { status: 'running' } }); start(); }); btn('单步推进', 'sec', tick); }
+    if (st.sim.status === 'failed') btn('从第 ' + (st.sim.failRound || 1) + ' 轮重试', '', () => { S.set({ sim: { status: 'running', failRound: null } }); start(); });
+    if (st.sim.status !== 'idle') btn('重置', 'ter', reset);
+    btn(st.sim.offline ? '关闭离线回放' : '离线回放', 'ter', () => S.set({ sim: { offline: !st.sim.offline, speed: st.sim.offline ? 1 : 0.5 } }));
+    btn(st.sim.sidecar === 'degraded' ? '恢复 Jev 信号' : '模拟 Jev 失败', 'ter', () => {
       const next = st.sim.sidecar === 'degraded' ? 'ok' : 'degraded';
       S.set({ sim: { sidecar: next } });
-      S.emit('toast', next === 'degraded' ? '旁路信号降级：第 4 轮起 Agent 置信度改用规则基线（示意）' : '旁路信号已恢复（示意）');
+      S.emit('toast', next === 'degraded' ? 'Jev 信号降级：轮次置信度改用规则基线（示意）' : 'Jev 信号已恢复（示意）');
     });
-    if (st.sim.status === 'idle') btn('模拟第 3 轮 Agent 超时', 'ter', () => S.set({ sim: { status: 'running', stage: 5, round: 3, status2: 0 } }));
+    if (st.sim.status === 'idle') btn('模拟第 8 轮 Agent 超时', 'ter', () => S.set({ sim: { status: 'failed', tick: 15, failRound: 8 } }));
+    B.forEach(b => dom.ctl.appendChild(b));
   }
 
-  function step() {
-    const st = S.state, sc = scenario(st.sim.scenario);
-    if (st.sim.stage < 5) return S.set({ sim: { stage: st.sim.stage + 1 } });
-    if (st.sim.round < sc.rounds.length) return S.set({ sim: { round: st.sim.round + 1 } });
-    if (st.sim.stage === 5) return S.set({ sim: { stage: 6 } });
-    if (st.sim.report < sc.report.length) return S.set({ sim: { report: st.sim.report + 1 } });
-    S.set({ sim: { status: 'done' } });
-  }
+  /* ---------- 五阶段 · 十二步骤 ---------- */
+  const STEP_STATUS = (n, st, dv) => {
+    if (st.sim.status === 'failed' && n === dv.step) return ['fail', '失败'];
+    if (dv.done) return ['done', '完成'];
+    if (n < dv.step) return ['done', '完成'];
+    if (n === dv.step) return [st.sim.status === 'running' ? 'run' : 'wait', st.sim.status === 'running' ? '进行中' : '当前'];
+    return ['wait', '待运行'];
+  };
 
-  function renderStages(st, sc) {
-    dom.stageMeta.textContent = '阶段 ' + Math.min(st.sim.stage + 1, 7) + '/7';
-    dom.stages.innerHTML = (D.STAGES || []).map((s, i) => {
-      const [cls, txt] = STAGE_STATUS(i, st, sc);
-      return `<div class="sim-stage ${cls}" data-stage="${i}">
-        <span class="ix">${cls === 'done' ? '✓' : i + 1}</span>
-        <span class="t"><b>${s.n}</b><small>${stageDetail(i, st, sc)}</small></span>
-        <span class="st">${txt}</span></div>`;
-    }).join('');
-  }
-
-  function renderSeeds(st, sc) {
-    const effective = seedsOf(st);
-    dom.seedMeta.textContent = effective.length + ' 条（含携带事实）';
-    const rows = uniq(sc.seeds.concat(st.carry || []).concat(effective)).map(id => {
-      const f = D.factById(id); if (!f) return '';
-      const on = effective.includes(id);
-      const carried = (st.carry || []).includes(id);
-      return `<label class="sim-seed"><input type="checkbox" data-seed="${id}" ${on ? 'checked' : ''}>
-        <span><b>${f.short} · ${f.date}</b><small>${f.title}${carried ? '（来自关联层携带）' : '（场景默认种子）'}</small></span></label>`;
-    }).join('');
-    dom.seeds.innerHTML = rows + `<p class="sim-note" style="margin-top:8px">${effective.length ? '种子用于第 0 轮激活；取消勾选后该事实不参与本轮推演。' : '当前没有种子：请勾选至少 1 条，或从事实详情「加入推演种子」/关联层携带事实进入。'}</p>`;
-    dom.seeds.querySelectorAll('[data-seed]').forEach(el => el.onchange = () => {
-      S.set({ sim: F.toggleSeed(S.state, el.dataset.seed, el.checked) });
-    });
-  }
-
-  function renderAgents() {
-    dom.agents.innerHTML = (D.AGENTS || []).map(a => `<div class="sim-agent"><span><b>${a.n}</b><small>${a.role}</small><small style="color:#94a3b8">输入来源：${a.src}</small></span></div>`).join('');
-  }
-
-  function citeChip(st, c) {
-    if (!c) return '';
-    if (c.fact) { const f = D.factById(c.fact); return f ? `<span class="sim-cite" data-cite="fact:${c.fact}">事实 · ${f.short} ${f.date}</span>` : ''; }
-    if (c.rel) { const r = D.relById(c.rel); return r ? `<span class="sim-cite" data-cite="rel:${c.rel}">关系 · ${r.type}（置信 ${(r.confidence * 100).toFixed(0)}%）</span>` : ''; }
-    if (c.round) return `<span class="sim-cite" data-cite="round:${c.round}">轮次 · 第 ${c.round} 轮</span>`;
-    return '';
-  }
-
-  function renderRounds(st, sc) {
-    dom.roundMeta.textContent = st.sim.round + '/' + sc.rounds.length + ' 轮';
-    dom.rounds.innerHTML = sc.rounds.map(r => {
-      const done = st.sim.round >= r.n && st.sim.stage >= 5;
-      const hot = st.sim.round === r.n && st.sim.status === 'running';
-      const failed = st.sim.status === 'failed' && st.sim.failRound === r.n;
-      const open = done || hot || failed;
-      const agents = r.agents.map(id => ((D.AGENTS || []).find(a => a.id === id) || {}).n || id).join(' / ');
-      return `<div class="sim-round${hot ? ' hot' : ''}${open ? '' : ' pending'}" data-round="${r.n}">
-        <div class="rh"><span class="rn">${r.n}</span><b>${r.title}</b><small>${agents}</small></div>
-        ${open ? `<div class="rb">
-          <p><b>动作：</b>${r.action}</p>
-          <p><b>发现：</b>${r.finding}</p>
-          <div class="sig">信号：${r.signal.status} · 不确定度 ${r.signal.uncertainty.toFixed(2)} · Provider ${r.signal.provider}${st.sim.sidecar === 'degraded' && r.n >= 4 ? '（旁路降级：改用规则基线）' : ''}</div>
-          ${failed ? `<div class="sig" style="color:#b91c1c"><b>失败：</b>渠道谈判 Agent 超时（8s 未响应），本轮结论未生成。可点「从第 ${r.n} 轮重试」继续。</div>` : ''}
-          <div class="sim-cites">${(r.cites.facts || []).map(f => citeChip(st, { fact: f })).join('')}${(r.cites.relations || []).map(x => citeChip(st, { rel: x })).join('')}${citeChip(st, { round: r.n })}</div>
-        </div>` : `<div class="rb"><p class="sim-note">待生成：本轮将在阶段「多轮时序模拟」中按顺序展开。</p></div>`}
+  function renderStages(st, dv) {
+    dom.stepMeta.textContent = dv.done ? '12/12 步骤完成' : '步骤 ' + dv.step + '/12 · 阶段 ' + (dv.stage + 1) + '/5';
+    dom.stages.innerHTML = (D.STAGES || []).map((s, si) => {
+      const cur = si === dv.stage;
+      return `<div class="sim-stageblk${cur ? ' cur' : ''}">
+        <div class="sb-head"><span class="ix">${si + 1}</span><b>${s.n}</b><small>${s.steps.map(n => '步骤 ' + n).join(' · ')}</small></div>
+        <div class="sb-steps">
+          ${s.steps.map(n => {
+            const sp = (D.STEPS || []).find(x => x.n === n) || {};
+            const [cls, txt] = STEP_STATUS(n, st, dv);
+            return `<div class="sim-step ${cls}"><span class="st-n">${n}</span><span class="st-t">${sp.t}</span><span class="st-s">${txt}</span></div>`;
+          }).join('')}
+        </div>
+        <div class="sb-d">${s.d}</div>
       </div>`;
     }).join('');
   }
 
-  function renderReport(st, sc) {
-    const shown = Math.min(st.sim.report, sc.report.length);
-    dom.report.innerHTML = sc.report.map((s, i) => i < shown
-      ? `<div class="sim-rep"><h5>${s.h}</h5><ul>${s.bullets.map(b => `<li>${b.t} ${citeChip(st, b.cite)}</li>`).join('')}</ul></div>`
-      : `<div class="sim-rep" style="margin-top:8px"><h5 style="color:#94a3b8">${s.h}</h5><div class="sim-pending">待生成：将在第 ${s.at} 轮完成后生成（不提前显示结论）</div></div>`).join('') +
-      `<p class="sim-note" style="margin-top:10px">报告为推演结果页，属于推演层，不单独作为第四个 TAB；每个要点都可回链事实、关系与轮次。全部数值为示意数据（待标定）。</p>`;
+  function renderCurrent(st, dv) {
+    const sp = (D.STEPS || []).find(x => x.n === dv.step) || {};
+    dom.curMeta.textContent = '步骤 ' + dv.step + ' · ' + ((D.STAGES || [])[dv.stage] || {}).n;
+    const list = (arr, cls) => `<ul class="sim-ul ${cls || ''}">${(arr || []).map(x => '<li>' + x + '</li>').join('')}</ul>`;
+    dom.cur.innerHTML = `
+      <div class="sim-stephead"><b>${sp.t}</b><span class="sim-badge">${dv.done ? '已完成' : st.sim.status === 'running' ? '进行中' : '当前步骤'}</span></div>
+      <div class="sim-sub"><h6>输入</h6>${list(sp.input)}</div>
+      <div class="sim-sub"><h6>处理</h6>${list(sp.process)}</div>
+      <div class="sim-sub"><h6>输出</h6>${list(sp.output)}</div>
+      <div class="sim-sub"><h6>页面承载</h6><p class="sim-note">${sp.page || ''}</p></div>
+      <div class="sim-sub"><h6>下一步</h6><p class="sim-note">${sp.next || ''}</p></div>`;
   }
 
-  function renderSide(st, sc) {
+  function renderSeeds(st) {
+    const seeds = seedsOf(st);
+    dom.seedMeta.textContent = seeds.length + ' 条（含携带事实）';
+    const all = (D.BASELINE || []).map(b => b.fact).concat(st.carry || []).concat(seeds);
+    const rows = all.filter((v, i) => all.indexOf(v) === i).map(id => {
+      const f = D.factById(id); if (!f) return '';
+      const on = seeds.includes(id);
+      return `<label class="sim-seed"><input type="checkbox" data-seed="${id}" ${on ? 'checked' : ''}>
+        <span><b>${f.short} · ${f.date}</b><small>${f.title}${(st.carry || []).includes(id) ? '（来自关联层携带）' : '（统一用户故事种子）'}</small></span></label>`;
+    }).join('');
+    const base = (D.BASELINE || []).map(b => `<div class="sim-kv"><span>${b.k}</span><b>${b.v}</b></div>`).join('');
+    dom.seeds.innerHTML = rows +
+      `<p class="sim-note" style="margin-top:8px">可计算基线（现实基线 · 演示样例）：</p>${base}
+       <p class="sim-note" style="margin-top:6px">缺失项：竞争市场采购能力没有现实台账 → 标记为「模拟参数」，不伪装为事实。</p>`;
+    dom.seeds.querySelectorAll('[data-seed]').forEach(el => el.onchange = () => S.set({ sim: F.toggleSeed(S.state, el.dataset.seed, el.checked) }));
+  }
+
+  /* ---------- 两个核心指标 ---------- */
+  function indicatorValue(st, dv, ind) {
+    const rs = ROUNDS();
+    const r = rs[Math.min(Math.max(dv.round, 1), rs.length) - 1];
+    if (!r) return { num: ind.numV, den: ind.denV, share: ind.base };
+    const num = ind.id === 'A' ? r.numA : r.numB;
+    const den = ind.id === 'A' ? r.denA : r.denB;
+    return { num, den, share: num / den };
+  }
+  function delta(a, b) {
+    const d = (b - a) * 100;
+    return (d >= 0 ? '+' : '') + d.toFixed(1) + ' 个百分点';
+  }
+  function renderIndicators(st, dv) {
+    const r0 = ROUNDS()[0] || {};
+    dom.ind.innerHTML = (D.INDICATORS || []).map(ind => {
+      const cur = indicatorValue(st, dv, ind);
+      const show = cur.share;
+      const rev = dv.round > 0;
+      return `<div class="sim-ind">
+        <div class="ind-h"><b>${ind.id} · ${ind.n}</b><span class="sim-badge">${ind.window}</span></div>
+        <div class="ind-grid">
+          <div class="sim-kv"><span>分子 · ${ind.num}</span><b>${cur.num.toLocaleString()} ${ind.unit}</b></div>
+          <div class="sim-kv"><span>分母 · ${ind.den}</span><b>${cur.den.toLocaleString()} ${ind.unit}</b></div>
+          <div class="sim-kv"><span>口径</span><b>${ind.caliber}</b></div>
+          <div class="sim-kv"><span>演示基线</span><b>${ind.baseText}</b></div>
+        </div>
+        <div class="ind-value"><span class="iv">${(show * 100).toFixed(1)}%</span>
+          <span class="sim-badge ${rev ? 'val' : ''}">${rev ? '模拟结果 · 第 ' + dv.round + ' 轮' : '现实基线'}</span>
+          <span class="ind-delta ${show >= ind.base ? 'up' : 'down'}">${rev ? delta(ind.base, show) + ' vs 基线' : '基线值'}</span></div>
+        <div class="ind-cites">${(ind.facts || []).map(f => `<span class="sim-cite" data-cite="fact:${f}">事实 · ${(D.factById(f) || {}).short || f}</span>`).join('')}</div>
+        <div class="ind-trend">${ROUNDS().map(r => {
+          const v = ind.id === 'A' ? r.shareA : r.shareB;
+          const on = r.n <= dv.round;
+          return `<i class="${on ? 'on' : ''}" style="height:${Math.max(12, (v - 0.30) * 2000 / 10)}%" title="第 ${r.n} 轮 ${(v * 100).toFixed(1)}%"></i>`;
+        }).join('')}<span class="trend-cap">12 轮轨迹（未执行轮次为空心）</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---------- 参数 / 轮次 / 报告 / 追问 / 侧栏 ---------- */
+  const TYPE_CLS = { '现实基线': 'base', '规则参数': 'rule', '模拟参数': 'simfmt', '用户假设': 'assume', '模型推断': 'infer', '建议': 'advice', '模拟结果': 'val', '待复核': 'review' };
+  const tag = t => `<span class="sim-tag ${TYPE_CLS[t] || ''}">${t}</span>`;
+
+  function renderParams(st) {
+    const A = st.sim.assumption || {};
+    dom.params.innerHTML = (D.PARAMS || []).map(p => {
+      let v = p.v;
+      if (p.key === 'supply') v = '+' + A.supply + '%（马来西亚对湖南）';
+      return `<div class="sim-kv"><span>${p.k}</span><b>${v}</b>${tag(p.type)}</div>`;
+    }).join('') + `<p class="sim-note" style="margin-top:8px">当前 run：${st.sim.run} · context_version=${st.sim.contextVersion}；修改关键假设将创建新 run（历史 run 与报告保持不变）。</p>`;
+  }
+
+  function renderRounds(st, dv) {
+    dom.roundMeta.textContent = dv.round + '/' + ROUNDS().length + ' 轮 · 每轮 2.5 天';
+    dom.rounds.innerHTML = ROUNDS().map(r => {
+      const open = r.n <= dv.round;
+      const hot = !dv.done && dv.round === r.n - 1 && dv.step === 8 && st.sim.status === 'running';
+      const failed = st.sim.status === 'failed' && st.sim.failRound === r.n;
+      return `<div class="sim-round${hot ? ' hot' : ''}${open ? '' : ' pending'}" data-round="${r.n}">
+        <div class="rh"><span class="rn">${r.n}</span><b>${r.title}</b><small>第 ${r.day} 天</small></div>
+        ${open ? `<div class="rb">
+          <p><b>动作：</b>${r.actions.join('；')}</p>
+          <p><b>事件：</b>${r.events}</p>
+          <div class="rvals"><span>流入占比 ${(r.shareA * 100).toFixed(1)}%</span><span>市场份额 ${(r.shareB * 100).toFixed(1)}%</span><span>批发价 ${r.price.toFixed(1)} 元/kg</span><span>周转 ${r.turnover.toFixed(1)} 天</span></div>
+          <div class="sig">信号：${r.signal.status} · 不确定度 ${r.signal.uncertainty.toFixed(2)} · Provider ${r.signal.provider}${st.sim.sidecar === 'degraded' ? '（Jev 降级：改用规则基线）' : ''}</div>
+          ${failed ? '<div class="sig fail"><b>失败：</b>渠道 Agent 超时（8s 未响应），本轮状态未写入推演图谱。可点「从第 ' + r.n + ' 轮重试」继续。</div>' : ''}
+          <div class="sim-cites">${(r.cites.facts || []).map(f => citeChip({ fact: f })).join('')}${(r.cites.relations || []).map(x => citeChip({ rel: x })).join('')}${(r.cites.steps || []).map(n => `<span class="sim-cite" data-cite="step:${n}">步骤 ${n}</span>`).join('')}</div>
+        </div>` : '<div class="rb"><p class="sim-note">待生成：本轮将在步骤 8「进行多轮推演」中按顺序展开。</p></div>'}
+      </div>`;
+    }).join('');
+  }
+
+  function citeChip(c) {
+    if (!c) return '';
+    if (c.fact) { const f = D.factById(c.fact); return f ? `<span class="sim-cite" data-cite="fact:${c.fact}">事实 · ${f.short}</span>` : ''; }
+    if (c.rel) { const r = D.relById(c.rel); return r ? `<span class="sim-cite" data-cite="rel:${c.rel}">关系 · ${r.type}（置信 ${(r.confidence * 100).toFixed(0)}%）</span>` : ''; }
+    if (c.round) return `<span class="sim-cite" data-cite="round:${c.round}">轮次 · 第 ${c.round} 轮</span>`;
+    if (c.step) return `<span class="sim-cite" data-cite="step:${c.step}">步骤 ${c.step}</span>`;
+    return '';
+  }
+
+  function renderReport(st, dv) {
+    const generated = dv.i > program().indexOf(11) || dv.done;
+    dom.report.innerHTML = (D.REPORT || []).map((s, i) => {
+      const open = generated || st.sim.report >= (D.REPORT || []).length && dv.step === 12;
+      return open
+        ? `<div class="sim-rep-sec"><h5>${s.h}</h5><ul>${s.bullets.map(b => `<li>${tag(b.label)}${b.t} ${citeChip(b.cite)}</li>`).join('')}</ul></div>`
+        : `<div class="sim-rep-sec" style="margin-top:8px"><h5 class="dim">${s.h}</h5><div class="sim-pending">待生成：在步骤 11「生成决策报告」完成（不提前显示结论）</div></div>`;
+    }).join('') +
+    `<p class="sim-note" style="margin-top:10px">报告为推演结果页，属于推演层；每个要点都可回链事实、关系与轮次。标签说明：${['现实基线', '模型推断', '模拟结果', '建议'].map(t => tag(t)).join(' ')}。全部数值为演示样例数据。</p>`;
+  }
+
+  function renderQa(st, dv) {
+    const asked = st.sim.qa || [];
+    const open = dv.done || dv.step === 12;
+    dom.qa.innerHTML = (D.QA || []).map((qa, i) => {
+      const done = asked.includes(i);
+      return `<div class="qa-item${done ? ' open' : ''}">
+        <button class="qa-q" data-qa="${i}" ${open ? '' : 'disabled'}>${qa.q}<span class="sim-tag ${qa.newRun ? 'assume' : 'infer'}">${qa.kind}</span></button>
+        ${done ? `<div class="qa-a">${qa.a}<div class="sim-cites">${(qa.cites || []).map(c => citeChip({ rel: c }).startsWith('relation') ? citeChip({ rel: c }) : citeChip({ fact: c })).join('')}</div></div>` : ''}
+      </div>`;
+    }).join('') + (open ? '' : '<p class="sim-note">步骤十二「深度追问」在报告完成后解锁。</p>');
+  }
+
+  function renderSide(st) {
     const sd = D.SIDECAR || {};
     const degraded = st.sim.sidecar === 'degraded';
-    const lo = degraded ? sd.base.lo + 0.18 : sd.base.lo, hi = degraded ? sd.base.hi + 0.24 : sd.base.hi;
+    const lo = degraded ? sd.base.lo + 0.16 : sd.base.lo, hi = degraded ? sd.base.hi + 0.22 : sd.base.hi;
     dom.side.className = 'sim-card sim-side' + (degraded ? ' degraded' : '');
     dom.side.innerHTML = `
-      <h4>${sd.n || 'Jev-like 旁路信号'} <small>只做参考 · 不参与事实入层</small></h4>
-      <div class="kv"><span>状态</span><b>${degraded ? '降级 · ' + (sd.degrade || '服务不可用') : '正常（示意）'}</b></div>
-      <div class="kv"><span>Provider</span><b>${sd.provider}</b></div>
-      <div class="kv"><span>版本</span><b>${sd.version}</b></div>
-      <div class="kv"><span>最近更新</span><b>${sd.updated}</b></div>
-      <div class="kv"><span>不确定性</span><b>${lo.toFixed(2)} – ${hi.toFixed(2)}</b></div>
+      <h4>${sd.n || 'Jev 旁路模型信号'} <small>只做参考 · 不参与事实入层</small></h4>
+      <div class="sim-kv"><span>状态</span><b>${degraded ? '降级 · ' + sd.degrade : (sd.version || '接入已就绪（示意）')}</b></div>
+      <div class="sim-kv"><span>Provider</span><b>${sd.provider}</b></div>
+      <div class="sim-kv"><span>最近更新</span><b>${sd.updated}</b></div>
+      <div class="sim-kv"><span>不确定性</span><b>${lo.toFixed(2)} – ${hi.toFixed(2)}</b></div>
       <div class="unc"><div class="b"><i style="left:${(lo * 100).toFixed(0)}%;width:${((hi - lo) * 100).toFixed(0)}%"></i></div></div>
-      ${degraded ? `<div class="sim-note" style="color:#b45309;margin-top:6px">降级原因：${sd.degrade}。影响：第 4 轮起 Agent 置信度改用规则基线；旁路信号不写入事实、关系与种子。</div>` : ''}
-      <div class="sim-note" style="margin-top:6px">${sd.note || ''}</div>`;
+      ${degraded ? `<div class="sim-note" style="color:#b45309;margin-top:6px">降级原因：${sd.degrade}。影响：轮次置信度改用规则基线；Jev 信号不写入事实、关系与种子。</div>` : ''}
+      <div class="sim-note" style="margin-top:6px">${sd.note || ''}</div>
+      <div class="sim-note" style="margin-top:6px"><b>密钥说明：</b>本页不接收、不记录、不提交任何密钥；Jev 钥匙只在服务端配置，页面只展示接入状态。</div>
+      <div class="sim-sec">
+        <div class="sim-kv"><span>run_id</span><b>${st.sim.run}</b></div>
+        <div class="sim-kv"><span>context_version</span><b>${st.sim.contextVersion}</b></div>
+        <div class="sim-kv"><span>现实图谱</span><b>只读引用</b></div>
+        <div class="sim-kv"><span>推演图谱</span><b>当前 run 可变 · 不写回现实</b></div>
+        ${(st.sim.runs || []).length > 1 ? `<div class="sim-kv"><span>历史 run</span><b>${st.sim.runs.join(' · ')}</b></div>` : ''}
+      </div>`;
   }
 
-  function renderLog(st, sc) {
+  function renderLog(st, dv) {
     const lines = [];
-    if (st.sim.stage >= 1) lines.push('[环境] 创建 run_id=run-' + sc.id.toLowerCase() + '-0912 隔离沙箱（示意）');
-    if (st.sim.stage >= 2) { const g = subgraph(st, sc); lines.push('[检索] GraphRAG 子图：对象 ' + g.objs.length + ' · 关系 ' + g.rels.length + ' · 事实 ' + g.facts.length); }
-    if (st.sim.stage >= 3) lines.push('[配置] ' + (D.AGENTS || []).length + ' 个农业角色 Agent 就绪');
-    if (st.sim.stage >= 5) lines.push('[激活] 种子 ' + seedsOf(st).length + ' 条已激活');
-    sc.rounds.slice(0, st.sim.round).forEach(r => lines.push('[轮次] 第 ' + r.n + ' 轮 ' + r.title + ' 完成'));
-    sc.report.slice(0, Math.min(st.sim.report, sc.report.length)).forEach(s => lines.push('[报告] 生成 ' + s.h));
-    if (st.sim.sidecar === 'degraded') lines.push('[降级] jev-like 旁路超时 → 轮次置信度改用规则基线');
+    const p = program();
+    if (dv.i >= 3) lines.push('[上下文] GraphRAG 子图完成 · context_version=' + st.sim.contextVersion);
+    if (dv.i >= 4) lines.push('[隔离] run_id=' + st.sim.run + ' · 现实图谱只读');
+    if (dv.i >= 5) lines.push('[Agent] ' + (D.AGENTS || []).length + ' 个农业角色 Agent 就绪');
+    if (dv.i >= 6) lines.push('[参数] 12 轮 × 2.5 天 = 30 天 · 供应 +' + (st.sim.assumption || {}).supply + '%（用户假设）');
+    if (dv.i >= 7) lines.push('[事件] 注入：马来西亚对湖南供应增长 20%');
+    ROUNDS().slice(0, dv.round).forEach(r => lines.push('[轮次] 第 ' + r.n + ' 轮 ' + r.title + ' · 流入占比 ' + (r.shareA * 100).toFixed(1) + '%'));
+    if (dv.i > p.indexOf(11)) lines.push('[报告] ReportAgent 生成 ' + (D.REPORT || []).length + ' 节 · 每节分离事实/推断/模拟/建议');
+    if (dv.i >= p.length) lines.push('[追问] 步骤十二可用 · 新假设将创建新 run');
+    if (st.sim.sidecar === 'degraded') lines.push('[降级] Jev 超时 → 轮次置信度改用规则基线');
     if (st.sim.offline) lines.push('[离线] 离线回放模式 · 使用本地记录（示意）');
-    if (st.sim.status === 'failed') lines.push('[失败] 第 ' + (st.sim.failRound || st.sim.round) + ' 轮渠道 Agent 超时');
-    dom.log.innerHTML = (lines.length ? lines : ['[待运行] 点「开始推演」按七阶段推进']).map(l => '<div>' + l + '</div>').join('');
+    if (st.sim.status === 'failed') lines.push('[失败] 第 ' + (st.sim.failRound || '') + ' 轮 Agent 超时');
+    dom.log.innerHTML = (lines.length ? lines : ['[待运行] 点「开始推演」按五阶段十二步骤推进']).map(l => '<div>' + l + '</div>').join('');
     dom.log.scrollTop = dom.log.scrollHeight;
   }
 
-  function bindCites() {
+  function bindCites(st, dv) {
     root.querySelectorAll('[data-cite]').forEach(el => el.onclick = () => {
       const [kind, id] = el.dataset.cite.split(':');
       if (kind === 'fact') S.set({ tab: 'fact', factId: id });
       else if (kind === 'rel') S.set({ tab: 'relation', rel: { sel: id, kind: 'relation' } });
-      else {
+      else if (kind === 'round') {
         const n = Number(id);
         S.set({ sim: { hotRound: n } });
         const node = root.querySelector('[data-round="' + n + '"]');
         if (node) { node.classList.add('hot'); node.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
         S.emit('toast', '定位到第 ' + n + ' 轮');
+      } else if (kind === 'step') {
+        const n = Number(id);
+        const sp = (D.STEPS || []).find(x => x.n === n);
+        S.emit('toast', '步骤 ' + n + '：' + (sp ? sp.t : ''));
+        const node = root.querySelector('.sim-step:nth-child(1)');
+        if (node) node.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }
+    });
+    root.querySelectorAll('[data-qa]').forEach(el => el.onclick = () => {
+      const i = Number(el.dataset.qa);
+      const qa = (D.QA || [])[i]; if (!qa) return;
+      const asked = (S.state.sim.qa || []).slice();
+      if (asked.indexOf(i) < 0) asked.push(i);
+      const patch = { qa: asked };
+      if (qa.newRun) {   // 关键假设变化 → 新 run（原 run 与报告保持不变）
+        const runs = (S.state.sim.runs || []).slice();
+        if (runs.indexOf(qa.newRun.id) < 0) runs.push(qa.newRun.id);
+        patch.runs = runs;
+        patch.run = qa.newRun.id;
+        patch.assumption = { supply: qa.newRun.assumption, compete: (S.state.sim.assumption || {}).compete };
+      }
+      S.set({ sim: patch });
+      S.emit('toast', qa.newRun ? '已创建新 run ' + qa.newRun.id + '（供应增幅 ' + qa.newRun.assumption + '%）· 原 run 保留' : '已按当前 run 回答');
     });
   }
 
   function update() {
     if (!root) return;
-    const st = S.state, sc = scenario(st.sim.scenario);
-    if (!sc) return;
-    const key = JSON.stringify([st.sim.scenario, st.sim.stage, st.sim.round, st.sim.report, st.sim.status, st.sim.offline, st.sim.replay, st.sim.sidecar, st.sim.seedIds, st.carry, st.sim.failRound, st.sim.speed]);
+    const st = S.state;
+    const key = JSON.stringify([st.sim.tick, st.sim.status, st.sim.report, st.sim.offline, st.sim.sidecar, st.sim.seedIds, st.carry, st.sim.failRound, st.sim.qa, st.sim.run, st.sim.assumption, st.sim.speed]);
     if (key === sig) return; sig = key;
-    renderHead(st, sc); renderStages(st, sc); renderSeeds(st, sc); renderAgents(); renderRounds(st, sc); renderReport(st, sc); renderSide(st, sc); renderLog(st, sc);
-    bindCites();
+    const dv = derived(st);
+    renderHead(st, dv);
+    renderStages(st, dv); renderCurrent(st, dv); renderSeeds(st);
+    renderIndicators(st, dv); renderParams(st); renderRounds(st, dv); renderReport(st, dv); renderQa(st, dv); renderSide(st); renderLog(st, dv);
+    bindCites(st, dv);
     if (st.sim.status === 'running' && !timer) start();
-    if (st.sim.status !== 'running' && timer && st.sim.status === 'paused') stop();
+    if (st.sim.status !== 'running' && timer) stop();
   }
 
   const debug = () => {
-    const st = S.state, sc = scenario(st.sim.scenario), g = subgraph(st, sc);
-    return { scenario: st.sim.scenario, stages: (D.STAGES || []).length, stage: st.sim.stage, rounds: sc.rounds.length, round: st.sim.round,
-      report: st.sim.report, reportSections: sc.report.length, status: st.sim.status, sidecar: st.sim.sidecar,
-      seeds: seedsOf(st).length, subgraph: { objects: g.objs.length, relations: g.rels.length, facts: g.facts.length },
-      renderedStages: root ? root.querySelectorAll('.sim-stage').length : 0, renderedRounds: root ? root.querySelectorAll('.sim-round').length : 0 };
+    const st = S.state, dv = derived(st);
+    return {
+      scenario: st.sim.scenario, stages: (D.STAGES || []).length, steps: (D.STEPS || []).length,
+      stage: dv.stage, step: dv.step, round: dv.round, rounds: ROUNDS().length, tick: st.sim.tick,
+      status: st.sim.status, sidecar: st.sim.sidecar, run: st.sim.run, runs: (st.sim.runs || []).length,
+      seeds: seedsOf(st).length, report: (D.REPORT || []).length,
+      renderedStages: root ? root.querySelectorAll('.sim-stageblk').length : 0,
+      renderedSteps: root ? root.querySelectorAll('.sim-step').length : 0,
+      renderedRounds: root ? root.querySelectorAll('.sim-round').length : 0,
+      indicators: root ? root.querySelectorAll('.sim-ind').length : 0
+    };
   };
 
-  return { mount, update, debug, streamLines: () => (window.V03Data.STREAM_SIM || []) };
+  return { mount, update, debug, progress: () => derived(S.state), streamLines: () => (window.V03Data.STREAM_SIM || []) };
 })();
 
 </script>
@@ -2208,7 +2669,7 @@ window.V03Sim = (function () {
   const TABS = [
     { id: 'fact', n: '事实层', hasCards: '事实卡片', d: '事实地图 · 空间下钻与筛选 · 事实详情与证据' },
     { id: 'relation', n: '关联层', hasCards: '对象清单', d: '关系图谱 / 地理关联双视图 · 本体对象与关系详情' },
-    { id: 'sim', n: '推演层', hasCards: null, d: '七阶段推演 · 轮次过程 · 报告与引用（报告属于本层）' }
+    { id: 'sim', n: '推演层', hasCards: null, d: '五阶段承载十二步骤 · 两个核心指标 · 报告与引用（报告属于本层）' }
   ];
   const tabMeta = id => TABS.find(t => t.id === id) || TABS[0];
 
@@ -2242,7 +2703,7 @@ window.V03Sim = (function () {
       ? '事实层：地图即主体，点在点/卡片上进入详情；点国家或省份标记下钻'
       : st.tab === 'relation'
         ? '关联层：分类栏切换九类对象域；图谱与地理关联共用同一批事实'
-        : '推演层：报告是推演结果页，随轮次逐步生成';
+        : '推演层：五阶段承载十二步骤 · 报告是推演结果页，逐步生成并带引用';
     $('railToggle').textContent = (st.rail ? '☰ ' : '☰ ') + '分类栏';
     $('railToggle').classList.toggle('on', st.rail);
     $('railToggle').setAttribute('aria-expanded', String(st.rail));
@@ -2322,12 +2783,19 @@ window.V03Sim = (function () {
       note.textContent = '本体抽离、关系建立与打分由规则与评分机制自动完成，不设人工审核入口。无坐标对象不在地图上伪造点位，只在清单中列出。';
       box.appendChild(note);
     } else {
-      const h = document.createElement('h4'); h.textContent = '推演场景（三条样例）'; box.appendChild(h);
-      const SCN = D.SCENARIOS || [];
-      SCN.forEach(sc => box.appendChild(railItem(sc.name, st.sim.scenario === sc.id, null, '#1d4ed8',
-        () => S.set({ sim: { scenario: sc.id, stage: 0, round: 0, status: 'idle', seedIds: [] } }), sc.goal)));
+      const h = document.createElement('h4'); h.textContent = '五阶段 · 十二步骤'; box.appendChild(h);
+      const dv = (window.V03Sim && V03Sim.progress) ? V03Sim.progress() : { stage: 0, step: 1, round: 0 };
+      (D.STAGES || []).forEach((sg, i) => {
+        const on = i === dv.stage;
+        box.appendChild(railItem(sg.n, on, sg.steps.length + ' 步', i < dv.stage ? '#16a34a' : on ? '#1d4ed8' : null,
+          () => {
+            const node = document.querySelector('#layer-sim .sim-stageblk:nth-child(' + (i + 1) + ')');
+            if (node) node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            S.emit('toast', '阶段 ' + (i + 1) + '：' + sg.n + ' · ' + sg.d);
+          }, sg.d));
+      });
       const note = document.createElement('div'); note.className = 'r-note';
-      note.textContent = '三条场景均为样例，用于演示推演过程与证据回溯；离线推演为示意引擎，不是真实 MiroFish 后端运行。';
+      note.textContent = '统一用户故事：马来西亚榴莲 → 红星市场份额。进度 ' + dv.step + '/12 步 · 第 ' + dv.round + '/12 轮；全部为演示样例，离线推演为示意引擎，不是真实 MiroFish 后端运行。';
       box.appendChild(note);
     }
     rail.classList.toggle('closed', !st.rail);
