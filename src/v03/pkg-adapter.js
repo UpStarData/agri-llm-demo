@@ -113,6 +113,11 @@ window.V03Pkg = (function () {
     if (f.cardType === 'news' && card.imageUrl) return 'image';
     return 'text';
   };
+  const PKG_TODAY = (P.manifest && P.manifest.collectedAt) || '2026-09-21';
+  const countryOf = f => {
+    const it = (f.regionPath || []).find(p => p.level === 'country');
+    return it ? it.code : null;
+  };
   const MEDIA_NOTE = {
     video: c => c.mediaTitle || '视频',
     price: c => c.commodityName ? c.commodityName + ' ' + c.priceValue + ' ' + (c.priceUnit || '') : '价格',
@@ -171,6 +176,76 @@ window.V03Pkg = (function () {
       provenanceMeta: pm
     };
   });
+
+  /* ============================================================
+     生成记录展示再平衡（口径修正 · LLM-291）
+     指令要求：M7/M8/M9 默认必须为「近 7 天 / 高可信 / 高影响」；同时全球视野在默认口径下要有
+     足够的多区域星点，切到「全部」仍保持数据包设计的 342 点完整密度。
+     真实公开记录（provenanceMeta.dataMode=real）**零改动**；只对生成记录按其分层 + 地理分组
+     做确定性分档（同一份输入永远得到同一份输出，无随机）：
+       tier1 前 25%  → 7 天内 · 高可信 · severity 72–96（默认口径下的星点）
+       tier2 次 25%  → 一半 7 天内、一半 8–30 天 · 高/中可信 · severity 45–69
+       tier3 再次 25% → 8–30 天 · 中可信为主 · severity 40–64
+       tier4 其余    → 31–180 天 · 中/低可信 · severity 20–39
+     分档在「层 + 国家/省」分组内进行，保证默认口径下每个区域都有代表点（多区域覆盖）。 */
+  function rebalanceGenerated(list) {
+    const hash = s => { let h = 2166136261; for (let i = 0; i < String(s).length; i++) { h ^= String(s).charCodeAt(i); h = Math.imul(h, 16777619); } return Math.abs(h); };
+    const pad = n => String(n).padStart(2, '0');
+    const dayOf = f => String(f.date || '').replace(/-/g, '');
+    const shiftTo = (f, days) => {                 /* 以数据包基准日回推 days 天，日期保持合法 */
+      const base = new Date((PKG_TODAY || '2026-09-21') + 'T00:00:00Z').getTime();
+      const d = new Date(base - days * 86400000);
+      return d.toISOString().slice(0, 10);
+    };
+    const groups = {};
+    list.forEach(f => {
+      if (f.prov !== 'generated') return;
+      const key = f.level + '|' + (f.level === 'L3' ? (f.provinceCode || f.region) : (countryOf(f) || f.region));
+      (groups[key] = groups[key] || []).push(f);
+    });
+    const summary = { groups: 0, generated: 0, tiers: { 1: 0, 2: 0, 3: 0, 4: 0 }, defaultView: { L1: 0, L2: 0, L3: 0 } };
+    Object.keys(groups).forEach(key => {
+      const arr = groups[key].slice().sort((a, b) =>
+        (b.severity - a.severity) || (a.date < b.date ? 1 : a.date > b.date ? -1 : 0) || (a.id < b.id ? -1 : 1));
+      const n = arr.length;
+      summary.groups++; summary.generated += n;
+      arr.forEach((f, i) => {
+        const r = i / n, rank = n > 1 ? i / (n - 1) : 0;      /* rank 0 = 组内最重要 */
+        const h = hash(f.id + '|' + key);
+        let tier, days, cred, sev;
+        if (r < .25) {
+          tier = 1;
+          days = h % 7;                                       /* 近 7 天 */
+          cred = 'high'; sev = Math.round(96 - 24 * rank);     /* 72–96 */
+        } else if (r < .5) {
+          tier = 2;
+          days = (i % 2 === 0) ? (h % 7) : (8 + (h % 23));     /* 一半在 7 天内 */
+          cred = (i % 5 < 3) ? 'high' : 'medium'; sev = Math.round(69 - 24 * rank);   /* 45–69 */
+        } else if (r < .75) {
+          tier = 3;
+          days = 8 + (h % 23);
+          cred = (i % 5 === 0) ? 'high' : (i % 7 === 0 ? 'low' : 'medium'); sev = Math.round(64 - 24 * rank);  /* 40–64 */
+        } else {
+          tier = 4;
+          days = 31 + (h % 150);
+          cred = (i % 3 === 0) ? 'low' : 'medium'; sev = Math.round(39 - 20 * rank);  /* 20–39 */
+        }
+        f.rebalance = { tier, key: key, from: { date: f.date, cred: f.cred, severity: f.severity } };
+        f.date = shiftTo(f, days);
+        if (f.occurredAt) f.occurredAt = f.date + String(f.occurredAt).slice(10);
+        if (f.publishedAt) f.publishedAt = f.date + String(f.publishedAt).slice(10);
+        f.cred = cred;
+        f.credScore = cred === 'high' ? 0.72 + (h % 24) / 100 : cred === 'medium' ? 0.5 + (h % 18) / 100 : 0.3 + (h % 15) / 100;
+        f.severity = sev;
+        f.impact = sev >= 70 ? 'high' : sev >= 40 ? 'mid' : 'low';
+        f.radius = radiusOf(sev);
+        summary.tiers[tier]++;
+        if (tier === 1) summary.defaultView[f.level] = (summary.defaultView[f.level] || 0) + 1;
+      });
+    });
+    return summary;
+  }
+  const REBALANCE = rebalanceGenerated(FACTS);
 
   /* ---------- Entity → 内部本体模型 ---------- */
   const OBJECTS = ENTITIES_IN.map(e => {
@@ -269,7 +344,7 @@ window.V03Pkg = (function () {
     ONTOLOGY: ONT, SOURCES: SOURCES_IN, EVIDENCE: EVIDENCE_IN, OBSERVATIONS: OBS_IN,
     CARD_SCHEMA: P.cards || {}, STATS, MANIFEST, VALIDATION: P.validation || {},
     CAT_COLOR, CAT_EMOJI, TYPE_EMOJI, TYPE2DOMAIN, REL_LABEL, STAGE_LABEL,
-    PROVINCES, PROV_BY_SHORT, shortProv,
+    PROVINCES, PROV_BY_SHORT, shortProv, REBALANCE,
     counts: {
       facts: FACTS.length, factsReal: realFacts, factsGenerated: FACTS.length - realFacts,
       entities: OBJECTS.length, relations: RELATIONS.length,

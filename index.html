@@ -744,7 +744,7 @@ svg{display:block}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"a75b5dcd5298","git":"d1ae9fe","builtAt":"2026-09-21T18:40:32.153Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"013d9c717e3d","git":"fd06596","builtAt":"2026-09-21T18:52:35.305Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -3109,6 +3109,11 @@ window.V03Pkg = (function () {
     if (f.cardType === 'news' && card.imageUrl) return 'image';
     return 'text';
   };
+  const PKG_TODAY = (P.manifest && P.manifest.collectedAt) || '2026-09-21';
+  const countryOf = f => {
+    const it = (f.regionPath || []).find(p => p.level === 'country');
+    return it ? it.code : null;
+  };
   const MEDIA_NOTE = {
     video: c => c.mediaTitle || '视频',
     price: c => c.commodityName ? c.commodityName + ' ' + c.priceValue + ' ' + (c.priceUnit || '') : '价格',
@@ -3167,6 +3172,76 @@ window.V03Pkg = (function () {
       provenanceMeta: pm
     };
   });
+
+  /* ============================================================
+     生成记录展示再平衡（口径修正 · LLM-291）
+     指令要求：M7/M8/M9 默认必须为「近 7 天 / 高可信 / 高影响」；同时全球视野在默认口径下要有
+     足够的多区域星点，切到「全部」仍保持数据包设计的 342 点完整密度。
+     真实公开记录（provenanceMeta.dataMode=real）**零改动**；只对生成记录按其分层 + 地理分组
+     做确定性分档（同一份输入永远得到同一份输出，无随机）：
+       tier1 前 25%  → 7 天内 · 高可信 · severity 72–96（默认口径下的星点）
+       tier2 次 25%  → 一半 7 天内、一半 8–30 天 · 高/中可信 · severity 45–69
+       tier3 再次 25% → 8–30 天 · 中可信为主 · severity 40–64
+       tier4 其余    → 31–180 天 · 中/低可信 · severity 20–39
+     分档在「层 + 国家/省」分组内进行，保证默认口径下每个区域都有代表点（多区域覆盖）。 */
+  function rebalanceGenerated(list) {
+    const hash = s => { let h = 2166136261; for (let i = 0; i < String(s).length; i++) { h ^= String(s).charCodeAt(i); h = Math.imul(h, 16777619); } return Math.abs(h); };
+    const pad = n => String(n).padStart(2, '0');
+    const dayOf = f => String(f.date || '').replace(/-/g, '');
+    const shiftTo = (f, days) => {                 /* 以数据包基准日回推 days 天，日期保持合法 */
+      const base = new Date((PKG_TODAY || '2026-09-21') + 'T00:00:00Z').getTime();
+      const d = new Date(base - days * 86400000);
+      return d.toISOString().slice(0, 10);
+    };
+    const groups = {};
+    list.forEach(f => {
+      if (f.prov !== 'generated') return;
+      const key = f.level + '|' + (f.level === 'L3' ? (f.provinceCode || f.region) : (countryOf(f) || f.region));
+      (groups[key] = groups[key] || []).push(f);
+    });
+    const summary = { groups: 0, generated: 0, tiers: { 1: 0, 2: 0, 3: 0, 4: 0 }, defaultView: { L1: 0, L2: 0, L3: 0 } };
+    Object.keys(groups).forEach(key => {
+      const arr = groups[key].slice().sort((a, b) =>
+        (b.severity - a.severity) || (a.date < b.date ? 1 : a.date > b.date ? -1 : 0) || (a.id < b.id ? -1 : 1));
+      const n = arr.length;
+      summary.groups++; summary.generated += n;
+      arr.forEach((f, i) => {
+        const r = i / n, rank = n > 1 ? i / (n - 1) : 0;      /* rank 0 = 组内最重要 */
+        const h = hash(f.id + '|' + key);
+        let tier, days, cred, sev;
+        if (r < .25) {
+          tier = 1;
+          days = h % 7;                                       /* 近 7 天 */
+          cred = 'high'; sev = Math.round(96 - 24 * rank);     /* 72–96 */
+        } else if (r < .5) {
+          tier = 2;
+          days = (i % 2 === 0) ? (h % 7) : (8 + (h % 23));     /* 一半在 7 天内 */
+          cred = (i % 5 < 3) ? 'high' : 'medium'; sev = Math.round(69 - 24 * rank);   /* 45–69 */
+        } else if (r < .75) {
+          tier = 3;
+          days = 8 + (h % 23);
+          cred = (i % 5 === 0) ? 'high' : (i % 7 === 0 ? 'low' : 'medium'); sev = Math.round(64 - 24 * rank);  /* 40–64 */
+        } else {
+          tier = 4;
+          days = 31 + (h % 150);
+          cred = (i % 3 === 0) ? 'low' : 'medium'; sev = Math.round(39 - 20 * rank);  /* 20–39 */
+        }
+        f.rebalance = { tier, key: key, from: { date: f.date, cred: f.cred, severity: f.severity } };
+        f.date = shiftTo(f, days);
+        if (f.occurredAt) f.occurredAt = f.date + String(f.occurredAt).slice(10);
+        if (f.publishedAt) f.publishedAt = f.date + String(f.publishedAt).slice(10);
+        f.cred = cred;
+        f.credScore = cred === 'high' ? 0.72 + (h % 24) / 100 : cred === 'medium' ? 0.5 + (h % 18) / 100 : 0.3 + (h % 15) / 100;
+        f.severity = sev;
+        f.impact = sev >= 70 ? 'high' : sev >= 40 ? 'mid' : 'low';
+        f.radius = radiusOf(sev);
+        summary.tiers[tier]++;
+        if (tier === 1) summary.defaultView[f.level] = (summary.defaultView[f.level] || 0) + 1;
+      });
+    });
+    return summary;
+  }
+  const REBALANCE = rebalanceGenerated(FACTS);
 
   /* ---------- Entity → 内部本体模型 ---------- */
   const OBJECTS = ENTITIES_IN.map(e => {
@@ -3265,7 +3340,7 @@ window.V03Pkg = (function () {
     ONTOLOGY: ONT, SOURCES: SOURCES_IN, EVIDENCE: EVIDENCE_IN, OBSERVATIONS: OBS_IN,
     CARD_SCHEMA: P.cards || {}, STATS, MANIFEST, VALIDATION: P.validation || {},
     CAT_COLOR, CAT_EMOJI, TYPE_EMOJI, TYPE2DOMAIN, REL_LABEL, STAGE_LABEL,
-    PROVINCES, PROV_BY_SHORT, shortProv,
+    PROVINCES, PROV_BY_SHORT, shortProv, REBALANCE,
     counts: {
       facts: FACTS.length, factsReal: realFacts, factsGenerated: FACTS.length - realFacts,
       entities: OBJECTS.length, relations: RELATIONS.length,
@@ -4668,11 +4743,13 @@ window.V03Store = (function () {
     },
 
     /* M7–M10：选择型快捷键（与筛选状态同源）
-       默认取「全部 / 不限 / 不限」：数据包 agrilink-demo-v1 的密度计划为全球 342 / 中国 175 /
-       湖南 281 点，若按 7 天 + 高可信 + 高影响收窄只剩个位数，与设计密度不符（详见 docs/V04b-数据包接入说明.md） */
-    time: 'all',                  // 7d | 30d | 90d | all
-    cred: 'all',                  // high | mid | low | all
-    infl: 'all',                  // high | mid | low | all
+       默认按权威指令：近 7 天 / 高可信 / 高影响。
+       数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
+       因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
+       规则见 docs/V04b-数据包接入说明.md §5。 */
+    time: '7d',                   // 7d | 30d | 90d | all
+    cred: 'high',                 // high | mid | low | all
+    infl: 'high',                 // high | mid | low | all
     q: '',
 
     /* 三级分类字典的选中项：null = 默认全选 */
@@ -7243,6 +7320,34 @@ window.V03Sim = (function () {
           counts, byType,
           sources: (D.PKG && D.PKG.SOURCES ? D.PKG.SOURCES.length : 0),
           evidence: (D.PKG && D.PKG.EVIDENCE ? D.PKG.EVIDENCE.length : 0)
+        };
+      },
+      /* 生成记录再平衡摘要（内部验收：真实记录零改动，生成记录按分层 + 地理分档调整） */
+      rebalanceSummary: () => {
+        const raw = (window.__AGRI_PKG__ || {}).facts || [];
+        const byId = {};
+        raw.forEach(r => { byId[r.factId] = r; });
+        let realUnchanged = 0, realTotal = 0, genChanged = 0;
+        const coverage = {};
+        (window.V03Data.FACTS || []).forEach(f => {
+          const r = byId[f.id]; if (!r) return;
+          const orig = { date: String(r.occurredAt || r.timestamp).slice(0, 10), cred: (r.credibility || {}).band, severity: r.severity };
+          if (f.prov === 'real') {
+            realTotal++;
+            if (f.date === orig.date && f.cred === orig.cred && f.severity === orig.severity) realUnchanged++;
+          } else if (f.date !== orig.date || f.cred !== orig.cred || f.severity !== orig.severity) genChanged++;
+          if (S.state.geo.level === f.level) {
+            const key = f.provinceCode || (f.regionPath || []).map(p => p.code).join('/');
+            coverage[key] = (coverage[key] || 0) + 1;
+          }
+        });
+        return {
+          applied: !!(window.V03Pkg && window.V03Pkg.REBALANCE), rules: (window.V03Pkg && window.V03Pkg.REBALANCE) || null,
+          realTotal, realUnchanged, generatedChanged: genChanged,
+          defaultFilters: { time: S.state.time, cred: S.state.cred, infl: S.state.infl },
+          defaultViewFacts: F.factsAtLevel(S.state).length,
+          defaultViewPoints: F.mappable(F.factsAtLevel(S.state)).length,
+          defaultViewRegions: Object.keys(coverage).length
         };
       },
       text: sel => { const n = document.querySelector(sel); return n ? n.textContent : ''; },

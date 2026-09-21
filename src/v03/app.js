@@ -545,6 +545,34 @@
           evidence: (D.PKG && D.PKG.EVIDENCE ? D.PKG.EVIDENCE.length : 0)
         };
       },
+      /* 生成记录再平衡摘要（内部验收：真实记录零改动，生成记录按分层 + 地理分档调整） */
+      rebalanceSummary: () => {
+        const raw = (window.__AGRI_PKG__ || {}).facts || [];
+        const byId = {};
+        raw.forEach(r => { byId[r.factId] = r; });
+        let realUnchanged = 0, realTotal = 0, genChanged = 0;
+        const coverage = {};
+        (window.V03Data.FACTS || []).forEach(f => {
+          const r = byId[f.id]; if (!r) return;
+          const orig = { date: String(r.occurredAt || r.timestamp).slice(0, 10), cred: (r.credibility || {}).band, severity: r.severity };
+          if (f.prov === 'real') {
+            realTotal++;
+            if (f.date === orig.date && f.cred === orig.cred && f.severity === orig.severity) realUnchanged++;
+          } else if (f.date !== orig.date || f.cred !== orig.cred || f.severity !== orig.severity) genChanged++;
+          if (S.state.geo.level === f.level) {
+            const key = f.provinceCode || (f.regionPath || []).map(p => p.code).join('/');
+            coverage[key] = (coverage[key] || 0) + 1;
+          }
+        });
+        return {
+          applied: !!(window.V03Pkg && window.V03Pkg.REBALANCE), rules: (window.V03Pkg && window.V03Pkg.REBALANCE) || null,
+          realTotal, realUnchanged, generatedChanged: genChanged,
+          defaultFilters: { time: S.state.time, cred: S.state.cred, infl: S.state.infl },
+          defaultViewFacts: F.factsAtLevel(S.state).length,
+          defaultViewPoints: F.mappable(F.factsAtLevel(S.state)).length,
+          defaultViewRegions: Object.keys(coverage).length
+        };
+      },
       text: sel => { const n = document.querySelector(sel); return n ? n.textContent : ''; },
       tab: () => (document.querySelector('#tabs button.on') || {}).dataset ? document.querySelector('#tabs button.on').dataset.tab : null,
       overflow: () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
