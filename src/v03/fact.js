@@ -717,7 +717,7 @@ window.V03Fact = (function () {
               <div class="kv"><span>影响等级</span><b>${IMPACT_LABEL[f.impact]}</b></div>
               <div class="kv"><span>生效日期</span><b>${f.date}</b></div>
               <div class="kv"><span>空间层级</span><b>${f.level === 'global' ? '全球' : f.level === 'china' ? '全国' : '省区'}</b></div>
-              <div class="kv"><span>经纬度</span><b>${f.lng.toFixed(2)}, ${f.lat.toFixed(2)}</b></div>
+              <div class="kv"><span>经纬度</span><b>东经 ${f.lng.toFixed(2)}° / 北纬 ${f.lat.toFixed(2)}°</b></div>
               <div class="kv"><span>影响半径</span><b>${f.radius} km</b></div>
             </div>
           </div>

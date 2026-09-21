@@ -262,7 +262,7 @@ window.V03Relation = (function () {
         <h3><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dm.c};margin-right:7px"></span>${o.name}</h3>
         <div class="fd-id">${o.id} · ${dm.e || ''} ${dm.n} · ${o.geo === false ? '非地理本体（不在地图定位）' : '可定位本体'}</div>
       </div></div>
-      <div class="fd-chips">${chip(dm.n)}${chip(o.geo === false ? '无坐标' : '经纬度 ' + o.lng.toFixed(2) + ', ' + o.lat.toFixed(2))}${chip(rels.length + ' 条关系')}${chip(allFacts.length + ' 条支撑事实')}</div>
+      <div class="fd-chips">${chip(dm.n)}${chip(o.geo === false ? '无坐标' : '坐标 ' + o.lng.toFixed(2) + '°E / ' + o.lat.toFixed(2) + '°N')}${chip(rels.length + ' 条关系')}${chip(allFacts.length + ' 条支撑事实')}</div>
       <div class="fd-grid">
         <div class="fd-col">
           <div class="fd-sec"><h4>对象说明 <small>${o.sub}</small></h4><p>${o.sub}。本体对象由事实抽离而来，关系与打分自动完成，不设人工审核入口。</p></div>
