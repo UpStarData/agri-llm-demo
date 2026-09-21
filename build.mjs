@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* V0.3 三层 Demo 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
+/* AgriLink V1.0 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
    —— 无网络依赖、无外部文件依赖；双击即可运行，离线与线上是同一个文件
    node build.mjs            正常构建（缺文件即失败）
    node build.mjs --partial  允许缺文件（并行开发自测用） */
@@ -28,19 +28,28 @@ const rb = p => {
 const put = (tpl, token, val) => tpl.replace(token, () => val);
 const b64 = p => rb(p).toString('base64');
 
-const fontCss = `@font-face{font-family:'IBM Plex Sans SC';src:url(data:font/woff2;base64,${b64('fonts/PlexRegular-sub.woff2')}) format('woff2');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'IBM Plex Sans SC';src:url(data:font/woff2;base64,${b64('fonts/PlexBold-sub.woff2')}) format('woff2');font-weight:700;font-style:normal;font-display:swap}`;
+/* 字重分档（页面指令 G2）：Light 辅助信息 / Regular 正文 / SemiBold 强调 / Bold 标题 */
+const FACES = [
+  { file: 'fonts/PlexLight-sub.woff2', weight: 300 },
+  { file: 'fonts/PlexRegular-sub.woff2', weight: 400 },
+  { file: 'fonts/PlexSemiBold-sub.woff2', weight: 600 },
+  { file: 'fonts/PlexBold-sub.woff2', weight: 700 }
+];
+const fontCss = FACES.map(f =>
+  `@font-face{font-family:'IBM Plex Sans SC';src:url(data:font/woff2;base64,${b64(f.file)}) format('woff2');font-weight:${f.weight};font-style:normal;font-display:swap}`
+).join('\n');
 
 const CSS = ['src/v03/app.css', 'src/v03/relation.css', 'src/v03/sim.css'];
 const JS = [
-  'src/v03/data.js',        // 事实 / 对象 / 关系（冻结）
+  'src/v03/atlas-data.js',  // 产区 / 港口机场 / 密集事实与本体（数据包）
+  'src/v03/data.js',        // 事实 / 对象 / 关系（底座 + 合并数据包）
   'src/v03/data-sim.js',    // 推演层场景与轮次
-  'src/v03/store.js',       // 唯一状态源（冻结）
-  'src/v03/filter.js',      // 三层共用的唯一过滤实现
+  'src/v03/store.js',       // 唯一状态源
+  'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
   'src/v03/fact.js',        // 事实层
   'src/v03/relation.js',    // 关联层
   'src/v03/sim.js',         // 推演层
-  'src/v03/app.js'          // 骨架 / 路由 / 共用控件 / 流水
+  'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];
 
@@ -52,7 +61,7 @@ const data = [
 const appJs = JS.map(f => `<script>\n${rd(f)}\n</script>`).join('\n');
 
 const INPUTS = ['src/v03/shell.html', ...CSS, ...JS, ...GEO, 'build.mjs',
-  'vendor/echarts.min.js', 'fonts/PlexRegular-sub.woff2', 'fonts/PlexBold-sub.woff2'];
+  'vendor/echarts.min.js', ...FACES.map(f => f.file)];
 const hh = crypto.createHash('sha256');
 INPUTS.forEach(p => { hh.update(p + '\0'); hh.update(rb(p)); });
 const hash = hh.digest('hex').slice(0, 12);

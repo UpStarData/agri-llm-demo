@@ -68,10 +68,10 @@ async function v03shots(browser) {
   await shot(page, path.join(V03, '01-fact-layer.png'));
   await page.click('#layer-fact .fcard'); await sleep(900);
   await shot(page, path.join(V03, '02-fact-detail.png'));
-  await page.click('#toRel'); await sleep(1400);
-  await shot(page, path.join(V03, '03-relation-graph.png'));
-  await page.click('.rel-seg button[data-view="geo"]'); await sleep(1400);
-  await shot(page, path.join(V03, '04-relation-geo.png'));
+  await page.click('#toRel'); await sleep(1600);
+  await shot(page, path.join(V03, '03-relation-map.png'));
+  await page.evaluate(() => window.V03_DEBUG.set({ cred: 'low' })); await sleep(1500);
+  await shot(page, path.join(V03, '04-relation-network.png'));
   await page.click('#tabs button[data-tab="sim"]'); await sleep(1000);
   await page.evaluate(() => window.V03_DEBUG.set({ sim: { tick: 28, status: 'paused' } })); await sleep(900);
   await shot(page, path.join(V03, '05-sim-steps.png'));
@@ -93,7 +93,7 @@ async function compose(browser, pairs) {
       .head{padding:10px 12px 0;font-size:13px;font-weight:700}
       .head small{font-weight:400;color:#64707f;margin-left:8px}
     </style></head><body>
-      <div class="head">${name}<small>左：基线 AgriLink 46be371 · 右：V0.3 三层 Demo（同一 1440×900 视口，等宽缩放）</small></div>
+      <div class="head">${name}<small>左：基线 AgriLink 46be371 · 右：V1.0 事实层 / 关联层（同一 1440×900 视口，等宽缩放）</small></div>
       <div class="row">
         <div class="col"><div class="cap">${capBase}</div><img src="file://${base}"></div>
         <div class="col"><div class="cap">${capNew}</div><img src="file://${neu}"></div>
@@ -112,12 +112,12 @@ await baseline(browser);
 await v03shots(browser);
 await compose(browser, [
   ['cmp-01-baseline-landing-vs-fact-layer', path.join(BASE, '01-landing.png'), path.join(V03, '01-fact-layer.png'),
-    '基线 · 品牌首页（landing：品牌位 / 标题 / 结构说明 / CTA / 免责声明）', 'V0.3 · 事实层（地图主体 + 右侧事实卡片 + 底部流水）'],
+    '基线 · 品牌首页（landing：品牌位 / 标题 / 结构说明 / CTA / 免责声明）', 'V1.0 · 事实层（地图主体 + 右侧事实卡片 + 底部终端流水）'],
   ['cmp-02-baseline-l2map-vs-fact-detail', path.join(BASE, '03-l2-map.png'), path.join(V03, '02-fact-detail.png'),
     '基线 · L2 全国地图 + 右侧分析面板', 'V0.3 · 事实详情（统一影响范围 / 证据 / 相关本体与关系）'],
-  ['cmp-03-baseline-l3panel-vs-relation', path.join(BASE, '04-l3-province.png'), path.join(V03, '03-relation-graph.png'),
+  ['cmp-03-baseline-l3panel-vs-relation', path.join(BASE, '04-l3-province.png'), path.join(V03, '03-relation-map.png'),
     '基线 · L3 省区分析面板（对象绑定）', 'V0.3 · 关联层图谱（九类对象域 + 对象/关系详情）'],
-  ['cmp-04-baseline-globe-vs-relation-geo', path.join(BASE, '02-l1-globe.png'), path.join(V03, '04-relation-geo.png'),
+  ['cmp-04-baseline-globe-vs-relation-geo', path.join(BASE, '02-l1-globe.png'), path.join(V03, '04-relation-network.png'),
     '基线 · L1 全球地球（真实地理 + 境外产区）', 'V0.3 · 关联层地理关联（有坐标对象上图，无坐标单独列出）'],
   ['cmp-05-baseline-l4chain-vs-sim', path.join(BASE, '05-l4-chain.png'), path.join(V03, '05-sim-steps.png'),
     '基线 · L4 单品全链路（环节卡 / 价格链 / 抽屉）', 'V0.3 · 推演层（五阶段十二步骤 + 两个核心指标 + 轮次）'],

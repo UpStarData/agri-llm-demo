@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "农业数据三层推演平台 V0.3 · 事实层 / 关联层 / 推演层（示意数据 · 离线单文件 Demo）",
+  "description": "AgriLink 农链 V1.0 · 事实层 / 关联层 / 推演层（离线单文件 Demo）",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -13,10 +13,9 @@
     "test": "node test/v03.mjs",
     "test:v03": "node test/v03.mjs",
     "shots": "node test/shots-v03.mjs",
-    "test:legacy-e2e": "node test/e2e.mjs",
-    "test:legacy-visual": "node test/visual.mjs",
-    "test:all": "node test/v03.mjs",
-    "compare": "node test/compare-v03.mjs"
+    "test:all": "node test/v03.mjs && node test/shots-v03.mjs",
+    "compare": "node test/compare-v03.mjs",
+    "fonts": "python3 tools/subset-fonts.py"
   },
   "devDependencies": {
     "playwright": "^1.58.2"
