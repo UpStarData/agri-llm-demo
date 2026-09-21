@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>农业数据三层推演平台 V0.3 · 事实层 / 关联层 / 推演层（示意数据）</title>
+<style>/*FONT_CSS*/</style>
+<style>/*APP_CSS*/</style>
+<style>/*REL_CSS*/</style>
+<style>/*SIM_CSS*/</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">农业数据三层推演平台<small>V0.3 · 事实层 / 关联层 / 推演层</small></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB">
+      <button role="tab" data-tab="fact">事实层</button>
+      <button role="tab" data-tab="relation">关联层</button>
+      <button role="tab" data-tab="sim">推演层</button>
+    </nav>
+    <div class="tb-right">
+      <span class="crumb" id="crumb"></span>
+      <span class="demo-badge">示意数据 · 待标定</span>
+    </div>
+  </header>
+
+  <div class="filterbar" id="filterbar">
+    <button class="ghost" id="railToggle" aria-expanded="true">☰ 分类栏</button>
+    <div class="seg" id="timeSeg" role="group" aria-label="时间范围">
+      <button data-time="7d">近 7 天</button>
+      <button data-time="30d">近 30 天</button>
+      <button data-time="90d">近 90 天</button>
+      <button data-time="all">全部</button>
+    </div>
+    <label class="mini" id="credWrap">可信度<select id="credSel" aria-label="可信度">
+      <option value="all">全部</option><option value="high">高</option><option value="mid">中</option><option value="low">低</option></select></label>
+    <label class="mini" id="inflWrap">影响等级<select id="inflSel" aria-label="影响等级">
+      <option value="all">全部</option><option value="high">高</option><option value="mid">中</option><option value="low">低</option></select></label>
+    <label class="searchbox"><span aria-hidden="true">🔍</span><input id="qInput" type="search" placeholder="搜索事实 / 对象 / 关系" aria-label="搜索"></label>
+    <span class="fb-note" id="fbNote"></span>
+  </div>
+
+  <div class="layout">
+    <aside class="rail" id="rail" aria-label="分类"></aside>
+    <main id="stage">
+      <div class="panelctl" id="panelCtl" role="group" aria-label="面板显隐"></div>
+      <section class="layer" id="layer-fact" role="tabpanel" aria-label="事实层"></section>
+      <section class="layer" id="layer-relation" role="tabpanel" aria-label="关联层"></section>
+      <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
+      <div class="stream" id="streamBox">
+        <div class="st-head">
+          <b id="streamTitle">数据接入与处理流水</b>
+          <span class="st-meta" id="streamMeta"></span>
+          <span class="st-spacer"></span>
+          <span class="st-note">逐行向上滚动 · 示意日志</span>
+          <button class="ghost sm" id="streamClose">关闭</button>
+        </div>
+        <div class="st-body" id="streamBody"></div>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<!--BUILD-->
+<!--LIBS-->
+<!--DATA-->
+<!--APP_JS-->
+</body>
+</html>

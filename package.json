@@ -2,19 +2,20 @@
   "name": "agri-llm-demo",
   "version": "3.0.0",
   "private": true,
-  "description": "农链 AgriLink — 中国农产品产业地图（阶段性领导演示 Demo，示意数据）",
+  "description": "农业数据三层推演平台 V0.3 · 事实层 / 关联层 / 推演层（示意数据 · 离线单文件 Demo）",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "build:partial": "node build.mjs --partial",
     "serve": "node server.mjs",
     "start": "./serve.sh start",
     "stop": "./serve.sh stop",
-    "test": "node test/e2e.mjs",
-    "test:visual": "node test/visual.mjs",
-    "test:round3": "node test/round3.mjs",
-    "test:round4": "node test/round4.mjs",
-    "test:live": "node test/live-check.mjs",
-    "test:all": "node test/e2e.mjs && node test/visual.mjs && node test/round3.mjs && node test/round4.mjs"
+    "test": "node test/v03.mjs",
+    "test:v03": "node test/v03.mjs",
+    "shots": "node test/shots-v03.mjs",
+    "test:legacy-e2e": "node test/e2e.mjs",
+    "test:legacy-visual": "node test/visual.mjs",
+    "test:all": "node test/v03.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"
