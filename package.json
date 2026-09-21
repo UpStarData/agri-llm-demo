@@ -15,7 +15,8 @@
     "shots": "node test/shots-v03.mjs",
     "test:all": "node test/v03.mjs && node test/shots-v03.mjs",
     "compare": "node test/compare-v03.mjs",
-    "fonts": "python3 tools/subset-fonts.py"
+    "fonts": "python3 tools/subset-fonts.py",
+    "shots:v2": "node test/shots-v2.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

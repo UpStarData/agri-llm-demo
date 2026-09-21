@@ -46,7 +46,7 @@ window.V03Store = (function () {
     factId: null, logOpen: false,        // 事实详情弹窗
     carry: [],
 
-    rel: { view: 'geo', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false },
+    rel: { view: 'geo', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
 
     sim: {
       /* 统一用户故事：马来西亚榴莲 → 红星市场份额；五阶段承载十二步骤 */

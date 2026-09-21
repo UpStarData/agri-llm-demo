@@ -17,9 +17,12 @@ window.V03Pkg = (function () {
   const STREAM_IN = P.stream || { events: [], loopMs: 1 };
 
   /* ---------- 类型 / 分类 字典（事实层冷色色系，与关联层暖色系区分） ---------- */
+  /* A2 固定九类对象域（V2）：商品与标准 / 生产与资源 / 经营主体 / 市场与渠道 / 物流与设施 /
+     政策与机构 / 环境与事件 / 空间与行政 / 指标与状态 */
   const TYPE2DOMAIN = {
-    Market: 'market', Enterprise: 'company', Base: 'base', Commodity: 'variety', Organization: 'agency',
-    Region: 'region', Person: 'person', MetricObservation: 'metric', LogisticsNode: 'facility'
+    Commodity: 'commodity', Base: 'resource', Enterprise: 'operator', Person: 'operator',
+    Market: 'channel', LogisticsNode: 'logistics', Organization: 'institution',
+    Region: 'admin', MetricObservation: 'metric'
   };
   const TYPE_EMOJI = {
     Market: '🏬', Enterprise: '🏢', Base: '🌱', Commodity: '🍎', Organization: '🏛️',
@@ -53,11 +56,27 @@ window.V03Pkg = (function () {
     .replace(/（\s*）|\(\s*\)/g, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
+  /* 技术/演示用语清洗：属性值里出现 geo=null、本包、数据包、L1/L2/L3、生成器等一律不进入产品界面 */
+  const TECH = /geo\s*=\s*null|本包|数据包|数据源包|L[123]\b|生成器|generator|样例|示意|sample|debug/i;
+  /* 按分句剥离技术片段；剥离后为空则整条丢弃（产品界面不出现研发/演示用语） */
+  const stripTech = t => String(t == null ? '' : t)
+    .split(/[；;。]/).filter(part => part && !TECH.test(part)).join('；')
+    .replace(/（[^）]*(?:geo\s*=\s*null|本包|数据包|无坐标)[^）]*）/g, '')
+    .replace(/\([^)]*(?:geo\s*=\s*null|本包|数据包|无坐标)[^)]*\)/g, '')
+    .trim();
+  const cleanProp = v => {
+    const t = stripTech(cleanText(v));
+    if (!t || TECH.test(t)) return '';
+    return t;
+  };
+  const NO_SOURCE = /生成器|generator|AgriLink/i;   /* 生成记录没有公开来源，不冒充来源 */
   const cleanCard = card => {
     const out = {};
     Object.keys(card || {}).forEach(k => {
       const v = card[k];
-      out[k] = (typeof v === 'string' && /title|summary|name|reason|label|issuer|provider|commodity|instrument|region|exchange/i.test(k)) ? cleanText(v) : v;
+      const isText = typeof v === 'string' && /title|summary|name|reason|label|issuer|provider|commodity|instrument|region|exchange/i.test(k);
+      out[k] = isText ? cleanText(v) : v;
+      if (typeof out[k] === 'string' && /source|provider|issuer/i.test(k) && NO_SOURCE.test(out[k])) out[k] = '';
     });
     return out;
   };
@@ -141,8 +160,11 @@ window.V03Pkg = (function () {
     }
     /* 生成记录没有一手证据：按 SCHEMA §2.4 呈现登记信息（内部来源标识不进入普通 UI） */
     const pm = f.provenanceMeta || {};
-    return [{ k: '记录登记', t: (pm.geoAnchorPlace || '区域登记') + ' · ' + (pm.collectedAt || ''),
-      q: '坐标锚点：' + (pm.geoAnchorPlace || '—') + '（' + (pm.geoAnchorPrecision || '—') + '）', url: '' }];
+    const raw = String(pm.geoAnchorPlace || '');
+    const anchor = (!raw || /^[a-z0-9-]+$/.test(raw)) ? (regionLabel(f) || '区域登记') : raw;
+    const prec = { exact: '精确点位', approx: '近似点位', region_only: '行政区代表点', none: '无坐标' }[pm.geoAnchorPrecision] || '点位';
+    return [{ k: '采集登记', t: anchor + ' · ' + (pm.collectedAt || ''),
+      q: '采集位置：' + anchor + '（' + prec + '）', url: '' }];
   }
 
   const FACTS = FACTS_IN.map(f => {
@@ -253,11 +275,11 @@ window.V03Pkg = (function () {
     const a = e.attributes || {};
     const dom = TYPE2DOMAIN[e.type] || 'metric';
     const props = [['对象域', ONT.lookup[e.type] || e.type], ['状态', e.status === 'active' ? '在册' : e.status]];
-    if (a.landmark) props.push(['定位', a.landmark]);
-    if (a.function) props.push(['功能', a.function]);
-    if (a.role) props.push(['角色', a.role]);
-    if (a.adminArea) props.push(['行政区', a.adminArea]);
-    if (a.anchorPlace) props.push(['地理锚点', a.anchorPlace]);
+    if (cleanProp(a.landmark)) props.push(['定位', cleanProp(a.landmark)]);
+    if (cleanProp(a.function)) props.push(['功能', cleanProp(a.function)]);
+    if (cleanProp(a.role)) props.push(['角色', cleanProp(a.role)]);
+    if (cleanProp(a.adminArea)) props.push(['行政区', cleanProp(a.adminArea)]);
+    if (cleanProp(a.anchorPlace)) props.push(['地理锚点', cleanProp(a.anchorPlace)]);
     if (a.metricUnit) props.push(['单位', a.metricUnit]);
     if (a.priceUnit) props.push(['计价单位', a.priceUnit]);
     if (e.geo && e.geo.geoPrecision) props.push(['坐标精度', { exact: '地物点', approx: '近似', region_only: '行政区代表点', none: '无坐标' }[e.geo.geoPrecision] || e.geo.geoPrecision]);
@@ -266,13 +288,16 @@ window.V03Pkg = (function () {
       entityType: e.type, typeName: ONT.lookup[e.type] || e.type,
       domain: dom, emoji: TYPE_EMOJI[e.type] || '📊',
       name: e.canonicalName,
-      sub: a.landmark || a.function || a.role || a.adminArea || (ONT.lookup[e.type] || '') + '对象',
+      sub: (() => {
+        const cleaned = stripTech(cleanText(a.landmark || a.function || a.role || a.adminArea || ''));
+        return cleaned || (ONT.lookup[e.type] || '') + '对象';
+      })(),
       alias: (e.aliases || []).join(' / '),
       lng: pt ? pt[0] : null, lat: pt ? pt[1] : null, geo: !!pt,
       regionPath: (e.geo && e.geo.regionPath) || [],
       region: (e.geo && e.geo.regionPath) ? ((pathName(e.geo.regionPath, 'province') || '') || pathName(e.geo.regionPath, 'country') || '全球') : '全球',
       props: props, commodityTags: e.commodityTags || [], factIds: e.supportingFactIds || [],
-      note: (e.provenanceMeta || {}).note || ''
+      note: TECH.test(String((e.provenanceMeta || {}).note || '')) ? '' : ((e.provenanceMeta || {}).note || '')
     };
   });
 
@@ -290,7 +315,7 @@ window.V03Pkg = (function () {
       formed: String((r.validity || {}).validFrom || '').slice(0, 7) || '',
       changedBy: (r.supportingFactIds || [])[0] || null,
       factIds: r.supportingFactIds || [],
-      note: (r.provenanceMeta || {}).note || '',
+      note: TECH.test(String((r.provenanceMeta || {}).note || '')) ? '' : ((r.provenanceMeta || {}).note || ''),
       review: (r.review || {}).state
     };
   });
