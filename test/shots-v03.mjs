@@ -53,12 +53,15 @@ await shot(page, 'v04-02-fact-l2-china.png');                      // 全国视�
 await page.click('#menuBtn'); await sleep(600);
 await shot(page, 'v04-03-fact-menu.png');                          // 左侧图层菜单：概览 / 10 类 taxonomy / 快捷控制
 await page.click('#menuClose'); await sleep(500);
+await set(page, { time: '7d', cred: 'high', infl: 'high' }, 1200);
+await shot(page, 'v04-01c-fact-default-regions.png');              // 默认口径（7 天 + 高 + 高）多区域星点
 
 await page.locator('#mapSk .sk[data-k="mode3d"]').click(); await sleep(1600);
 await shot(page, 'v04-04-fact-3d.png');                            // 3D 地球（缓慢自转）
 await page.locator('#mapSk .sk[data-k="mode3d"]').click(); await sleep(800);
 
-await set(page, { time: 'all', cred: 'all', infl: 'all', geo: { level: 'L1', focus: null } }, 1400);
+await set(page, { time: 'all', cred: 'all', infl: 'all', geo: { level: 'L1', focus: null } }, 1500);
+await shot(page, 'v04-01b-fact-all-342.png');                      // 切「全部」后的 342 点完整密度
 await shot(page, 'v04-05-fact-cards.png');                         // 两列瀑布流（价格 / 新闻 / 产地类模板）
 await page.evaluate(() => {                                        // 滚动到天气 / 市场类卡片，取证其余模板
   const first = window.V03Data.FACTS.find(f => f.cardType === 'weather');

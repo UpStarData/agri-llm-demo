@@ -29,11 +29,13 @@ window.V03Store = (function () {
     },
 
     /* M7–M10：选择型快捷键（与筛选状态同源）
-       默认取「全部 / 不限 / 不限」：数据包 agrilink-demo-v1 的密度计划为全球 342 / 中国 175 /
-       湖南 281 点，若按 7 天 + 高可信 + 高影响收窄只剩个位数，与设计密度不符（详见 docs/V04b-数据包接入说明.md） */
-    time: 'all',                  // 7d | 30d | 90d | all
-    cred: 'all',                  // high | mid | low | all
-    infl: 'all',                  // high | mid | low | all
+       默认按权威指令：近 7 天 / 高可信 / 高影响。
+       数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
+       因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
+       规则见 docs/V04b-数据包接入说明.md §5。 */
+    time: '7d',                   // 7d | 30d | 90d | all
+    cred: 'high',                 // high | mid | low | all
+    infl: 'high',                 // high | mid | low | all
     q: '',
 
     /* 三级分类字典的选中项：null = 默认全选 */

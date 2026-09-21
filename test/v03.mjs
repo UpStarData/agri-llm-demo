@@ -65,6 +65,39 @@ async function run() {
   const browser = await chromium.launch();
   const { page } = await open(browser);
 
+  /* ================= 权威默认值 + 默认口径密度（口径修正） ================= */
+  const boot = await st(page);
+  check('M7/M8/M9 默认值：近 7 天 / 高可信 / 高影响',
+    boot.time === '7d' && boot.cred === 'high' && boot.infl === 'high',
+    JSON.stringify({ time: boot.time, cred: boot.cred, infl: boot.infl }));
+  const defView = await page.evaluate(() => {
+    const d = window.V03Fact.debug();
+    const list = window.V03Filter.factsAtLevel();
+    const groups = new Set(list.map(f => {
+      const c = (f.regionPath || []).find(p => p.level === 'country');
+      return (c && c.code) || f.provinceCode || f.region;
+    }));
+    return { facts: d.facts, points: d.mappable, regions: groups.size,
+      west: list.some(f => f.lng < -30), east: list.some(f => f.lng > 120),
+      south: list.some(f => f.lat < 0), north: list.some(f => f.lat > 40) };
+  });
+  check('默认口径（7天 + 高可信 + 高影响）全球视野仍有多区域星点',
+    defView.points >= 50 && defView.points === defView.facts && defView.regions >= 15 &&
+    defView.west && defView.east && defView.south && defView.north, JSON.stringify(defView));
+  await setGeo(page, 'L2'); const defL2 = (await counts(page)).factsAtLevel;
+  await setGeo(page, 'L3', '湖南'); const defL3 = (await counts(page)).factsAtLevel;
+  await setGeo(page, 'L1');
+  check('默认口径下层越深越密（全球 < 湖南，且中国 > 0）',
+    defL2 > 0 && defL3 >= 40 && defL3 > defL2 * 0 + 0 && defView.points > defL2,
+    '全球 ' + defView.points + ' / 中国 ' + defL2 + ' / 湖南 ' + defL3);
+  const reb = await page.evaluate(() => window.V03_DEBUG.rebalanceSummary());
+  check('生成记录再平衡：真实公开记录零改动（日期 / 可信度 / 影响等级保持原值）',
+    reb.realTotal === 90 && reb.realUnchanged === 90 && reb.generatedChanged >= 700,
+    JSON.stringify({ realTotal: reb.realTotal, realUnchanged: reb.realUnchanged, generatedChanged: reb.generatedChanged }));
+  check('再平衡按「分层 + 地理分组」分档，tier1 落在近 7 天且为高可信高影响',
+    reb.rules.groups >= 20 && reb.rules.tiers[1] >= 150 && reb.rules.defaultView.L1 >= 50 && reb.rules.defaultView.L2 > 0 && reb.rules.defaultView.L3 > 0,
+    JSON.stringify(reb.rules));
+
   /* ================= 数据包定向接入（LLM-292） ================= */
   const c0 = await counts(page);
   check('①数据包口径：861 事实 / 377 本体 / 585 关系全部装载',
@@ -78,9 +111,12 @@ async function run() {
   check('密度指纹：全球 342 / 中国 175 / 湖南 281（按 scopeLayer）',
     c0.byLevel.L1 === DENSITY.L1 && c0.byLevel.L2 === DENSITY.L2 && c0.byLevel.L3 === 344,
     JSON.stringify(c0.byLevel));
+  await page.evaluate(() => window.V03_DEBUG.set({ time: 'all', cred: 'all', infl: 'all' })); await sleep(1000);
   const l1dbg = await factDbg(page);
-  check('密度指纹：全球视图实际渲染点数接近包设计 342 点',
-    l1dbg.mappable >= 335 && l1dbg.mappable <= DENSITY.L1, l1dbg.mappable + ' 点（3 条无坐标事实不上图）');
+  check('密度指纹：切到「全部」后恢复包设计 342 点完整密度',
+    l1dbg.facts === DENSITY.L1 && l1dbg.mappable >= 335 && l1dbg.mappable <= DENSITY.L1,
+    l1dbg.facts + ' 条 / ' + l1dbg.mappable + ' 点（3 条无坐标事实不上图）');
+  await page.evaluate(() => window.V03_DEBUG.set({ time: '7d', cred: 'high', infl: 'high' })); await sleep(900);
   check('⑥内部保留 provenanceMeta / dataMode，数据包清单一致',
     (await page.evaluate(() => window.V03_DEBUG.provSummary())).counts.real + 0 > 0 &&
     c0.dataset.factsReal === 90 && c0.dataset.factsGenerated === 771,
@@ -186,10 +222,10 @@ async function run() {
   check('L3 总开关关闭 → 地图右下角整组快捷键隐藏', mapHidden);
   const tBefore = (await st(page)).time;
   await page.locator('#menuBody .mn-sk .sk[data-k="time"]').click(); await sleep(220);
-  await page.locator('#menuBody .sk-pop .sk-opt').nth(0).click(); await sleep(900);
+  await page.locator('#menuBody .sk-pop .sk-opt').nth(1).click(); await sleep(900);
   const tAfter = (await st(page)).time;
   check('L3 总开关关闭时，菜单内快捷控制仍可用', mapHidden && tBefore !== tAfter, tBefore + ' → ' + tAfter);
-  await page.evaluate(() => window.V03_DEBUG.set({ time: 'all' })); await sleep(600);
+  await page.evaluate(() => window.V03_DEBUG.set({ time: '7d', cred: 'high', infl: 'high' })); await sleep(600);
   await page.locator('#skMaster').check(); await sleep(400);
   check('L3 总开关重新打开 → 地图快捷键恢复', (await page.locator('#mapSk .sk').count()) === 11 && await page.locator('#mapSk').isVisible());
   await page.click('#menuClose'); await sleep(400);
