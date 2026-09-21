@@ -1,7 +1,7 @@
 {
-  "hash": "013d9c717e3d",
-  "git": "57e6582",
-  "builtAt": "2026-09-21T22:37:54.153Z",
+  "hash": "6d6eda030068",
+  "git": "a8481ff",
+  "builtAt": "2026-09-21T23:38:38.478Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -12,6 +12,7 @@
     "src/v03/atlas-data.js",
     "src/v03/data.js",
     "src/v03/data-sim.js",
+    "src/v03/dict-f3.js",
     "src/v03/store.js",
     "src/v03/filter.js",
     "src/v03/fact.js",
@@ -44,5 +45,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 6176913
+  "bytes": 6161477
 }

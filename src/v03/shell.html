@@ -12,24 +12,22 @@
 <body>
 
 <div id="app">
-  <!-- 顶部导航：图层菜单 Icon → 🌾 AgriLink + 版本号 →（居中）三 TAB → 快捷图标组 -->
+  <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
-    <div class="tb-left">
-      <button class="icbtn" id="menuBtn" aria-label="图层菜单" aria-pressed="false"></button>
-      <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>v1.0</small></div>
-    </div>
+    <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
-      <button class="icbtn" id="btnStream" aria-label="数据接入与处理流水"></button>
-      <button class="icbtn" id="btnCards" aria-label="右侧面板"></button>
-      <button class="icbtn" id="btnSettings" aria-label="设置"></button>
+      <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
+      <button class="tb-ic" id="btnCards" aria-label="右侧面板显隐"></button>
+      <button class="tb-ic" id="btnSettings" aria-label="设置"></button>
     </div>
   </header>
 
   <div class="layout">
-    <!-- 左侧图层菜单：从左侧滑出，三层结构（数据概览 / 三级分类 / 快捷控制） -->
-    <aside class="menu" id="menu" aria-label="图层菜单" aria-hidden="true">
-      <button class="menu-close" id="menuClose" aria-label="收起图层菜单">×</button>
+    <!-- F2：左侧菜单（从左侧滑出，固定四段：数据概览 / 分类筛选 / 地图快捷控制 / 总开关） -->
+    <aside class="menu" id="menu" aria-label="菜单" aria-hidden="true">
+      <button class="menu-close" id="menuClose" aria-label="收起菜单">×</button>
       <div class="menu-body" id="menuBody"></div>
     </aside>
 
@@ -38,31 +36,25 @@
       <section class="layer" id="layer-relation" role="tabpanel" aria-label="关联层"></section>
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
 
-      <!-- 地图右下角：M1–M11 全套快捷键（总开关关闭时整组隐藏） -->
+      <!-- F7：横向图例（地图底部、流水上方；内容随筛选同步变化） -->
+      <div class="legend" id="legend" aria-label="图例"></div>
+
+      <!-- F6：缩放（快捷键组正上方） + 快捷键组（右下角） -->
+      <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
 
-      <!-- 底部：数据接入与处理流水（终端风格 · 纯黑 · 无标题） -->
+      <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
+      <div class="drawer-stack" id="drawerStack"></div>
+
+      <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
       <div class="stream" id="streamBox">
-        <div class="st-tabs">
-          <span class="st-tab on" id="stTabName">输入流</span>
-          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
-          <span class="st-meta" id="streamMeta"></span>
-        </div>
         <div class="st-body" id="streamBody"></div>
-        <button class="st-close" id="streamClose" aria-label="关闭流水面板">×</button>
+        <button class="st-close" id="streamClose" aria-label="关闭流水">×</button>
       </div>
     </main>
   </div>
 
-  <!-- 详情弹窗（事实 / 本体 / 关系共用） -->
-  <div class="modal" id="modal" role="dialog" aria-modal="true">
-    <div class="modal-box">
-      <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
-      <div class="modal-body" id="modalBody"></div>
-    </div>
-  </div>
-
-  <!-- 设置入口：演示口令 -->
+  <!-- G1：设置入口（口令 123321；本期空白页） -->
   <div class="pw" id="pwBox" role="dialog" aria-modal="true" aria-label="设置口令">
     <div class="pw-box">
       <div class="pw-t">设置</div>
@@ -72,11 +64,8 @@
         <button class="btn sec" id="pwCancel">取消</button>
         <button class="btn" id="pwOk">进入</button>
       </div>
-      <p class="pw-note">演示口令，仅用于演示设置入口的跳转流程，不构成真实安全能力。</p>
     </div>
   </div>
-
-  <!-- 设置页（本期为空白页，内容后续填充） -->
   <div class="settings" id="settingsPage">
     <div class="set-box">
       <div class="set-t">设置</div>

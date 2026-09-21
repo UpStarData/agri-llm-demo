@@ -24,23 +24,18 @@ window.V03Data = (function () {
     return out;
   })();
 
-  /* 九类展示对象域（数据包 ontology.displayDomains）—— 暖色本体色系 */
-  const DOMAINS = (() => {
-    const meta = {
-      market:   { n: '市场',      geo: true,  c: '#f59e0b', e: '🏬' },
-      company:  { n: '公司',      geo: true,  c: '#ea580c', e: '🏢' },
-      base:     { n: '基地',      geo: true,  c: '#65a30d', e: '🌱' },
-      variety:  { n: '品种',      geo: false, c: '#eab308', e: '🍎' },
-      agency:   { n: '政策机构',  geo: false, c: '#d946ef', e: '🏛️' },
-      region:   { n: '区域',      geo: true,  c: '#16a34a', e: '🗺️' },
-      person:   { n: '人物角色',  geo: false, c: '#f472b6', e: '🧑‍🌾' },
-      metric:   { n: '指标',      geo: false, c: '#facc15', e: '📊' },
-      facility: { n: '设施渠道',  geo: true,  c: '#fb923c', e: '🚉' }
-    };
-    const order = PKG ? ['market', 'company', 'base', 'variety', 'agency', 'region', 'person', 'metric', 'facility'] : Object.keys(meta);
-    return order.map(id => Object.assign({ id }, meta[id]));
-  })();
-
+  /* A2 固定九类对象域（V2 指令）—— 浅色农业风配色，与事实层一级分类色区分 */
+  const DOMAINS = [
+    { id: 'commodity',  n: '商品与标准', geo: false, c: '#c2410c', e: '📦' },
+    { id: 'resource',   n: '生产与资源', geo: true,  c: '#4d7c0f', e: '🌱' },
+    { id: 'operator',   n: '经营主体',   geo: true,  c: '#b45309', e: '🏢' },
+    { id: 'channel',    n: '市场与渠道', geo: true,  c: '#d97706', e: '🏬' },
+    { id: 'logistics',  n: '物流与设施', geo: true,  c: '#0369a1', e: '🚉' },
+    { id: 'institution',n: '政策与机构', geo: false, c: '#7e22ce', e: '🏛️' },
+    { id: 'environment',n: '环境与事件', geo: false, c: '#0f766e', e: '🌍' },
+    { id: 'admin',      n: '空间与行政', geo: true,  c: '#15803d', e: '🗺️' },
+    { id: 'metric',     n: '指标与状态', geo: false, c: '#a16207', e: '📊' }
+  ];
 
   /* 省区中心（数据包 Region 实体坐标优先，缺失时用自带表）：[经度, 纬度, 缩放级] */
   const PROV_CENTER_FALLBACK = {

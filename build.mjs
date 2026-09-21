@@ -45,6 +45,7 @@ const JS = [
   'src/v03/atlas-data.js',  // 上一轮自带数据（数据包缺失时的兜底 + 推演层别名来源）
   'src/v03/data.js',        // 事实 / 对象 / 关系（数据包为准，自带数据作别名）
   'src/v03/data-sim.js',    // 推演层场景与轮次
+  'src/v03/dict-f3.js',     // V2 指令 F3 事实三级分类字典（7/26/125）
   'src/v03/store.js',       // 唯一状态源
   'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
   'src/v03/fact.js',        // 事实层
