@@ -1,0 +1,712 @@
+[
+ {
+  "sourceId": "wb-wdi",
+  "name": "世界银行世界发展指标（WDI）农业序列",
+  "kind": "open_data",
+  "authorityTier": "A",
+  "homepage": "https://api.worldbank.org/v2/country/CHN/indicator/AG.PRD.FOOD.XD",
+  "institution": "World Bank",
+  "collectedAt": "2026-09-21",
+  "notes": "API 采集，2020–2025 年度值；仅取非空值；lastupdated 见 observations"
+ },
+ {
+  "sourceId": "fao-fpi",
+  "name": "FAO 食品价格指数月报",
+  "kind": "international_org",
+  "authorityTier": "A",
+  "homepage": "https://www.fao.org/newsroom/detail/supply-concerns-drive-fao-food-price-index-higher/zh",
+  "institution": "联合国粮食及农业组织",
+  "collectedAt": "2026-09-21",
+  "notes": "2026-08 指数 133.3"
+ },
+ {
+  "sourceId": "un-wfp",
+  "name": "世界粮食计划署厄尔尼诺预警",
+  "kind": "international_org",
+  "authorityTier": "A",
+  "homepage": "https://news.un.org/zh/story/2026/08/1142583",
+  "institution": "UN News / WFP",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "usda-nass",
+  "name": "USDA NASS Crop Production（月度产量报告）",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://esmis.nal.usda.gov/sites/default/release-files/796056/crop0926.pdf",
+  "institution": "USDA National Agricultural Statistics Service",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "eu-eurlex",
+  "name": "EUR-Lex 欧盟法规原文",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://eur-lex.europa.eu/eli/reg_impl/2026/748/oj",
+  "institution": "European Commission",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "mofcom-trb",
+  "name": "商务部贸易救济调查局公告",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://trb.mofcom.gov.cn/myjjdc/art/2026/art_4da4c1f592664a95839664f5c71b7e94.html",
+  "institution": "中华人民共和国商务部",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "gov-cn-policy",
+  "name": "中国政府网政策文件",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://www.gov.cn/zhengce/202602/content_7056930.htm",
+  "institution": "国务院",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "moa-cn",
+  "name": "农业农村部公开文件",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://jcs.moa.gov.cn/gzdt/202602/t20260212_6481561.htm",
+  "institution": "农业农村部",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-agri",
+  "name": "湖南省农业农村厅",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://agri.hunan.gov.cn/agri/xxgk/tzgg/202609/t20260904_34056645.html",
+  "institution": "湖南省农业农村厅",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-gov",
+  "name": "湖南省人民政府门户网站",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://www.hunan.gov.cn/hnszf/hnyw/zwdt/202603/t20260327_33942326.html",
+  "institution": "湖南省人民政府",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hunantoday",
+  "name": "新湖南（湖南日报客户端）：湖南气象风险预警",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "http://www.hunantoday.cn/news/xhn/202607/33105395.html",
+  "institution": "湖南日报社",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-cma",
+  "name": "湖南省气象局",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "http://hn.cma.gov.cn/xwzx/tqzx/202608/t20260830_8014940.html",
+  "institution": "湖南省气象局",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "nmc-cma",
+  "name": "中央气象台农业气象周报",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://www.nmc.cn/publish/agro/ten-week/index.html",
+  "institution": "中国气象局",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-swt",
+  "name": "湖南省商务厅通知公告",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://swt.hunan.gov.cn/swt/hnswt/85753/fdzdgknr/tzgg/202607/t20260715_71852749377417144.html",
+  "institution": "湖南省商务厅",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "xinhua",
+  "name": "新华社",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://www.news.cn/20260619/07eb0fab463941dcb314cf195f04c7b5/c.html",
+  "institution": "新华社",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "cctv17",
+  "name": "央视网 CCTV-17 农业农村频道",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://tv.cctv.com/live/cctv17/m/",
+  "institution": "中央广播电视总台",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hongxing-mkt",
+  "name": "红星农副产品大市场每日行情（农业农村部信息中心口径转载）",
+  "kind": "market",
+  "authorityTier": "B",
+  "homepage": "http://www.cqtresearch.com/guancha/2026/0911/268911.html",
+  "institution": "红星实业集团有限公司 / 农业农村部信息中心",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "agri-gov-quote",
+  "name": "全国农产品批发市场价格行情（红星市场样例日）",
+  "kind": "market",
+  "authorityTier": "B",
+  "homepage": "https://www.aivtp.com/shanxun/202608/627444.html",
+  "institution": "农业农村部信息中心（转载）",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "dce-quote",
+  "name": "大连商品交易所期货行情（第三方行情页）",
+  "kind": "exchange",
+  "authorityTier": "B",
+  "homepage": "https://agr.100ppi.com/futures/list-12-1353-5.html",
+  "institution": "大连商品交易所 / 生意社",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "dce-soybean-meal",
+  "name": "豆粕期货行情（第三方行情页）",
+  "kind": "exchange",
+  "authorityTier": "B",
+  "homepage": "https://www.100ppi.com/futures/list-12-1351-4.html",
+  "institution": "大连商品交易所 / 生意社",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "sina-finance",
+  "name": "新浪财经（期货与商品行情）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://finance.sina.com.cn/money/future/fmnews/2026-09-21/doc-inispync2231187.shtml",
+  "institution": "新浪财经",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "vfa-rice",
+  "name": "越南粮食协会（VFA）世界大米价格",
+  "kind": "association",
+  "authorityTier": "B",
+  "homepage": "https://e.vietfood.org.vn/world-prices-2026-09-10/",
+  "institution": "Vietnam Food Association",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "vietnamplus",
+  "name": "越通社 VietnamPlus",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://zh.vietnamplus.vn/article-post268260.vnp",
+  "institution": "Vietnam News Agency",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "guojiguoshu",
+  "name": "国际果蔬报道",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://guojiguoshu.com/article/10977",
+  "institution": "国际果蔬报道",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "freshplaza-cn",
+  "name": "FreshPlaza 中文站",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.freshplaza.cn/article/9868686/zhi-li-yu-ji-2026-27-chan-ji-chu-kou-che-li-zi-66-7-mo-dun/",
+  "institution": "FreshPlaza",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "asiafruit",
+  "name": "亚洲水果 Asia Fruit",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://asiafruitchina.net/31359.html",
+  "institution": "Asia Fruit",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "caixin-data",
+  "name": "财新数据",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://database.caixin.com/2026-04-30/102439924.html",
+  "institution": "财新",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "jiemian",
+  "name": "界面新闻",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.jiemian.com/article/14957899.html",
+  "institution": "界面新闻",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "21jingji",
+  "name": "21 世纪经济报道",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://m.21jingji.com/article/20260902/herald/5db083be310745c91d65ee4d2dbc6267.html",
+  "institution": "21 财经",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "zaobao",
+  "name": "联合早报",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.zaobao.com.sg/news/sea/story20260908-9645916",
+  "institution": "新加坡报业控股",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "worldfoods",
+  "name": "世界食品网行业分析",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://worldfoods.cn/industry-news/import-durian-market-analysis-202604.html",
+  "institution": "worldfoods.cn",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "asia-times-my",
+  "name": "亚洲时报（马来西亚）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.asiatimes.com.my/2026/06/17/",
+  "institution": "Asia Times Malaysia",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "enanyang",
+  "name": "南洋商报",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.enanyang.my/news/20260617/Finance/1284080",
+  "institution": "南洋商报",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "conab-via-indexbox",
+  "name": "巴西国家供应公司 Conab 作物调查（第三方转载）",
+  "kind": "government",
+  "authorityTier": "B",
+  "homepage": "https://www.indexbox.io/zh-hans/blog/conab-projects-record-soybean-and-corn-crops-for-brazil-in-2025-26/",
+  "institution": "Conab（转载）",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "moneydj",
+  "name": "MoneyDJ 理财网",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.moneydj.com/kmdj/news/newsviewer.aspx?a=b8658fae-42d4-427c-86ba-e9ca55b253cc",
+  "institution": "MoneyDJ",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "wedoany",
+  "name": "维度网（ANEC 数据转载）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.wedoany.com/shortnews/204499.html",
+  "institution": "维度网",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "abc-au",
+  "name": "ABC 中文（澳大利亚广播公司）",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://www.abc.net.au/chinese/2026-01-02/china-hits-australian-beef-industry-with-tariff/106194120",
+  "institution": "ABC News",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "ce-cn",
+  "name": "中国经济网",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "http://www.ce.cn/cysc/sp/info/202608/t20260824_3165653.shtml",
+  "institution": "经济日报社",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "guancha",
+  "name": "观察者网",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://www.guancha.cn/internation/2026_08_25_828588.shtml",
+  "institution": "观察者网",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "shev",
+  "name": "Shev IO 贸易风险简报",
+  "kind": "aggregator",
+  "authorityTier": "D",
+  "homepage": "https://shev.io/zh/news/india-food-exports-face-resistance-in-multiple-markets",
+  "institution": "Shev IO",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "jin10",
+  "name": "金十数据（USDA 月报转载）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://xnews.jin10.com/details/229914",
+  "institution": "金十数据",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "mofcom-africa",
+  "name": "商务部驻摩洛哥使馆经商处（USDA 报告转载）",
+  "kind": "government",
+  "authorityTier": "B",
+  "homepage": "https://ma.mofcom.gov.cn/dyfw/art/2026/art_750d9e608c2747c3bbea123f1a658ea6.html",
+  "institution": "商务部",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "mofcom-ghana",
+  "name": "商务部驻加纳使馆经商处（OECD-FAO 展望转载）",
+  "kind": "government",
+  "authorityTier": "B",
+  "homepage": "https://gh.mofcom.gov.cn/jmxw/art/2026/art_5e0fdf72f05648c98e700177bdde7b08.html",
+  "institution": "商务部",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "khusoko",
+  "name": "Khusoko（肯尼亚农业报道）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://khusoko.com/2026/09/16/kenya-maize-wheat-drought-imports-2026/",
+  "institution": "Khusoko",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "dailyeconomic",
+  "name": "每日经济（JRC 研究转载）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://cn.dailyeconomic.com/2026/09/06/155882.html",
+  "institution": "每日经济",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "galaxy-futures",
+  "name": "银河期货农产品研究（新浪财经转载）",
+  "kind": "research",
+  "authorityTier": "C",
+  "homepage": "https://finance.sina.com.cn/stock/stockzmt/2026-09-10/doc-inirhvxe7980908.shtml",
+  "institution": "银河期货",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "jpmorgan-via-wscn",
+  "name": "摩根大通农产品研究（华尔街见闻转载）",
+  "kind": "research",
+  "authorityTier": "C",
+  "homepage": "https://wallstreetcn.com/articles/3782142",
+  "institution": "J.P. Morgan（转载）",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "qq-finance",
+  "name": "腾讯新闻（车厘子价格报道）",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://news.qq.com/rain/a/20260114A05P3Y00",
+  "institution": "腾讯新闻",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "douyin-live",
+  "name": "抖音农产品直播（公开链接）",
+  "kind": "social",
+  "authorityTier": "D",
+  "homepage": "https://www.douyin.com/video/7677179194938100403",
+  "institution": "抖音",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "tbs-rice",
+  "name": "泰国大米 FOB 报价（商业报价页）",
+  "kind": "commercial",
+  "authorityTier": "C",
+  "homepage": "https://tbsricemills.com/zh/blog/thai-rice-export-price-2026",
+  "institution": "TBS Rice Mill",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "indexbox",
+  "name": "IndexBox 农产品市场分析",
+  "kind": "research",
+  "authorityTier": "D",
+  "homepage": "https://www.indexbox.io/zh-hans/blog/conab-projects-record-soybean-and-corn-crops-for-brazil-in-2025-26/",
+  "institution": "IndexBox",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "163-my-road",
+  "name": "网易转载：马来西亚寻找陆路榴莲出口通道",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://c.m.163.com/news/a/L2KABON90535ATX0.html",
+  "institution": "网易新闻",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "guojiguoshu-cherry",
+  "name": "国际果蔬报道：Frutas de Chile 2026 工作坊",
+  "kind": "media",
+  "authorityTier": "C",
+  "homepage": "https://guojiguoshu.com/article/11261",
+  "institution": "国际果蔬报道",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "eu-eurlex-mrl",
+  "name": "EUR-Lex（EU）2026/876 农药残留限量修订",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ%3AL_202600876",
+  "institution": "European Commission",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "gov-cn-policy-2",
+  "name": "中国政府网：中央一号文件精神解读",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://www.gov.cn/zhengce/202602/content_7057088.htm",
+  "institution": "国务院新闻办公室",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-cma-2",
+  "name": "湖南省气象局：9 月 4 日降雨实况与预报",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "http://hn.cma.gov.cn/xwzx/tqzx/202609/t20260904_8024672.html",
+  "institution": "湖南省气象局",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-agri-2",
+  "name": "湖南省农业农村厅：省人大建议答复（双季稻奖补）",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "http://agri.hunan.gov.cn/agri/xxgk/jyta/202606/t20260610_33998058.html",
+  "institution": "湖南省农业农村厅",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-agri-3",
+  "name": "湖南省农业农村厅：2026 年农机补贴额公示",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "http://agri.hunan.gov.cn/agri/ztzl/njgz/njtzgg/202609/t20260916_34065782.html",
+  "institution": "湖南省农业农村厅",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "hn-gov-trade",
+  "name": "湖南省人民政府：湖南外贸“开门红”",
+  "kind": "government",
+  "authorityTier": "A",
+  "homepage": "https://www.hunan.gov.cn/hnszf/hnyw/zwdt/202603/t20260327_33942326.html",
+  "institution": "湖南省人民政府",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "cctv17-live",
+  "name": "央视网直播大全",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://tv.cctv.com/live/",
+  "institution": "中央广播电视总台",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "cctv17-programme",
+  "name": "央视网《农广天地》栏目页",
+  "kind": "media",
+  "authorityTier": "B",
+  "homepage": "https://www.cctv.com/program/ngtd/02/index.shtml",
+  "institution": "中央广播电视总台",
+  "collectedAt": "2026-09-21",
+  "notes": ""
+ },
+ {
+  "sourceId": "gen-market-daily",
+  "name": "生成数据集：批发市场日行情模式",
+  "kind": "pattern_family",
+  "authorityTier": "B",
+  "homepage": "internal://generator/market-daily",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实市场日报字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-gov-notice",
+  "name": "生成数据集：政务通知模式",
+  "kind": "pattern_family",
+  "authorityTier": "A",
+  "homepage": "internal://generator/gov-notice",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实政务公开字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-customs-stat",
+  "name": "生成数据集：海关统计模式",
+  "kind": "pattern_family",
+  "authorityTier": "A",
+  "homepage": "internal://generator/customs-stat",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实海关统计字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-weather-alert",
+  "name": "生成数据集：气象预警模式",
+  "kind": "pattern_family",
+  "authorityTier": "A",
+  "homepage": "internal://generator/weather-alert",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实气象预警字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-industry-news",
+  "name": "生成数据集：行业资讯模式",
+  "kind": "pattern_family",
+  "authorityTier": "C",
+  "homepage": "internal://generator/industry-news",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实行业资讯字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-logistics",
+  "name": "生成数据集：物流与通关模式",
+  "kind": "pattern_family",
+  "authorityTier": "B",
+  "homepage": "internal://generator/logistics",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实物流台账字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-production",
+  "name": "生成数据集：基地与产地台账模式",
+  "kind": "pattern_family",
+  "authorityTier": "B",
+  "homepage": "internal://generator/production",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按真实基地台账字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-exchange",
+  "name": "生成数据集：交易所行情模式",
+  "kind": "pattern_family",
+  "authorityTier": "B",
+  "homepage": "internal://generator/exchange",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按交易所行情字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-media-live",
+  "name": "生成数据集：视频直播源模式",
+  "kind": "pattern_family",
+  "authorityTier": "C",
+  "homepage": "internal://generator/media-live",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按公开直播源字段结构生成，非真实观测"
+ },
+ {
+  "sourceId": "gen-open-data",
+  "name": "生成数据集：公开统计序列模式",
+  "kind": "pattern_family",
+  "authorityTier": "A",
+  "homepage": "internal://generator/open-data",
+  "institution": "AgriLink 生成器",
+  "collectedAt": "2026-09-21",
+  "notes": "按公开统计序列字段结构生成，非真实观测"
+ }
+]

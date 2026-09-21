@@ -1,13 +1,14 @@
 {
-  "hash": "c2a48ba6baa8",
-  "git": "da42575",
-  "builtAt": "2026-09-21T16:10:28.587Z",
+  "hash": "a75b5dcd5298",
+  "git": "d1ae9fe",
+  "builtAt": "2026-09-21T18:40:32.164Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
     "src/v03/app.css",
     "src/v03/relation.css",
     "src/v03/sim.css",
+    "src/v03/pkg-adapter.js",
     "src/v03/atlas-data.js",
     "src/v03/data.js",
     "src/v03/data-sim.js",
@@ -19,6 +20,22 @@
     "src/v03/app.js",
     "data/china.geo.json",
     "data/world110.geo.json",
+    "data/pkg/facts.json",
+    "data/pkg/entities.json",
+    "data/pkg/relations.json",
+    "data/pkg/ontology.json",
+    "data/pkg/sources.json",
+    "data/pkg/evidence.json",
+    "data/pkg/observations.json",
+    "data/pkg/stream.sequence.json",
+    "data/pkg/manifest.json",
+    "data/pkg/stats.json",
+    "data/pkg/cards.schema.json",
+    "data/pkg/validation.json",
+    "data/pkg/geo/regions.geojson",
+    "data/pkg/geo/ports.geojson",
+    "data/pkg/geo/airports.geojson",
+    "data/pkg/geo/nodes.geojson",
     "build.mjs",
     "vendor/echarts.min.js",
     "fonts/PlexLight-sub.woff2",
@@ -27,5 +44,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 3268439
+  "bytes": 6170790
 }

@@ -41,8 +41,9 @@ const fontCss = FACES.map(f =>
 
 const CSS = ['src/v03/app.css', 'src/v03/relation.css', 'src/v03/sim.css'];
 const JS = [
-  'src/v03/atlas-data.js',  // 产区 / 港口机场 / 密集事实与本体（数据包）
-  'src/v03/data.js',        // 事实 / 对象 / 关系（底座 + 合并数据包）
+  'src/v03/pkg-adapter.js', // 数据包 agrilink-demo-v1（LLM-292）→ 页面内部模型
+  'src/v03/atlas-data.js',  // 上一轮自带数据（数据包缺失时的兜底 + 推演层别名来源）
+  'src/v03/data.js',        // 事实 / 对象 / 关系（数据包为准，自带数据作别名）
   'src/v03/data-sim.js',    // 推演层场景与轮次
   'src/v03/store.js',       // 唯一状态源
   'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
@@ -53,14 +54,29 @@ const JS = [
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];
 
+/* 展示数据包（LLM-292 · agrilink-demo-v1）：原样内联，前端由 src/v03/pkg-adapter.js 适配 */
+const PKG_FILES = {
+  facts: 'facts.json', entities: 'entities.json', relations: 'relations.json',
+  ontology: 'ontology.json', sources: 'sources.json', evidence: 'evidence.json',
+  observations: 'observations.json', stream: 'stream.sequence.json',
+  manifest: 'manifest.json', stats: 'stats.json', cards: 'cards.schema.json', validation: 'validation.json',
+  regions: 'geo/regions.geojson', ports: 'geo/ports.geojson',
+  airports: 'geo/airports.geojson', nodes: 'geo/nodes.geojson'
+};
+const PKG_INPUTS = Object.keys(PKG_FILES).map(k => 'data/pkg/' + PKG_FILES[k]);
+
 const libs = `<script>${rd('vendor/echarts.min.js')}</script>`;
+const pkgData = '<script>window.__AGRI_PKG__={' +
+  Object.keys(PKG_FILES).map(k => JSON.stringify(k) + ':' + rd('data/pkg/' + PKG_FILES[k])).join(',') +
+  '};</script>';
 const data = [
   `<script>window.__CHINA_GEO=${rd('data/china.geo.json')};</script>`,
-  `<script>window.__WORLD110=${rd('data/world110.geo.json')};</script>`
+  `<script>window.__WORLD110=${rd('data/world110.geo.json')};</script>`,
+  pkgData
 ].join('\n');
 const appJs = JS.map(f => `<script>\n${rd(f)}\n</script>`).join('\n');
 
-const INPUTS = ['src/v03/shell.html', ...CSS, ...JS, ...GEO, 'build.mjs',
+const INPUTS = ['src/v03/shell.html', ...CSS, ...JS, ...GEO, ...PKG_INPUTS, 'build.mjs',
   'vendor/echarts.min.js', ...FACES.map(f => f.file)];
 const hh = crypto.createHash('sha256');
 INPUTS.forEach(p => { hh.update(p + '\0'); hh.update(rb(p)); });

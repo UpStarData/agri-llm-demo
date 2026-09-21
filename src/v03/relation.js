@@ -119,7 +119,7 @@ window.V03Relation = (function () {
         spokes.push({ id: r.id, coords: [anchor, end], lineStyle: { color: typeOf(r), width: 1.6, opacity: .85, curveness: .16, type: 'dashed' } });
         sats.push({ id: other.id, objId: other.id, name: other.name, value: end, symbolSize: 9,
           itemStyle: { color: domColor(other), borderColor: '#08101f', borderWidth: 1 },
-          label: { show: true, position: 'right', distance: 4, fontSize: 9.5, color: 'hsl(' + WARM_HUES[hash(other.domain) % WARM_HUES.length] + ',85%,72%)', formatter: other.name } });
+          label: { show: true, position: 'right', distance: 4, fontSize: 9.5, color: 'hsl(' + WARM_HUES[hash(other.domain) % WARM_HUES.length] + ',85%,72%)', formatter: p => String(p.name || '') } });
       });
     }
 
@@ -130,8 +130,10 @@ window.V03Relation = (function () {
         symbolSize: 8 + Math.min(16, deg * 1.7) + (isSel ? 6 : 0),
         itemStyle: { color: domColor(o), borderColor: isSel ? '#fff' : isCarried ? '#4ade80' : '#08101f',
           borderWidth: isSel ? 2.6 : isCarried ? 2 : 1, shadowBlur: isSel ? 20 : 8, shadowColor: domColor(o) },
-        label: { show: geoObjs.length <= 60 || deg >= 3,
-          position: 'right', distance: 4, fontSize: 9.5, color: 'rgba(255,240,214,.92)' }
+        /* 必须显式给 formatter：echarts 对 geo scatter 的默认标签会落到 value 上（渲染成经纬度） */
+        label: { show: geoObjs.length <= 60 || deg >= 8 || isSel || isCarried, position: 'right', distance: 4, fontSize: 9.5,
+          color: 'rgba(255,240,214,.92)',
+          formatter: p => { const n = String(p.name || ''); return n.length > 12 ? n.slice(0, 11) + '…' : n; } }
       };
     });
 
@@ -190,7 +192,16 @@ window.V03Relation = (function () {
     dom.count.textContent = objs.length + ' 个对象 · ' + rels.length + ' 条关系';
     dom.note.textContent = (st.rel.domain === 'all' ? '全部对象域' : (D.domain(st.rel.domain) || {}).n) +
       (st.rel.onlyCarry ? ' · 仅携带事实相关' : '');
-    const capped = st.rel.allCards ? nogeo : nogeo.slice(0, 12);
+    /* 非地理本体按对象域轮转排序：首屏 12 张即可覆盖九个对象域（含人物角色 Person） */
+    const ordered = (() => {
+      const buckets = {};
+      nogeo.forEach(o => (buckets[o.domain] = buckets[o.domain] || []).push(o));
+      const order = D.DOMAINS.map(d => d.id).filter(k => buckets[k]);
+      const out = [];
+      for (let i = 0; out.length < nogeo.length; i++) order.forEach(k => { if (buckets[k][i]) out.push(buckets[k][i]); });
+      return out;
+    })();
+    const capped = st.rel.allCards ? ordered : ordered.slice(0, 12);
     dom.body.innerHTML = `
       <section class="rel-sec">
         <div class="rel-sec-h">关联关系清单 <small>${rels.length} 条 · 点一条在地图上高亮</small></div>

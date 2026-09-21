@@ -4,32 +4,46 @@
    事实与对象/关系双向可回溯：fact.objects / fact.relations / obj.factIds / rel.factIds
    ============================================================ */
 window.V03Data = (function () {
-  const TODAY = '2026-09-20';            // 演示基准日（相对时间筛选以它为准）
+  /* 数据包（agrilink-demo-v1 · LLM-292）为准；缺失时退回上一轮自带数据（src/v03/atlas-data.js） */
+  const PKG = (window.V03Pkg && window.V03Pkg.FACTS && window.V03Pkg.FACTS.length) ? window.V03Pkg : null;
+  const TODAY = PKG ? PKG.TODAY : '2026-09-20';   // 基准日取自数据包 collectedAt
 
-  const CATS = {
-    policy:    { n: '政策', c: '#8b5cf6', e: '📜' },
-    price:     { n: '价格', c: '#f43f5e', e: '🏷️' },
-    weather:   { n: '天气', c: '#22d3ee', e: '🌪️' },
-    logistics: { n: '物流', c: '#2dd4bf', e: '🚚' },
-    trade:     { n: '交易', c: '#60a5fa', e: '🤝' }
-  };
+  /* 事实分类（L1 大类，10 个受控值）—— 冷色色系，与关联层暖色系完全区分 */
+  const CATS = (() => {
+    const tax = (PKG && PKG.ONTOLOGY && PKG.ONTOLOGY.taxonomy) || {};
+    const defs = [
+      ['price', '价格'], ['news', '舆情与新闻'], ['natural', '天气与自然灾害'], ['supply', '产量与库存'],
+      ['circulation', '流通与交易'], ['policy', '政策与监管'], ['production', '产地与基地'],
+      ['logistics', '物流与交通'], ['customs', '海关与进出口'], ['industry_event', '产业事件']
+    ];
+    const out = {};
+    defs.forEach(([k, fallback]) => {
+      const t = tax[k] || {};
+      out[k] = { n: t.name || fallback, c: (PKG && PKG.CAT_COLOR[k]) || '#60a5fa', e: (PKG && PKG.CAT_EMOJI[k]) || '📰' };
+    });
+    return out;
+  })();
 
-  /* 九类对象域（关联层分类必须完整覆盖）——暖色本体色系，与事实层冷色系完全区分 */
-  const DOMAINS = [
-    { id: 'market',   n: '市场',       geo: true,  c: '#f59e0b', e: '🏬' },
-    { id: 'company',  n: '公司',       geo: true,  c: '#ea580c', e: '🏢' },
-    { id: 'base',     n: '基地',       geo: true,  c: '#65a30d', e: '🌱' },
-    { id: 'variety',  n: '品种',       geo: false, c: '#eab308', e: '🍎' },
-    { id: 'agency',   n: '政策机构',   geo: false, c: '#d946ef', e: '🏛️' },
-    { id: 'region',   n: '区域',       geo: true,  c: '#16a34a', e: '🗺️' },
-    { id: 'person',   n: '人物/角色',  geo: false, c: '#f472b6', e: '🧑‍🌾' },
-    { id: 'metric',   n: '指标',       geo: false, c: '#facc15', e: '📊' },
-    { id: 'facility', n: '设施/渠道',  geo: true,  c: '#fb923c', e: '🚉' }
-  ];
+  /* 九类展示对象域（数据包 ontology.displayDomains）—— 暖色本体色系 */
+  const DOMAINS = (() => {
+    const meta = {
+      market:   { n: '市场',      geo: true,  c: '#f59e0b', e: '🏬' },
+      company:  { n: '公司',      geo: true,  c: '#ea580c', e: '🏢' },
+      base:     { n: '基地',      geo: true,  c: '#65a30d', e: '🌱' },
+      variety:  { n: '品种',      geo: false, c: '#eab308', e: '🍎' },
+      agency:   { n: '政策机构',  geo: false, c: '#d946ef', e: '🏛️' },
+      region:   { n: '区域',      geo: true,  c: '#16a34a', e: '🗺️' },
+      person:   { n: '人物角色',  geo: false, c: '#f472b6', e: '🧑‍🌾' },
+      metric:   { n: '指标',      geo: false, c: '#facc15', e: '📊' },
+      facility: { n: '设施渠道',  geo: true,  c: '#fb923c', e: '🚉' }
+    };
+    const order = PKG ? ['market', 'company', 'base', 'variety', 'agency', 'region', 'person', 'metric', 'facility'] : Object.keys(meta);
+    return order.map(id => Object.assign({ id }, meta[id]));
+  })();
 
 
-  /* 省区中心与缩放（事实层与视线漏斗共用）：[经度, 纬度, 缩放级] */
-  const PROV_CENTER = {
+  /* 省区中心（数据包 Region 实体坐标优先，缺失时用自带表）：[经度, 纬度, 缩放级] */
+  const PROV_CENTER_FALLBACK = {
 
     湖南: [111.7, 27.6, 4.2], 山东: [118.2, 36.4, 4.0], 四川: [102.9, 30.6, 3.6], 广东: [113.4, 23.3, 4.0],
     河南: [113.6, 33.9, 4.2], 北京: [116.4, 40.2, 6.0], 江苏: [119.4, 32.9, 4.2], 浙江: [120.2, 29.2, 4.2],
@@ -41,8 +55,19 @@ window.V03Data = (function () {
     甘肃: [100.5, 37.7, 3.0], 青海: [95.9, 35.7, 2.8], 宁夏: [106.2, 37.3, 4.4], 台湾: [121.0, 23.7, 4.6],
     香港: [114.2, 22.3, 7.0], 澳门: [113.5, 22.2, 7.0]
   };
+  const PROV_CENTER = (() => {
+    const out = {};
+    Object.keys(PROV_CENTER_FALLBACK).forEach(k => { out[k] = PROV_CENTER_FALLBACK[k]; });
+    const provinces = (PKG && PKG.PROVINCES) || {};
+    Object.keys(provinces).forEach(name => {
+      const short = String(name).replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || name;
+      const p = provinces[name];
+      out[short] = [p.lng, p.lat, (PROV_CENTER_FALLBACK[short] || [0, 0, 4.0])[2]];
+    });
+    return out;
+  })();
 
-  /* 视线漏斗：地图看到哪里就显示哪里的数据，缩放越深越密（M0 / M13） */
+  /* 无数据包时的兜底视野盒（有数据包时层级由 geo.scopeLayer 决定，见 filter.js） */
   const CHINA_BOX = { lng: [73, 136], lat: [17.5, 54.5] };
 
   /* ---------- 事实：地图对象 + 影响范围 + 证据 ---------- */
@@ -425,6 +450,13 @@ window.V03Data = (function () {
        synthesized 按 schema 补齐生成：由 src/v03/atlas-data.js 提供
      验收方式：window.V03_DEBUG.provSummary() 与 docs/V04-指令映射与验收.md
      ============================================================ */
+  /* ---------------- 数据集来源 ----------------
+     正式口径（事实层 / 关联层）：数据包 agrilink-demo-v1 —— 861 事实 / 377 本体 / 585 关系 /
+     64 产区 / 56 港口 / 49 机场 / 4 节点；provenanceMeta.dataMode 在内部保留（real / generated）。
+     自带数据（data.js 手写 + atlas-data.js 补齐）降级为：
+       · 推演层别名 BASE_* —— data-sim.js 的场景种子与报告引用继续按原 id 解析，不被数据包连带覆盖；
+       · 数据包缺失时的兜底数据集。
+     验收方式：window.V03_DEBUG.provSummary() / counts()，普通界面不展示来源文案。 */
   const BASE_FACTS = FACTS.slice();
   const BASE_OBJECTS = OBJECTS.slice();
   const BASE_RELATIONS = RELATIONS.slice();
@@ -432,37 +464,52 @@ window.V03Data = (function () {
   BASE_OBJECTS.forEach(o => { if (!o.prov) o.prov = 'curated'; });
   BASE_RELATIONS.forEach(r => { if (!r.prov) r.prov = 'curated'; });
 
-  /* 数据包（产区 / 港口机场 / 密集事实与本体）—— 缺失时页面仍可运行 */
   const ATLAS = window.V03Atlas || { REGIONS: [], GATES: [], PACK: { facts: [], objects: [], relations: [] } };
-  const REGIONS = (ATLAS.REGIONS || []).map(r => { if (!r.prov) r.prov = 'public'; return r; });
-  const GATES = (ATLAS.GATES || []).map(g => { if (!g.prov) g.prov = 'public'; return g; });
-  const PACK = ATLAS.PACK || { facts: [], objects: [], relations: [] };
-  /* 数据包产出的事实 / 本体 / 关系：一律标记为「按 schema 补齐生成」（口径统一，不随数据包自身声明浮动）；
-     数据包只负责提供真实地理锚点（REGIONS / GATES 的经纬度），事实与本体仍属生成内容。 */
-  (PACK.facts || []).forEach(f => { f.prov = 'synthesized'; });
-  (PACK.objects || []).forEach(o => { o.prov = 'synthesized'; });
-  (PACK.relations || []).forEach(r => { r.prov = 'synthesized'; });
+  (ATLAS.PACK && ATLAS.PACK.facts || []).forEach(f => { f.prov = 'synthesized'; });
+  (ATLAS.PACK && ATLAS.PACK.objects || []).forEach(o => { o.prov = 'synthesized'; });
+  (ATLAS.PACK && ATLAS.PACK.relations || []).forEach(r => { r.prov = 'synthesized'; });
 
-  /* 产区 / 口岸与本体对象互相挂接：点地图标记即可打开对应本体详情 */
-  REGIONS.forEach(r => {
-    const obj = (PACK.objects || []).concat(BASE_OBJECTS).find(o => o.lat != null && Math.abs(o.lat - r.lat) < .35 && Math.abs(o.lng - r.lng) < .35 && o.domain !== 'facility');
-    r.objId = r.objId || (obj ? obj.id : null);
-  });
-  GATES.forEach(g => {
-    const obj = (PACK.objects || []).concat(BASE_OBJECTS).find(o => o.lat != null && Math.abs(o.lat - g.lat) < .35 && Math.abs(o.lng - g.lng) < .35);
-    g.objId = g.objId || (obj ? obj.id : null);
-  });
+  const PACK = ATLAS.PACK || { facts: [], objects: [], relations: [] };   /* 上一轮自带的补齐数据（别名） */
+  const PACK_FACTS = BASE_FACTS.concat(PACK.facts || []);
+  const PACK_OBJECTS = BASE_OBJECTS.concat(PACK.objects || []);
+  const PACK_RELATIONS = BASE_RELATIONS.concat(PACK.relations || []);
 
-  const ALL_FACTS = BASE_FACTS.concat(PACK.facts || []);
-  const ALL_OBJECTS = BASE_OBJECTS.concat(PACK.objects || []);
-  const ALL_RELATIONS = BASE_RELATIONS.concat(PACK.relations || []);
+  /* 产区 / 口岸：数据包 geo/*.geojson 优先；缺失时用上一轮自带数据 */
+  const REGIONS = (PKG ? PKG.REGIONS : (ATLAS.REGIONS || [])).map(r => { if (!r.prov) r.prov = 'public'; return r; });
+  const GATES = (PKG ? PKG.GATES : (ATLAS.GATES || [])).map(g => { if (!g.prov) g.prov = 'public'; return g; });
+  /* 标记 → 本体对象：数据包 geo 要素的 id 即实体 id */
+  REGIONS.forEach(r => { r.objId = r.objId || null; });
+  GATES.forEach(g => { g.objId = g.objId || null; });
+  if (!PKG) {
+    REGIONS.forEach(r => {
+      const obj = PACK_OBJECTS.find(o => o.lat != null && Math.abs(o.lat - r.lat) < .35 && Math.abs(o.lng - r.lng) < .35 && o.domain !== 'facility');
+      r.objId = r.objId || (obj ? obj.id : null);
+    });
+    GATES.forEach(g => {
+      const obj = PACK_OBJECTS.find(o => o.lat != null && Math.abs(o.lat - g.lat) < .35 && Math.abs(o.lng - g.lng) < .35);
+      g.objId = g.objId || (obj ? obj.id : null);
+    });
+  }
 
-  const idx = arr => arr.reduce((m, x) => (m[x.id] = x, m), {});
-  const F = idx(ALL_FACTS), O = idx(ALL_OBJECTS), R = idx(ALL_RELATIONS);
+  const ALL_FACTS = PKG ? PKG.FACTS : PACK_FACTS;
+  const ALL_OBJECTS = PKG ? PKG.OBJECTS : PACK_OBJECTS;
+  const ALL_RELATIONS = PKG ? PKG.RELATIONS : PACK_RELATIONS;
+
+  const idx = arr => arr.reduce((m, x) => { if (!m[x.id]) m[x.id] = x; return m; }, {});
+  /* 数据包优先；自带数据（BASE_/ATLAS_）作别名兜底：推演层 run / report 里的引用依旧可解析 */
+  const F = idx(ALL_FACTS.concat(PACK_FACTS)), O = idx(ALL_OBJECTS.concat(PACK_OBJECTS)), R = idx(ALL_RELATIONS.concat(PACK_RELATIONS));
 
   return {
     TODAY, CATS, DOMAINS, PROV_CENTER, CHINA_BOX, FACTS: ALL_FACTS, OBJECTS: ALL_OBJECTS, RELATIONS: ALL_RELATIONS, STREAM,
-    REGIONS, GATES, PACK,
+    REGIONS, GATES, NODES: GATES.filter(g => g.kind === 'node'), PACK,
+    /* 数据包对象（事实层 / 关联层正式数据源）；自带走 BASE_* 别名，供推演层与降级使用 */
+    PKG, STREAM_SEQ: (PKG && PKG.STREAM) || [], STREAM_LOOP: (PKG && PKG.STREAM_LOOP) || 1,
+    BASE_FACTS, BASE_OBJECTS, BASE_RELATIONS,
+    ontology: (PKG && PKG.ONTOLOGY) || null,
+    counts: (PKG && PKG.counts) || { facts: ALL_FACTS.length, entities: ALL_OBJECTS.length, relations: ALL_RELATIONS.length, regions: REGIONS.length, ports: GATES.filter(g => g.kind === 'port').length, airports: GATES.filter(g => g.kind === 'airport').length, nodes: GATES.filter(g => g.kind === 'node').length, sources: 0 },
+    cardSchema: (PKG && PKG.CARD_SCHEMA) || null,
+    stats: (PKG && PKG.STATS) || null,
+    manifest: (PKG && PKG.MANIFEST) || null,
     factById: id => F[id] || null,
     objById: id => O[id] || null,
     relById: id => R[id] || null,

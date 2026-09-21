@@ -1,0 +1,111 @@
+{
+ "datasetId": "agrilink-demo-v1",
+ "datasetVersion": "1.0.0",
+ "generatedAt": "2026-09-21T18:00:00Z",
+ "collectedAt": "2026-09-21",
+ "dataMode": "mixed",
+ "provenancePolicy": {
+  "real": "provenanceMeta.dataMode=real：记录必须带真实 sourceUrl/机构/采集时间，evidence 与 observations 一一对应",
+  "generated": "provenanceMeta.dataMode=generated：按同一 schema 生成，位置锚定真实地理锚点，不冒充真实来源；普通 UI 字段不出现“示意/样例”字样",
+  "displayRule": "UI 不展示 sample/示例文案；验收人员通过 provenanceMeta + sources.json + validation.json 区分"
+ },
+ "files": [
+  "facts.json",
+  "entities.json",
+  "relations.json",
+  "observations.json",
+  "evidence.json",
+  "ontology.json",
+  "sources.json",
+  "cards.schema.json",
+  "stream.sequence.json",
+  "stats.json",
+  "geo/regions.geojson",
+  "geo/ports.geojson",
+  "geo/airports.geojson",
+  "geo/nodes.geojson"
+ ],
+ "counts": {
+  "facts": 861,
+  "factsReal": 90,
+  "factsGenerated": 771,
+  "entities": 377,
+  "relations": 585,
+  "sources": 71,
+  "realSources": 61,
+  "observations": 90,
+  "evidence": 90,
+  "streamEvents": 1135,
+  "productionAreas": 64,
+  "ports": 56,
+  "airports": 49,
+  "ontologyTypes": 12,
+  "displayDomains": 9
+ },
+ "layerModel": {
+  "layers": [
+   {
+    "id": "L1",
+    "name": "全球",
+    "rule": "regionPath 无 province/city 且国家非 CHN 或无中国省级节点"
+   },
+   {
+    "id": "L2",
+    "name": "中国",
+    "rule": "regionPath 含 country=CHN 且不含 province"
+   },
+   {
+    "id": "L3",
+    "name": "省/市",
+    "rule": "regionPath 含 province；湖南可下钻到长沙市 430100"
+   }
+  ],
+  "regionPathRoot": {
+   "level": "global",
+   "code": "GLOBAL",
+   "name": "全球"
+  },
+  "drill": {
+   "L1": [
+    "L2",
+    "L3"
+   ],
+   "L2": [
+    "L3"
+   ],
+   "L3": {
+    "default": "stop",
+    "exceptions": [
+     {
+      "provinceCode": "CN-HN",
+      "drillTo": {
+       "level": "city",
+       "code": "430100",
+       "name": "长沙市"
+      }
+     }
+    ]
+   }
+  },
+  "cityPrecisionOnly": "非湖南城市仅作落点精度，事实标记 cityPrecisionOnly=true"
+ },
+ "cardTypes": [
+  "news",
+  "policy",
+  "price",
+  "weather",
+  "video",
+  "market"
+ ],
+ "consumers": [
+  {
+   "name": "前端事实层/关联层",
+   "how": "facts/entities/relations/ontology/sources 直接 import 或 fetch；geo/*.geojson 作为产区/港口/机场图层；stream.sequence.json 驱动底部流水与地图新星"
+  },
+  {
+   "name": "验收复核",
+   "how": "stats.json + validation.json + sources.json 逐条回链；抽样核对坐标与 URL"
+  }
+ ],
+ "boundaryNotice": "本数据包为展示用数据集：真实记录均可回链来源，生成记录按同一 schema 生成并在 provenanceMeta 标记，不冒充真实来源。"
+}

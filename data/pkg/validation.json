@@ -1,0 +1,231 @@
+{
+ "package": "agrilink-demo-v1",
+ "validatedAt": "2026-09-21T18:00:00Z",
+ "summary": {
+  "total": 39,
+  "passed": 39,
+  "failed": 0
+ },
+ "checks": [
+  {
+   "id": "unique.factId",
+   "pass": true,
+   "detail": "861 条事实，重复 0 条"
+  },
+  {
+   "id": "unique.entityId",
+   "pass": true,
+   "detail": "377 个实体，重复 0 个"
+  },
+  {
+   "id": "unique.relationId",
+   "pass": true,
+   "detail": "585 条关系，重复 0 条"
+  },
+  {
+   "id": "dedupe.title",
+   "pass": true,
+   "detail": "完全同标题记录 11 条（同标题出现在不同区域/时间为正常：区域下钻需要同名指标）"
+  },
+  {
+   "id": "refs.factEntityIds",
+   "pass": true,
+   "detail": "事实引用不存在的实体：[]"
+  },
+  {
+   "id": "refs.factCommodityIds",
+   "pass": true,
+   "detail": "品种引用不存在：[]"
+  },
+  {
+   "id": "refs.relationEndpoints",
+   "pass": true,
+   "detail": "关系端点不存在：[]"
+  },
+  {
+   "id": "refs.relationSupport",
+   "pass": true,
+   "detail": "关系支撑事实不存在：[]"
+  },
+  {
+   "id": "refs.sourcePlugin",
+   "pass": true,
+   "detail": "事实引用了未登记来源：[]"
+  },
+  {
+   "id": "refs.entityType",
+   "pass": true,
+   "detail": "实体类型未在本体注册：[]"
+  },
+  {
+   "id": "relation.verifiedHasSupport",
+   "pass": true,
+   "detail": "已证实关系缺支撑：0 条"
+  },
+  {
+   "id": "relation.inferredNoSupport",
+   "pass": true,
+   "detail": "推断关系不应带支撑：0 条"
+  },
+  {
+   "id": "relation.endpointConstraint",
+   "pass": true,
+   "detail": "违反端点约束：0 条"
+  },
+  {
+   "id": "relation.supportLinkage",
+   "pass": true,
+   "detail": "支撑事实未直接引用端点的关系 154 条（同区域/同品种事实间接支撑，见报告说明）"
+  },
+  {
+   "id": "real.sourceUrl",
+   "pass": true,
+   "detail": "真实记录缺 URL：0 条"
+  },
+  {
+   "id": "real.evidence1to1",
+   "pass": true,
+   "detail": "真实记录缺证据：0 条"
+  },
+  {
+   "id": "real.observation1to1",
+   "pass": true,
+   "detail": "证据引用缺失观测：0 条"
+  },
+  {
+   "id": "real.evidenceUrl",
+   "pass": true,
+   "detail": "证据缺 URL：0 条"
+  },
+  {
+   "id": "real.collectedAt",
+   "pass": true,
+   "detail": "采集时间集合：['2026-09-21']"
+  },
+  {
+   "id": "generated.noFakeUrl",
+   "pass": true,
+   "detail": "生成记录带 sourceUrl：0 条"
+  },
+  {
+   "id": "display.noSampleWording",
+   "pass": true,
+   "detail": "标题/摘要出现示意类字样：0 条"
+  },
+  {
+   "id": "generated.flagPresent",
+   "pass": true,
+   "detail": "生成标记缺失：0 条"
+  },
+  {
+   "id": "geo.coordinateRange",
+   "pass": true,
+   "detail": "坐标越界/空岛：0 条"
+  },
+  {
+   "id": "geo.notInOcean",
+   "pass": true,
+   "detail": "距最近陆地块 >25km 的非港口事实：0 条（50m 简化面判定，容差 25km）"
+  },
+  {
+   "id": "geo.portCoastal",
+   "pass": true,
+   "detail": "港口事实点位于海侧（港口本身即海岸线地物）：11 条"
+  },
+  {
+   "id": "geo.anchorConsistency",
+   "pass": true,
+   "detail": "与登记锚点偏差 >1km 的事实：0 条"
+  },
+  {
+   "id": "geo.regions",
+   "pass": true,
+   "detail": "64 个要素；ID 唯一=True；坐标合法=True；含来源=True"
+  },
+  {
+   "id": "geo.ports",
+   "pass": true,
+   "detail": "56 个要素；ID 唯一=True；坐标合法=True；含来源=True"
+  },
+  {
+   "id": "geo.airports",
+   "pass": true,
+   "detail": "49 个要素；ID 唯一=True；坐标合法=True；含来源=True"
+  },
+  {
+   "id": "geo.nodes",
+   "pass": true,
+   "detail": "4 个要素；ID 唯一=True；坐标合法=True；含来源=True"
+  },
+  {
+   "id": "geo.regionCommodityRefs",
+   "pass": true,
+   "detail": "产区引用不存在品种：0"
+  },
+  {
+   "id": "card.requiredFields",
+   "pass": true,
+   "detail": "卡片缺必填字段：0 条"
+  },
+  {
+   "id": "layer.scopeConsistency",
+   "pass": true,
+   "detail": "分层与 regionPath 不一致：0 条"
+  },
+  {
+   "id": "stream.monotonic",
+   "pass": true,
+   "detail": "1135 条事件，tOffsetMs 单调=True"
+  },
+  {
+   "id": "stream.starFacts",
+   "pass": true,
+   "detail": "160 个新星事件，事实引用有效=True"
+  },
+  {
+   "id": "stream.brightRatio",
+   "pass": true,
+   "detail": "亮星 21 / 微弱 139（severity≥70 为亮星）"
+  },
+  {
+   "id": "ontology.displayDomains",
+   "pass": true,
+   "detail": "展示对象域 9 个：['市场', '公司', '基地', '品种', '政策机构', '区域', '人物角色', '指标', '设施渠道']"
+  },
+  {
+   "id": "ontology.taxonomy",
+   "pass": true,
+   "detail": "L1 大类 10 个；三级字典层级数 10"
+  },
+  {
+   "id": "stats.consistency",
+   "pass": true,
+   "detail": "stats 与文件一致：facts 861==861，relations 585==585"
+  }
+ ],
+ "samples": {
+  "geo.portCoastal": [
+   "real-in-export-rejections-2026:40km",
+   "gen-bra-news-002:87km",
+   "gen-bra-supply-004:87km",
+   "gen-bra-price-014:87km",
+   "gen-bra-price-026:87km"
+  ]
+ },
+ "counts": {
+  "facts": 861,
+  "real": 90,
+  "generated": 771,
+  "entities": 377,
+  "relations": 585,
+  "sources": 71,
+  "regions": 64,
+  "ports": 56,
+  "airports": 49
+ },
+ "notes": [
+  "陆海校验基于 Natural Earth 1:50m 国家面简化几何，容差 25km；港口点按海岸线地物单列，不计入落海判定。",
+  "relation.supportLinkage 为提示项：部分关系由同区域/同品种事实间接支撑（契约允许 supportingFactIds 指向支撑事实集合）。",
+  "生成记录不含 evidence/observations，其来源可追溯性由 provenanceMeta + 生成器规则提供。"
+ ]
+}

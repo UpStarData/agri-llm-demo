@@ -292,6 +292,7 @@ svg{display:block}
 /* 视频 / 直播类 */
 .fc-player{position:relative;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#05070c;margin-bottom:5px}
 .fc-player canvas{width:100%;height:100%;display:block}
+.fc-player iframe{width:100%;height:100%;border:0;display:block;background:#05070c}
 .fc-player .live{position:absolute;left:5px;top:5px;display:flex;align-items:center;gap:4px;background:rgba(220,38,38,.92);color:#fff;
   border-radius:20px;padding:1px 7px;font-size:.5625rem;font-weight:var(--f-semi);letter-spacing:.06em}
 .fc-player .ch{position:absolute;right:5px;top:5px;background:rgba(0,0,0,.5);color:#fff;border-radius:20px;padding:1px 6px;font-size:.5625rem}
@@ -305,6 +306,26 @@ svg{display:block}
 .kbar{display:flex;gap:2px;align-items:flex-end;height:26px;flex:1}
 .kbar i{flex:1;border-radius:1px;background:linear-gradient(180deg,#fb7185,#f43f5e)}
 .kbar i.dn{background:linear-gradient(180deg,#34d399,#16a34a)}
+.sym{font-weight:var(--f-light);color:var(--dim);font-size:.625rem;margin-left:3px}
+.price-u{font-size:.625rem;font-weight:var(--f-light);color:var(--dim);margin-left:3px}
+/* 天气预警等级 */
+.alert{margin-left:auto;font-size:.5625rem;font-weight:var(--f-semi);border-radius:20px;padding:1px 6px;white-space:nowrap}
+.alert-red{color:#b91c1c;background:#fee2e2}
+.alert-orange{color:#b45309;background:#ffedd5}
+.alert-yellow{color:#a16207;background:#fef9c3}
+.alert-blue{color:#1d4ed8;background:#dbeafe}
+/* 视频 / 直播：仅已验证可嵌入源播放，其余静态卡片降级 */
+.fc-static{border-radius:8px;overflow:hidden;background:rgba(15,23,42,.05);border:1px solid rgba(15,23,42,.08);padding:0 0 6px;margin-bottom:5px}
+.fs-cover{position:relative;height:58px;display:grid;place-items:center;background:linear-gradient(125deg,#3f4f6b,#1b2537)}
+.fs-play{color:#fff;font-size:1rem;opacity:.85}
+.fs-badge{position:absolute;right:5px;top:5px;background:rgba(0,0,0,.5);color:#fff;border-radius:20px;padding:1px 6px;font-size:.5625rem;letter-spacing:.05em}
+.fs-meta{display:flex;align-items:baseline;gap:5px;padding:5px 7px 0}
+.fs-meta b{font-size:.6875rem;font-weight:var(--f-semi);line-height:1.4}
+.fs-meta span{font-size:.625rem;font-weight:var(--f-light);color:var(--dim)}
+.fs-why{padding:2px 7px 0;font-size:.625rem;font-weight:var(--f-light);color:var(--dim);line-height:1.55}
+.ext{display:inline-block;margin:4px 7px 0;font-size:.625rem;color:#b45309;text-decoration:none;border-bottom:1px dotted currentColor}
+.ext:hover{color:var(--ink)}
+.ev-u{margin-top:3px}
 
 /* 地图浮层 */
 .fact-top{position:absolute;left:var(--s3);top:var(--s3);z-index:30;display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 24px)}

@@ -28,10 +28,12 @@ window.V03Store = (function () {
       legend: true                // M11 图例
     },
 
-    /* M7–M10：选择型快捷键（与筛选状态同源） */
-    time: '7d',                   // 7d | 30d | 90d | all
-    cred: 'high',                 // high | mid | low | all
-    infl: 'high',                 // high | mid | low | all
+    /* M7–M10：选择型快捷键（与筛选状态同源）
+       默认取「全部 / 不限 / 不限」：数据包 agrilink-demo-v1 的密度计划为全球 342 / 中国 175 /
+       湖南 281 点，若按 7 天 + 高可信 + 高影响收窄只剩个位数，与设计密度不符（详见 docs/V04b-数据包接入说明.md） */
+    time: 'all',                  // 7d | 30d | 90d | all
+    cred: 'all',                  // high | mid | low | all
+    infl: 'all',                  // high | mid | low | all
     q: '',
 
     /* 三级分类字典的选中项：null = 默认全选 */
