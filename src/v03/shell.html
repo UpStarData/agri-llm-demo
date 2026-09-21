@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>农业数据三层推演平台 V0.3 · 事实层 / 关联层 / 推演层（示意数据）</title>
+<title>AgriLink 农链 · 事实层 / 关联层 / 推演层</title>
 <style>/*FONT_CSS*/</style>
 <style>/*APP_CSS*/</style>
 <style>/*REL_CSS*/</style>
@@ -12,54 +12,79 @@
 <body>
 
 <div id="app">
+  <!-- 顶部导航：图层菜单 Icon → 🌾 AgriLink + 版本号 →（居中）三 TAB → 快捷图标组 -->
   <header class="topbar">
-    <div class="brand">农业数据三层推演平台<small>V0.3 · 事实层 / 关联层 / 推演层</small></div>
-    <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB">
-      <button role="tab" data-tab="fact">事实层</button>
-      <button role="tab" data-tab="relation">关联层</button>
-      <button role="tab" data-tab="sim">推演层</button>
-    </nav>
+    <div class="tb-left">
+      <button class="icbtn" id="menuBtn" aria-label="图层菜单" aria-pressed="false"></button>
+      <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>v1.0</small></div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
-      <span class="crumb" id="crumb"></span>
-      <span class="demo-badge">示意数据 · 待标定</span>
+      <button class="icbtn" id="btnStream" aria-label="数据接入与处理流水"></button>
+      <button class="icbtn" id="btnCards" aria-label="右侧面板"></button>
+      <button class="icbtn" id="btnSettings" aria-label="设置"></button>
     </div>
   </header>
 
-  <div class="filterbar" id="filterbar">
-    <button class="ghost" id="railToggle" aria-expanded="true">☰ 分类栏</button>
-    <div class="seg" id="timeSeg" role="group" aria-label="时间范围">
-      <button data-time="7d">近 7 天</button>
-      <button data-time="30d">近 30 天</button>
-      <button data-time="90d">近 90 天</button>
-      <button data-time="all">全部</button>
-    </div>
-    <label class="mini" id="credWrap">可信度<select id="credSel" aria-label="可信度">
-      <option value="all">全部</option><option value="high">高</option><option value="mid">中</option><option value="low">低</option></select></label>
-    <label class="mini" id="inflWrap">影响等级<select id="inflSel" aria-label="影响等级">
-      <option value="all">全部</option><option value="high">高</option><option value="mid">中</option><option value="low">低</option></select></label>
-    <label class="searchbox"><span aria-hidden="true">🔍</span><input id="qInput" type="search" placeholder="搜索事实 / 对象 / 关系" aria-label="搜索"></label>
-    <span class="fb-note" id="fbNote"></span>
-  </div>
-
   <div class="layout">
-    <aside class="rail" id="rail" aria-label="分类"></aside>
+    <!-- 左侧图层菜单：从左侧滑出，三层结构（数据概览 / 三级分类 / 快捷控制） -->
+    <aside class="menu" id="menu" aria-label="图层菜单" aria-hidden="true">
+      <button class="menu-close" id="menuClose" aria-label="收起图层菜单">×</button>
+      <div class="menu-body" id="menuBody"></div>
+    </aside>
+
     <main id="stage">
-      <div class="panelctl" id="panelCtl" role="group" aria-label="面板显隐"></div>
       <section class="layer" id="layer-fact" role="tabpanel" aria-label="事实层"></section>
       <section class="layer" id="layer-relation" role="tabpanel" aria-label="关联层"></section>
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
+
+      <!-- 地图右下角：M1–M11 全套快捷键（总开关关闭时整组隐藏） -->
+      <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
+
+      <!-- 底部：数据接入与处理流水（终端风格 · 纯黑 · 无标题） -->
       <div class="stream" id="streamBox">
-        <div class="st-head">
-          <b id="streamTitle">数据接入与处理流水</b>
+        <div class="st-tabs">
+          <span class="st-tab on" id="stTabName">输入流</span>
+          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
           <span class="st-meta" id="streamMeta"></span>
-          <span class="st-spacer"></span>
-          <span class="st-note">逐行向上滚动 · 示意日志</span>
-          <button class="ghost sm" id="streamClose">关闭</button>
         </div>
         <div class="st-body" id="streamBody"></div>
+        <button class="st-close" id="streamClose" aria-label="关闭流水面板">×</button>
       </div>
     </main>
   </div>
+
+  <!-- 详情弹窗（事实 / 本体 / 关系共用） -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- 设置入口：演示口令 -->
+  <div class="pw" id="pwBox" role="dialog" aria-modal="true" aria-label="设置口令">
+    <div class="pw-box">
+      <div class="pw-t">设置</div>
+      <input id="pwInput" type="password" inputmode="numeric" autocomplete="off" placeholder="请输入口令">
+      <div class="pw-hint" id="pwHint"></div>
+      <div class="pw-act">
+        <button class="btn sec" id="pwCancel">取消</button>
+        <button class="btn" id="pwOk">进入</button>
+      </div>
+      <p class="pw-note">演示口令，仅用于演示设置入口的跳转流程，不构成真实安全能力。</p>
+    </div>
+  </div>
+
+  <!-- 设置页（本期为空白页，内容后续填充） -->
+  <div class="settings" id="settingsPage">
+    <div class="set-box">
+      <div class="set-t">设置</div>
+      <p>本期设置页为空白页，内容在后续版本填充。</p>
+      <button class="btn sec" id="setBack">返回</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 

@@ -1,13 +1,14 @@
 {
-  "hash": "d09d7a06ad4f",
-  "git": "b3e469d",
-  "builtAt": "2026-09-21T10:04:15.051Z",
+  "hash": "363ff044c8fc",
+  "git": "c6fe7b0",
+  "builtAt": "2026-09-21T16:06:46.342Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
     "src/v03/app.css",
     "src/v03/relation.css",
     "src/v03/sim.css",
+    "src/v03/atlas-data.js",
     "src/v03/data.js",
     "src/v03/data-sim.js",
     "src/v03/store.js",
@@ -20,9 +21,11 @@
     "data/world110.geo.json",
     "build.mjs",
     "vendor/echarts.min.js",
+    "fonts/PlexLight-sub.woff2",
     "fonts/PlexRegular-sub.woff2",
+    "fonts/PlexSemiBold-sub.woff2",
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 2399493
+  "bytes": 3268411
 }
