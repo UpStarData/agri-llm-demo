@@ -2,8 +2,9 @@
 
 > **当前状态：V0.7**（数据概览主数字改为 hyperresearch.ai 同款实时大数字：全位数千分位 / tabular-nums / 尾数持续递增）
 >
-> **发版地址约定：每次发版换一个带版本号的新地址**——V0.7 `https://upstardata.github.io/agri-llm-demo-v0.7/` ·
-> V0.6.2 `https://upstardata.github.io/agri-llm-demo-v0.6.2/` · V0.5 `…/agri-llm-demo-v05/` · V0.4（已否决留档）`…/agri-llm-demo-v04/`；原站 `…/agri-llm-demo/` 始终不动。
+> **发版地址约定（单仓库 · 按版本分目录）**：仓库只有 `agri-llm-demo`，每个版本一个目录一个地址 ——
+> V0.7 `https://upstardata.github.io/agri-llm-demo/v0.7/` · V0.6.2 `…/v0.6.2/` · V0.6.1 `…/v0.6.1/` · V0.6 `…/v0.6/` · V0.5 `…/v0.5/` · V0.4（已否决留档）`…/v0.4/`；
+> 版本目录页 `…/agri-llm-demo/versions/`；原站 `…/agri-llm-demo/`（基线）始终不动。
 > 局域网同规则：`http://192.168.1.83:3101/v0.7/`（根路径为版本目录页）。细则见 `docs/V09-版本发布地址约定.md`。（按《页面修改指令 V2》，只交付静态视觉与基础显隐）。
 > 视觉基线回到原版 AgriLink 浅色农业风；事实层 / 关联层的分类字典、图例、快捷键与缩放、
 > 右侧嵌套抽屉、MiroFish 式关系线均已按 V2 重做；复杂动效与真实直播接入按指令暂停。
