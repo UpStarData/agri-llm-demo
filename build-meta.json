@@ -1,13 +1,14 @@
 {
-  "hash": "c44a4783ed88",
-  "git": "13ed739",
-  "builtAt": "2026-09-22T01:51:59.234Z",
+  "hash": "60dd9ba775e5",
+  "git": "ae311d0",
+  "builtAt": "2026-09-22T02:32:09.305Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
     "src/v03/app.css",
     "src/v03/relation.css",
     "src/v03/sim.css",
+    "src/v03/mass.js",
     "src/v03/pkg-adapter.js",
     "src/v03/atlas-data.js",
     "src/v03/data.js",
@@ -46,5 +47,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 7136790
+  "bytes": 7148439
 }

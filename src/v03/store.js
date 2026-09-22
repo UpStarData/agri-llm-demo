@@ -25,7 +25,8 @@ window.V03Store = (function () {
       live: true,                 // M4 直播流（默认开启：已验证可嵌入的公开直播源直接播放）
       regions: false,             // M5 产区
       gates: false,               // M6 港口与机场
-      legend: true                // M11 图例
+      legend: true,               // M11 图例
+      mass: true                  // 质量级采样点阵（表达数据库体量）
     },
 
     /* M7–M10：选择型快捷键（与筛选状态同源）
@@ -45,6 +46,8 @@ window.V03Store = (function () {
     geo: { level: 'L1', focus: null },   // L1 全球（默认）/ L2 全国 / L3 省区（focus=省名）
     factId: null, logOpen: false,        // 事实详情抽屉
     factObj: null,                       // 事实层内直接查看的本体对象（点击产区/口岸标记，不切 Tab）
+    newFacts: [],                        // 最近接入的事实（卡片流顶部显示「新接入」）
+    carousel: false,                     // 质量级点阵开关（默认开）
     carry: [],
 
     rel: { view: 'geo', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
