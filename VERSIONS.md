@@ -10,7 +10,9 @@
 | V0.6 | https://upstardata.github.io/agri-llm-demo/v0.6/ | 体量口径 + 实时滚动计数、地图缩放三项规则、铺满整屏 + 浮层、毛玻璃、统一中性点、直播卡常驻 | `60dd9ba775e5` | `e6c236a` · `v0.6.0` |
 | V0.5 | https://upstardata.github.io/agri-llm-demo/v0.5/ | 浅色视觉校准 + 第二轮反馈（MiroFish 连线 / 纯黑终端 / 真实直播 / 左下两排快捷键） | `c44a4783ed88` | `13ed739` · `v0.5.0` |
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
-| 原版 | https://upstardata.github.io/agri-llm-demo/ | 三层 Demo 原始基线（**始终不动**） | — | `main` |
+| **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
+
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.7**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
@@ -18,11 +20,17 @@
 
 ```
 agri-llm-demo/
-├── index.html          # 原版基线（Pages 根，不动）
+├── index.html          # V0.0 原版基线（Pages 根，内容与 v0.0/ 同一份）
 ├── versions/index.html # 版本目录页
-├── v0.4/ … v0.7/       # 每个版本：index.html + build-meta.json
+├── v0.0/ … v0.7/       # 每个版本：index.html + build-meta.json（V0.0 = 起点）
 └── src/ data/ test/ …  # 源码（与版本产物同仓库）
 ```
+
+## 版本号规则
+
+- **V0.0**：原版基线（仓库根地址显示的那一版），作为迭代起点；
+- 以后每次发版在最新版本上加一个号（V0.1 / V0.8 / V1.0 …），旧版本目录与地址都保留；
+- 每个版本对应一个 git tag（`v0.0.0` `v0.4.0` … `v0.7.0`），拿到那一版的源码。
 
 ## 新增版本（不再新建仓库）
 
