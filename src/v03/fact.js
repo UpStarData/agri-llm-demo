@@ -23,6 +23,12 @@ window.V03Fact = (function () {
   const IMPACT_RANK = { high: 3, mid: 2, low: 1 };
   const catOf = f => (D.CATS[f.cat] || { n: f.cat, c: '#1d4ed8', e: '📌' });
   const leafOf = f => ((F.leafOf && F.leafOf(f)) || { e: catOf(f).e, n: '', key: '' });
+  /* F4/M6：一级分类决定颜色（低饱和色，与菜单/图例同一套） */
+  const groupOf = f => {
+    const g = (F.FACT_TREE || []).find(x => (x.subs || []).some(sb => (sb.items || []).some(it => it.key === leafOf(f).key)));
+    return g || null;
+  };
+  const dotColor = f => (groupOf(f) || {}).color || catOf(f).c;
   const emojiOf = f => leafOf(f).e || catOf(f).e;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -69,9 +75,9 @@ window.V03Fact = (function () {
       if (!hit) return;
       if (hit.type === 'fact') return openFact(hit.id);
       const o = hit.id && D.objById(hit.id);
-      if (o) S.set({ tab: 'relation', rel: { sel: o.id, kind: 'object', stack: [{ kind: 'object', id: o.id }] } });
+      if (o) S.set({ factId: null, factObj: o.id });
     });
-    S.onEvent('stream:line', p => flashFact(p && p.fact, p && p.level));
+    S.onEvent('stream:line', p => flashStar(p && p.fact, p && p.level));
   }
 
   /* ---------- 地图（浅色农业风） ---------- */
@@ -81,6 +87,22 @@ window.V03Fact = (function () {
     if (!dom.map || !window.echarts) return null;
     chart = echarts.init(dom.map);
     chart.on('click', onMapClick);
+    /* 交互（滚轮/拖拽）后把相机状态同步回 camera，保证缩放按钮与层级切换一致 */
+    chart.on('georoam', () => {
+      const g = (chart.getOption().geo || [])[0];
+      if (g) { camera.zoom = g.zoom != null ? g.zoom : camera.zoom; if (g.center) camera.center = g.center.slice(); }
+      S.set({ sk: { zoom: Math.round(camera.zoom * 100) } });
+    });
+    /* 双击放大 */
+    dom.map.addEventListener('dblclick', e => {
+      if (!chart || S.state.sk.mode3d) return;
+      const r = dom.map.getBoundingClientRect();
+      const lngLat = chart.convertFromPixel({ geoIndex: 0 }, [e.clientX - r.left, e.clientY - r.top]);
+      const box = LEVEL[S.state.geo.level].zoomBox;
+      const z = Math.min(box[1], camera.zoom * 1.35);
+      const target = Array.isArray(lngLat) && lngLat.length === 2 ? lngLat : camera.center;
+      flyTo(target, z, 420);
+    });
     return chart;
   }
   function flyTo(center, zoom, dur) {
@@ -121,7 +143,7 @@ window.V03Fact = (function () {
     const lv = LEVEL[st.geo.level];
     const halos = [], pts = [];
     facts.forEach(f => {
-      const c = catOf(f).c;
+      const c = dotColor(f);
       if (st.sk.influence) {
         halos.push({
           id: f.id, value: [f.lng, f.lat], symbolSize: radiusPx(f),
@@ -145,11 +167,6 @@ window.V03Fact = (function () {
     const series = [
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 1, symbol: 'circle' },
       /* 亮光（数据接入瞬间一闪而过，0.8s 内消退后落成普通小点） */
-      { id: 'flash', type: 'scatter', coordinateSystem: 'geo', data: flashData(), z: 6, silent: true, symbol: 'circle',
-        itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-          { offset: 0, color: 'rgba(255,255,255,.95)' }, { offset: .35, color: 'rgba(255,236,150,.75)' },
-          { offset: .7, color: 'rgba(255,214,102,.28)' }, { offset: 1, color: 'rgba(255,214,102,0)' }] } },
-        label: { show: false } },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 4, cursor: 'pointer' }
     ];
     if (st.sk.regions) markerSeries('regions', D.REGIONS, '#65a30d', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -162,7 +179,9 @@ window.V03Fact = (function () {
       backgroundColor: 'transparent',
       animationDurationUpdate: 320,
       geo: {
-        map: lv.map, roam: false, zoom: camera.zoom, center: camera.center.slice(),
+        map: lv.map, roam: true, zoom: camera.zoom, center: camera.center.slice(),
+        zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false,
+        scaleLimit: { min: lv.zoomBox[0], max: lv.zoomBox[1] },
         boundingCoords: lv.bounds || undefined,
         itemStyle: { areaColor: '#e9eef7', borderColor: 'rgba(120,145,185,.55)', borderWidth: .7 },
         emphasis: { itemStyle: { areaColor: '#dde6f4' }, label: { show: true, color: '#2b3444', fontSize: 10 } },
@@ -205,33 +224,24 @@ window.V03Fact = (function () {
     } : null].filter(Boolean);
   }
 
-  /* F5：新事实接入 → 一次闪光（1.2s 内消退，不循环） */
-  const flash = new Map();
-  const FACT_READY_AT = Date.now() + 2500;    /* 开屏预置批次不触发闪光（F5：已存在的事实保持稳定小点） */
-  function flashFact(f, level) {
-    if (!f || S.state.tab !== 'fact' || f.lng == null) return;
-    if (Date.now() < FACT_READY_AT) return;
-    const list = F.factsAtLevel(S.state);
-    if (!list.some(x => x.id === f.id)) return;
-    flash.set(f.id, { f, until: Date.now() + 800, bright: level === 'bright' });
-    if (chart && !S.state.sk.mode3d) chart.setOption({ series: [{ id: 'flash', data: flashData() }] }, { lazyUpdate: true });
-    clearTimeout(flashFact._t);
-    flashFact._t = setTimeout(() => {
-      const now = Date.now();
-      [...flash.keys()].forEach(k => { if (flash.get(k).until <= now) flash.delete(k); });
-      if (chart && !S.state.sk.mode3d) chart.setOption({ series: [{ id: 'flash', data: flashData() }] }, { lazyUpdate: true });
-      if (flash.size) flashFact(null);
-    }, 700);
+  /* B3/M7：新事实接入 → 对应坐标闪一颗星（DOM 动画，0.9–1s 后自动移除，不长期发光） */
+  function flashStar(f, level) {
+    if (!f || f.lng == null || S.state.tab !== 'fact' || S.state.sk.mode3d) return;
+    if (!chart || !dom.mapBox) return;
+    let px = null;
+    try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { px = null; }
+    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
+    const box = dom.mapBox.getBoundingClientRect();
+    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;   /* 视野外不闪 */
+    const d = document.createElement('div');
+    d.className = 'star-flash ' + (level === 'bright' || f.impact === 'high' ? 'bright' : 'dim');
+    d.dataset.fid = f.id;
+    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px';
+    d.innerHTML = '<i></i>';
+    dom.mapBox.appendChild(d);
+    setTimeout(() => d.remove(), 1000);
   }
-  function flashData() {
-    const now = Date.now();
-    return [...flash.values()].filter(x => x.until > now).map(x => {
-      const k = Math.max(0, (x.until - now) / 800);              /* 1 → 0 的衰减，越接近 0 越淡 */
-      return { id: x.f.id, name: x.f.title, value: [x.f.lng, x.f.lat],
-        symbolSize: (x.bright ? 30 : 20) * (.55 + .45 * k),
-        itemStyle: { opacity: .25 + .75 * k } };
-    });
-  }
+  const flashIds = () => [...document.querySelectorAll('#layer-fact .star-flash')].map(n => n.dataset.fid);
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -250,7 +260,7 @@ window.V03Fact = (function () {
     const st = S.state, sid = p.seriesId || '';
     if (sid.indexOf('regions') === 0 || sid.indexOf('gates') === 0) {
       const it = D.REGIONS.concat(D.GATES).find(r => r.id === (p.data || {}).id);
-      if (it && it.objId) S.set({ tab: 'relation', rel: { sel: it.objId, kind: 'object', stack: [{ kind: 'object', id: it.objId }] } });
+      if (it && it.objId) S.set({ factId: null, factObj: it.objId });   /* 就地看本体详情，不切 Tab */
       return;
     }
     if (sid === 'facts' && p.data && p.data.id) return openFact(p.data.id);
@@ -271,18 +281,17 @@ window.V03Fact = (function () {
     if (!window.V03Shell) return;
     const st = S.state;
     if (!st.sk.legend) return window.V03Shell.setLegend('');
-    const groups = F.FACT_TREE.map(g => '<span class="lg-i"><i style="background:' + g.color + '"></i>' + g.n + '</span>').join('');
-    const seen = {}, leafChips = [];
-    F.mappable(F.factsAtLevel(st)).forEach(f => {
-      const leaf = leafOf(f);
-      if (!leaf.key || seen[leaf.key]) return;
-      seen[leaf.key] = 1;
-      if (leafChips.length < 10) leafChips.push('<span class="lg-i">' + leaf.e + ' ' + leaf.n + '</span>');
-    });
-    window.V03Shell.setLegend(
-      '<span class="lg-cat">事实分类</span>' + groups +
-      (leafChips.length ? '<span class="lg-sep"></span><span class="lg-cat">当前视野类型</span>' + leafChips.join('') : '')
-    );
+    const facts = F.mappable(F.factsAtLevel(st));
+    const byGroup = {};
+    facts.forEach(f => { const g = groupOf(f); if (g) byGroup[g.key] = (byGroup[g.key] || 0) + 1; });
+    const chips = (F.FACT_TREE || [])
+      .filter(g => byGroup[g.key])
+      .sort((a, b) => byGroup[b.key] - byGroup[a.key])
+      .map(g => '<span class="lg-i"><i style="background:' + g.color + '"></i>' + g.n + '</span>');
+    const marks = [];
+    if (st.sk.regions) marks.push('<span class="lg-i">🌾 农产品产区</span>');
+    if (st.sk.gates) marks.push('<span class="lg-i">⚓ 港口</span><span class="lg-i">✈️ 机场</span><span class="lg-i">🧊 冷链节点</span>');
+    window.V03Shell.setLegend(chips.concat(marks).join(''));
   }
 
   /* ---------- 右侧卡片（F9） ---------- */
@@ -304,6 +313,11 @@ window.V03Fact = (function () {
      此时按静态降级卡片处理（保留原始外链），避免控制台报错与"黑屏播放器"。 */
   const CAN_EMBED = typeof location !== 'undefined' && (location.protocol === 'http:' || location.protocol === 'https:');
   const isPlayable = f => CAN_EMBED && f.cardType === 'video' && f.card && f.card.embeddable === 'yes' && !!f.card.embedUrl;
+  /* m3u8 直连：hls.js 可用，且流地址协议与页面协议一致（避免 https 页面被混合内容拦截） */
+  const pageProto = (typeof location !== 'undefined' ? location.protocol : 'file:');
+  const canHls = url => !!url && typeof Hls !== 'undefined' && Hls.isSupported() &&
+    (url.indexOf('https://') === 0 ? pageProto === 'https:' : pageProto === 'http:');
+  const isStreamable = f => !!(f.cardType === 'video' && f.card && f.card.hlsUrl && canHls(f.card.hlsUrl));
   function hexA(hex, a) {
     const h = String(hex).replace('#', '');
     const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
@@ -338,14 +352,37 @@ window.V03Fact = (function () {
     apply(box, visible) {
       if (!box || !box.dataset || box.dataset.embed !== '1') return;
       const on = S.state.sk.live && visible;
-      const frame = box.querySelector('iframe');
       box.classList.toggle('paused', !on);
-      if (on && !frame && box.dataset.src) {
-        const el2 = document.createElement('iframe');
-        el2.src = box.dataset.src; el2.title = box.dataset.title || '直播'; el2.allowFullscreen = true;
-        box.appendChild(el2);
+      const frame = box.querySelector('iframe'), video = box.querySelector('video');
+      if (on && !frame && !video && box.dataset.hls) {
+        /* D1：m3u8 直连（hls.js） */
+        const v = document.createElement('video');
+        v.muted = true; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', '');
+        box.appendChild(v);
+        try {
+          const hls = new Hls({ lowLatencyMode: false, liveDurationInfinity: true });
+          box._hls = hls;
+          hls.loadSource(box.dataset.hls);
+          hls.attachMedia(v);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); });
+          hls.on(Hls.Events.ERROR, () => { /* 流不可用时退回 iframe 播放页 */
+            try { hls.destroy(); } catch (e) {}
+            box._hls = null; v.remove();
+            if (box.dataset.src) { const f2 = document.createElement('iframe'); f2.src = box.dataset.src; f2.allowFullscreen = true; box.appendChild(f2); }
+          });
+        } catch (e) { v.remove(); }
+        return;
       }
-      if (!on && frame) frame.remove();
+      if (on && !frame && !video && box.dataset.src) {
+        const f2 = document.createElement('iframe');
+        f2.src = box.dataset.src; f2.title = box.dataset.title || '直播'; f2.allowFullscreen = true;
+        box.appendChild(f2);
+      }
+      if (!on) {
+        if (frame) frame.remove();
+        if (box._hls) { try { box._hls.destroy(); } catch (e) {} box._hls = null; }
+        if (video) video.remove();
+      }
     },
     sync() {
       this.init();
@@ -356,9 +393,11 @@ window.V03Fact = (function () {
 
   function videoBlock(f) {
     const c = f.card || {};
-    if (isPlayable(f)) {
-      return '<div class="fc-player" data-embed="1" data-play="' + (S.state.sk.live ? 1 : 0) + '" data-src="' + esc(c.embedUrl) +
-        '" data-title="' + esc(c.mediaTitle || '视频') + '">' + (S.state.sk.live ? '' : '<span class="pause">已暂停</span>') + '</div>';
+    if (isPlayable(f) || isStreamable(f)) {
+      const hlsAttr = isStreamable(f) ? ' data-hls="' + esc(c.hlsUrl) + '"' : '';
+      const srcAttr = isPlayable(f) ? ' data-src="' + esc(c.embedUrl) + '"' : '';
+      return '<div class="fc-player" data-embed="1" data-play="' + (S.state.sk.live ? 1 : 0) + '"' + srcAttr + hlsAttr +
+        ' data-title="' + esc(c.mediaTitle || '视频') + '">' + (S.state.sk.live ? '' : '<span class="pause">已暂停</span>') + '</div>';
     }
     return '<div class="fc-static" data-embed="0">' +
       '<div class="fs-line"><span class="fs-ic">▤</span><b>' + esc(c.mediaTitle || f.title) + '</b></div>' +
@@ -664,11 +703,14 @@ window.V03Fact = (function () {
       legend: st.sk.legend, legendItems: document.querySelectorAll('#legend .lg-i').length,
       videoTotal: vid.length,
       videoEmbeddable: vid.filter(f => f.card && f.card.embeddable === 'yes' && f.card.embedUrl).length,   /* 已核验可嵌入的公开源 */
+      videoStreamable: vid.filter(f => f.card && f.card.hlsUrl).length,                                    /* 有 m3u8 直连地址 */
       videoVerified: vid.filter(isPlayable).length,                                                        /* 当前环境下可播放（http/https） */
       videoStatic: vid.filter(f => !isPlayable(f)).length,
       cards: document.querySelectorAll('#layer-fact .fcard').length,
       cardTypes: [...document.querySelectorAll('#layer-fact .fcard')].reduce((m, n) => { const f = D.factById(n.dataset.fid); if (f) m[f.cardType] = (m[f.cardType] || 0) + 1; return m; }, {}),
       emojiLeaves: new Set(pts.map(f => leafOf(f).key)).size,
+      flashes: document.querySelectorAll('#layer-fact .star-flash').length,
+      roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
       dictReady: !!F.dictReady
     };
   };
@@ -681,5 +723,5 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; update(); }
   };
-  return { mount, update, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds: () => [...flash.keys()], worldGeoJSON, pick, forceEmbeddable, isPlayable };
+  return { mount, update, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar };
 })();

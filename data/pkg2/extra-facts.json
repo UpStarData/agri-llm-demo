@@ -1,0 +1,2853 @@
+[
+ {
+  "factId": "chili-gz-zunyi-price-001",
+  "factType": "event",
+  "status": "active",
+  "title": "遵义朝天椒干辣椒批发价 21.4 元/斤，环比上涨 4.9%",
+  "summary": "遵义虾子辣椒市场朝天椒（三级）干辣椒批发均价 21.4 元/斤，环比上涨 4.9%；新货上市量偏紧，加工企业备货积极。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-21T09:00:00Z",
+  "publishedAt": "2026-09-21T09:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-GZ",
+     "name": "贵州省"
+    },
+    {
+     "level": "city",
+     "code": "520300",
+     "name": "遵义市"
+    }
+   ],
+   "geoPoint": [
+    106.927,
+    27.7255
+   ]
+  },
+  "severity": 72,
+  "credibility": {
+   "score": 0.78,
+   "band": "high"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "遵义朝天椒（干辣椒）",
+    "priceValue": 21.4,
+    "priceUnit": "元/斤",
+    "changePct": 4.9,
+    "caliber": "虾子辣椒市场批发均价（日）",
+    "trend": [
+     19.2,
+     19.8,
+     20.1,
+     20.6,
+     20.9,
+     21.0,
+     21.4
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "贵州虾子辣椒市场公开行情",
+   "geoAnchorPlace": "遵义",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-gz-qiandongnan-area-002",
+  "factType": "event",
+  "status": "active",
+  "title": "黔东南辣椒种植面积稳定在 62 万亩，酸汤原料占比过半",
+  "summary": "黔东南州辣椒种植面积保持 62 万亩，其中用于酸汤加工的本地品种占比过半；合作社订单面积同比增加。",
+  "category": "supply",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "supply",
+   "l2": "面积",
+   "l3": "supply.production.weekly"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-20T08:00:00Z",
+  "publishedAt": "2026-09-20T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-GZ",
+     "name": "贵州省"
+    },
+    {
+     "level": "city",
+     "code": "522600",
+     "name": "黔东南苗族侗族自治州"
+    }
+   ],
+   "geoPoint": [
+    107.9852,
+    26.5835
+   ]
+  },
+  "severity": 45,
+  "credibility": {
+   "score": 0.72,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "黔东南辣椒种植面积稳定在 62 万亩",
+    "summary": "黔东南州辣椒种植面积保持 62 万亩，本地酸汤品种占比过半，合作社订单面积同比增加。",
+    "sourceName": "黔东南州农业农村局",
+    "publishedAt": "2026-09-20T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "州级农业统计公开数据",
+   "geoAnchorPlace": "凯里",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-gz-bijie-export-003",
+  "factType": "event",
+  "status": "active",
+  "title": "毕节干辣椒出口东南亚 3800 吨，同比增 12%",
+  "summary": "毕节市干辣椒及制品出口东南亚 3800 吨，同比增长 12%；油辣椒制品占出口额六成以上。",
+  "category": "customs",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "customs",
+   "l2": "出口",
+   "l3": "customs.flow.monthly"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-18T08:00:00Z",
+  "publishedAt": "2026-09-18T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-GZ",
+     "name": "贵州省"
+    },
+    {
+     "level": "city",
+     "code": "520500",
+     "name": "毕节市"
+    }
+   ],
+   "geoPoint": [
+    105.2847,
+    27.3019
+   ]
+  },
+  "severity": 62,
+  "credibility": {
+   "score": 0.74,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "毕节干辣椒出口东南亚 3800 吨",
+    "summary": "毕节干辣椒及制品出口东南亚 3800 吨，同比增长 12%，油辣椒制品占出口额六成以上。",
+    "sourceName": "贵阳海关公开统计",
+    "publishedAt": "2026-09-18T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "海关月度公开数据",
+   "geoAnchorPlace": "毕节",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-hn-shaoyang-price-004",
+  "factType": "event",
+  "status": "active",
+  "title": "邵阳线椒收购价 2.8 元/斤，雨天采收放缓",
+  "summary": "邵阳线椒田间收购价 2.8 元/斤，连续降雨使采收节奏放缓，鲜椒到货量低于上月同期。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "收购价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-HN",
+     "name": "湖南省"
+    },
+    {
+     "level": "city",
+     "code": "430500",
+     "name": "邵阳市"
+    }
+   ],
+   "geoPoint": [
+    111.4683,
+    27.2387
+   ]
+  },
+  "severity": 48,
+  "credibility": {
+   "score": 0.68,
+   "band": "medium"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "邵阳线椒（鲜椒）",
+    "priceValue": 2.8,
+    "priceUnit": "元/斤",
+    "changePct": -3.4,
+    "caliber": "田间收购价（日）",
+    "trend": [
+     3.1,
+     3.0,
+     2.95,
+     2.9,
+     2.85,
+     2.8,
+     2.8
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "产地收购行情",
+   "geoAnchorPlace": "邵阳",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-hn-xx-process-005",
+  "factType": "event",
+  "status": "active",
+  "title": "湘西剁椒加工进入旺季，本地鲜椒需求 9 万吨",
+  "summary": "湘西州剁椒加工进入旺季，本地加工企业鲜椒需求约 9 万吨，订单收购价高于市场价 8%。",
+  "category": "production",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "production",
+   "l2": "加工",
+   "l3": "production.base.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-19T08:00:00Z",
+  "publishedAt": "2026-09-19T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-HN",
+     "name": "湖南省"
+    },
+    {
+     "level": "city",
+     "code": "433100",
+     "name": "湘西土家族苗族自治州"
+    }
+   ],
+   "geoPoint": [
+    109.7391,
+    28.3119
+   ]
+  },
+  "severity": 55,
+  "credibility": {
+   "score": 0.7,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "湘西剁椒加工进入旺季",
+    "summary": "湘西州剁椒加工进入旺季，本地加工企业鲜椒需求约 9 万吨，订单收购价高于市场价 8%。",
+    "sourceName": "湘西州农业农村局",
+    "publishedAt": "2026-09-19T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "州级加工产业公开信息",
+   "geoAnchorPlace": "吉首",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-hn-huaihua-weather-006",
+  "factType": "event",
+  "status": "active",
+  "title": "怀化连续降雨影响辣椒采收，霉变风险上升",
+  "summary": "怀化连续降雨影响辣椒采收与晾晒，田间霉变风险上升，烘干线开工率提高到 82%。",
+  "category": "natural",
+  "cardType": "weather",
+  "taxonomy": {
+   "l1": "natural",
+   "l2": "气象预警",
+   "l3": "natural.alert.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-20T08:00:00Z",
+  "publishedAt": "2026-09-20T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-HN",
+     "name": "湖南省"
+    },
+    {
+     "level": "city",
+     "code": "431200",
+     "name": "怀化市"
+    }
+   ],
+   "geoPoint": [
+    110.0016,
+    27.5697
+   ]
+  },
+  "severity": 58,
+  "credibility": {
+   "score": 0.75,
+   "band": "medium"
+  },
+  "card": {
+   "type": "weather",
+   "fields": {
+    "regionName": "怀化",
+    "weatherIconCode": "heavy-rain",
+    "alertLevel": "blue",
+    "impactText": "连续降雨影响辣椒采收与晾晒，田间霉变风险上升，烘干线开工率提高到 82%。"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "open-meteo",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "Open-Meteo API（公开预报）",
+   "geoAnchorPlace": "怀化",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-sc-chengdu-price-007",
+  "factType": "event",
+  "status": "active",
+  "title": "成都二荆条干辣椒批发价 16.8 元/斤，走货平稳",
+  "summary": "成都濛阳市场二荆条干辣椒批发均价 16.8 元/斤，走货平稳；火锅底料企业按需补库。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SC",
+     "name": "四川省"
+    },
+    {
+     "level": "city",
+     "code": "510100",
+     "name": "成都市"
+    }
+   ],
+   "geoPoint": [
+    104.0668,
+    30.5728
+   ]
+  },
+  "severity": 52,
+  "credibility": {
+   "score": 0.74,
+   "band": "medium"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "二荆条干辣椒",
+    "priceValue": 16.8,
+    "priceUnit": "元/斤",
+    "changePct": 1.2,
+    "caliber": "濛阳市场批发均价（日）",
+    "trend": [
+     16.2,
+     16.4,
+     16.5,
+     16.6,
+     16.7,
+     16.7,
+     16.8
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "成都濛阳市场公开行情",
+   "geoAnchorPlace": "成都",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-sc-nanchong-area-008",
+  "factType": "event",
+  "status": "active",
+  "title": "南充辣椒种植面积 45 万亩，加工型品种占比升至 6 成",
+  "summary": "南充市辣椒种植面积 45 万亩，加工型品种占比升至六成，郫县豆瓣产业链订单稳定。",
+  "category": "supply",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "supply",
+   "l2": "面积",
+   "l3": "supply.production.weekly"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-17T08:00:00Z",
+  "publishedAt": "2026-09-17T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SC",
+     "name": "四川省"
+    },
+    {
+     "level": "city",
+     "code": "511300",
+     "name": "南充市"
+    }
+   ],
+   "geoPoint": [
+    106.1106,
+    30.8408
+   ]
+  },
+  "severity": 44,
+  "credibility": {
+   "score": 0.71,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "南充辣椒种植面积 45 万亩",
+    "summary": "南充市辣椒种植面积 45 万亩，加工型品种占比升至六成，郫县豆瓣产业链订单稳定。",
+    "sourceName": "南充市农业农村局",
+    "publishedAt": "2026-09-17T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "市级农业统计公开数据",
+   "geoAnchorPlace": "南充",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-sc-neijiang-sauce-009",
+  "factType": "event",
+  "status": "active",
+  "title": "内江辣椒酱出口订单排到 12 月，原料缺口 8000 吨",
+  "summary": "内江辣椒酱出口订单排至 12 月，原料缺口约 8000 吨；企业转向遵义采购干辣椒补充。",
+  "category": "circulation",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "circulation",
+   "l2": "市场到货",
+   "l3": "circulation.market_arrival.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-16T08:00:00Z",
+  "publishedAt": "2026-09-16T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SC",
+     "name": "四川省"
+    },
+    {
+     "level": "city",
+     "code": "511000",
+     "name": "内江市"
+    }
+   ],
+   "geoPoint": [
+    105.0584,
+    29.58
+   ]
+  },
+  "severity": 57,
+  "credibility": {
+   "score": 0.69,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "内江辣椒酱出口订单排到 12 月",
+    "summary": "内江辣椒酱出口订单排至 12 月，原料缺口约 8000 吨；企业转向遵义采购干辣椒补充。",
+    "sourceName": "四川经济日报",
+    "publishedAt": "2026-09-16T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "公开媒体报道",
+   "geoAnchorPlace": "内江",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-gz-policy-010",
+  "factType": "event",
+  "status": "active",
+  "title": "贵州辣椒产业奖补政策落地，加工产能扩建每条线补贴 80 万元",
+  "summary": "贵州辣椒产业奖补政策落地，对新增加工生产线每条补贴 80 万元，首批覆盖 12 家企业。",
+  "category": "policy",
+  "cardType": "policy",
+  "taxonomy": {
+   "l1": "policy",
+   "l2": "产业扶持",
+   "l3": "policy.notice.general"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-15T08:00:00Z",
+  "publishedAt": "2026-09-15T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L2",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-GZ",
+     "name": "贵州省"
+    }
+   ],
+   "geoPoint": [
+    106.6302,
+    26.647
+   ]
+  },
+  "severity": 66,
+  "credibility": {
+   "score": 0.85,
+   "band": "high"
+  },
+  "card": {
+   "type": "policy",
+   "fields": {
+    "policyTitle": "贵州辣椒产业奖补实施细则",
+    "issuer": "贵州省农业农村厅",
+    "effectiveDate": "2026-09-10",
+    "impactSummary": "新增加工生产线每条补贴 80 万元，首批覆盖 12 家企业，利好干辣椒加工产能扩张。"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "省级政策公开文件",
+   "geoAnchorPlace": "贵阳",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-market-index-011",
+  "factType": "event",
+  "status": "active",
+  "title": "中国辣椒价格指数收于 118.6 点，环比上涨 2.3%",
+  "summary": "中国辣椒价格指数（干辣椒）收于 118.6 点，环比上涨 2.3%；产新进度偏慢支撑价格。",
+  "category": "price",
+  "cardType": "market",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "region_only",
+   "scopeLayer": "L2",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    }
+   ],
+   "geoPoint": [
+    104.5,
+    34.5
+   ]
+  },
+  "severity": 60,
+  "credibility": {
+   "score": 0.8,
+   "band": "high"
+  },
+  "card": {
+   "type": "market",
+   "fields": {
+    "instrumentName": "中国辣椒价格指数（干辣椒）",
+    "symbol": "CHILI-IDX",
+    "lastPrice": 118.6,
+    "unit": "点",
+    "changePct": 2.3,
+    "exchange": "全国农产品批发市场价格信息系统",
+    "kline": [
+     113.2,
+     114.8,
+     115.6,
+     116.4,
+     117.1,
+     115.9,
+     118.6
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "全国农产品批发市场价格信息系统",
+   "geoAnchorPlace": null,
+   "geoAnchorPrecision": "region_only",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-vietnam-import-012",
+  "factType": "event",
+  "status": "active",
+  "title": "越南辣椒对华出口 1.9 万吨，同比增长 9%",
+  "summary": "越南辣椒对华出口 1.9 万吨，同比增长 9%；经友谊关口岸通关时效缩短至 6 小时。",
+  "category": "customs",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "customs",
+   "l2": "进口",
+   "l3": "customs.flow.monthly"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-14T08:00:00Z",
+  "publishedAt": "2026-09-14T08:00:00Z",
+  "regionIso": "VNM",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "VNM",
+     "name": "越南"
+    }
+   ],
+   "geoPoint": [
+    106.6297,
+    10.8231
+   ]
+  },
+  "severity": 50,
+  "credibility": {
+   "score": 0.72,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "越南辣椒对华出口 1.9 万吨",
+    "summary": "越南辣椒对华出口 1.9 万吨，同比增长 9%；经友谊关口岸通关时效缩短至 6 小时。",
+    "sourceName": "凭祥海关公开统计",
+    "publishedAt": "2026-09-14T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "口岸海关公开数据",
+   "geoAnchorPlace": "胡志明市",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-hn-cs-price-013",
+  "factType": "event",
+  "status": "active",
+  "title": "长沙红星市场干辣椒到货 260 吨，均价 17.2 元/斤",
+  "summary": "长沙红星市场干辣椒到货 260 吨，批发均价 17.2 元/斤，贵州货与本地货价差收窄。",
+  "category": "circulation",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "circulation",
+   "l2": "市场到货",
+   "l3": "circulation.market_arrival.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili",
+   "e:mkt-hongxing"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-HN",
+     "name": "湖南省"
+    },
+    {
+     "level": "city",
+     "code": "430100",
+     "name": "长沙市"
+    }
+   ],
+   "geoPoint": [
+    112.9388,
+    28.2282
+   ]
+  },
+  "severity": 48,
+  "credibility": {
+   "score": 0.76,
+   "band": "high"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "干辣椒（混合等级）",
+    "priceValue": 17.2,
+    "priceUnit": "元/斤",
+    "changePct": 0.6,
+    "caliber": "红星市场批发均价（日）",
+    "trend": [
+     16.9,
+     17.0,
+     17.05,
+     17.1,
+     17.15,
+     17.1,
+     17.2
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "红星市场行情公开数据",
+   "geoAnchorPlace": "长沙",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "chili-video-cctv17-014",
+  "factType": "event",
+  "status": "active",
+  "title": "辣椒产区直播：贵州遵义采收与分级现场",
+  "summary": "跟随产区镜头直击遵义朝天椒采收、分级与装运现场，了解干辣椒从田间到市场的第一道流程。",
+  "category": "news",
+  "cardType": "video",
+  "taxonomy": {
+   "l1": "news",
+   "l2": "行业新闻",
+   "l3": "news.industry.daily"
+  },
+  "entityIds": [
+   "e:cmd:chili"
+  ],
+  "commodityIds": [
+   "e:cmd:chili"
+  ],
+  "industryId": "spice",
+  "occurredAt": "2026-09-19T08:00:00Z",
+  "publishedAt": "2026-09-19T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-GZ",
+     "name": "贵州省"
+    },
+    {
+     "level": "city",
+     "code": "520300",
+     "name": "遵义市"
+    }
+   ],
+   "geoPoint": [
+    106.927,
+    27.7255
+   ]
+  },
+  "severity": 40,
+  "credibility": {
+   "score": 0.7,
+   "band": "medium"
+  },
+  "card": {
+   "type": "video",
+   "fields": {
+    "mediaTitle": "CCTV-17 农业农村频道直播",
+    "embedUrl": null,
+    "provider": "央视网",
+    "isLive": true,
+    "embeddable": "unknown",
+    "fallbackReason": "公开直播源按站点策略接入，当前保留静态卡片与原始链接"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "央视网公开直播页",
+   "geoAnchorPlace": "遵义",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-sd-yantai-season-001",
+  "factType": "event",
+  "status": "active",
+  "title": "烟台大樱桃秋延迟栽培上市，批发均价 38 元/斤",
+  "summary": "烟台福山秋延迟大棚大樱桃上市，批发均价 38 元/斤，同比高 6%；产量约 1.2 万吨。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SD",
+     "name": "山东省"
+    },
+    {
+     "level": "city",
+     "code": "370600",
+     "name": "烟台市"
+    }
+   ],
+   "geoPoint": [
+    121.4479,
+    37.4638
+   ]
+  },
+  "severity": 58,
+  "credibility": {
+   "score": 0.76,
+   "band": "high"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "烟台大樱桃（秋延迟）",
+    "priceValue": 38,
+    "priceUnit": "元/斤",
+    "changePct": 6.0,
+    "caliber": "产地批发均价（日）",
+    "trend": [
+     35.5,
+     36.2,
+     36.8,
+     37.4,
+     37.6,
+     37.8,
+     38.0
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "烟台产地行情",
+   "geoAnchorPlace": "烟台",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-ln-dalian-coldchain-002",
+  "factType": "event",
+  "status": "active",
+  "title": "大连樱桃冷链直发华南，全程温控损耗降至 4%",
+  "summary": "大连樱桃经冷链直发华南市场，全程温控使损耗降至 4%，到货时效缩短 14 小时。",
+  "category": "logistics",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "logistics",
+   "l2": "冷链",
+   "l3": "logistics.route.status"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-18T08:00:00Z",
+  "publishedAt": "2026-09-18T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-LN",
+     "name": "辽宁省"
+    },
+    {
+     "level": "city",
+     "code": "210200",
+     "name": "大连市"
+    }
+   ],
+   "geoPoint": [
+    121.6147,
+    38.914
+   ]
+  },
+  "severity": 45,
+  "credibility": {
+   "score": 0.7,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "大连樱桃冷链直发华南",
+    "summary": "大连樱桃经冷链直发华南市场，全程温控使损耗降至 4%，到货时效缩短 14 小时。",
+    "sourceName": "大连日报",
+    "publishedAt": "2026-09-18T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "公开媒体报道",
+   "geoAnchorPlace": "大连",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-sx-tongchuan-area-003",
+  "factType": "event",
+  "status": "active",
+  "title": "铜川樱桃设施栽培面积增至 3.2 万亩，提前上市 12 天",
+  "summary": "铜川樱桃设施栽培面积增至 3.2 万亩，冷凉气候优势下较露地提前上市 12 天。",
+  "category": "supply",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "supply",
+   "l2": "面积",
+   "l3": "supply.production.weekly"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-15T08:00:00Z",
+  "publishedAt": "2026-09-15T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SN",
+     "name": "陕西省"
+    },
+    {
+     "level": "city",
+     "code": "610200",
+     "name": "铜川市"
+    }
+   ],
+   "geoPoint": [
+    108.9451,
+    34.8966
+   ]
+  },
+  "severity": 40,
+  "credibility": {
+   "score": 0.71,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "铜川樱桃设施栽培面积增至 3.2 万亩",
+    "summary": "铜川樱桃设施栽培面积增至 3.2 万亩，冷凉气候优势下较露地提前上市 12 天。",
+    "sourceName": "铜川市农业农村局",
+    "publishedAt": "2026-09-15T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "市级农业统计公开数据",
+   "geoAnchorPlace": "铜川",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-cl-central-arrival-004",
+  "factType": "event",
+  "status": "active",
+  "title": "智利樱桃产季临近，早熟品种首批到港预增 18%",
+  "summary": "智利中部山谷樱桃产季临近，早熟品种（早红）首批到港量预增 18%；海运船期集中在 11 月下旬。",
+  "category": "trade",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "circulation",
+   "l2": "市场到货",
+   "l3": "circulation.market_arrival.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-20T08:00:00Z",
+  "publishedAt": "2026-09-20T08:00:00Z",
+  "regionIso": "CHL",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHL",
+     "name": "智利"
+    }
+   ],
+   "geoPoint": [
+    -70.9,
+    -34.6
+   ]
+  },
+  "severity": 65,
+  "credibility": {
+   "score": 0.78,
+   "band": "high"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "智利樱桃产季临近，早熟品种首批到港预增 18%",
+    "summary": "智利中部山谷樱桃产季临近，早熟品种首批到港量预增 18%；海运船期集中在 11 月下旬。",
+    "sourceName": "智利水果出口商协会",
+    "publishedAt": "2026-09-20T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "行业协会公开周报",
+   "geoAnchorPlace": "Rancagua",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-nz-otago-export-005",
+  "factType": "event",
+  "status": "active",
+  "title": "新西兰中奥塔哥樱桃对华空运启动，单箱均价上涨",
+  "summary": "新西兰中奥塔哥樱桃对华空运启动，5 公斤装单箱均价上涨 7%，旺季集中在 12 月至 2 月。",
+  "category": "trade",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "circulation",
+   "l2": "市场到货",
+   "l3": "circulation.market_arrival.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-17T08:00:00Z",
+  "publishedAt": "2026-09-17T08:00:00Z",
+  "regionIso": "NZL",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "NZL",
+     "name": "新西兰"
+    }
+   ],
+   "geoPoint": [
+    169.2127,
+    -45.0312
+   ]
+  },
+  "severity": 42,
+  "credibility": {
+   "score": 0.7,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "新西兰中奥塔哥樱桃对华空运启动",
+    "summary": "新西兰中奥塔哥樱桃对华空运启动，5 公斤装单箱均价上涨 7%，旺季集中在 12 月至 2 月。",
+    "sourceName": "新西兰樱桃出口商协会",
+    "publishedAt": "2026-09-17T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "行业协会公开信息",
+   "geoAnchorPlace": "Cromwell",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-us-wa-price-006",
+  "factType": "event",
+  "status": "active",
+  "title": "华盛顿州樱桃季结束，库存果批发价 4.2 美元/公斤",
+  "summary": "华盛顿州樱桃季结束，冷库库存果批发价 4.2 美元/公斤，同比低 3%；对华出口基本收尾。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-16T08:00:00Z",
+  "publishedAt": "2026-09-16T08:00:00Z",
+  "regionIso": "USA",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "USA",
+     "name": "美国"
+    },
+    {
+     "level": "province",
+     "code": "US-WA",
+     "name": "华盛顿州"
+    }
+   ],
+   "geoPoint": [
+    -119.6052,
+    46.9848
+   ]
+  },
+  "severity": 38,
+  "credibility": {
+   "score": 0.72,
+   "band": "medium"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "华盛顿甜樱桃（库存果）",
+    "priceValue": 4.2,
+    "priceUnit": "美元/公斤",
+    "changePct": -3.0,
+    "caliber": "产地批发价（周）",
+    "trend": [
+     4.5,
+     4.42,
+     4.36,
+     4.3,
+     4.26,
+     4.22,
+     4.2
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "美国农业部公开周报",
+   "geoAnchorPlace": "Yakima",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-sd-yantai-weather-007",
+  "factType": "event",
+  "status": "active",
+  "title": "烟台降温伴随大风，秋延迟樱桃注意棚温管理",
+  "summary": "烟台出现降温与大风天气，秋延迟大棚樱桃需注意棚温管理与通风控制。",
+  "category": "natural",
+  "cardType": "weather",
+  "taxonomy": {
+   "l1": "natural",
+   "l2": "气象预警",
+   "l3": "natural.alert.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-19T08:00:00Z",
+  "publishedAt": "2026-09-19T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SD",
+     "name": "山东省"
+    },
+    {
+     "level": "city",
+     "code": "370600",
+     "name": "烟台市"
+    }
+   ],
+   "geoPoint": [
+    121.4479,
+    37.4638
+   ]
+  },
+  "severity": 44,
+  "credibility": {
+   "score": 0.75,
+   "band": "medium"
+  },
+  "card": {
+   "type": "weather",
+   "fields": {
+    "regionName": "烟台",
+    "weatherIconCode": "strong-wind",
+    "alertLevel": "yellow",
+    "impactText": "降温与大风影响大棚樱桃棚温管理，注意通风与保温。"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "open-meteo",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "Open-Meteo API（公开预报）",
+   "geoAnchorPlace": "烟台",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-sd-yantai-video-008",
+  "factType": "event",
+  "status": "active",
+  "title": "产区直播：烟台大樱桃分级与打包现场",
+  "summary": "直击烟台大樱桃采收后的分级、预冷与打包现场，看一颗樱桃如何在 24 小时内到达华东市场。",
+  "category": "news",
+  "cardType": "video",
+  "taxonomy": {
+   "l1": "news",
+   "l2": "行业新闻",
+   "l3": "news.industry.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-18T08:00:00Z",
+  "publishedAt": "2026-09-18T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SD",
+     "name": "山东省"
+    },
+    {
+     "level": "city",
+     "code": "370600",
+     "name": "烟台市"
+    }
+   ],
+   "geoPoint": [
+    121.4479,
+    37.4638
+   ]
+  },
+  "severity": 36,
+  "credibility": {
+   "score": 0.7,
+   "band": "medium"
+  },
+  "card": {
+   "type": "video",
+   "fields": {
+    "mediaTitle": "CCTV-17 农业农村频道直播",
+    "embedUrl": null,
+    "provider": "央视网",
+    "isLive": true,
+    "embeddable": "unknown",
+    "fallbackReason": "公开直播源按站点策略接入，当前保留静态卡片与原始链接"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "央视网公开直播页",
+   "geoAnchorPlace": "烟台",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-market-index-009",
+  "factType": "event",
+  "status": "active",
+  "title": "樱桃价格指数收于 132.4 点，秋延迟货与库存货价差扩大",
+  "summary": "樱桃价格指数收于 132.4 点，秋延迟鲜货与库存果价差扩大至 9%。",
+  "category": "price",
+  "cardType": "market",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "region_only",
+   "scopeLayer": "L2",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    }
+   ],
+   "geoPoint": [
+    104.5,
+    34.5
+   ]
+  },
+  "severity": 50,
+  "credibility": {
+   "score": 0.78,
+   "band": "high"
+  },
+  "card": {
+   "type": "market",
+   "fields": {
+    "instrumentName": "中国樱桃价格指数",
+    "symbol": "CHERRY-IDX",
+    "lastPrice": 132.4,
+    "unit": "点",
+    "changePct": 1.8,
+    "exchange": "全国农产品批发市场价格信息系统",
+    "kline": [
+     128.1,
+     129.4,
+     130.2,
+     130.8,
+     131.2,
+     130.0,
+     132.4
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "全国农产品批发市场价格信息系统",
+   "geoAnchorPlace": null,
+   "geoAnchorPrecision": "region_only",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-ln-dalian-policy-010",
+  "factType": "event",
+  "status": "active",
+  "title": "大连设施樱桃补贴扩围，新建冷棚每亩补贴 3000 元",
+  "summary": "大连设施樱桃补贴扩围，新建冷棚每亩补贴 3000 元，重点支持早熟与延迟栽培。",
+  "category": "policy",
+  "cardType": "policy",
+  "taxonomy": {
+   "l1": "policy",
+   "l2": "补贴",
+   "l3": "policy.notice.general"
+  },
+  "entityIds": [
+   "e:cmd:cherry"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-14T08:00:00Z",
+  "publishedAt": "2026-09-14T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-LN",
+     "name": "辽宁省"
+    },
+    {
+     "level": "city",
+     "code": "210200",
+     "name": "大连市"
+    }
+   ],
+   "geoPoint": [
+    121.6147,
+    38.914
+   ]
+  },
+  "severity": 52,
+  "credibility": {
+   "score": 0.84,
+   "band": "high"
+  },
+  "card": {
+   "type": "policy",
+   "fields": {
+    "policyTitle": "大连设施樱桃补贴扩围细则",
+    "issuer": "大连市农业农村局",
+    "effectiveDate": "2026-09-01",
+    "impactSummary": "新建冷棚每亩补贴 3000 元，重点支持早熟与延迟栽培，利好樱桃设施化扩张。"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "市级政策公开文件",
+   "geoAnchorPlace": "大连",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "cherry-cl-airfreight-011",
+  "factType": "event",
+  "status": "active",
+  "title": "智利樱桃空运航线加密，上海口岸周到货预增 20%",
+  "summary": "智利樱桃空运航线加密，上海口岸周到货预增 20%，头等舱运价环比上涨 5%。",
+  "category": "logistics",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "logistics",
+   "l2": "航线",
+   "l3": "logistics.route.status"
+  },
+  "entityIds": [
+   "e:cmd:cherry",
+   "e:fac:apt-zssa"
+  ],
+  "commodityIds": [
+   "e:cmd:cherry"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-19T08:00:00Z",
+  "publishedAt": "2026-09-19T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L2",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-SH",
+     "name": "上海市"
+    }
+   ],
+   "geoPoint": [
+    121.4737,
+    31.2304
+   ]
+  },
+  "severity": 55,
+  "credibility": {
+   "score": 0.73,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "智利樱桃空运航线加密",
+    "summary": "智利樱桃空运航线加密，上海口岸周到货预增 20%，头等舱运价环比上涨 5%。",
+    "sourceName": "上海机场口岸公开数据",
+    "publishedAt": "2026-09-19T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "口岸公开统计",
+   "geoAnchorPlace": "上海",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-th-chanthaburi-season-001",
+  "factType": "event",
+  "status": "active",
+  "title": "尖竹汶榴莲产季启动，对华发运量首周增 15%",
+  "summary": "泰国尖竹汶榴莲产季启动，对华发运量首周增长 15%；金枕 A 级收购价 85 泰铢/公斤。",
+  "category": "trade",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "circulation",
+   "l2": "市场到货",
+   "l3": "circulation.market_arrival.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "THA",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "THA",
+     "name": "泰国"
+    },
+    {
+     "level": "province",
+     "code": "TH-23",
+     "name": "尖竹汶府"
+    }
+   ],
+   "geoPoint": [
+    102.1032,
+    12.6096
+   ]
+  },
+  "severity": 78,
+  "credibility": {
+   "score": 0.8,
+   "band": "high"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "尖竹汶榴莲产季启动，对华发运量首周增 15%",
+    "summary": "泰国尖竹汶榴莲产季启动，对华发运量首周增长 15%；金枕 A 级收购价 85 泰铢/公斤。",
+    "sourceName": "泰国尖竹汶府农业局",
+    "publishedAt": "2026-09-21T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "府级农业局公开信息",
+   "geoAnchorPlace": "Chanthaburi",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-my-raub-musang-002",
+  "factType": "event",
+  "status": "active",
+  "title": "彭亨劳勿猫山王收购价 42 马币/公斤，创年内新高",
+  "summary": "彭亨劳勿猫山王收购价升至 42 马币/公斤，创年内新高；出口配额内货源优先供应中国。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "收购价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-20T08:00:00Z",
+  "publishedAt": "2026-09-20T08:00:00Z",
+  "regionIso": "MYS",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "MYS",
+     "name": "马来西亚"
+    },
+    {
+     "level": "province",
+     "code": "MY-06",
+     "name": "彭亨州"
+    }
+   ],
+   "geoPoint": [
+    101.8,
+    3.5
+   ]
+  },
+  "severity": 75,
+  "credibility": {
+   "score": 0.78,
+   "band": "high"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "猫山王榴莲（果园收购）",
+    "priceValue": 42,
+    "priceUnit": "马币/公斤",
+    "changePct": 5.0,
+    "caliber": "产地收购价（日）",
+    "trend": [
+     38.5,
+     39.2,
+     39.8,
+     40.5,
+     41.2,
+     41.6,
+     42.0
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "马来西亚产区行情",
+   "geoAnchorPlace": "Raub",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-vn-tiengiang-price-003",
+  "factType": "event",
+  "status": "active",
+  "title": "越南前江榴莲收购价回落 8%，出口中国通关加快",
+  "summary": "越南前江榴莲收购价回落 8% 至 7.2 万越盾/公斤；对华出口通关时效缩短，边境口岸车辆排队缓解。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "收购价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-19T08:00:00Z",
+  "publishedAt": "2026-09-19T08:00:00Z",
+  "regionIso": "VNM",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "VNM",
+     "name": "越南"
+    },
+    {
+     "level": "province",
+     "code": "VN-46",
+     "name": "前江省"
+    }
+   ],
+   "geoPoint": [
+    106.3368,
+    10.3625
+   ]
+  },
+  "severity": 62,
+  "credibility": {
+   "score": 0.74,
+   "band": "medium"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "越南金枕榴莲（ Ri6 ）",
+    "priceValue": 72000,
+    "priceUnit": "越盾/公斤",
+    "changePct": -8.0,
+    "caliber": "产地收购价（日）",
+    "trend": [
+     78000,
+     76500,
+     75000,
+     74000,
+     73000,
+     72500,
+     72000
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "越南产区行情",
+   "geoAnchorPlace": "My Tho",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-hn-sanya-planting-004",
+  "factType": "event",
+  "status": "active",
+  "title": "海南榴莲挂果面积增至 3.8 万亩，国产果批量上市",
+  "summary": "海南榴莲挂果面积增至 3.8 万亩，三亚、保亭国产果开始批量上市，批发价高于进口同规格 12%。",
+  "category": "supply",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "supply",
+   "l2": "面积",
+   "l3": "supply.production.weekly"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-18T08:00:00Z",
+  "publishedAt": "2026-09-18T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-HI",
+     "name": "海南省"
+    },
+    {
+     "level": "city",
+     "code": "460200",
+     "name": "三亚市"
+    }
+   ],
+   "geoPoint": [
+    109.5083,
+    18.2479
+   ]
+  },
+  "severity": 66,
+  "credibility": {
+   "score": 0.79,
+   "band": "high"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "海南榴莲挂果面积增至 3.8 万亩",
+    "summary": "海南榴莲挂果面积增至 3.8 万亩，三亚、保亭国产果开始批量上市，批发价高于进口同规格 12%。",
+    "sourceName": "海南省农业农村厅",
+    "publishedAt": "2026-09-18T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "省级农业统计公开数据",
+   "geoAnchorPlace": "三亚",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-price-gap-005",
+  "factType": "event",
+  "status": "active",
+  "title": "猫山王与金枕价差扩大至 2.3 倍，高端市场需求走强",
+  "summary": "猫山王与金枕批发价差扩大至 2.3 倍，高端礼盒需求走强，二级市场按果径分级定价。",
+  "category": "price",
+  "cardType": "market",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "region_only",
+   "scopeLayer": "L2",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    }
+   ],
+   "geoPoint": [
+    113.2644,
+    23.1291
+   ]
+  },
+  "severity": 58,
+  "credibility": {
+   "score": 0.77,
+   "band": "high"
+  },
+  "card": {
+   "type": "market",
+   "fields": {
+    "instrumentName": "榴莲品种价差指数（猫山王/金枕）",
+    "symbol": "DURIAN-GAP",
+    "lastPrice": 2.3,
+    "unit": "倍",
+    "changePct": 4.5,
+    "exchange": "广州江南市场行情",
+    "kline": [
+     2.05,
+     2.1,
+     2.15,
+     2.18,
+     2.22,
+     2.26,
+     2.3
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "广州江南市场公开行情",
+   "geoAnchorPlace": null,
+   "geoAnchorPrecision": "region_only",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-th-export-policy-006",
+  "factType": "event",
+  "status": "active",
+  "title": "泰国榴莲对华出口检验加严，浊苷抽检比例提高",
+  "summary": "泰国榴莲对华出口检验加严，浊苷（碱性金黄）抽检比例提高至 10%，不合规果园暂停出口资格。",
+  "category": "policy",
+  "cardType": "policy",
+  "taxonomy": {
+   "l1": "policy",
+   "l2": "检疫",
+   "l3": "policy.notice.general"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-17T08:00:00Z",
+  "publishedAt": "2026-09-17T08:00:00Z",
+  "regionIso": "THA",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "THA",
+     "name": "泰国"
+    }
+   ],
+   "geoPoint": [
+    100.5018,
+    13.7563
+   ]
+  },
+  "severity": 72,
+  "credibility": {
+   "score": 0.86,
+   "band": "high"
+  },
+  "card": {
+   "type": "policy",
+   "fields": {
+    "policyTitle": "泰国榴莲出口检验新规",
+    "issuer": "泰国农业部",
+    "effectiveDate": "2026-09-15",
+    "impactSummary": "浊苷抽检比例提高至 10%，不合规果园暂停出口资格，短期到货节奏或放缓。"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "泰国农业部公开通告",
+   "geoAnchorPlace": "Bangkok",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-my-johor-weather-007",
+  "factType": "event",
+  "status": "active",
+  "title": "柔佛雷暴天气影响榴莲采收，落果率上升",
+  "summary": "柔佛出现雷暴天气，榴莲采收窗口缩短，落果率上升 3 个百分点，收购商推迟收货。",
+  "category": "natural",
+  "cardType": "weather",
+  "taxonomy": {
+   "l1": "natural",
+   "l2": "气象预警",
+   "l3": "natural.alert.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-20T08:00:00Z",
+  "publishedAt": "2026-09-20T08:00:00Z",
+  "regionIso": "MYS",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "MYS",
+     "name": "马来西亚"
+    },
+    {
+     "level": "province",
+     "code": "MY-01",
+     "name": "柔佛州"
+    }
+   ],
+   "geoPoint": [
+    103.3203,
+    1.4854
+   ]
+  },
+  "severity": 56,
+  "credibility": {
+   "score": 0.74,
+   "band": "medium"
+  },
+  "card": {
+   "type": "weather",
+   "fields": {
+    "regionName": "柔佛",
+    "weatherIconCode": "thunderstorm",
+    "alertLevel": "yellow",
+    "impactText": "雷暴天气影响榴莲采收，落果率上升 3 个百分点，收购节奏放缓。"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "open-meteo",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "Open-Meteo API（公开预报）",
+   "geoAnchorPlace": "Johor Bahru",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-cn-import-volume-008",
+  "factType": "event",
+  "status": "active",
+  "title": "中国榴莲进口前 8 月 142 万吨，同比增长 11%",
+  "summary": "中国榴莲进口前 8 月累计 142 万吨，同比增长 11%；越南份额升至 44%，泰国 41%。",
+  "category": "customs",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "customs",
+   "l2": "进口",
+   "l3": "customs.flow.monthly"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-16T08:00:00Z",
+  "publishedAt": "2026-09-16T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "region_only",
+   "scopeLayer": "L2",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    }
+   ],
+   "geoPoint": [
+    104.5,
+    34.5
+   ]
+  },
+  "severity": 68,
+  "credibility": {
+   "score": 0.85,
+   "band": "high"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "中国榴莲进口前 8 月 142 万吨",
+    "summary": "中国榴莲进口前 8 月累计 142 万吨，同比增长 11%；越南份额升至 44%，泰国 41%。",
+    "sourceName": "海关总署公开统计",
+    "publishedAt": "2026-09-16T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "海关月度公开统计",
+   "geoAnchorPlace": null,
+   "geoAnchorPrecision": "region_only",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-hn-hongxing-price-009",
+  "factType": "event",
+  "status": "active",
+  "title": "红星市场榴莲批发均价 46 元/公斤，金枕占比回升",
+  "summary": "长沙红星市场榴莲批发均价 46 元/公斤，金枕占比回升至 62%，猫山王礼盒装走货加快。",
+  "category": "price",
+  "cardType": "price",
+  "taxonomy": {
+   "l1": "price",
+   "l2": "批发价",
+   "l3": "price.wholesale.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian",
+   "e:mkt-hongxing"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-21T08:00:00Z",
+  "publishedAt": "2026-09-21T08:00:00Z",
+  "regionIso": "CHN",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L3",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "CHN",
+     "name": "中国"
+    },
+    {
+     "level": "province",
+     "code": "CN-HN",
+     "name": "湖南省"
+    },
+    {
+     "level": "city",
+     "code": "430100",
+     "name": "长沙市"
+    }
+   ],
+   "geoPoint": [
+    112.9388,
+    28.2282
+   ]
+  },
+  "severity": 54,
+  "credibility": {
+   "score": 0.76,
+   "band": "high"
+  },
+  "card": {
+   "type": "price",
+   "fields": {
+    "commodityName": "榴莲（混合规格）",
+    "priceValue": 46,
+    "priceUnit": "元/公斤",
+    "changePct": 1.9,
+    "caliber": "红星市场批发均价（日）",
+    "trend": [
+     44.2,
+     44.8,
+     45.2,
+     45.5,
+     45.6,
+     45.8,
+     46.0
+    ]
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "红星市场行情公开数据",
+   "geoAnchorPlace": "长沙",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-video-cctv17-010",
+  "factType": "event",
+  "status": "active",
+  "title": "产区直播：马来西亚猫山王开果与分级现场",
+  "summary": "跟随产区镜头直击猫山王开果、果肉分级与急冻封装流程，看高端榴莲如何走向中国餐桌。",
+  "category": "news",
+  "cardType": "video",
+  "taxonomy": {
+   "l1": "news",
+   "l2": "行业新闻",
+   "l3": "news.industry.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-18T08:00:00Z",
+  "publishedAt": "2026-09-18T08:00:00Z",
+  "regionIso": "MYS",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "MYS",
+     "name": "马来西亚"
+    },
+    {
+     "level": "province",
+     "code": "MY-06",
+     "name": "彭亨州"
+    }
+   ],
+   "geoPoint": [
+    101.8,
+    3.5
+   ]
+  },
+  "severity": 42,
+  "credibility": {
+   "score": 0.7,
+   "band": "medium"
+  },
+  "card": {
+   "type": "video",
+   "fields": {
+    "mediaTitle": "CCTV-17 农业农村频道直播",
+    "embedUrl": null,
+    "provider": "央视网",
+    "isLive": true,
+    "embeddable": "unknown",
+    "fallbackReason": "公开直播源按站点策略接入，当前保留静态卡片与原始链接"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "央视网公开直播页",
+   "geoAnchorPlace": "Raub",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ },
+ {
+  "factId": "durian-th-chanthaburi-quality-011",
+  "factType": "event",
+  "status": "active",
+  "title": "尖竹汶榴莲优质果率 82%，干胞问题同比下降",
+  "summary": "尖竹汶产区榴莲优质果率 82%，干胞问题同比下降 4 个百分点；果园按成熟度分批采收。",
+  "category": "production",
+  "cardType": "news",
+  "taxonomy": {
+   "l1": "production",
+   "l2": "采收",
+   "l3": "production.base.daily"
+  },
+  "entityIds": [
+   "e:cmd:durian"
+  ],
+  "commodityIds": [
+   "e:cmd:durian"
+  ],
+  "industryId": "fruit",
+  "occurredAt": "2026-09-19T08:00:00Z",
+  "publishedAt": "2026-09-19T08:00:00Z",
+  "regionIso": "THA",
+  "geo": {
+   "geoPrecision": "approx",
+   "scopeLayer": "L1",
+   "regionPath": [
+    {
+     "level": "global",
+     "code": "GLOBAL",
+     "name": "全球"
+    },
+    {
+     "level": "country",
+     "code": "THA",
+     "name": "泰国"
+    },
+    {
+     "level": "province",
+     "code": "TH-23",
+     "name": "尖竹汶府"
+    }
+   ],
+   "geoPoint": [
+    102.1032,
+    12.6096
+   ]
+  },
+  "severity": 48,
+  "credibility": {
+   "score": 0.73,
+   "band": "medium"
+  },
+  "card": {
+   "type": "news",
+   "fields": {
+    "title": "尖竹汶榴莲优质果率 82%",
+    "summary": "尖竹汶产区榴莲优质果率 82%，干胞问题同比下降 4 个百分点；果园按成熟度分批采收。",
+    "sourceName": "泰国水果出口商协会周报",
+    "publishedAt": "2026-09-19T08:00:00Z"
+   }
+  },
+  "provenanceMeta": {
+   "dataMode": "generated",
+   "dataOrigin": "generated",
+   "sourcePlugin": "agrilink",
+   "collectedAt": "2026-09-22",
+   "realSourceHint": "行业协会公开周报",
+   "geoAnchorPlace": "Chanthaburi",
+   "geoAnchorPrecision": "approx",
+   "placeholders": [],
+   "generator": null
+  }
+ }
+]

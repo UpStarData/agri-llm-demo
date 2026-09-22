@@ -66,19 +66,31 @@ const PKG_FILES = {
 };
 const PKG_INPUTS = Object.keys(PKG_FILES).map(k => 'data/pkg/' + PKG_FILES[k]);
 
-const libs = `<script>${rd('vendor/echarts.min.js')}</script>`;
+/* 第三方数据补充包（D0/D2/D4/D1）：天气事实 / 大型机场 / 公开直播频道 / 重点农产品补齐事实 */
+const PKG2_FILES = [
+  'data/pkg2/weather-facts.json', 'data/pkg2/airports-large.geojson',
+  'data/pkg2/live-channels.json', 'data/pkg2/extra-facts.json'
+];
+const pkg2Data = (() => {
+  const read = f => { try { return JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch (e) { return null; } };
+  const out = { weather: read('data/pkg2/weather-facts.json') || [], airports: read('data/pkg2/airports-large.geojson'), channels: read('data/pkg2/live-channels.json') || [], extra: read('data/pkg2/extra-facts.json') || [] };
+  return '<script>window.__AGRI_PKG2__=' + JSON.stringify(out) + ';</script>';
+})();
+
+const libs = `<script>${rd('vendor/echarts.min.js')}</script>\n<script>${rd('vendor/hls.min.js')}</script>`;
 const pkgData = '<script>window.__AGRI_PKG__={' +
   Object.keys(PKG_FILES).map(k => JSON.stringify(k) + ':' + rd('data/pkg/' + PKG_FILES[k])).join(',') +
   '};</script>';
 const data = [
   `<script>window.__CHINA_GEO=${rd('data/china.geo.json')};</script>`,
   `<script>window.__WORLD110=${rd('data/world110.geo.json')};</script>`,
-  pkgData
+  pkgData,
+  pkg2Data
 ].join('\n');
 const appJs = JS.map(f => `<script>\n${rd(f)}\n</script>`).join('\n');
 
 const INPUTS = ['src/v03/shell.html', ...CSS, ...JS, ...GEO, ...PKG_INPUTS, 'build.mjs',
-  'vendor/echarts.min.js', ...FACES.map(f => f.file)];
+  'vendor/echarts.min.js', 'vendor/hls.min.js', ...FACES.map(f => f.file)];
 const hh = crypto.createHash('sha256');
 INPUTS.forEach(p => { hh.update(p + '\0'); hh.update(rb(p)); });
 const hash = hh.digest('hex').slice(0, 12);

@@ -14,6 +14,9 @@ window.V03Pkg = (function () {
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
   const FACTS_IN = P.facts || [], ENTITIES_IN = P.entities || [], RELATIONS_IN = P.relations || [];
   const EVIDENCE_IN = P.evidence || [], SOURCES_IN = P.sources || [], OBS_IN = P.observations || [];
+  /* D0/D4：第三方补充包（重点农产品补齐事实 + Open-Meteo 天气事实 + OurAirports 大型机场 + 公开直播频道） */
+  const P2 = window.__AGRI_PKG2__ || {};
+  const EX_FACTS = (P2.extra || []).concat(P2.weather || []);
   const STREAM_IN = P.stream || { events: [], loopMs: 1 };
 
   /* ---------- 类型 / 分类 字典（事实层冷色色系，与关联层暖色系区分） ---------- */
@@ -90,6 +93,8 @@ window.V03Pkg = (function () {
   OBS_IN.forEach(o => { obsById[o.observationId] = o; });
   const entityById = {};
   ENTITIES_IN.forEach(e => { entityById[e.entityId] = e; });
+  /* D2：OurAirports 大型机场（真实公开数据，约 900 个） */
+  const AIRPORT_FEATURES = (P2.airports && P2.airports.features) || [];
 
   /* 关系 → 事实 反查（事实详情的「相关关系」） */
   const relIdsByFact = {};
@@ -169,6 +174,18 @@ window.V03Pkg = (function () {
 
   /* ---------- 视频源可嵌入性核验（2026-09-21 实测 HTTP 响应头：无 X-Frame-Options / CSP frame-ancestors） ----------
      只有核验通过的源才允许在卡片/详情内挂载播放器；其余一律静态卡片降级（不伪造播放器）。 */
+  /* 公开 m3u8（hls.js 直连播放）：CCTV-17 来自 ChinaIPTV 维护的可用地址；http 页面下可播，
+     https 页面因混合内容限制会自动退回 iframe 播放页（见 fact.js 的优先级链）。 */
+  const HLS_SOURCES = {
+    'real-video-cctv17-live': 'http://183.196.25.171:808/hls/93/index.m3u8'
+  };
+  /* D1：ChinaIPTV 公开频道（仅取实测 200 的源），按频道名匹配到视频事实 */
+  const CHANNELS = (P2.channels || []).filter(c => c && c.url && (c.httpStatus === 200 || c.httpStatus === 206));
+  const channelFor = name => {
+    const n = String(name || '');
+    const hit = CHANNELS.find(c => c.name && (n.indexOf(c.name.slice(0, 6)) >= 0 || c.name.indexOf(n.slice(0, 6)) >= 0));
+    return hit ? hit.url : null;
+  };
   const VERIFIED_EMBED = {
     'real-video-cctv17-live':   { url: 'https://tv.cctv.com/live/cctv17/',      provider: '央视网', title: 'CCTV-17 农业农村频道直播' },
     'real-video-cctv-live-index': { url: 'https://tv.cctv.com/live/cctv1/',      provider: '央视网', title: 'CCTV-1 综合频道直播' },
@@ -179,10 +196,18 @@ window.V03Pkg = (function () {
     'gen-video-04': { url: 'https://tv.cctv.com/live/cctv4/',  provider: '央视网', title: 'CCTV-4 中文国际频道' }
   };
 
-  const FACTS = FACTS_IN.map(f => {
+  const FACTS_BASE = FACTS_IN.concat(EX_FACTS.map(f => Object.assign({}, f, {
+    provenanceMeta: Object.assign({ dataMode: 'generated' }, f.provenanceMeta || {})
+  })));
+  const FACTS = FACTS_BASE.map(f => {
     let card = (f.card && f.card.fields) || {};
     const vv = VERIFIED_EMBED[f.factId];
     if (vv) card = Object.assign({}, card, { embeddable: 'yes', embedUrl: vv.url, provider: vv.provider, mediaTitle: vv.title, isLive: true });
+    if (HLS_SOURCES[f.factId]) card = Object.assign({}, card, { hlsUrl: HLS_SOURCES[f.factId], embeddable: 'yes', isLive: true });
+    else if (card.embeddable === 'yes' || f.cardType === 'video') {
+      const ch = channelFor(card.mediaTitle);
+      if (ch) card = Object.assign({}, card, { hlsUrl: ch, embeddable: 'yes' });
+    }
     const pt = f.geo.geoPoint;
     const pm = f.provenanceMeta || {};
     return {
@@ -307,7 +332,18 @@ window.V03Pkg = (function () {
     return [hit[1][0] + ((h % 17) - 8) * 0.012, hit[1][1] + ((h % 13) - 6) * 0.012];
   };
 
-  const OBJECTS = ENTITIES_IN.map(e => {
+  /* 大型机场若不在原实体表内，补一个轻量本体对象（点标记即可打开详情） */
+  const ENTITIES_ALL = ENTITIES_IN.concat(AIRPORT_FEATURES
+    .filter(ft => !entityById[ft.properties.id])
+    .map(ft => ({
+      entityId: ft.properties.id, type: 'LogisticsNode', status: 'active',
+      canonicalName: ft.properties.name, aliases: [],
+      geo: { geoPoint: ft.geometry.coordinates, geoPrecision: 'exact', regionPath: [{ level: 'global', code: 'GLOBAL', name: '全球' }, { level: 'country', code: ft.properties.country || '', name: ft.properties.country || '' }] },
+      attributes: { nodeKind: 'airport', function: ft.properties.function || '机场', iata: ft.properties.iata, municipality: ft.properties.municipality },
+      commodityTags: [], supportingFactIds: [],
+      provenanceMeta: { dataMode: 'real', note: (ft.properties.provenance || {}).provider || 'OurAirports' }
+    })));
+  const OBJECTS = ENTITIES_ALL.map(e => {
     const a = e.attributes || {};
     let pt = e.geo && e.geo.geoPoint;
     let approx = false;
@@ -378,7 +414,7 @@ window.V03Pkg = (function () {
       cargo: ft.properties.function, objId: ft.properties.id, prov: 'public',
       provider: (ft.properties.provenance || {}).provider
     })))
-    .concat(geoFeatures('airports').map(ft => ({
+    .concat((AIRPORT_FEATURES.length ? AIRPORT_FEATURES : geoFeatures('airports')).map(ft => ({
       id: ft.properties.id, name: ft.properties.name, emoji: '✈️', kind: 'airport', iata: ft.properties.iata,
       lat: ft.geometry.coordinates[1], lng: ft.geometry.coordinates[0], country: ft.properties.country,
       cargo: ft.properties.function, objId: ft.properties.id, prov: 'public',
@@ -409,6 +445,7 @@ window.V03Pkg = (function () {
     FACTS, OBJECTS, RELATIONS, REGIONS, GATES, STREAM, STREAM_LOOP,
     ONTOLOGY: ONT, SOURCES: SOURCES_IN, EVIDENCE: EVIDENCE_IN, OBSERVATIONS: OBS_IN,
     CARD_SCHEMA: P.cards || {}, STATS, MANIFEST, VALIDATION: P.validation || {},
+    CHANNELS,
     CAT_COLOR, CAT_EMOJI, TYPE_EMOJI, TYPE2DOMAIN, REL_LABEL, STAGE_LABEL,
     PROVINCES, PROV_BY_SHORT, shortProv, REBALANCE,
     counts: {

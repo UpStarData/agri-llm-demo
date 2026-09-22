@@ -19,7 +19,10 @@ window.V03Filter = (function () {
     { n: '政策与治理', key: 'policy', color: '#1d4ed8', subs: [{ n: '农业政策', items: [{ key: 'policy|农业政策|产业扶持', n: '产业扶持', e: '📜', kw: ['扶持', '补贴'] }] }] },
     { n: '宏观与公共事件', key: 'macro', color: '#b45309', subs: [{ n: '地缘与安全', items: [{ key: 'macro|地缘与安全|公共安全', n: '公共安全', e: '⚠️', kw: ['安全'] }] }] }
   ];
-  const FACT_TREE = (D3 && D3.TREE && D3.TREE.length) ? D3.TREE : FALLBACK_TREE;
+  const FACT_TREE_RAW = (D3 && D3.TREE && D3.TREE.length) ? D3.TREE : FALLBACK_TREE;
+  /* L2：一级分类改用低饱和配色（与整体明亮风格一致；地图点/图例/菜单同一套） */
+  const MUTED = { nature: '#5b8ea6', supply: '#6f9a6a', chain: '#5f9a94', market: '#b0736b', consume: '#8b7fa8', policy: '#6f86b8', macro: '#a08a63' };
+  const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: MUTED[g.key] || g.color }));
   const leafOf = f => (D3 && D3.leafOf) ? D3.leafOf(f) : null;
 
   /* ---------- 关联层：A2 固定九类对象域（不得缩减） ---------- */
@@ -96,19 +99,24 @@ window.V03Filter = (function () {
   const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
   const DEFAULT_FOCUS = '湖南';
 
+  /* M6 空间漏斗：全球=全部事实；中国=落入中国范围的事实；省区=聚焦省区的事实。
+     层越深，视野内密度越高（全球各大洲都有点，缩到中国/湖南后局部更密）。 */
+  const inChina = f => f.lng >= 73 && f.lng <= 136 && f.lat >= 17.5 && f.lat <= 54.5;
+  const inProvince = (f, focus) => {
+    const prov = (PKG && PKG.PROV_BY_SHORT ? PKG.PROV_BY_SHORT[focus] : null) || {};
+    const c = (D.PROV_CENTER || {})[focus];
+    if (prov.code && f.provinceCode === prov.code) return true;
+    if (shortProv(f.province) === focus) return true;
+    return !!(c && Math.abs(f.lng - c[0]) <= 2.8 && Math.abs(f.lat - c[1]) <= 2.4);
+  };
   function factsAtLevel(s) {
     s = s || window.V03Store.state;
     const all = facts(s);
     const lv = s.geo.level;
-    let list;
-    if (lv === 'L1') list = all.filter(f => f.level === 'L1');
-    else if (lv === 'L2') list = all.filter(f => f.level === 'L2');
-    else {
-      const focus = shortProv(s.geo.focus || DEFAULT_FOCUS);
-      const prov = (PKG && PKG.PROV_BY_SHORT ? PKG.PROV_BY_SHORT[focus] : null) || {};
-      list = all.filter(f => f.level === 'L3' &&
-        (f.provinceCode === prov.code || shortProv(f.province) === focus));
-    }
+    const focus = shortProv(s.geo.focus || DEFAULT_FOCUS);
+    let list = lv === 'L1' ? all.slice()
+      : lv === 'L2' ? all.filter(f => f.lng != null && inChina(f))
+        : all.filter(f => f.lng != null && inProvince(f, focus));
     (s.carry || []).forEach(id => {
       const f = D.factById(id);
       if (f && !list.includes(f) && all.some(x => x.id === id)) list = list.concat(f);
@@ -157,31 +165,27 @@ window.V03Filter = (function () {
   }
 
   /* ---------- 数据概览（F2 固定四项：本层事实数 / 高可信占比 / 关联本体数 / 最近更新时间） ---------- */
+  /* L1：数据概览只保留两项 —— 事实条数 + 整体可信占比 */
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
       const objs = objects(s), rels = relations(s);
       const landed = objs.filter(o => o.geo !== false && o.lat != null);
+      const hi = rels.filter(r => r.confidence >= .75).length;
       return {
         rows: [
-          ['本体对象', objs.length + ' 个'],
-          ['可定位本体', landed.length + ' 个'],
-          ['本体关系', rels.length + ' 条'],
-          ['最近更新', D.TODAY]
+          ['本体对象', objs.length],
+          ['可信关系', (rels.length ? Math.round(hi / rels.length * 100) : 0) + '%'],
+          ['', landed.length + ' 个可定位']
         ]
       };
     }
     const list = factsAtLevel(s);
     const hi = list.filter(f => f.cred === 'high').length;
-    const objIds = new Set();
-    list.forEach(f => (f.objects || []).forEach(o => objIds.add(o)));
-    const last = list.map(f => f.date).sort().pop() || D.TODAY;
     return {
       rows: [
-        ['本层事实', list.length + ' 条'],
-        ['高可信占比', list.length ? Math.round(hi / list.length * 100) + '%' : '—'],
-        ['关联本体', objIds.size + ' 个'],
-        ['最近更新', last]
+        ['事实条数', list.length],
+        ['整体可信占比', (list.length ? Math.round(hi / list.length * 100) : 0) + '%']
       ]
     };
   }
