@@ -192,15 +192,17 @@
 
   /* v08：数据概览主数字 —— 与 hyperresearch.ai 同款「实时大数字」：
      全位数 + 千分位 + tabular-nums，尾数每秒都在走；终端每处理一条再即时 +1 */
-  const OV = { node: null, base: 0, extra: 0, rate: 0, t0: 0, today: 0, raf: 0, timer: 0 };
+  const OV = { node: null, model: null, base: 0, extra: 0, rate: 0, t0: 0, today: 0, raf: 0, timer: 0 };
   const ovStill = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  function ovValue() {
-    const secs = (OV.raf || OV.timer) ? (performance.now() - OV.t0) / 1000 : 0;
-    return OV.base + OV.extra + OV.rate * secs;
+  /* 把「已走时间」折算进基数：菜单重绘 / 终端事件都会重绘，不折算就会掉数（只增不减的关键） */
+  function ovTick() {
+    const now = performance.now();
+    if (OV.t0) OV.base += OV.rate * (now - OV.t0) / 1000;
+    OV.t0 = now;
   }
   function ovPaint() {
     const M = window.V03Mass;
-    if (OV.node && M) OV.node.textContent = M.digits(ovValue());
+    if (OV.node && M) OV.node.textContent = M.digits(OV.base + OV.extra);
   }
   function ovStop() {
     if (OV.raf) cancelAnimationFrame(OV.raf);
@@ -208,14 +210,16 @@
     OV.raf = 0; OV.timer = 0; OV.node = null;
   }
   function ovMount(node, base, rate) {
-    ovStop();
-    if (!node || typeof base !== 'number') return;
-    OV.node = node; OV.base = base; OV.t0 = performance.now();
+    if (!node || typeof base !== 'number') { ovStop(); return; }
     if (typeof rate === 'number') OV.rate = rate;
+    if (base !== OV.model) { OV.model = base; OV.base = base; }   /* 只有体量口径变了才重置基数 */
+    if (node !== OV.node) ovTick();                              /* 换节点前先结帐，不丢时间 */
+    OV.node = node;
+    if (OV.raf || OV.timer) { ovPaint(); return; }                /* 表已在走：不重启 rAF */
+    const pulse = () => { ovTick(); ovPaint(); };
+    if (ovStill()) { OV.timer = setInterval(pulse, 1000); }       /* 弱动效与源站同款降级：1s 一跳 */
+    else { const loop = () => { pulse(); OV.raf = requestAnimationFrame(loop); }; OV.raf = requestAnimationFrame(loop); }
     ovPaint();
-    /* 弱动效环境与源站同款降级：1s 一跳，不逐帧 */
-    if (ovStill()) OV.timer = setInterval(ovPaint, 1000);
-    else { const loop = () => { ovPaint(); OV.raf = requestAnimationFrame(loop); }; OV.raf = requestAnimationFrame(loop); }
   }
   function bumpOverview() {
     OV.extra += 1; OV.today += 1; ovPaint();

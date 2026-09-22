@@ -155,6 +155,11 @@ const ovT2 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.
 check('L1/v08 主数字持续递增（尾数一直在走，非静态值）且分组格式稳定',
   Number(ovT2.replace(/,/g, '')) - Number(ovT1.replace(/,/g, '')) >= 2 && /^\d{1,3}(,\d{3})+$/.test(ovT2),
   ovT1 + ' → ' + ovT2);
+/* 回归：菜单重绘 / 终端事件都会重绘数字，历史上一度会把已走时间丢掉 → 数字倒着走 */
+const ovSeries = [];
+for (let i = 0; i < 10; i++) { ovSeries.push(await page.evaluate(() => document.querySelector('#menuBody .mn-ov.hero .ov-i b').textContent)); await sleep(320); }
+const ovNums = ovSeries.map(s => Number(s.replace(/,/g, '')));
+check('L1/v08 主数字只增不减（重绘不掉数）', ovNums.every((v, i) => i === 0 || v >= ovNums[i - 1]), ovSeries.join(' '));
 
 /* ---------------- F3 事实三级分类字典 ---------------- */
 check('F3 分类字典与指令一致：一级 7 / 二级 26 / 三级 125，逐条未合并改名',
