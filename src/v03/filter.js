@@ -187,8 +187,7 @@ window.V03Filter = (function () {
     const t = M ? M.totals(s.geo.level, FACT_ITEMS.length, leaves) : null;
     return {
       rows: [
-        ['事实条数', t ? M.fmt(t.total) : list.length, t ? t.total : list.length],
-        ['整体可信占比', (list.length ? Math.round(hi / list.length * 100) : 62) + '%', null]
+        ['事实条数', t ? M.fmt(t.total) : list.length, t ? t.total : list.length]
       ],
       note: t ? '每个三级类型 ' + M.fmt(t.per) + ' 条 · 本视野采样 ' + t.sampled + ' 点' : '',
       real: list.length

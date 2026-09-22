@@ -180,7 +180,7 @@ window.V03Fact = (function () {
   const radiusPx = f => Math.max(9, Math.min(26, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
 
   const DOT = { high: 6, mid: 5.2, low: 4.6 };      /* 事实点：统一红点，大小随重要性 */
-  const RED = '#d63c3c';
+  const DOTC = '#3f4c5f';          /* 统一中性色点（与关联层本体点一致，不用红色） */
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
@@ -190,9 +190,9 @@ window.V03Fact = (function () {
       const sev = f.severity || 40;
       halos.push({ id: f.id, value: [f.lng, f.lat], symbolSize: radiusPx(f),
         itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-          { offset: 0, color: hexA(RED, .16) }, { offset: .55, color: hexA(RED, .07) }, { offset: 1, color: hexA(RED, 0) }] } } });
+          { offset: 0, color: hexA(DOTC, .13) }, { offset: .55, color: hexA(DOTC, .06) }, { offset: 1, color: hexA(DOTC, 0) }] } } });
       pts.push({ id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
-        itemStyle: { color: RED, borderColor: '#fff', borderWidth: .7 } });
+        itemStyle: { color: '#ffffff', borderColor: DOTC, borderWidth: 1.1 } });
       if (f.impact === 'high' && sev >= 70) high.push({ id: f.id, name: f.title, value: [f.lng, f.lat] });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
@@ -200,13 +200,9 @@ window.V03Fact = (function () {
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
     const series = [
-      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], symbolSize: 2.1, i })), z: 1, silent: true, symbol: 'circle',
-        itemStyle: { color: 'rgba(214,60,60,.42)' } },
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], symbolSize: 2.3, i })), z: 1, silent: true, symbol: 'circle',
+        itemStyle: { color: 'rgba(63,76,95,.42)' } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
-      /* 扩散动画重做：高影响事实用一圈缓慢扩散的细环（6s 一轮，克制不刺眼） */
-      { id: 'ring', type: 'effectScatter', coordinateSystem: 'geo', data: high.slice(0, 40), z: 3, silent: true,
-        symbolSize: 5, rippleEffect: { scale: 4.6, brushType: 'stroke', period: 6, number: 2 },
-        itemStyle: { color: 'rgba(214,60,60,.35)', borderColor: 'rgba(214,60,60,.45)' } },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
     ];
     if (st.sk.regions) markerSeries('regions', D.REGIONS, '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -286,6 +282,55 @@ window.V03Fact = (function () {
     setTimeout(() => d.remove(), 1000);
   }
   const flashIds = () => [...document.querySelectorAll('#layer-fact .star-flash')].map(n => n.dataset.fid);
+
+  /* ---------- P2：水波纹扩散（自绘 canvas，缓慢外扩 + 渐隐，半径/速度随 severity） ---------- */
+  const RIPPLE = { raf: 0, cv: null };
+  function ensureRipple() {
+    if (RIPPLE.cv || !dom.mapBox) return RIPPLE.cv;
+    const cv = document.createElement('canvas');
+    cv.className = 'ripple-canvas';
+    dom.mapBox.appendChild(cv);
+    RIPPLE.cv = cv;
+    return cv;
+  }
+  function rippleLoop(now) {
+    RIPPLE.raf = requestAnimationFrame(rippleLoop);
+    const cv = ensureRipple();
+    if (!cv || !chart) return;
+    const box = dom.mapBox.getBoundingClientRect();
+    if (cv.width !== Math.round(box.width) || cv.height !== Math.round(box.height)) { cv.width = Math.round(box.width); cv.height = Math.round(box.height); }
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const st = S.state;
+    if (!st.sk.influence || st.sk.mode3d || st.tab !== 'fact') return;
+    const t = now / 1000;
+    const facts = F.mappable(F.factsAtLevel(st)).filter(f => f.impact === 'high').slice(0, 60);
+    facts.forEach(f => {
+      let px = null;
+      try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { return; }
+      if (!Array.isArray(px) || px[0] < -40 || px[1] < -40 || px[0] > cv.width + 40 || px[1] > cv.height + 40) return;
+      const sev = f.severity || 60;
+      const period = 6 + sev / 60;                       /* 6.0–7.7s：慢，像水面波纹 */
+      const base = radiusPx(f) * 2.4;
+      for (let k = 0; k < 2; k++) {
+        const phase = ((((t + (f.lng + f.lat) * .31) / period) + k * .5) % 1 + 1) % 1;
+        const alpha = .30 * (1 - phase) * (1 - phase);    /* 越外越透明，尾段自然消失 */
+        if (alpha < .004) continue;
+        const r = base * phase;
+        if (!(r > 0.5)) continue;
+        ctx.beginPath();
+        ctx.arc(px[0], px[1], r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(63,76,95,' + alpha.toFixed(3) + ')';
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+      }
+    });
+  }
+  function syncRipple() {
+    const on = S.state.tab === 'fact' && S.state.sk.influence && !S.state.sk.mode3d;
+    if (on && !RIPPLE.raf) { RIPPLE.raf = requestAnimationFrame(rippleLoop); }
+    if (!on && RIPPLE.raf) { cancelAnimationFrame(RIPPLE.raf); RIPPLE.raf = 0; const cv = RIPPLE.cv; if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); }
+  }
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -724,11 +769,13 @@ window.V03Fact = (function () {
     if (key === sig) return; sig = key;
 
     syncMode();
+    syncRipple();
     const lvKey = st.geo.level + '|' + (st.geo.focus || '');
     const c = ensureChart();
     if (c && !st.sk.mode3d) {
-      if (camera.level !== lvKey) {
-        camera.level = lvKey;
+      let justLeveled = false;
+    if (camera.level !== lvKey) {
+        camera.level = lvKey; justLeveled = true;
         const t = LEVEL[st.geo.level], focus = PROV[st.geo.focus || (st.geo.level === 'L3' ? '湖南' : '')];
         const target = focus ? [focus[0], focus[1]] : t.center;
         const zoom = focus ? focus[2] : t.zoom;
@@ -737,6 +784,11 @@ window.V03Fact = (function () {
         c.clear();
       }
       c.setOption(mapOption(), { notMerge: true });
+      /* Z3：层级切换时事实点淡入（世界→中国→省区 过渡自然） */
+      if (justLeveled) {
+        c.setOption({ series: [{ id: 'facts', itemStyle: { opacity: .15 } }, { id: 'mass', itemStyle: { opacity: .1 } }] }, { lazyUpdate: true });
+        setTimeout(() => c.setOption({ series: [{ id: 'facts', itemStyle: { opacity: 1 } }, { id: 'mass', itemStyle: { opacity: 1 } }] }, { lazyUpdate: true, animationDurationUpdate: 420 }), 90);
+      }
     }
     renderLegend(); renderCards();
   }

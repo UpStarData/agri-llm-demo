@@ -13,8 +13,8 @@
   /* 地图底图（浅色农业风） */
   --ocean:#f4f6fa;--land:#e9eef7;--land-2:#dde6f4;--map-line:rgba(120,145,185,.55);--map-label:#7b8aa3;
   /* 面板与阴影（浅色，不用暗色玻璃） */
-  --glass:rgba(255,255,255,.62);--glass-2:rgba(255,255,255,.56);--glass-line:rgba(255,255,255,.45);
-  --blur:blur(24px) saturate(180%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
+  --glass:rgba(255,255,255,.55);--glass-2:rgba(255,255,255,.5);--glass-line:rgba(255,255,255,.4);
+  --blur:blur(28px) saturate(185%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
   /* 图标（Cursor 风格：细线、浅灰、hover 变深） */
   --icon:#8899aa;--icon-hover:#556677;--icon-on:rgba(15,23,42,.06);
   /* 一级分类（低饱和，与明亮风格一致；同时用于地图点与图例） */
@@ -168,6 +168,8 @@ svg{display:block}
 .drawer-back:hover,.drawer-x:hover{background:var(--accent-soft);color:var(--accent);border-color:#c7d7f5}
 .drawer-body{flex:1;overflow-y:auto;padding:10px 12px 20px}
 
+.ripple-canvas{position:absolute;inset:0;z-index:2;pointer-events:none}
+
 /* ---------------- B3：地图星闪（新数据接入一闪而过，0.5–1s 消失） ---------------- */
 .star-flash{position:absolute;pointer-events:none;z-index:20;transform-origin:50% 50%;will-change:transform,opacity;
   animation:starFlash .9s var(--ease) forwards}
@@ -186,7 +188,7 @@ svg{display:block}
 /* ---------------- 底部流水：MiroFish 式终端面板（纯黑 · 等宽 · 时间戳 + 处理信息） ---------------- */
 .stream{position:absolute;left:0;right:0;bottom:0;height:0;overflow:hidden;z-index:45;background:#0b0f14;color:#cbd5e1;
   border-top:1px solid #1f2937;transition:height .2s var(--ease);display:flex;flex-direction:column}
-.stream.on{height:132px}
+.stream.on{height:74px}   /* 约 3 行 */
 .st-bar{display:flex;align-items:center;gap:8px;padding:0 12px;height:22px;flex:0 0 22px;border-bottom:1px solid #1f2937}
 .st-tab{font-size:.59375rem;font-weight:var(--f-reg);color:#94a3b8;letter-spacing:.08em}
 .st-tab.add{color:#475569;cursor:default}
@@ -263,7 +265,8 @@ svg{display:block}
   padding:6px 7px 7px;transition:box-shadow .15s,transform .15s,border-color .15s;cursor:pointer}
 .fcard:hover{box-shadow:0 6px 16px -14px rgba(15,23,42,.5);border-color:#c7d7f5;transform:translateY(-1px)}
 .fcard.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
-.fcard.fresh{border-left-color:var(--red);background:rgba(255,255,255,.94)}
+.fcard.fresh{border-left-color:#4b5b73;background:rgba(255,255,255,.94);animation:cardIn .34s var(--ease)}
+@keyframes cardIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .fresh-tag{display:inline-block;font-size:.5625rem;font-weight:var(--f-semi);color:#fff;background:var(--red);
   border-radius:2px;padding:0 3px;margin-right:4px;vertical-align:1px}
 /* 概览里的实时接入计数 + 滚动 +1 动画 */
