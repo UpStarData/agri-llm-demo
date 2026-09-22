@@ -14,7 +14,7 @@ window.V03Mass = (function () {
   /* 每个三级类型的事实条数下限（产品定义） */
   const QUOTA = { L1: 1000000, L2: 100000, L3: 10000 };
   /* 单视野渲染采样上限（性能） */
-  const SAMPLE = { L1: 2400, L2: 2200, L3: 1800 };
+  const SAMPLE = { L1: 3800, L2: 3400, L3: 2800 };   /* 点还不够密：采样数上调 */
   const SEED = 20260922;
 
   function mulberry32(a) {

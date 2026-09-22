@@ -356,9 +356,10 @@
     body.scrollTop = body.scrollHeight;
     const f = e.factId ? D.factById(e.factId) : (e.star && D.factById(e.star.factId));
     if (f) {
-      bumpOverview();
-      S.set({ newFacts: (S.state.newFacts || []).concat([f.id]).slice(-12) });
-      S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity });
+      bumpOverview();                                        /* [0ms] 事实条数 +1（翻牌动画） */
+      const maybeNew = Math.random() < .2;                   /* 约 1/5 概率新增卡片 */
+      setTimeout(() => S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity }), 100);   /* [100ms] 地图亮星 */
+      if (maybeNew) setTimeout(() => S.set({ newFacts: (S.state.newFacts || []).concat([f.id]).slice(-12) }), 200);   /* [200ms] 卡片滑入 */
     }
   }
   function scheduleStream() {
@@ -388,7 +389,7 @@
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
-    document.documentElement.style.setProperty('--stream-h', on ? '132px' : '0px');
+    document.documentElement.style.setProperty('--stream-h', on ? '74px' : '0px');
     document.documentElement.style.setProperty('--side-w',
       (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? '420px' : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];

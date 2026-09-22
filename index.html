@@ -23,8 +23,8 @@
   /* 地图底图（浅色农业风） */
   --ocean:#f4f6fa;--land:#e9eef7;--land-2:#dde6f4;--map-line:rgba(120,145,185,.55);--map-label:#7b8aa3;
   /* 面板与阴影（浅色，不用暗色玻璃） */
-  --glass:rgba(255,255,255,.62);--glass-2:rgba(255,255,255,.56);--glass-line:rgba(255,255,255,.45);
-  --blur:blur(24px) saturate(180%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
+  --glass:rgba(255,255,255,.55);--glass-2:rgba(255,255,255,.5);--glass-line:rgba(255,255,255,.4);
+  --blur:blur(28px) saturate(185%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
   /* 图标（Cursor 风格：细线、浅灰、hover 变深） */
   --icon:#8899aa;--icon-hover:#556677;--icon-on:rgba(15,23,42,.06);
   /* 一级分类（低饱和，与明亮风格一致；同时用于地图点与图例） */
@@ -178,6 +178,8 @@ svg{display:block}
 .drawer-back:hover,.drawer-x:hover{background:var(--accent-soft);color:var(--accent);border-color:#c7d7f5}
 .drawer-body{flex:1;overflow-y:auto;padding:10px 12px 20px}
 
+.ripple-canvas{position:absolute;inset:0;z-index:2;pointer-events:none}
+
 /* ---------------- B3：地图星闪（新数据接入一闪而过，0.5–1s 消失） ---------------- */
 .star-flash{position:absolute;pointer-events:none;z-index:20;transform-origin:50% 50%;will-change:transform,opacity;
   animation:starFlash .9s var(--ease) forwards}
@@ -196,7 +198,7 @@ svg{display:block}
 /* ---------------- 底部流水：MiroFish 式终端面板（纯黑 · 等宽 · 时间戳 + 处理信息） ---------------- */
 .stream{position:absolute;left:0;right:0;bottom:0;height:0;overflow:hidden;z-index:45;background:#0b0f14;color:#cbd5e1;
   border-top:1px solid #1f2937;transition:height .2s var(--ease);display:flex;flex-direction:column}
-.stream.on{height:132px}
+.stream.on{height:74px}   /* 约 3 行 */
 .st-bar{display:flex;align-items:center;gap:8px;padding:0 12px;height:22px;flex:0 0 22px;border-bottom:1px solid #1f2937}
 .st-tab{font-size:.59375rem;font-weight:var(--f-reg);color:#94a3b8;letter-spacing:.08em}
 .st-tab.add{color:#475569;cursor:default}
@@ -273,7 +275,8 @@ svg{display:block}
   padding:6px 7px 7px;transition:box-shadow .15s,transform .15s,border-color .15s;cursor:pointer}
 .fcard:hover{box-shadow:0 6px 16px -14px rgba(15,23,42,.5);border-color:#c7d7f5;transform:translateY(-1px)}
 .fcard.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
-.fcard.fresh{border-left-color:var(--red);background:rgba(255,255,255,.94)}
+.fcard.fresh{border-left-color:#4b5b73;background:rgba(255,255,255,.94);animation:cardIn .34s var(--ease)}
+@keyframes cardIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .fresh-tag{display:inline-block;font-size:.5625rem;font-weight:var(--f-semi);color:#fff;background:var(--red);
   border-radius:2px;padding:0 3px;margin-right:4px;vertical-align:1px}
 /* 概览里的实时接入计数 + 滚动 +1 动画 */
@@ -651,7 +654,7 @@ svg{display:block}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"60dd9ba775e5","git":"e6c236a","builtAt":"2026-09-22T02:33:44.092Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"6f5be1ea7109","git":"692ddc0","builtAt":"2026-09-22T03:12:56.484Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -2921,7 +2924,7 @@ window.V03Mass = (function () {
   /* 每个三级类型的事实条数下限（产品定义） */
   const QUOTA = { L1: 1000000, L2: 100000, L3: 10000 };
   /* 单视野渲染采样上限（性能） */
-  const SAMPLE = { L1: 2400, L2: 2200, L3: 1800 };
+  const SAMPLE = { L1: 3800, L2: 3400, L3: 2800 };   /* 点还不够密：采样数上调 */
   const SEED = 20260922;
 
   function mulberry32(a) {
@@ -5335,8 +5338,7 @@ window.V03Filter = (function () {
     const t = M ? M.totals(s.geo.level, FACT_ITEMS.length, leaves) : null;
     return {
       rows: [
-        ['事实条数', t ? M.fmt(t.total) : list.length, t ? t.total : list.length],
-        ['整体可信占比', (list.length ? Math.round(hi / list.length * 100) : 62) + '%', null]
+        ['事实条数', t ? M.fmt(t.total) : list.length, t ? t.total : list.length]
       ],
       note: t ? '每个三级类型 ' + M.fmt(t.per) + ' 条 · 本视野采样 ' + t.sampled + ' 点' : '',
       real: list.length
@@ -5557,7 +5559,7 @@ window.V03Fact = (function () {
   const radiusPx = f => Math.max(9, Math.min(26, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
 
   const DOT = { high: 6, mid: 5.2, low: 4.6 };      /* 事实点：统一红点，大小随重要性 */
-  const RED = '#d63c3c';
+  const DOTC = '#3f4c5f';          /* 统一中性色点（与关联层本体点一致，不用红色） */
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
@@ -5567,9 +5569,9 @@ window.V03Fact = (function () {
       const sev = f.severity || 40;
       halos.push({ id: f.id, value: [f.lng, f.lat], symbolSize: radiusPx(f),
         itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-          { offset: 0, color: hexA(RED, .16) }, { offset: .55, color: hexA(RED, .07) }, { offset: 1, color: hexA(RED, 0) }] } } });
+          { offset: 0, color: hexA(DOTC, .13) }, { offset: .55, color: hexA(DOTC, .06) }, { offset: 1, color: hexA(DOTC, 0) }] } } });
       pts.push({ id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
-        itemStyle: { color: RED, borderColor: '#fff', borderWidth: .7 } });
+        itemStyle: { color: '#ffffff', borderColor: DOTC, borderWidth: 1.1 } });
       if (f.impact === 'high' && sev >= 70) high.push({ id: f.id, name: f.title, value: [f.lng, f.lat] });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
@@ -5577,13 +5579,9 @@ window.V03Fact = (function () {
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
     const series = [
-      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], symbolSize: 2.1, i })), z: 1, silent: true, symbol: 'circle',
-        itemStyle: { color: 'rgba(214,60,60,.42)' } },
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], symbolSize: 2.3, i })), z: 1, silent: true, symbol: 'circle',
+        itemStyle: { color: 'rgba(63,76,95,.42)' } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
-      /* 扩散动画重做：高影响事实用一圈缓慢扩散的细环（6s 一轮，克制不刺眼） */
-      { id: 'ring', type: 'effectScatter', coordinateSystem: 'geo', data: high.slice(0, 40), z: 3, silent: true,
-        symbolSize: 5, rippleEffect: { scale: 4.6, brushType: 'stroke', period: 6, number: 2 },
-        itemStyle: { color: 'rgba(214,60,60,.35)', borderColor: 'rgba(214,60,60,.45)' } },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
     ];
     if (st.sk.regions) markerSeries('regions', D.REGIONS, '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -5663,6 +5661,55 @@ window.V03Fact = (function () {
     setTimeout(() => d.remove(), 1000);
   }
   const flashIds = () => [...document.querySelectorAll('#layer-fact .star-flash')].map(n => n.dataset.fid);
+
+  /* ---------- P2：水波纹扩散（自绘 canvas，缓慢外扩 + 渐隐，半径/速度随 severity） ---------- */
+  const RIPPLE = { raf: 0, cv: null };
+  function ensureRipple() {
+    if (RIPPLE.cv || !dom.mapBox) return RIPPLE.cv;
+    const cv = document.createElement('canvas');
+    cv.className = 'ripple-canvas';
+    dom.mapBox.appendChild(cv);
+    RIPPLE.cv = cv;
+    return cv;
+  }
+  function rippleLoop(now) {
+    RIPPLE.raf = requestAnimationFrame(rippleLoop);
+    const cv = ensureRipple();
+    if (!cv || !chart) return;
+    const box = dom.mapBox.getBoundingClientRect();
+    if (cv.width !== Math.round(box.width) || cv.height !== Math.round(box.height)) { cv.width = Math.round(box.width); cv.height = Math.round(box.height); }
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const st = S.state;
+    if (!st.sk.influence || st.sk.mode3d || st.tab !== 'fact') return;
+    const t = now / 1000;
+    const facts = F.mappable(F.factsAtLevel(st)).filter(f => f.impact === 'high').slice(0, 60);
+    facts.forEach(f => {
+      let px = null;
+      try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { return; }
+      if (!Array.isArray(px) || px[0] < -40 || px[1] < -40 || px[0] > cv.width + 40 || px[1] > cv.height + 40) return;
+      const sev = f.severity || 60;
+      const period = 6 + sev / 60;                       /* 6.0–7.7s：慢，像水面波纹 */
+      const base = radiusPx(f) * 2.4;
+      for (let k = 0; k < 2; k++) {
+        const phase = ((((t + (f.lng + f.lat) * .31) / period) + k * .5) % 1 + 1) % 1;
+        const alpha = .30 * (1 - phase) * (1 - phase);    /* 越外越透明，尾段自然消失 */
+        if (alpha < .004) continue;
+        const r = base * phase;
+        if (!(r > 0.5)) continue;
+        ctx.beginPath();
+        ctx.arc(px[0], px[1], r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(63,76,95,' + alpha.toFixed(3) + ')';
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+      }
+    });
+  }
+  function syncRipple() {
+    const on = S.state.tab === 'fact' && S.state.sk.influence && !S.state.sk.mode3d;
+    if (on && !RIPPLE.raf) { RIPPLE.raf = requestAnimationFrame(rippleLoop); }
+    if (!on && RIPPLE.raf) { cancelAnimationFrame(RIPPLE.raf); RIPPLE.raf = 0; const cv = RIPPLE.cv; if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); }
+  }
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -6101,11 +6148,13 @@ window.V03Fact = (function () {
     if (key === sig) return; sig = key;
 
     syncMode();
+    syncRipple();
     const lvKey = st.geo.level + '|' + (st.geo.focus || '');
     const c = ensureChart();
     if (c && !st.sk.mode3d) {
-      if (camera.level !== lvKey) {
-        camera.level = lvKey;
+      let justLeveled = false;
+    if (camera.level !== lvKey) {
+        camera.level = lvKey; justLeveled = true;
         const t = LEVEL[st.geo.level], focus = PROV[st.geo.focus || (st.geo.level === 'L3' ? '湖南' : '')];
         const target = focus ? [focus[0], focus[1]] : t.center;
         const zoom = focus ? focus[2] : t.zoom;
@@ -6114,6 +6163,11 @@ window.V03Fact = (function () {
         c.clear();
       }
       c.setOption(mapOption(), { notMerge: true });
+      /* Z3：层级切换时事实点淡入（世界→中国→省区 过渡自然） */
+      if (justLeveled) {
+        c.setOption({ series: [{ id: 'facts', itemStyle: { opacity: .15 } }, { id: 'mass', itemStyle: { opacity: .1 } }] }, { lazyUpdate: true });
+        setTimeout(() => c.setOption({ series: [{ id: 'facts', itemStyle: { opacity: 1 } }, { id: 'mass', itemStyle: { opacity: 1 } }] }, { lazyUpdate: true, animationDurationUpdate: 420 }), 90);
+      }
     }
     renderLegend(); renderCards();
   }
@@ -7287,9 +7341,10 @@ window.V03Sim = (function () {
     body.scrollTop = body.scrollHeight;
     const f = e.factId ? D.factById(e.factId) : (e.star && D.factById(e.star.factId));
     if (f) {
-      bumpOverview();
-      S.set({ newFacts: (S.state.newFacts || []).concat([f.id]).slice(-12) });
-      S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity });
+      bumpOverview();                                        /* [0ms] 事实条数 +1（翻牌动画） */
+      const maybeNew = Math.random() < .2;                   /* 约 1/5 概率新增卡片 */
+      setTimeout(() => S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity }), 100);   /* [100ms] 地图亮星 */
+      if (maybeNew) setTimeout(() => S.set({ newFacts: (S.state.newFacts || []).concat([f.id]).slice(-12) }), 200);   /* [200ms] 卡片滑入 */
     }
   }
   function scheduleStream() {
@@ -7319,7 +7374,7 @@ window.V03Sim = (function () {
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
-    document.documentElement.style.setProperty('--stream-h', on ? '132px' : '0px');
+    document.documentElement.style.setProperty('--stream-h', on ? '74px' : '0px');
     document.documentElement.style.setProperty('--side-w',
       (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? '420px' : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];

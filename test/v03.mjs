@@ -131,9 +131,9 @@ const menu = await page.evaluate(() => ({
   dictL3: document.querySelectorAll('#menuBody .l3').length
 }));
 check('F2 菜单固定四段（数据概览 / 分类筛选 / 地图快捷控制 / 总开关）', menu.secs === 4, JSON.stringify(menu));
-check('L1 数据概览只保留两项（事实条数 + 整体可信占比），无边框、数字大于文字', await page.evaluate(() => {
+check('L1/S2 数据概览只留「事实条数」（可信占比已按补充指令去掉），无边框、数字大于文字', await page.evaluate(() => {
   const rows = [...document.querySelectorAll('#menuBody .ov-i')];
-  if (rows.length !== 2) return false;
+  if (rows.length !== 1) return false;
   const big = parseFloat(getComputedStyle(rows[0].querySelector('b')).fontSize);
   const small = parseFloat(getComputedStyle(rows[0].querySelector('span')).fontSize);
   const cs = getComputedStyle(rows[0]);
@@ -279,8 +279,8 @@ const stream = await page.evaluate(() => {
     txt: document.getElementById('streamBody').innerText.slice(0, 200), lines: document.querySelectorAll('#streamBody .st-line').length,
     close: !!document.getElementById('streamClose') };
 });
-check('F8 流水为纯黑终端面板（窄条、无标题、× 可关闭、多 Tab 预留）',
-  /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(stream.bg) && stream.h >= 118 && stream.h <= 150 && !stream.hasTitle && stream.close && stream.tabs === 2,
+check('F8/S2 流水为纯黑终端（约 3 行高、无标题、× 可关闭、多 Tab 预留）',
+  /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(stream.bg) && stream.h >= 60 && stream.h <= 96 && !stream.hasTitle && stream.close && stream.tabs === 2,
   JSON.stringify({ h: stream.h, bg: stream.bg, tabs: stream.tabs }));
 check('F8 流水使用产品语言（接入 / 定位 / 影响 / 关联），无技术字段',
   /接入|定位|影响范围|关联|抽取|归并|评分/.test(stream.txt) && !BANNED.test(stream.txt) && !/gen-|real-|r:\*|MERGE|API|uuid/.test(stream.txt),
