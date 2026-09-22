@@ -13,8 +13,8 @@ window.V03Mass = (function () {
   const data = () => window.V03Data || {};   /* 延迟取用：mass.js 在 data.js 之前加载 */
   /* 每个三级类型的事实条数下限（产品定义） */
   const QUOTA = { L1: 1000000, L2: 100000, L3: 10000 };
-  /* 单视野渲染采样上限（性能） */
-  const SAMPLE = { L1: 3800, L2: 3400, L3: 2800 };   /* 点还不够密：采样数上调 */
+  /* 单视野渲染采样上限：重复真实锚点来表达体量，但每个点仍是地图经纬度 */
+  const SAMPLE = { L1: 20000, L2: 16000, L3: 12000 };
   const SEED = 20260922;
 
   function mulberry32(a) {
@@ -42,6 +42,43 @@ window.V03Mass = (function () {
   const CHINA = { lng: [73, 136], lat: [17.5, 54.5] };
   const inChina = (lng, lat) => lng >= CHINA.lng[0] && lng <= CHINA.lng[1] && lat >= CHINA.lat[0] && lat <= CHINA.lat[1];
 
+  /* 点必须真正落在地图面内。旧版只判断矩形并给锚点做大范围抖动，沿海点会漂到海上，
+     看起来像脱离地图的屏幕贴层。这里对世界/中国 GeoJSON 做 point-in-polygon 校验。 */
+  function inRing(lng, lat, ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if (((yi > lat) !== (yj > lat)) && lng < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-12) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  function inPolygon(lng, lat, poly) {
+    if (!poly || !poly.length || !inRing(lng, lat, poly[0])) return false;
+    for (let i = 1; i < poly.length; i++) if (inRing(lng, lat, poly[i])) return false;
+    return true;
+  }
+  function geometryContains(g, lng, lat) {
+    if (!g) return false;
+    if (g.type === 'Polygon') return inPolygon(lng, lat, g.coordinates);
+    if (g.type === 'MultiPolygon') return g.coordinates.some(p => inPolygon(lng, lat, p));
+    return false;
+  }
+  function worldFeatures() {
+    return (window.__WORLD110 || []).map(o => {
+      let x = o.c, depth = 0; while (Array.isArray(x) && x.length) { depth++; x = x[0]; }
+      return { geometry: depth >= 4 ? { type: 'MultiPolygon', coordinates: o.c } : { type: 'Polygon', coordinates: depth === 3 ? o.c : [o.c] } };
+    });
+  }
+  let MAP_FEATURES = null;
+  function mapFeatures(level) {
+    if (!MAP_FEATURES) MAP_FEATURES = { L1: worldFeatures(), china: ((window.__CHINA_GEO || {}).features || []) };
+    return level === 'L1' ? MAP_FEATURES.L1 : MAP_FEATURES.china;
+  }
+  function insideMap(level, lng, lat) {
+    if (level !== 'L1' && !inChina(lng, lat)) return false;
+    return mapFeatures(level).some(f => geometryContains(f.geometry, lng, lat));
+  }
+
   /* ---------- 体量：按视角与分类字典的类型数计算 ---------- */
   function totals(level, leafCount, shownLeafCount) {
     const per = QUOTA[level] || QUOTA.L3;
@@ -58,23 +95,29 @@ window.V03Mass = (function () {
   /* ---------- 采样：确定性、围绕真实锚点分布 ---------- */
   function sample(level, focus, leafKeys) {
     const rnd = mulberry32(SEED + (level === 'L1' ? 1 : level === 'L2' ? 2 : 3));
-    const list = anchors();
+    const list = anchors().filter(a => insideMap(level, a.lng, a.lat));
     const keys = (leafKeys && leafKeys.length) ? leafKeys : ['x'];
     const want = SAMPLE[level] || 2000;
-    const spread = level === 'L1' ? 4.2 : level === 'L2' ? 2.4 : 0.45;
+    /* 小范围抖动：数据可以重复，位置不能离开真实锚点或地图面。 */
+    const spread = level === 'L1' ? 2.4 : level === 'L2' ? 1.0 : .30;
     const out = [];
     const gauss = () => (rnd() + rnd() + rnd() - 1.5) / 1.5;
-    for (let i = 0; i < want; i++) {
+    let tries = 0;
+    while (out.length < want && tries++ < want * 30) {
+      const i = out.length;
       const a = list[Math.floor(rnd() * list.length)];
+      if (!a) break;
       let lng = a.lng + gauss() * spread, lat = a.lat + gauss() * spread * .7;
       if (lng > 180) lng -= 360; if (lng < -180) lng += 360;
       if (lat > 74) lat = 74; if (lat < -58) lat = -58;
-      if (level === 'L2' && !inChina(lng, lat)) { i--; continue; }
+      if (!insideMap(level, lng, lat)) continue;
       if (level === 'L3' && focus) {
         const c = (data().PROV_CENTER || {})[focus];
-        if (c && (Math.abs(lng - c[0]) > 3.4 || Math.abs(lat - c[1]) > 2.8)) { i--; continue; }
+        if (c && (Math.abs(lng - c[0]) > 3.4 || Math.abs(lat - c[1]) > 2.8)) continue;
       }
-      out.push({ lng: Math.round(lng * 100) / 100, lat: Math.round(lat * 100) / 100, leaf: keys[i % keys.length] });
+      const fixedLng = Math.round(lng * 10000) / 10000, fixedLat = Math.round(lat * 10000) / 10000;
+      if (!insideMap(level, fixedLng, fixedLat)) continue;
+      out.push({ lng: fixedLng, lat: fixedLat, leaf: keys[i % keys.length] });
     }
     return out;
   }
@@ -91,5 +134,5 @@ window.V03Mass = (function () {
     return { v: String(n), u: '' };
   }
 
-  return { QUOTA, SAMPLE, totals, sample, fmt, fmtUnit, SEED };
+  return { QUOTA, SAMPLE, totals, sample, insideMap, fmt, fmtUnit, SEED };
 })();

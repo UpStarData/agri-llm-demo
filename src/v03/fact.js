@@ -200,8 +200,9 @@ window.V03Fact = (function () {
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
     const series = [
-      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], symbolSize: 2.3, i })), z: 1, silent: true, symbol: 'circle',
-        itemStyle: { color: 'rgba(63,76,95,.42)' } },
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
+        large: true, largeThreshold: 2000, progressive: 5000, progressiveThreshold: 3000,
+        itemStyle: { color: 'rgba(63,76,95,.26)' } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
     ];
