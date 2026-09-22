@@ -1,0 +1,24 @@
+{
+  "hash": "7710f0006c28",
+  "git": "72e78d1",
+  "builtAt": "2026-09-17T07:52:14.240Z",
+  "inputs": [
+    "src/shell.html",
+    "src/app.css",
+    "src/data.js",
+    "src/globe.js",
+    "src/provider.js",
+    "src/ai.js",
+    "src/aiconfig.js",
+    "src/map.js",
+    "src/app-chain.js",
+    "src/app.js",
+    "build.mjs",
+    "data/china.geo.json",
+    "data/world110.geo.json",
+    "vendor/echarts.min.js",
+    "fonts/PlexRegular-sub.woff2",
+    "fonts/PlexBold-sub.woff2"
+  ],
+  "bytes": 2456820
+}
