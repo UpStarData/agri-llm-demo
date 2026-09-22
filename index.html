@@ -615,7 +615,7 @@ svg{display:block}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"dcb74e82f45b","git":"3cd1276","builtAt":"2026-09-22T00:35:07.618Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"445a02b556d6","git":"5393f99","builtAt":"2026-09-22T00:40:12.823Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5517,13 +5517,37 @@ window.V03Fact = (function () {
       return '<i class="' + (dn ? 'dn' : '') + '" style="height:' + hgt.toFixed(0) + '%"></i>';
     }).join('') + '</div>';
   }
+  /* 播放器懒挂载：仅当卡片进入视口且「直播流」开启时挂载 iframe（离开视口卸载，减少第三方资源与噪音） */
+  const VIS = {
+    io: null,
+    init() {
+      if (this.io || typeof IntersectionObserver === 'undefined') return;
+      this.io = new IntersectionObserver(list => list.forEach(en => VIS.apply(en.target, en.isIntersecting)), { rootMargin: '160px', threshold: .01 });
+    },
+    apply(box, visible) {
+      if (!box || !box.dataset || box.dataset.embed !== '1') return;
+      const on = S.state.sk.live && visible;
+      const frame = box.querySelector('iframe');
+      box.classList.toggle('paused', !on);
+      if (on && !frame && box.dataset.src) {
+        const el2 = document.createElement('iframe');
+        el2.src = box.dataset.src; el2.title = box.dataset.title || '直播'; el2.allowFullscreen = true;
+        box.appendChild(el2);
+      }
+      if (!on && frame) frame.remove();
+    },
+    sync() {
+      this.init();
+      const boxes = [...document.querySelectorAll('.fc-player[data-embed="1"]')];
+      boxes.forEach(box => { if (this.io) { this.io.observe(box); } else this.apply(box, true); });
+    }
+  };
+
   function videoBlock(f) {
     const c = f.card || {};
     if (isPlayable(f)) {
-      const playing = S.state.sk.live;
-      return '<div class="fc-player" data-embed="1" data-play="' + (playing ? 1 : 0) + '" data-src="' + esc(c.embedUrl) + '">' +
-        (playing ? '<iframe src="' + esc(c.embedUrl) + '" title="' + esc(c.mediaTitle || '视频') + '" allowfullscreen></iframe>' : '') +
-        (playing ? '' : '<span class="pause">已暂停</span>') + '</div>';
+      return '<div class="fc-player" data-embed="1" data-play="' + (S.state.sk.live ? 1 : 0) + '" data-src="' + esc(c.embedUrl) +
+        '" data-title="' + esc(c.mediaTitle || '视频') + '">' + (S.state.sk.live ? '' : '<span class="pause">已暂停</span>') + '</div>';
     }
     return '<div class="fc-static" data-embed="0">' +
       '<div class="fs-line"><span class="fs-ic">▤</span><b>' + esc(c.mediaTitle || f.title) + '</b></div>' +
@@ -5601,6 +5625,7 @@ window.V03Fact = (function () {
       const on = dom.sideBody.querySelector('[data-fid="' + st.factId + '"]');
       if (on) on.classList.add('on');
     }
+    VIS.sync();
   }
 
   /* ---------- F10：事实详情（右侧嵌套抽屉） ---------- */
@@ -5662,6 +5687,7 @@ window.V03Fact = (function () {
     if (toRel) toRel.onclick = () => S.set({ tab: 'relation', factId: null, carry: uniq([...(st.carry || []), f.id]), rel: { focusFact: f.id, sel: null, kind: null, stack: [] } });
     const toLog = box.querySelector('#toLog');
     if (toLog) toLog.onclick = () => S.set({ logOpen: !st.logOpen });
+    VIS.sync();
   }
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
