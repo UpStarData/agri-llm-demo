@@ -23,6 +23,9 @@
 .rel-card .rc-dom{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim)}
 .rel-card .rc-sub{font-size:.625rem;font-weight:var(--f-light);color:var(--mut);line-height:1.5;margin-top:2px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rel-card .rc-attrs{display:flex;flex-direction:column;gap:1px;margin-top:3px}
+.rel-card .rc-kv{font-size:.59375rem;font-weight:var(--f-light);color:var(--mut);display:flex;gap:4px;line-height:1.45}
+.rel-card .rc-kv i{font-style:normal;color:var(--dim);flex:0 0 auto}
 .rel-card .rc-m{font-size:.59375rem;font-weight:var(--f-light);color:var(--hint);margin-top:3px}
 .rel-more{margin:0 0 8px}
 .rel-foot{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim);line-height:1.6;padding:6px 7px;border:1px dashed var(--hair);border-radius:var(--r-sm);background:var(--panel-2)}

@@ -71,7 +71,8 @@ svg{display:block}
 .layout{position:relative;display:flex;flex:1;min-height:0}
 #stage{position:relative;flex:1;min-width:0;height:100%;overflow:hidden;background:var(--bg)}
 .layer{position:absolute;inset:0;display:none}
-.layer.on{display:block}
+.layer.on{display:block;animation:layerIn .26s var(--ease)}
+@keyframes layerIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #layer-sim{background:var(--bg)}
 
 /* ---------------- 左侧菜单（从左侧滑出，固定四段） ---------------- */
@@ -110,28 +111,25 @@ svg{display:block}
 .mn-master b{font-size:.6875rem;font-weight:var(--f-semi);display:block}
 .mn-master small{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim);line-height:1.5;display:block;margin-top:1px}
 
-/* ---------------- 地图快捷键（右下） + 缩放（其上） ---------------- */
-.mapzoom{position:absolute;right:calc(var(--side-w) + 10px);bottom:calc(var(--stream-h) + 44px);z-index:40;display:flex;flex-direction:column;gap:3px}
-.mapzoom button{width:24px;height:24px;border-radius:var(--r-sm);background:var(--glass);border:1px solid var(--glass-line);
-  color:var(--mut);display:grid;place-items:center;box-shadow:var(--shadow);font-size:.875rem;line-height:1}
-.mapzoom button:hover{background:#fff;color:var(--accent);border-color:#c7d7f5}
-.mapzoom button[disabled]{opacity:.4;cursor:not-allowed}
-.mapsk{position:absolute;right:calc(var(--side-w) + 10px);bottom:calc(var(--stream-h) + 10px);z-index:40;display:flex;gap:1px;
-  padding:3px;border-radius:var(--r-lg);background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
-.sk{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:26px;height:26px;
-  border-radius:var(--r-sm);color:var(--mut);transition:background .14s,color .14s}
-.sk .sk-v{font-size:.53125rem;font-weight:var(--f-light);line-height:1;color:var(--dim)}
+/* ---------------- 地图快捷键组（左下角，两排；含放大/缩小；Windy 式小图标条） ---------------- */
+.mapsk{position:absolute;left:10px;bottom:calc(var(--stream-h) + 10px);z-index:40;display:grid;grid-auto-flow:column;
+  grid-template-rows:repeat(2, 26px);gap:2px;padding:4px;border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
+.sk{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-width:27px;height:26px;
+  border-radius:var(--r-sm);color:#8899aa;transition:background .14s,color .14s}
+.sk .sk-v{font-size:.5rem;font-weight:var(--f-light);line-height:1;color:#9aa7b6}
 .sk:hover{background:var(--accent-soft);color:var(--accent)}
 .sk.on{background:var(--accent-soft);color:var(--accent)}
 .sk.on .sk-v{color:var(--accent)}
 .sk[disabled]{opacity:.35;cursor:not-allowed}
-.sk[disabled]:hover{background:transparent;color:var(--mut)}
+.sk[disabled]:hover{background:transparent;color:#8899aa}
+.sk.zoom{border:1px solid var(--line);background:#fff}
 .menu-mode .sk{flex-direction:row;justify-content:flex-start;gap:6px;height:26px;padding:0 6px;background:var(--panel);border:1px solid var(--line)}
 .menu-mode .sk:hover{background:var(--accent-soft)}
 .menu-mode .sk.on{background:var(--accent-soft);border-color:#c7d7f5}
 .menu-mode .sk-n{font-size:.65625rem;font-weight:var(--f-reg)}
 .menu-mode .sk-v{margin-left:auto;font-size:.59375rem;color:var(--dim)}
-.sk-pop{position:absolute;bottom:calc(100% + 6px);right:0;z-index:70;display:flex;flex-direction:column;gap:1px;padding:4px;
+.sk-pop{position:absolute;bottom:calc(100% + 6px);left:0;z-index:70;display:flex;flex-direction:column;gap:1px;padding:4px;
   min-width:104px;border-radius:var(--r-md);background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow)}
 .menu-mode .sk-pop{right:auto;left:0}
 .sk-opt{display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:var(--r-sm);font-size:.6875rem;color:var(--mut);text-align:left}
@@ -139,11 +137,13 @@ svg{display:block}
 .sk-opt.on{background:var(--accent);color:#fff;font-weight:var(--f-semi)}
 .sk-opt.reserved{color:var(--dim);font-weight:var(--f-light)}
 .sk-input{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 7px;font-size:.6875rem;background:#fff}
+.mapzoom{display:none}
 
-/* ---------------- 底部横向图例（流水上方，最多两行） ---------------- */
-.legend{position:absolute;left:8px;bottom:calc(var(--stream-h) + 8px);right:auto;z-index:35;max-width:calc(100% - var(--side-w) - 200px);
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;row-gap:3px;max-height:44px;overflow-x:auto;overflow-y:hidden;
-  padding:4px 8px;border-radius:var(--r-lg);background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow);
+/* ---------------- 底部横向图例（地图右下角，流水上方；最多两行） ---------------- */
+.legend{position:absolute;right:10px;bottom:calc(var(--stream-h) + 10px);z-index:35;
+  max-width:min(720px, calc(100% - 460px));
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;row-gap:3px;max-height:48px;overflow-x:auto;overflow-y:hidden;
+  padding:5px 9px;border-radius:var(--r-lg);background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--shadow);
   font-size:.625rem;color:var(--mut)}
 .legend .lg-i{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-weight:var(--f-light)}
 .legend .lg-i i{width:8px;height:8px;border-radius:2px;flex:0 0 8px}
@@ -165,27 +165,25 @@ svg{display:block}
 .drawer-back:hover,.drawer-x:hover{background:var(--accent-soft);color:var(--accent);border-color:#c7d7f5}
 .drawer-body{flex:1;overflow-y:auto;padding:10px 12px 20px}
 
-/* ---------------- 底部流水：窄条终端（浅色系统内的等宽日志） ---------------- */
-.stream{position:absolute;left:0;right:0;bottom:0;height:0;overflow:hidden;z-index:45;background:#f8fafc;
-  border-top:1px solid var(--line);transition:height .2s var(--ease);display:flex;flex-direction:column}
-.stream.on{height:96px}
-.st-bar{display:flex;align-items:center;gap:6px;padding:0 10px;height:20px;flex:0 0 20px;border-bottom:1px solid var(--hair)}
-.st-tab{font-size:.59375rem;font-weight:var(--f-reg);color:var(--dim);letter-spacing:.06em}
-.st-tab.add{color:#aab4c4;cursor:default}
-.st-meta{margin-left:auto;font-size:.5625rem;font-weight:var(--f-light);color:var(--hint)}
-.st-body{flex:1;overflow-y:auto;padding:2px 10px 4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.625rem;line-height:1.6}
-.st-line{display:flex;gap:6px;white-space:nowrap;color:var(--mut);animation:stIn .16s var(--ease)}
+/* ---------------- 底部流水：MiroFish 式终端面板（纯黑 · 等宽 · 时间戳 + 处理信息） ---------------- */
+.stream{position:absolute;left:0;right:0;bottom:0;height:0;overflow:hidden;z-index:45;background:#0b0f14;color:#cbd5e1;
+  border-top:1px solid #1f2937;transition:height .2s var(--ease);display:flex;flex-direction:column}
+.stream.on{height:132px}
+.st-bar{display:flex;align-items:center;gap:8px;padding:0 12px;height:22px;flex:0 0 22px;border-bottom:1px solid #1f2937}
+.st-tab{font-size:.59375rem;font-weight:var(--f-reg);color:#94a3b8;letter-spacing:.08em}
+.st-tab.add{color:#475569;cursor:default}
+.st-meta{margin-left:auto;font-size:.5625rem;font-weight:var(--f-light);color:#64748b}
+.st-body{flex:1;overflow-y:auto;padding:4px 12px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.65625rem;line-height:1.72}
+.st-line{display:flex;gap:8px;white-space:nowrap;color:#9fb0c9;animation:stIn .16s var(--ease)}
 @keyframes stIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-.st-line .k{flex:0 0 34px;color:var(--accent)}
-.st-line .k.warn{color:var(--warn)}
-.st-line .t{color:var(--hint)}
+.st-line .k{flex:0 0 40px;color:#5eead4}
+.st-line .k.warn{color:#fbbf24}
+.st-line .t{color:#475569}
 .st-line .tx{overflow:hidden;text-overflow:ellipsis}
-.st-line .f{color:var(--purple);cursor:pointer;text-decoration:underline dotted}
-.st-line:hover{background:#eef3fb}
-.st-close{position:absolute;right:4px;top:0;height:20px;width:22px;color:var(--dim);font-size:.875rem;line-height:1}
-.st-close:hover{color:var(--ink);background:#eef2f8}
-.st-body::-webkit-scrollbar{width:5px}
-.st-body::-webkit-scrollbar-thumb{background:rgba(15,23,42,.16);border-radius:3px}
+.st-close{position:absolute;right:6px;top:0;height:22px;width:24px;color:#64748b;font-size:.9375rem;line-height:1}
+.st-close:hover{color:#fff;background:rgba(255,255,255,.08)}
+.st-body::-webkit-scrollbar{width:6px}
+.st-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px}
 
 /* ---------------- 提示 / 口令 / 设置 ---------------- */
 .toast{position:fixed;left:50%;bottom:calc(var(--stream-h) + 16px);transform:translate(-50%,10px);background:rgba(16,21,31,.94);color:#fff;
@@ -363,6 +361,9 @@ svg{display:block}
 .rel-card .rc-dom{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim)}
 .rel-card .rc-sub{font-size:.625rem;font-weight:var(--f-light);color:var(--mut);line-height:1.5;margin-top:2px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rel-card .rc-attrs{display:flex;flex-direction:column;gap:1px;margin-top:3px}
+.rel-card .rc-kv{font-size:.59375rem;font-weight:var(--f-light);color:var(--mut);display:flex;gap:4px;line-height:1.45}
+.rel-card .rc-kv i{font-style:normal;color:var(--dim);flex:0 0 auto}
 .rel-card .rc-m{font-size:.59375rem;font-weight:var(--f-light);color:var(--hint);margin-top:3px}
 .rel-more{margin:0 0 8px}
 .rel-foot{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim);line-height:1.6;padding:6px 7px;border:1px dashed var(--hair);border-radius:var(--r-sm);background:var(--panel-2)}
@@ -571,15 +572,20 @@ svg{display:block}
       <!-- F7：横向图例（地图底部、流水上方；内容随筛选同步变化） -->
       <div class="legend" id="legend" aria-label="图例"></div>
 
-      <!-- F6：缩放（快捷键组正上方） + 快捷键组（右下角） -->
-      <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
+      <!-- 快捷键组（地图左下角，两排；含放大 / 缩小） -->
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
+      <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
 
       <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
       <div class="stream" id="streamBox">
+        <div class="st-bar">
+          <span class="st-tab" id="stTabName">接入流</span>
+          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
+          <span class="st-meta" id="streamMeta"></span>
+        </div>
         <div class="st-body" id="streamBody"></div>
         <button class="st-close" id="streamClose" aria-label="关闭流水">×</button>
       </div>
@@ -609,7 +615,7 @@ svg{display:block}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"6d6eda030068","git":"a8481ff","builtAt":"2026-09-21T23:38:38.467Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"dcb74e82f45b","git":"665add2","builtAt":"2026-09-22T00:05:59.554Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -2918,7 +2924,7 @@ window.V03Pkg = (function () {
     .replace(/\s{2,}/g, ' ')
     .trim();
   /* 技术/演示用语清洗：属性值里出现 geo=null、本包、数据包、L1/L2/L3、生成器等一律不进入产品界面 */
-  const TECH = /geo\s*=\s*null|本包|数据包|数据源包|L[123]\b|生成器|generator|样例|示意|sample|debug/i;
+  const TECH = /geo\s*=\s*null|本包|数据包|数据源包|L[123]\b|生成器|generator|样例|示意|sample|debug|iframe|frame-ancestors|响应头|嵌入策略/i;
   /* 按分句剥离技术片段；剥离后为空则整条丢弃（产品界面不出现研发/演示用语） */
   const stripTech = t => String(t == null ? '' : t)
     .split(/[；;。]/).filter(part => part && !TECH.test(part)).join('；')
@@ -3028,13 +3034,27 @@ window.V03Pkg = (function () {
       q: '采集位置：' + anchor + '（' + prec + '）', url: '' }];
   }
 
+  /* ---------- 视频源可嵌入性核验（2026-09-21 实测 HTTP 响应头：无 X-Frame-Options / CSP frame-ancestors） ----------
+     只有核验通过的源才允许在卡片/详情内挂载播放器；其余一律静态卡片降级（不伪造播放器）。 */
+  const VERIFIED_EMBED = {
+    'real-video-cctv17-live':   { url: 'https://tv.cctv.com/live/cctv17/',      provider: '央视网', title: 'CCTV-17 农业农村频道直播' },
+    'real-video-cctv-live-index': { url: 'https://tv.cctv.com/live/cctv1/',      provider: '央视网', title: 'CCTV-1 综合频道直播' },
+    'gen-video-00': { url: 'https://tv.cctv.com/live/cctv1/',  provider: '央视网', title: 'CCTV-1 综合频道' },
+    'gen-video-01': { url: 'https://tv.cctv.com/live/cctv2/',  provider: '央视网', title: 'CCTV-2 财经频道' },
+    'gen-video-02': { url: 'https://tv.cctv.com/live/cctv7/',  provider: '央视网', title: 'CCTV-7 国防军事频道' },
+    'gen-video-03': { url: 'https://tv.cctv.com/live/cctv13/', provider: '央视网', title: 'CCTV-13 新闻频道' },
+    'gen-video-04': { url: 'https://tv.cctv.com/live/cctv4/',  provider: '央视网', title: 'CCTV-4 中文国际频道' }
+  };
+
   const FACTS = FACTS_IN.map(f => {
-    const card = (f.card && f.card.fields) || {};
+    let card = (f.card && f.card.fields) || {};
+    const vv = VERIFIED_EMBED[f.factId];
+    if (vv) card = Object.assign({}, card, { embeddable: 'yes', embedUrl: vv.url, provider: vv.provider, mediaTitle: vv.title, isLive: true });
     const pt = f.geo.geoPoint;
     const pm = f.provenanceMeta || {};
     return {
       id: f.factId, prov: pm.dataMode || 'generated',
-      title: cleanText(f.title), summary: cleanText(f.summary),
+      title: cleanText(f.title), summary: stripTech(cleanText(f.summary)),
       cat: f.category, cardType: f.cardType, card: cleanCard(card), cardTypeName: f.cardType,
       taxonomy: f.taxonomy || {}, factType: f.factType, status: f.status,
       level: f.geo.scopeLayer || 'L1',
@@ -3050,6 +3070,7 @@ window.V03Pkg = (function () {
       impact: IMPACT_OF(f.severity), severity: f.severity,
       radius: radiusOf(f.severity),
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
+      embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,
       confidence: f.confidence, review: (f.review || {}).state,
       evidence: evidenceOf(f), evidenceIds: f.evidenceIds || [],
@@ -3131,9 +3152,33 @@ window.V03Pkg = (function () {
   const REBALANCE = rebalanceGenerated(FACTS);
 
   /* ---------- Entity → 内部本体模型 ---------- */
+  /* 实体代表点：数据包对少数市场/公司未取到门址坐标（geo=null）。这些是**有真实地理归属**的物理主体，
+     不应只留在右侧列表：用其所在城市/总部的行政区代表点落图（精度标记为「行政区代表点（近似）」，不伪造门址）。 */
+  const CITY_ANCHOR = [
+    [/广州|江南市场/, [113.264, 23.129]],
+    [/深圳|海吉星.*深圳/, [114.057, 22.543]],
+    [/Talaad|泰国/, [100.601, 14.020]],
+    [/Rungis|法国/, [2.353, 48.744]],
+    [/Selayang|马来西亚/, [101.657, 3.240]],
+    [/洪九/, [106.259, 29.283]],
+    [/佳沃|中粮/, [116.407, 39.905]],
+    [/Del Monte/i, [-122.062, 37.911]],
+    [/湖南|长沙|果之友|绿叶|金胜|云辉|聚海鑫|龙源|畅农|星勤/, [112.939, 28.228]]
+  ];
+  const PHYSICAL = { Market: 1, Enterprise: 1, Base: 1, Region: 1, LogisticsNode: 1 };
+  const anchorOf = e => {
+    const nm = String(e.canonicalName || '') + ' ' + String((e.attributes || {}).anchorPlace || '');
+    const hit = CITY_ANCHOR.find(([re]) => re.test(nm));
+    if (!hit) return null;
+    const h = Math.abs(String(e.entityId).split('').reduce((a, c) => a * 31 + c.charCodeAt(0) | 0, 7));
+    return [hit[1][0] + ((h % 17) - 8) * 0.012, hit[1][1] + ((h % 13) - 6) * 0.012];
+  };
+
   const OBJECTS = ENTITIES_IN.map(e => {
-    const pt = e.geo && e.geo.geoPoint;
     const a = e.attributes || {};
+    let pt = e.geo && e.geo.geoPoint;
+    let approx = false;
+    if (!pt && PHYSICAL[e.type]) { const ap = anchorOf(e); if (ap) { pt = ap; approx = true; } }
     const dom = TYPE2DOMAIN[e.type] || 'metric';
     const props = [['对象域', ONT.lookup[e.type] || e.type], ['状态', e.status === 'active' ? '在册' : e.status]];
     if (cleanProp(a.landmark)) props.push(['定位', cleanProp(a.landmark)]);
@@ -3143,7 +3188,8 @@ window.V03Pkg = (function () {
     if (cleanProp(a.anchorPlace)) props.push(['地理锚点', cleanProp(a.anchorPlace)]);
     if (a.metricUnit) props.push(['单位', a.metricUnit]);
     if (a.priceUnit) props.push(['计价单位', a.priceUnit]);
-    if (e.geo && e.geo.geoPrecision) props.push(['坐标精度', { exact: '地物点', approx: '近似', region_only: '行政区代表点', none: '无坐标' }[e.geo.geoPrecision] || e.geo.geoPrecision]);
+    if (approx) props.push(['坐标精度', '行政区代表点（近似）']);
+    else if (e.geo && e.geo.geoPrecision) props.push(['坐标精度', { exact: '地物点', approx: '近似', region_only: '行政区代表点', none: '无坐标' }[e.geo.geoPrecision] || e.geo.geoPrecision]);
     return {
       id: e.entityId, prov: (e.provenanceMeta || {}).dataMode || 'generated',
       entityType: e.type, typeName: ONT.lookup[e.type] || e.type,
@@ -3154,7 +3200,8 @@ window.V03Pkg = (function () {
         return cleaned || (ONT.lookup[e.type] || '') + '对象';
       })(),
       alias: (e.aliases || []).join(' / '),
-      lng: pt ? pt[0] : null, lat: pt ? pt[1] : null, geo: !!pt,
+      lng: pt ? pt[0] : null, lat: pt ? pt[1] : null, geo: !!pt, geoApprox: approx,
+      factCount: (e.supportingFactIds || []).length,
       regionPath: (e.geo && e.geo.regionPath) || [],
       region: (e.geo && e.geo.regionPath) ? ((pathName(e.geo.regionPath, 'province') || '') || pathName(e.geo.regionPath, 'country') || '全球') : '全球',
       props: props, commodityTags: e.commodityTags || [], factIds: e.supportingFactIds || [],
@@ -4858,7 +4905,7 @@ window.V03Store = (function () {
       mode3d: false,              // M1 2D / 3D
       influence: true,            // M2 影响力扩散动画
       fullscreen: false,          // M3 全屏
-      live: false,                // M4 直播流
+      live: true,                 // M4 直播流（默认开启：已验证可嵌入的公开直播源直接播放）
       regions: false,             // M5 产区
       gates: false,               // M6 港口与机场
       legend: true                // M11 图例
@@ -5254,8 +5301,9 @@ window.V03Fact = (function () {
     return { canIn: camera.zoom < box[1] - 1e-3, canOut: camera.zoom > box[0] + 1e-3, zoom: camera.zoom };
   };
 
-  const IMPACT_ALPHA = { high: .20, mid: .14, low: .10 };
-  const radiusPx = f => Math.max(9, Math.min(30, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
+  const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
+  const radiusPx = f => Math.max(9, Math.min(26, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
+  const DOT = { high: 6, mid: 5, low: 4.2 };   /* 事实点：小亮点 4–6px（颜色对应事实类型） */
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
@@ -5270,8 +5318,8 @@ window.V03Fact = (function () {
             color: {
               type: 'radial', x: .5, y: .5, r: .5,
               colorStops: [
-                { offset: 0, color: hexA(c, IMPACT_ALPHA[f.impact] || .12) },
-                { offset: .6, color: hexA(c, (IMPACT_ALPHA[f.impact] || .12) * .45) },
+                { offset: 0, color: hexA(c, IMPACT_ALPHA[f.impact] || .1) },
+                { offset: .6, color: hexA(c, (IMPACT_ALPHA[f.impact] || .1) * .4) },
                 { offset: 1, color: hexA(c, 0) }
               ]
             }
@@ -5279,23 +5327,25 @@ window.V03Fact = (function () {
         });
       }
       pts.push({
-        id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: f.impact === 'high' ? 11 : 9.5,
-        itemStyle: { color: hexA(c, .16), borderColor: c, borderWidth: 1.1 },
-        label: { show: true, fontSize: f.impact === 'high' ? 9.5 : 8.5, color: '#2b3444', formatter: () => emojiOf(f) }
+        id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
+        itemStyle: { color: c, borderColor: '#ffffff', borderWidth: .8 }
       });
     });
     const series = [
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 1, symbol: 'circle' },
-      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 4, cursor: 'pointer' },
-      { id: 'flash', type: 'effectScatter', coordinateSystem: 'geo', data: flashData(), z: 6, silent: true, symbol: 'circle',
-        symbolSize: 12, rippleEffect: { scale: 3.2, brushType: 'stroke', period: 1.2 },
-        itemStyle: { color: 'rgba(220,38,38,.85)', shadowBlur: 8, shadowColor: 'rgba(220,38,38,.55)' } }
+      /* 亮光（数据接入瞬间一闪而过，0.8s 内消退后落成普通小点） */
+      { id: 'flash', type: 'scatter', coordinateSystem: 'geo', data: flashData(), z: 6, silent: true, symbol: 'circle',
+        itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
+          { offset: 0, color: 'rgba(255,255,255,.95)' }, { offset: .35, color: 'rgba(255,236,150,.75)' },
+          { offset: .7, color: 'rgba(255,214,102,.28)' }, { offset: 1, color: 'rgba(255,214,102,0)' }] } },
+        label: { show: false } },
+      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 4, cursor: 'pointer' }
     ];
-    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#65a30d', '🌾').forEach(s => series.push(s));
+    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#65a30d', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
     if (st.sk.gates) {
-      markerSeries('gatesP', D.GATES.filter(g => g.kind === 'port'), '#0369a1', '⚓').forEach(s => series.push(s));
-      markerSeries('gatesA', D.GATES.filter(g => g.kind === 'airport'), '#0f766e', '✈️').forEach(s => series.push(s));
-      markerSeries('gatesN', D.GATES.filter(g => g.kind === 'node'), '#7e22ce', '🧊').forEach(s => series.push(s));
+      markerSeries('gatesP', D.GATES.filter(g => g.kind === 'port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+      markerSeries('gatesA', D.GATES.filter(g => g.kind === 'airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+      markerSeries('gatesN', D.GATES.filter(g => g.kind === 'node'), '#7e22ce', '🧊', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
     }
     return {
       backgroundColor: 'transparent',
@@ -5312,25 +5362,36 @@ window.V03Fact = (function () {
         textStyle: { color: '#10151f', fontSize: 11 }, padding: [6, 9],
         formatter: p => {
           const sid = p.seriesId || '';
-          if (sid === 'facts' || sid === 'flash') {
+          if (sid === 'facts') {
             const f = D.factById(p.data.id); if (!f) return '';
             return '<b>' + esc(f.title) + '</b><br>' + esc(f.region) + ' · ' + f.date + '<br>' + esc(leafOf(f).n || catOf(f).n);
           }
           const it = D.REGIONS.concat(D.GATES).find(r => r.id === (p.data || {}).id);
-          return it ? '<b>' + esc(it.name) + '</b>' : (p.name || '');
+          return it ? '<b>' + esc(it.name) + '</b>' + (it.variety ? '<br>' + esc(it.variety) : '') : (p.name || '');
         }
       },
       series
     };
   }
 
-  function markerSeries(id, list, color, emoji) {
+  function markerSeries(id, list, color, emoji, size, showLabel) {
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
-      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: 9 })),
-      symbol: 'circle', itemStyle: { color: '#ffffff', borderColor: color, borderWidth: 1.1 },
-      label: { show: true, fontSize: 8, color: color, formatter: () => emoji, position: 'inside' }
-    }];
+      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: size })),
+      symbol: 'circle', itemStyle: { color: 'rgba(255,255,255,.6)', borderColor: 'transparent', borderWidth: 0 },
+      label: {
+        show: true, fontSize: size, color: color, formatter: () => emoji, position: 'inside'
+      },
+      labelLayout: { hideOverlap: true }
+    }, showLabel ? {
+      id: id + 'Label', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 5,
+      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: 1 })),
+      symbol: 'circle', itemStyle: { color: 'transparent' },
+      label: { show: true, position: 'bottom', distance: 2, fontSize: 9, color: '#4d586a',
+        backgroundColor: 'rgba(255,255,255,.78)', padding: [1, 3], borderRadius: 3,
+        formatter: p => { const it = list.find(r => r.id === (p.data || {}).id); return it ? (it.variety || it.name).slice(0, 10) : ''; } },
+      labelLayout: { hideOverlap: true }
+    } : null].filter(Boolean);
   }
 
   /* F5：新事实接入 → 一次闪光（1.2s 内消退，不循环） */
@@ -5341,7 +5402,7 @@ window.V03Fact = (function () {
     if (Date.now() < FACT_READY_AT) return;
     const list = F.factsAtLevel(S.state);
     if (!list.some(x => x.id === f.id)) return;
-    flash.set(f.id, { f, until: Date.now() + 1200, bright: level === 'bright' });
+    flash.set(f.id, { f, until: Date.now() + 800, bright: level === 'bright' });
     if (chart && !S.state.sk.mode3d) chart.setOption({ series: [{ id: 'flash', data: flashData() }] }, { lazyUpdate: true });
     clearTimeout(flashFact._t);
     flashFact._t = setTimeout(() => {
@@ -5353,9 +5414,12 @@ window.V03Fact = (function () {
   }
   function flashData() {
     const now = Date.now();
-    return [...flash.values()].filter(x => x.until > now).map(x => ({
-      id: x.f.id, name: x.f.title, value: [x.f.lng, x.f.lat], symbolSize: x.bright ? 13 : 11
-    }));
+    return [...flash.values()].filter(x => x.until > now).map(x => {
+      const k = Math.max(0, (x.until - now) / 800);              /* 1 → 0 的衰减，越接近 0 越淡 */
+      return { id: x.f.id, name: x.f.title, value: [x.f.lng, x.f.lat],
+        symbolSize: (x.bright ? 30 : 20) * (.55 + .45 * k),
+        itemStyle: { opacity: .25 + .75 * k } };
+    });
   }
 
   /* ---------- 点击 ---------- */
@@ -5424,7 +5488,11 @@ window.V03Fact = (function () {
     return '⛅';
   };
   const fmtNum = v => (typeof v === 'number' ? (Math.abs(v) >= 1000 ? v.toLocaleString() : v) : v == null ? '—' : v);
-  const isPlayable = f => f.cardType === 'video' && f.card && f.card.embeddable === 'yes' && !!f.card.embedUrl;
+  /* 可嵌入播放条件：① 数据来自已核验可嵌入的公开源（响应头无 X-Frame-Options / CSP frame-ancestors）
+     ② 页面本身通过 http(s) 打开 —— 公开直播源的播放器帧会以 CSP frame-ancestors 拒绝 file:// 祖先，
+     此时按静态降级卡片处理（保留原始外链），避免控制台报错与"黑屏播放器"。 */
+  const CAN_EMBED = typeof location !== 'undefined' && (location.protocol === 'http:' || location.protocol === 'https:');
+  const isPlayable = f => CAN_EMBED && f.cardType === 'video' && f.card && f.card.embeddable === 'yes' && !!f.card.embedUrl;
   function hexA(hex, a) {
     const h = String(hex).replace('#', '');
     const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
@@ -5757,7 +5825,10 @@ window.V03Fact = (function () {
       regionMarks: st.sk.regions ? D.REGIONS.length : 0,
       gateMarks: st.sk.gates ? D.GATES.length : 0,
       legend: st.sk.legend, legendItems: document.querySelectorAll('#legend .lg-i').length,
-      videoTotal: vid.length, videoVerified: vid.filter(isPlayable).length, videoStatic: vid.filter(f => !isPlayable(f)).length,
+      videoTotal: vid.length,
+      videoEmbeddable: vid.filter(f => f.card && f.card.embeddable === 'yes' && f.card.embedUrl).length,   /* 已核验可嵌入的公开源 */
+      videoVerified: vid.filter(isPlayable).length,                                                        /* 当前环境下可播放（http/https） */
+      videoStatic: vid.filter(f => !isPlayable(f)).length,
       cards: document.querySelectorAll('#layer-fact .fcard').length,
       cardTypes: [...document.querySelectorAll('#layer-fact .fcard')].reduce((m, n) => { const f = D.factById(n.dataset.fid); if (f) m[f.cardType] = (m[f.cardType] || 0) + 1; return m; }, {}),
       emojiLeaves: new Set(pts.map(f => leafOf(f).key)).size,
@@ -5880,26 +5951,38 @@ window.V03Relation = (function () {
   function linesData(objs, rels, focus) {
     const pos = {};
     objs.forEach(o => { if (o.geo !== false && o.lat != null) pos[o.id] = [o.lng, o.lat]; });
-    const out = [], related = new Set();
+    const out = [], labels = [], related = new Set();
+    const total = rels.filter(r => pos[r.from] && pos[r.to]).length;
     rels.forEach(r => {
       const a = pos[r.from], b = pos[r.to];
       if (!a || !b) return;
       const isFocus = focus && (r.from === focus || r.to === focus);
       if (isFocus) related.add(r.id);
+      const color = isFocus ? typeColor(r.type) : 'rgba(126,138,158,.85)';
       out.push({
         id: r.id, coords: [a, b],
         lineStyle: {
-          color: typeColor(r.type),
-          width: isFocus ? 1.8 : 0.9,
-          opacity: focus ? (isFocus ? .95 : .10) : (r.confidence < .6 ? .28 : .42),
-          type: r.confidence < .6 ? 'dashed' : 'solid',
-          curveness: .26
+          color: color,
+          width: isFocus ? 1.5 : 1,
+          opacity: focus ? (isFocus ? .95 : .07) : (total <= 60 ? .55 : .38),
+          type: 'solid',
+          curveness: .18
         },
         _focus: isFocus
       });
+      /* 关系语义标签：只在可辨认的场景出现（焦点相关线，或全局线数量很少时） */
+      if (isFocus || (!focus && total <= 40)) {
+        labels.push({
+          id: r.id + '-l', coords: [a, b],
+          label: { show: true, position: 'middle', formatter: r.type, fontSize: 9, color: '#4d586a',
+            backgroundColor: 'rgba(255,255,255,.82)', padding: [1, 3], borderRadius: 3 },
+          lineStyle: { opacity: 0 }
+        });
+      }
     });
-    return { lines: out, related };
+    return { lines: out, labels, related, total };
   }
+
   function nodesData(objs, focus) {
     return objs.filter(o => o.geo !== false && o.lat != null).map(o => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
@@ -5918,8 +6001,9 @@ window.V03Relation = (function () {
   }
   function option(objs, rels, st) {
     const focus = focusId();
-    const { lines } = linesData(objs, rels, focus);
+    const { lines, labels } = linesData(objs, rels, focus);
     const nodes = nodesData(objs, focus);
+    const focusLines = lines.filter(l => l._focus);
     return {
       backgroundColor: 'transparent',
       geo: {
@@ -5945,23 +6029,26 @@ window.V03Relation = (function () {
       },
       series: [
         { id: 'relLineGlow', type: 'lines', coordinateSystem: 'geo', silent: true, z: 2, polyline: false,
-          data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 5, opacity: .10, curveness: .26 } })) },
+          data: focusLines.map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .08, curveness: .18 } })) },
         { id: 'relLine', type: 'lines', coordinateSystem: 'geo', z: 3, polyline: false, data: lines,
-          effect: { show: true, period: 6.5, trailLength: 0, symbol: 'circle', symbolSize: 2.4, color: '#334155' },
-          lineStyle: { curveness: .26 } },
+          effect: { show: true, period: 7, trailLength: .12, symbol: 'circle', symbolSize: 2, color: '#5b6b82' },
+          lineStyle: { curveness: .18 } },
+        { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels },
         { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' }
       ]
     };
   }
+
   function paintFocus() {
     const st = S.state;
     if (!chart) return;
     const objs = F.objects(st).filter(o => o.geo !== false && o.lat != null);
-    const { lines } = linesData(objs, F.relations(st), focusId());
+    const { lines, labels } = linesData(objs, F.relations(st), focusId());
     chart.setOption({
       series: [
-        { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 5, opacity: .10, curveness: .26 } })) },
+        { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .08, curveness: .18 } })) },
         { id: 'relLine', data: lines },
+        { id: 'relLineLabel', data: labels },
         { id: 'relNode', data: nodesData(F.objects(st), focusId()) }
       ]
     }, { lazyUpdate: true });
@@ -5987,15 +6074,18 @@ window.V03Relation = (function () {
     const capped = st.rel.allCards ? ordered : ordered.slice(0, 16);
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
-      const sub = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位/.test(k)).slice(0, 2).map(([k, v]) => k + '：' + v).join(' · ') || o.sub || '';
+      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位|计价单位|状态/.test(k)).slice(0, 3)
+        .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
+      const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
-        '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(dm.n) + '</span></span>' +
+        '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + dm.e + ' ' + esc(dm.n) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
-        '<span class="rc-sub">' + esc(sub) + '</span>' +
-        '<span class="rc-m">' + (recentOf(o) ? '最近变化 ' + recentOf(o) + ' · ' : '') + esc(shortFacts(o)).slice(0, 26) + '</span></button>';
+        '<span class="rc-sub">' + esc(o.sub || '') + '</span>' +
+        (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
+        '<span class="rc-m">' + (o.factCount ? o.factCount + ' 条支撑事实 · ' : '') + relCount + ' 条关系 · 点击展开详情</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">当前筛选下没有不可定位的本体对象</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
-      + '<div class="rel-foot">有真实坐标的本体显示在地图上；无坐标本体仅在此列出，不编造位置。点击卡片逐层展开本体详情与关系详情。</div>';
+      + '<div class="rel-foot">有真实地理归属的本体显示在地图上；无坐标的抽象对象（品种 / 机构 / 指标 / 人物）在此列出，不编造位置。</div>';
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
@@ -6620,6 +6710,8 @@ window.V03Sim = (function () {
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
+    { k: 'zoomIn', i: 'plus', n: '放大', d: '放大地图', kind: 'zoom', dir: 1 },
+    { k: 'zoomOut', i: 'minus', n: '缩小', d: '缩小地图', kind: 'zoom', dir: -1 },
     { k: 'mode3d', i: 'cube3d', n: '2D / 3D', d: '切换二维地图与三维地球', kind: 'sw', get: s => s.sk.mode3d, set: v => ({ sk: { mode3d: v } }) },
     { k: 'influence', i: 'radar', n: '影响力动画', d: '事实影响范围与扩散表现', kind: 'sw', get: s => s.sk.influence, set: v => ({ sk: { influence: v } }) },
     { k: 'fullscreen', i: 'expand', n: '全屏', d: '浏览器全屏显示地图', kind: 'sw', get: s => s.sk.fullscreen, set: v => ({ sk: { fullscreen: v } }) },
@@ -6632,7 +6724,8 @@ window.V03Sim = (function () {
     { k: 'search', i: 'search', n: '搜索', d: '按关键词搜索', kind: 'input', get: s => s.q, set: v => ({ q: v }) },
     { k: 'legend', i: 'legend', n: '图例', d: '显示 / 隐藏底部图例', kind: 'sw', get: s => s.sk.legend, set: v => ({ sk: { legend: v } }) }
   ];
-  const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关') : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
+  const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
+    : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
 
   let pop = null;
   function closePop() { if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', onDocDown, true); } }
@@ -6675,15 +6768,22 @@ window.V03Sim = (function () {
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
     SK.forEach((sk, idx) => {
-      const on = sk.kind === 'sw' ? !!sk.get(st) : false;
-      const b = el('button', 'sk' + (on ? ' on' : ''));
+      const api = layerApi();
+      const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
+      const on = sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
+      const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
       b.dataset.k = sk.k;
       b.title = sk.n + '：' + sk.d;
       b.innerHTML = '<span class="sk-i">' + svg(sk.i, mode === 'menu' ? 14 : 13) + '</span>' +
         (mode === 'menu' ? '<span class="sk-n">' + sk.n + '</span><span class="sk-v">' + skVal(sk, st) + '</span>' : '<span class="sk-v">' + skVal(sk, st) + '</span>');
-      b.setAttribute('aria-pressed', String(!!sk.get(st)));
+      b.setAttribute('aria-pressed', String(!!(sk.get && sk.get(st))));
       if (na.includes(sk.k)) { b.disabled = true; b.title = sk.n + '：关联层为地理关联视图'; }
+      if (sk.kind === 'zoom') {
+        if (!api || !api.zoomBy) { b.disabled = true; b.title = sk.n + '：当前层不支持缩放'; }
+        else if (zs && ((sk.dir > 0 && !zs.canIn) || (sk.dir < 0 && !zs.canOut))) { b.disabled = true; b.title = sk.n + '：已到边界'; }
+      }
       b.onclick = () => {
+        if (sk.kind === 'zoom') { const a = layerApi(); if (a && a.zoomBy) a.zoomBy(sk.dir); return; }
         if (sk.kind === 'sw') {
           if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
           S.set(sk.set(!sk.get(st)));
@@ -6698,27 +6798,12 @@ window.V03Sim = (function () {
     const key = S.state.tab === 'relation' ? 'V03Relation' : S.state.tab === 'fact' ? 'V03Fact' : null;
     return key ? window[key] : null;
   }
-  function renderZoom() {
-    const box = $('mapZoom'), api = layerApi();
-    const show = S.state.tab !== 'sim' && !!(api && api.zoomBy);
-    box.style.display = show ? '' : 'none';
-    if (!show) return;
-    const st = api.zoomState ? api.zoomState() : { canIn: true, canOut: true };
-    box.innerHTML = '';
-    const mk = (dir, icon, ok, label) => {
-      const b = el('button', null, svg(icon, 13));
-      b.title = label; b.disabled = !ok;
-      b.onclick = () => api.zoomBy(dir);
-      box.appendChild(b);
-    };
-    mk(1, 'plus', st.canIn, '放大');
-    mk(-1, 'minus', st.canOut, '缩小');
-  }
+  function renderZoom() { /* 缩放键已并入左下角快捷键组（两排） */ }
 
   function renderMapSk() {
     const box = $('mapSk'), st = S.state;
     const show = st.panels.shortcuts && st.tab !== 'sim';
-    box.style.display = show ? '' : 'none';
+    box.style.display = show ? 'grid' : 'none';
     if (!show) { closePop(); return; }
     renderShortcutBar(box, { mode: 'map' });
   }
@@ -6871,7 +6956,7 @@ window.V03Sim = (function () {
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
-    document.documentElement.style.setProperty('--stream-h', on ? '96px' : '0px');
+    document.documentElement.style.setProperty('--stream-h', on ? '132px' : '0px');
     document.documentElement.style.setProperty('--side-w',
       (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? '420px' : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];
