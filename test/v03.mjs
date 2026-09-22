@@ -436,6 +436,38 @@ check('默认口径全球星点足够（≥50）且切「全部」恢复 342 点
   dens.def >= 50 && allDens >= 335, JSON.stringify({ 默认: dens.def, 全部: allDens }));
 await page.evaluate(() => window.V03_DEBUG.set({ time: '7d', cred: 'high', infl: 'high' })); await sleep(800);
 
+/* ---------------- 密度点地图锚定回归（用户反馈：拖动后点与地图分离） ---------------- */
+const landSamples = await page.evaluate(() => {
+  const M = window.V03Mass;
+  const levels = [['L1', '湖南'], ['L2', '湖南'], ['L3', '湖南']];
+  return levels.map(([level, focus]) => {
+    const pts = M.sample(level, focus, ['probe']);
+    return { level, count: pts.length, outside: pts.filter(p => !M.insideMap(level, p.lng, p.lat)).length };
+  });
+});
+check('密度效果点全部落在世界/中国地图面内（不漂到海上或国界外）',
+  landSamples.every(x => x.count === ({ L1: 20000, L2: 16000, L3: 12000 })[x.level] && x.outside === 0), JSON.stringify(landSamples));
+const anchor = await page.evaluate(() => {
+  const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
+  const opt = chart.getOption(), mass = opt.series.find(s => s.id === 'mass');
+  const ll = mass.data[0].value;
+  return { ll, px: chart.convertToPixel({ geoIndex: 0 }, ll), n: mass.data.length, geo: mass.coordinateSystem, large: mass.large };
+});
+const mapBox = await page.locator('#factMap').boundingBox();
+const drag = [Math.round(mapBox.width * .18), Math.round(mapBox.height * .08)];
+await page.mouse.move(mapBox.x + mapBox.width * .5, mapBox.y + mapBox.height * .5);
+await page.mouse.down();
+await page.mouse.move(mapBox.x + mapBox.width * .68, mapBox.y + mapBox.height * .58, { steps: 20 });
+await page.mouse.up(); await sleep(300);
+const anchoredAfter = await page.evaluate(ll => {
+  const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
+  return chart.convertToPixel({ geoIndex: 0 }, ll);
+}, anchor.ll);
+const projectedDelta = [anchoredAfter[0] - anchor.px[0], anchoredAfter[1] - anchor.px[1]];
+check('拖动地图后密度点与底图使用同一 geo 投影同步移动',
+  anchor.geo === 'geo' && anchor.large === true && anchor.n === 20000 && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
+  JSON.stringify({ count: anchor.n, projectedDelta, drag }));
+
 /* ---------------- 会话健康 ---------------- */
 check('控制台无错误、无未捕获异常', consoleErrors.length === 0 && pageErrors.length === 0,
   JSON.stringify({ consoleErrors: consoleErrors.slice(0, 3), pageErrors: pageErrors.slice(0, 3) }));
