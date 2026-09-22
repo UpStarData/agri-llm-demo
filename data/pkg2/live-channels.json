@@ -1,0 +1,152 @@
+[
+ {
+  "name": "CCTV-11 戏曲",
+  "group": "央视台",
+  "url": "http://183.196.25.171:808/hls/11/index.m3u8",
+  "tvgName": "CCTV-11",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 502,
+  "playable": false
+ },
+ {
+  "name": "CCTV-17 农业农村",
+  "group": "央视台",
+  "url": "http://183.196.25.171:808/hls/93/index.m3u8",
+  "tvgName": "CCTV-17",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 502,
+  "playable": false
+ },
+ {
+  "name": "CCTV-4 中文国际",
+  "group": "央视台",
+  "url": "https://live-play-hls.cctvnews.cctv.com/CCTVChannel/channel_cctv4_mbd.m3u8?auth_key=1790092800-1-b59134a2ead43d7f783f943c8f535e7bb80c5169575b2e8efcd5b3ddea21b41c-eb56da704bdd254b1e98b2b3ab16d4e8&yid=b59134a2ead43d7f783f943c8f535e7bb80c5169575b2e8efcd5b3ddea21b41c",
+  "tvgName": "CCTV-4",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "CCTV-4K 高清",
+  "group": "央视台",
+  "url": "https://live-play-hls.cctvnews.cctv.com/CCTVChannel/channel_cctv4k_mbd.m3u8?auth_key=1790092800-1-b59134a2ead43d7f783f943c8f535e7bb80c5169575b2e8efcd5b3ddea21b41c-4052beacd6c44cd6c917fb93414bf7d1&yid=b59134a2ead43d7f783f943c8f535e7bb80c5169575b2e8efcd5b3ddea21b41c",
+  "tvgName": "CCTV-4k",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "湖南卫视",
+  "group": "湖南台",
+  "url": "http://120.196.232.43:8088/rrs03.hw.gmcc.net/PLTV/651/224/3221226698/1.m3u8",
+  "tvgName": "湖南卫视",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 502,
+  "playable": false
+ },
+ {
+  "name": "河南卫视",
+  "group": "卫视台",
+  "url": "http://tvcdn.stream3.hndt.com/tv/65bef28a017e10009c49d5f900000000_transios/playlist.m3u8?wsSecret=d46cd3eebaff4c5c70d89289e8fb03ad&wsTime=1789538942",
+  "tvgName": "河南卫视",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 403,
+  "playable": false
+ },
+ {
+  "name": "寰宇新闻台",
+  "group": "港澳台",
+  "url": "https://raw.githubusercontent.com/ChiSheng9/iptv/master/TV02.m3u8",
+  "tvgName": "寰宇新闻台",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "东森财经新闻",
+  "group": "港澳台",
+  "url": "https://raw.githubusercontent.com/ChiSheng9/iptv/master/TV03.m3u8",
+  "tvgName": "东森财经新闻",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "中视新闻",
+  "group": "港澳台",
+  "url": "https://raw.githubusercontent.com/ChiSheng9/iptv/master/TV09.m3u8",
+  "tvgName": "中视新闻",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "民视新闻HD",
+  "group": "港澳台",
+  "url": "https://raw.githubusercontent.com/ChiSheng9/iptv/master/TV17.m3u8",
+  "tvgName": "民视新闻HD",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "凤凰资讯",
+  "group": "卫视台",
+  "url": "http://api.mg.itv888.cn:8080/hls/11ef1dc70d8/index.m3u8",
+  "tvgName": "凤凰资讯",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 502,
+  "playable": false
+ },
+ {
+  "name": "凤凰中文",
+  "group": "卫视台",
+  "url": "http://api.mg.itv888.cn:8080/hls/2f80047f91e/index.m3u8",
+  "tvgName": "凤凰中文",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 502,
+  "playable": false
+ },
+ {
+  "name": "澳门卫视",
+  "group": "港澳台",
+  "url": "http://61.244.22.4/ch1/ch1.live/playlist.m3u8",
+  "tvgName": "澳门卫视",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 502,
+  "playable": false
+ },
+ {
+  "name": "Pet Club TV",
+  "group": "港澳台",
+  "url": "https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-petclub-samsungnz/playlist.m3u8",
+  "tvgName": "Pet Club TV",
+  "source": "ChinaIPTV",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 200,
+  "playable": true
+ },
+ {
+  "name": "CCTV-17 农业农村（固定源）",
+  "group": "央视台",
+  "url": "http://183.196.25.171:808/hls/93/index.m3u8",
+  "tvgName": "CCTV-17",
+  "source": "上游文档指定源",
+  "fetchedAt": "2026-09-22",
+  "httpStatus": 0,
+  "playable": false
+ }
+]

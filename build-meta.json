@@ -1,7 +1,7 @@
 {
-  "hash": "445a02b556d6",
-  "git": "6fe3388",
-  "builtAt": "2026-09-22T00:41:29.058Z",
+  "hash": "c44a4783ed88",
+  "git": "f9cb6ad",
+  "builtAt": "2026-09-22T01:49:12.275Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -39,11 +39,12 @@
     "data/pkg/geo/nodes.geojson",
     "build.mjs",
     "vendor/echarts.min.js",
+    "vendor/hls.min.js",
     "fonts/PlexLight-sub.woff2",
     "fonts/PlexRegular-sub.woff2",
     "fonts/PlexSemiBold-sub.woff2",
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 6169205
+  "bytes": 7136790
 }

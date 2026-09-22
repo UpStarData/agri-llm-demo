@@ -43,7 +43,8 @@ window.V03Store = (function () {
     relKeys: null,                // 关联层
 
     geo: { level: 'L1', focus: null },   // L1 全球（默认）/ L2 全国 / L3 省区（focus=省名）
-    factId: null, logOpen: false,        // 事实详情弹窗
+    factId: null, logOpen: false,        // 事实详情抽屉
+    factObj: null,                       // 事实层内直接查看的本体对象（点击产区/口岸标记，不切 Tab）
     carry: [],
 
     rel: { view: 'geo', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },

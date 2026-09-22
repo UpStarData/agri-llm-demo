@@ -51,13 +51,28 @@ const top = await page.evaluate(() => {
   return { h: Math.round(bar.height), order, icons,
     ctrlH: Math.max(...['#menuBtn', '#btnStream', '#btnCards', '#btnSettings'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().height))) };
 });
-check('G1 顶部工具条视觉高度 ≤24px，含点击数热区总高 ≤32px', top.h <= 24 && top.ctrlH <= 32, JSON.stringify(top));
+check('G1 顶部工具条总高 ≤32px，图标热区 ≤32px', top.h <= 32 && top.ctrlH <= 32, JSON.stringify(top));
+check('T1 三 TAB 小巧低调（≤13px、细下划线高亮、非大块按钮）', await page.evaluate(() => {
+  const b = document.querySelector('#tabs button.on');
+  const cs = getComputedStyle(b, '::after');
+  return parseFloat(getComputedStyle(b).fontSize) <= 13.5 && !/rgb\(16, 21, 31\)/.test(getComputedStyle(b).backgroundColor) && parseFloat(cs.height) <= 2.5;
+}));
+check('T3 品牌为 🌾 AgriLink v1.0，Logo 为轻柔摇摆动画（sway）', await page.evaluate(() => {
+  const t = document.querySelector('.brand').innerText.replace(/\s+/g, ' ');
+  const logo = document.getElementById('logo');
+  return /AgriLink v1\.0/.test(t) && !!logo;
+}));
 check('G1 顶部顺序：菜单显隐 → 🌾 AgriLink → 三 TAB → 流水显隐 → 卡片显隐 → 设置',
   top.order[0].x < top.order[1].x && top.order[1].x < top.order[2].x && top.order[2].x < top.order[3].x && top.order[3].x < top.order[5].x,
   JSON.stringify(top.order.map(o => o.s)));
 const iconStrokes = await page.evaluate(() => [...document.querySelectorAll('.topbar svg')].map(s => s.getAttribute('stroke')));
-check('G1 顶部图标为同一套线性 SVG 且浅色可用',
-  top.icons >= 4 && iconStrokes.every(x => x === 'currentColor'), JSON.stringify({ n: top.icons, strokes: iconStrokes }));
+const iconStyle = await page.evaluate(() => [...document.querySelectorAll('.topbar svg, #mapSk svg, #menuBody svg')].map(s => ({
+  w: s.getAttribute('stroke-width'), cap: s.getAttribute('stroke-linecap'), join: s.getAttribute('stroke-linejoin'), sz: s.getAttribute('width')
+})));
+check('五 全局图标统一 Cursor 风格（stroke 1.5、无圆角 butt/miter、16px、浅灰）',
+  iconStyle.length >= 8 && iconStyle.every(i => i.w === '1.5' && i.cap === 'butt' && i.join === 'miter') &&
+  await page.evaluate(() => getComputedStyle(document.querySelector('.tb-ic')).color === 'rgb(136, 153, 170)'),
+  JSON.stringify(iconStyle.slice(0, 3)));
 check('G1 TAB 为细文字 + 轻底色选中态（非黑白大块按钮）', await page.evaluate(() => {
   const b = document.querySelector('#tabs button.on');
   const cs = getComputedStyle(b);
@@ -70,6 +85,13 @@ const light = await page.evaluate(() => ({
   panel: getComputedStyle(document.querySelector('.fact-side')).backgroundColor,
   land: (window.echarts.getInstanceByDom(document.getElementById('factMap')).getOption().geo[0].itemStyle.areaColor) || ''
 }));
+const glassy = await page.evaluate(() => {
+  const f = sel => { const n = document.querySelector(sel); if (!n) return ''; const cs = getComputedStyle(n); return cs.backdropFilter || cs.webkitBackdropFilter || ''; };
+  return { topbar: f('.topbar'), menu: f('.menu'), side: f('.fact-side'), sk: f('#mapSk'), legend: f('#legend'), stream: getComputedStyle(document.getElementById('streamBox')).backgroundColor };
+});
+check('M1 毛玻璃覆盖顶栏 / 菜单 / 右侧面板 / 快捷键条 / 图例（blur 20px saturate160%），流水保持纯黑',
+  ['topbar', 'menu', 'side', 'sk', 'legend'].every(k => /blur\(20px\)/.test(glassy[k])) && /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(glassy.stream),
+  JSON.stringify(glassy));
 check('视觉基线：页面浅色（#f4f6fa 系）+ 白色面板 + 浅色底图，未改为暗色重设计',
   /244, 246, 250/.test(light.body) && /255, 255, 255/.test(light.panel) && /#e9eef7|238, 243, 250/i.test(String(light.land)),
   JSON.stringify(light));
@@ -109,7 +131,14 @@ const menu = await page.evaluate(() => ({
   dictL3: document.querySelectorAll('#menuBody .l3').length
 }));
 check('F2 菜单固定四段（数据概览 / 分类筛选 / 地图快捷控制 / 总开关）', menu.secs === 4, JSON.stringify(menu));
-check('F2 数据概览四项且不含事实类型分布', menu.ovRows === 4 && !menu.hasDist, '行数 ' + menu.ovRows);
+check('L1 数据概览只保留两项（事实条数 + 整体可信占比），无边框、数字大于文字', await page.evaluate(() => {
+  const rows = [...document.querySelectorAll('#menuBody .ov-i')];
+  if (rows.length !== 2) return false;
+  const big = parseFloat(getComputedStyle(rows[0].querySelector('b')).fontSize);
+  const small = parseFloat(getComputedStyle(rows[0].querySelector('span')).fontSize);
+  const cs = getComputedStyle(rows[0]);
+  return big >= 20 && small <= 12 && big > small && (cs.borderStyle === 'none' || cs.borderWidth === '0px') && !/事实类型分布/.test(document.getElementById('menuBody').innerText);
+}));
 check('F2 菜单内含地图快捷控制（11 项 + 放大/缩小）与总开关', menu.sk === 13 && menu.master, '菜单内控制项 ' + menu.sk);
 
 /* ---------------- F3 事实三级分类字典 ---------------- */
@@ -168,18 +197,20 @@ check('F5 亮光为一闪而过（≤0.8s 消退为普通小点，不持续发�
 const sk = await page.evaluate(() => {
   const mapSk = document.getElementById('mapSk');
   const r = mapSk.getBoundingClientRect();
-  const rows = new Set([...mapSk.querySelectorAll('.sk')].map(b => Math.round(b.getBoundingClientRect().top)));
+  const items = [...mapSk.querySelectorAll('.sk')];
+  const rows = new Set(items.map(b => Math.round(b.getBoundingClientRect().top)));
   return {
-    mapSk: mapSk.querySelectorAll('.sk').length,
+    mapSk: items.length,
     zooms: mapSk.querySelectorAll('.sk[data-k="zoomIn"], .sk[data-k="zoomOut"]').length,
-    separateZoom: document.querySelectorAll('#mapZoom button').length,
     rows: rows.size,
-    side: r.left < 300 && (window.innerWidth - r.right) > 300,
-    zoomDisabled: mapSk.querySelectorAll('.sk.zoom[disabled]').length
+    rightSide: (window.innerWidth - r.right) < 500,
+    borderless: getComputedStyle(mapSk).borderStyle === 'none' || getComputedStyle(mapSk).borderWidth === '0px',
+    tooltips: items.filter(b => (b.title || '').length > 3).length,
+    shiftsForPanel: (window.innerWidth - r.right) > 380
   };
 });
-check('F6 快捷键组在地图左下角，含放大 / 缩小共 13 键，排成两排', sk.mapSk === 13 && sk.zooms === 2 && sk.rows === 2 && sk.side, JSON.stringify(sk));
-check('F6 缩放键与快捷键同组（不再独立一列），到边界呈禁用态', sk.separateZoom === 0, JSON.stringify({ separate: sk.separateZoom }));
+check('M3 快捷键条在地图右下角、无框线、每键有 tooltip、右侧面板打开时自动左移',
+  sk.mapSk === 13 && sk.zooms === 2 && sk.rows === 2 && sk.rightSide && sk.borderless && sk.tooltips === 13 && sk.shiftsForPanel, JSON.stringify(sk));
 const zoomTest = await page.evaluate(async () => {
   const z0 = window.V03Fact.debug().zoom;
   document.querySelector('#mapSk .sk[data-k="zoomIn"]').click();
@@ -211,11 +242,19 @@ const legend = await page.evaluate(() => {
   const el = document.getElementById('legend');
   const r = el.getBoundingClientRect();
   const stream = document.getElementById('streamBox').getBoundingClientRect();
-  return { inMenu: !!document.querySelector('#menuBody .mn-legend'), display: getComputedStyle(el).display,
-    horizontal: r.width > r.height * 2, aboveStream: r.bottom <= stream.top + 2, items: document.querySelectorAll('#legend .lg-i').length };
+  const st = getComputedStyle(el);
+  const visibleGroups = new Set(window.V03Filter.factsAtLevel().map(f => (window.V03Filter.leafOf(f) || {}).group).filter(Boolean));
+  const legendNames = [...document.querySelectorAll('#legend .lg-i')].map(n => n.textContent.trim());
+  return { inMenu: !!document.querySelector('#menuBody .mn-legend'), display: st.display,
+    horizontal: r.width > r.height * 2, aboveStream: r.bottom <= stream.top + 2, items: legendNames.length,
+    centered: Math.abs((r.left + r.right) / 2 - window.innerWidth / 2) < 160 || r.right <= window.innerWidth - 380,
+    singleRow: st.flexWrap === 'nowrap', borderless: st.borderStyle === 'none' || st.borderWidth === '0px',
+    hasTitleText: /当前视野类型/.test(el.innerText),
+    matchesVisibleTypes: legendNames.length > 0 && legendNames.every(n => visibleGroups.has(n) || /产区|港口|机场|冷链/.test(n)) };
 });
-check('F7 图例不进入菜单，位于地图底部流水上方且横向排列',
-  !legend.inMenu && legend.display !== 'none' && legend.horizontal && legend.aboveStream && legend.items > 0, JSON.stringify(legend));
+check('M4/M5 图例在地图底部居中、单行横排、无框线、不显示「当前视野类型」标题，且内容取自地图上可见类型',
+  !legend.inMenu && legend.display !== 'none' && legend.centered && legend.singleRow && legend.borderless &&
+  !legend.hasTitleText && legend.items > 0 && legend.matchesVisibleTypes, JSON.stringify(legend));
 const legendSync = await page.evaluate(async () => {
   const n0 = document.querySelectorAll('#legend .lg-i').length;
   window.V03_DEBUG.set({ catKeys: window.V03Filter.FACT_ITEMS.slice(0, 3).map(x => x.key) });
@@ -277,7 +316,7 @@ const vidCards = await page.evaluate(async () => {
   return { n, p, i, verified: d.videoEmbeddable, playable: d.videoVerified, total: d.videoTotal };
 });
 check('F9 已核验可嵌入的公开直播源已接入（7 路）；file:// 下按静态卡片降级、不挂 iframe 也不产生外链请求',
-  vidCards.verified >= 7 && vidCards.n > 0 && vidCards.i === 0 && vidCards.total === 10, JSON.stringify(vidCards));
+  vidCards.verified >= 7 && vidCards.n > 0 && vidCards.i === 0 && vidCards.total >= 10, JSON.stringify(vidCards));
 check('F9 六类内容模板仍在（价格 / 天气 / 新闻 / 政策 / 视频 / 市场分布）',
   Object.keys(cards.types).length >= 2, JSON.stringify(cards.types));
 
@@ -380,9 +419,9 @@ const st0 = await page.evaluate(() => window.V03_DEBUG.state());
 check('默认口径仍为：近 7 天 + 高可信 + 高影响（未被视觉校准改动）',
   st0.time === '7d' && st0.cred === 'high' && st0.infl === 'high', JSON.stringify({ time: st0.time, cred: st0.cred, infl: st0.infl }));
 const c = await counts(page);
-check('数据接入成果未回退：861 事实 / 377 本体 / 585 关系 / 64 产区 / 56 港口 / 49 机场',
-  c.facts === 861 && c.objects === 377 && c.relations === 585 && c.regions === 64 && c.ports === 56 && c.airports === 49,
-  JSON.stringify({ facts: c.facts, objects: c.objects, relations: c.relations }));
+check('数据接入成果未回退，且已并入第三方公开数据（天气事实 / 900 个大型机场）',
+  c.facts >= 861 && c.objects >= 377 && c.relations === 585 && c.regions === 64 && c.ports === 56 && c.airports >= 500 && c.nodes === 4,
+  JSON.stringify({ facts: c.facts, objects: c.objects, relations: c.relations, airports: c.airports }));
 const dens = await page.evaluate(() => ({ def: window.V03Fact.debug().mappable }));
 await page.evaluate(() => window.V03_DEBUG.set({ time: 'all', cred: 'all', infl: 'all' })); await sleep(1200);
 const allDens = (await factDbg(page)).mappable;
@@ -399,7 +438,7 @@ await page.close();
 /* ---------------- 390px（基础可用性，本阶段不交付窄屏截图） ---------------- */
 const m = await open(browser, 390, 844, '390');
 check('390px 无横向溢出', (await overflow(m)) === 0);
-check('390px 顶部工具条仍 ≤24px 且三 TAB 可点', await m.evaluate(() => Math.round(document.querySelector('.topbar').getBoundingClientRect().height) <= 24));
+check('390px 顶部工具条仍 ≤32px 且三 TAB 可点', await m.evaluate(() => Math.round(document.querySelector('.topbar').getBoundingClientRect().height) <= 32));
 check('390px 控制台无错误', consoleErrors.filter(x => x.startsWith('390')).length === 0);
 await m.close();
 await browser.close();

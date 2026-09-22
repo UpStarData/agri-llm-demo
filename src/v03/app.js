@@ -35,8 +35,9 @@
     minus:   ['M5 12h14'],
     close:   ['M6 6l12 12', 'M18 6 6 18']
   };
-  const svg = (name, size) => '<svg viewBox="0 0 24 24" width="' + (size || 15) + '" height="' + (size || 15) +
-    '" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+  /* 全局图标：Cursor 风格 —— 细线条 1.5px、无圆角（butt/miter）、16px */
+  const svg = (name, size) => '<svg viewBox="0 0 24 24" width="' + (size || 16) + '" height="' + (size || 16) +
+    '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="miter">' +
     (ICON[name] || []).map(d => '<path d="' + d + '"/>').join('') + '</svg>';
 
   /* ---------- 提示 / Logo ---------- */
@@ -149,7 +150,7 @@
       const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
       b.dataset.k = sk.k;
       b.title = sk.n + '：' + sk.d;
-      b.innerHTML = '<span class="sk-i">' + svg(sk.i, mode === 'menu' ? 14 : 13) + '</span>' +
+      b.innerHTML = '<span class="sk-i">' + svg(sk.i, mode === 'menu' ? 15 : 16) + '</span>' +
         (mode === 'menu' ? '<span class="sk-n">' + sk.n + '</span><span class="sk-v">' + skVal(sk, st) + '</span>' : '<span class="sk-v">' + skVal(sk, st) + '</span>');
       b.setAttribute('aria-pressed', String(!!(sk.get && sk.get(st))));
       if (na.includes(sk.k)) { b.disabled = true; b.title = sk.n + '：关联层为地理关联视图'; }
@@ -208,7 +209,8 @@
     /* ① 数据概览（F2 固定四项；不含事实类型分布） */
     const s1 = el('section', 'mn-sec');
     s1.appendChild(el('div', 'mn-h', '数据概览'));
-    s1.appendChild(el('div', 'mn-ov', ov.rows.map(([k, v]) => '<div class="ov-i"><span>' + k + '</span><b>' + v + '</b></div>').join('')));
+    s1.appendChild(el('div', 'mn-ov', ov.rows.filter(r => r[0]).map(([k, v]) =>
+      '<div class="ov-i"><b>' + v + '</b><span>' + k + '</span></div>').join('')));
     body.appendChild(s1);
 
     /* ② 图层数据分类筛选（F3 三级字典 / A2 九类对象域） */
@@ -278,54 +280,75 @@
   const SEQ = D.STREAM_SEQ || [];
   const BATCHES = { fact: seqBatches(SEQ), relation: seqBatches(SEQ.filter(e => REL_STAGES[e.stage])) };
   const SPEED = 2.6;
-  /* 流水文案：产品语言（接入 / 定位 / 影响 / 关联 / 入库），不显示内部 id、层级、生成器与规则名 */
-  function productLines(e) {
+  /* B2：单条日志写长写细（阶段 · 来源 · 标题 · 可信度 · 影响 · 坐标 · 关联本体 · 耗时），超过 800 字截断 */
+  const STAGE_TAG = { ingest: '接入', extract: '抽取', resolve: '归并', geo: '定位', score: '评分', link: '关联', graph: '图谱', warn: '提醒' };
+  const pad2 = n => String(n).padStart(2, '0');
+  const stamp = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' +
+    pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+  function logText(e) {
     const f = e.factId ? D.factById(e.factId) : null;
-    const leaf = (f && F.leafOf && F.leafOf(f)) || null;
-    const kind = leaf ? leaf.n : (f ? (D.CATS[f.cat] || {}).n : '');
-    const where = f ? String(f.region || '').split(' · ')[0] : '';
-    const out = {
-      ingest: [['接入', '接入' + (where ? where + '的' : '') + (kind || '行业') + '事实']],
-      extract: [['抽取', '抽取事实要点：' + (f ? String(f.title).slice(0, 18) : '行业信息') + '…']],
-      resolve: [['归并', '主体归一完成' + (where ? ' · ' + where : '')]],
-      geo: [['定位', '完成地理定位' + (where ? ' · ' + where : '') + (f && f.lat != null ? '（' + Math.abs(f.lat).toFixed(1) + '°' + (f.lat >= 0 ? 'N' : 'S') + '）' : '')]],
-      score: [['评分', '完成可信度与影响等级判定' + (f ? '：' + (f.cred === 'high' ? '高可信' : '中可信') + ' / ' + (f.impact === 'high' ? '高影响' : f.impact === 'mid' ? '中影响' : '低影响') : '')]],
-      link: [['关联', '关联 ' + (f ? (f.objects || []).length : 2) + ' 个本体对象']],
-      graph: [['图谱', '影响范围生成：半径约 ' + (f ? f.radius : 120) + ' km']],
-      warn: [['提醒', '待复核口径 1 条，已标记']]
-    };
-    return (out[e.stage] || out.ingest)[0];
+    const tag = STAGE_TAG[e.stage] || '接入';
+    /* 没有对应事实的批次日志：用产品语言描述阶段动作（不暴露来源插件名与内部字段） */
+    if (!f) {
+      const plain = {
+        ingest: '接入公开数据批次', extract: '抽取结构化字段', resolve: '主体归一与去重',
+        geo: '地理定位与坐标校验', score: '可信度与影响等级判定', link: '关联本体对象',
+        graph: '影响范围生成', warn: '待复核项标记'
+      }[e.stage] || '处理完成';
+      return '[' + stamp(new Date()) + '] ◆ ' + tag + ' | ' + plain + ' | 处理耗时:' + (120 + (e.t % 260)) + 'ms ✓';
+    }
+    const cred = ({ high: '高', medium: '中', mid: '中', low: '低' }[f.cred] || '中');
+    const infl = ({ high: '高', mid: '中', low: '低' }[f.impact] || '中');
+    const objs = (f.objects || []).map(id => (D.objById(id) || {}).name).filter(Boolean).slice(0, 4);
+    const src = (f.evidence && f.evidence[0] && f.evidence[0].t) || f.sourcePlugin || '公开渠道';
+    const coords = f.lng != null ? '[' + f.lng.toFixed(2) + ',' + f.lat.toFixed(2) + ']' : '[无坐标]';
+    let line = ['[' + stamp(new Date()) + '] ◆ ' + tag,
+      '来源:' + String(src).slice(0, 24),
+      '标题:' + String(f.title).slice(0, 80),
+      '可信度:' + cred, '影响:' + infl, '坐标:' + coords,
+      '受影响区域:' + String(f.region || '') + '(半径约' + (f.radius || 120) + 'km)',
+      '关联本体:' + (objs.join(',') || '—'),
+      '证据:' + ((f.evidence || []).length) + '条',
+      '来源级别:' + (f.authorityTier || 'B') + '级',
+      '处理链路:解析→归一→定位→评分→入库',
+      '处理耗时:' + (110 + (e.t || 0) % 420) + 'ms ✓'].join(' | ');
+    if (line.length > 800) line = line.slice(0, 797) + '...';
+    return line;
   }
+  /* B3/M7：每条进入流水的事实都向地图发一次「星闪」 */
   function pushStreamLine(e) {
     const body = $('streamBody');
     if (!body || !e) return;
-    const [k, text] = productLines(e);
     const row = el('div', 'st-line');
-    row.appendChild(el('span', 'k' + (e.stage === 'warn' ? ' warn' : ''), k));
-    row.appendChild(el('span', 't', new Date().toTimeString().slice(0, 8)));
-    row.appendChild(el('span', 'tx', text));
+    row.appendChild(el('span', 'tx', logText(e)));
     body.appendChild(row);
-    while (body.children.length > 60) body.removeChild(body.firstChild);
+    while (body.children.length > 90) body.removeChild(body.firstChild);
     body.scrollTop = body.scrollHeight;
-    if (e.star) {
-      const f = D.factById(e.star.factId);
-      if (f) S.emit('stream:line', { fact: f, level: e.star.level, severity: e.star.severity });
-    }
+    const f = e.factId ? D.factById(e.factId) : (e.star && D.factById(e.star.factId));
+    if (f) S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity });
   }
   function scheduleStream() {
     clearTimeout(ST.timer);
     if (!$('streamBox').classList.contains('on')) return;
     const list = BATCHES[S.state.tab === 'relation' ? 'relation' : 'fact'];
     if (!list.length) return;
-    const idx = ST.i % list.length, batch = list[idx];
+    const batch = list[ST.i % list.length];
     ST.i++;
-    batch.items.forEach(pushStreamLine);
-    const next = list[(idx + 1) % list.length];
-    const raw = next ? Math.max(400, next.t - batch.t) : 1800;
-    const roll = ST.i % 5;
-    let gap = Math.max(360, Math.min(2600, raw / SPEED)) + Math.random() * 180;
-    if (roll === 0) gap = gap * 2.4 + 1200; else if (roll === 2) gap = 140;
-    ST.timer = setTimeout(scheduleStream, gap);
+    const roll = Math.random();
+    if (roll < .42) {
+      const n = Math.min(batch.items.length, 3 + Math.floor(Math.random() * 3));   /* 成批快速刷过 3–5 条 */
+      let k = 0;
+      const step = () => {
+        pushStreamLine(batch.items[k]); k++;
+        if (k < n) ST.timer = setTimeout(step, 90 + Math.random() * 80);
+        else ST.timer = setTimeout(scheduleStream, 1000 + Math.random() * 1200);   /* 批间停顿 1–2.2s */
+      };
+      step();
+      return;
+    }
+    if (roll < .58) { pushStreamLine(batch.items[0]); ST.timer = setTimeout(scheduleStream, 1500 + Math.random() * 900); return; }
+    pushStreamLine(batch.items[0]);
+    ST.timer = setTimeout(scheduleStream, 260 + Math.random() * 900);
   }
   function syncStream() {
     const st = S.state, box = $('streamBox');
@@ -347,7 +370,11 @@
   /* ---------- F10 / A5：右侧嵌套抽屉 ---------- */
   function drawerStack() {
     const st = S.state;
-    if (st.tab === 'fact') return st.factId ? [{ kind: 'fact', id: st.factId }] : [];
+    if (st.tab === 'fact') {
+      if (st.factId) return [{ kind: 'fact', id: st.factId }];
+      if (st.factObj) return [{ kind: 'object', id: st.factObj }];
+      return [];
+    }
     if (st.tab === 'relation') {
       const stack = Array.isArray(st.rel.stack) ? st.rel.stack.filter(x => x && x.id) : [];
       if (stack.length) return stack;
@@ -357,7 +384,7 @@
   }
   function popDrawer() {
     const st = S.state;
-    if (st.tab === 'fact') return S.set({ factId: null, logOpen: false });
+    if (st.tab === 'fact') return S.set({ factId: null, logOpen: false, factObj: null });
     const stack = drawerStack();
     if (!stack.length) return;
     if (stack.length === 1) return S.set({ rel: { sel: null, kind: null, stack: [] } });
@@ -385,16 +412,18 @@
         head.appendChild(back);
       }
       const x = el('button', 'drawer-x', '×');
-      x.onclick = () => (stack.length > 1 ? popDrawer() : S.set(d.kind === 'fact' ? { factId: null, logOpen: false } : { rel: { sel: null, kind: null, stack: [] } }));
+      x.onclick = () => {
+        if (stack.length > 1) return popDrawer();
+        S.set(d.kind === 'fact' ? { factId: null, logOpen: false } : { rel: { sel: null, kind: null, stack: [] }, factObj: null });
+      };
       head.appendChild(x);
       wrap.appendChild(head);
       const bodyEl = el('div', 'drawer-body');
       wrap.appendChild(bodyEl);
       box.appendChild(wrap);
-      const mod = d.kind === 'fact' ? window.V03Fact : window.V03Relation;
       try {
-        if (d.kind === 'fact' && mod && mod.renderDetail) mod.renderDetail(bodyEl);
-        else if (mod && mod.renderDrawer) mod.renderDrawer(bodyEl, d);
+        if (d.kind === 'fact' && window.V03Fact && V03Fact.renderDetail) V03Fact.renderDetail(bodyEl);
+        else if (window.V03Relation && V03Relation.renderDrawer) V03Relation.renderDrawer(bodyEl, d);
       } catch (e) { console.error('drawer', e); }
     });
   }
@@ -457,10 +486,10 @@
 
   function bindOnce() {
     /* G1：顶部图标（同一套线性 SVG） */
-    $('menuBtn').innerHTML = svg('menu', 14);
-    $('btnStream').innerHTML = svg('stream', 14);
-    $('btnCards').innerHTML = svg('cards', 14);
-    $('btnSettings').innerHTML = svg('gear', 14);
+    $('menuBtn').innerHTML = svg('menu', 16);
+    $('btnStream').innerHTML = svg('stream', 16);
+    $('btnCards').innerHTML = svg('cards', 16);
+    $('btnSettings').innerHTML = svg('gear', 16);
     $('menuBtn').onclick = () => S.set({ menu: !S.state.menu });
     $('menuClose').onclick = () => S.set({ menu: false });
     $('btnStream').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { stream: !S.state.panels.stream } }); };
@@ -481,7 +510,7 @@
       markDirty();
       renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); syncStream(); renderSettings(); syncDrawers();
       refreshLayers(false);
-      if (changed.some(k => ['time', 'cred', 'infl', 'q', 'catKeys', 'relKeys', 'geo', 'tab', 'rel', 'sk', 'carry'].includes(k))) shakeLogo();
+      if (changed.some(k => ['time', 'cred', 'infl', 'q', 'catKeys', 'relKeys', 'geo', 'tab', 'rel', 'sk', 'carry', 'factObj'].includes(k))) shakeLogo();
     });
     S.onEvent('toast', toast);
     S.onEvent('jump', p => { if (p && p.tab) S.set({ tab: p.tab }); });
