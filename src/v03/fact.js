@@ -181,6 +181,13 @@ window.V03Fact = (function () {
 
   const DOT = { high: 6, mid: 5.2, low: 4.6 };      /* 事实点：统一红点，大小随重要性 */
   const DOTC = '#3f4c5f';          /* 统一中性色点（与关联层本体点一致，不用红色） */
+  const palette = () => S.state.theme === 'dark' ? {
+    land: '#0b3f47', land2: '#14515a', line: 'rgba(143,178,184,.58)', ink: '#f2f6f7',
+    tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', mass: 'rgba(152,190,196,.34)', dot: '#cde3e7'
+  } : {
+    land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238',
+    tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', mass: 'rgba(63,76,95,.26)', dot: '#3f4c5f'
+  };
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
@@ -199,11 +206,18 @@ window.V03Fact = (function () {
     const mass = (window.V03Mass && st.sk.mass !== false)
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
+    const p = palette();
+    const ripple = facts.filter(f => f.impact === 'high').slice(0, 60).map(f => ({
+      id: f.id, value: [f.lng, f.lat], symbolSize: Math.max(3, radiusPx(f) * .24), itemStyle: { color: dotColor(f) }
+    }));
     const series = [
       { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
-        large: true, largeThreshold: 2000, progressive: 5000, progressiveThreshold: 3000,
-        itemStyle: { color: 'rgba(63,76,95,.26)' } },
+        large: false, progressive: 0, animation: false,
+        itemStyle: { color: p.mass } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
+      { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripple : [], silent: true, z: 3,
+        showEffectOn: 'render', rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 },
+        itemStyle: { opacity: .55 } },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
     ];
     if (st.sk.regions) markerSeries('regions', D.REGIONS, '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -220,13 +234,13 @@ window.V03Fact = (function () {
         zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false,
         scaleLimit: { min: lv.zoomBox[0], max: lv.zoomBox[1] },
         boundingCoords: lv.bounds || undefined,
-        itemStyle: { areaColor: '#e9eef7', borderColor: 'rgba(120,145,185,.55)', borderWidth: .7 },
-        emphasis: { itemStyle: { areaColor: '#dde6f4' }, label: { show: true, color: '#2b3444', fontSize: 10 } },
+        itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
+        emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: true, color: p.ink, fontSize: 10 } },
         select: { disabled: true }, label: { show: false }
       },
       tooltip: {
-        trigger: 'item', backgroundColor: 'rgba(255,255,255,.97)', borderColor: 'rgba(15,23,42,.12)', borderWidth: 1,
-        textStyle: { color: '#10151f', fontSize: 11 }, padding: [6, 9],
+        trigger: 'item', backgroundColor: p.tipBg, borderColor: p.tipLine, borderWidth: 1,
+        textStyle: { color: p.ink, fontSize: 11 }, padding: [6, 9],
         formatter: p => {
           const sid = p.seriesId || '';
           if (sid === 'mass') {
@@ -283,55 +297,6 @@ window.V03Fact = (function () {
     setTimeout(() => d.remove(), 1000);
   }
   const flashIds = () => [...document.querySelectorAll('#layer-fact .star-flash')].map(n => n.dataset.fid);
-
-  /* ---------- P2：水波纹扩散（自绘 canvas，缓慢外扩 + 渐隐，半径/速度随 severity） ---------- */
-  const RIPPLE = { raf: 0, cv: null };
-  function ensureRipple() {
-    if (RIPPLE.cv || !dom.mapBox) return RIPPLE.cv;
-    const cv = document.createElement('canvas');
-    cv.className = 'ripple-canvas';
-    dom.mapBox.appendChild(cv);
-    RIPPLE.cv = cv;
-    return cv;
-  }
-  function rippleLoop(now) {
-    RIPPLE.raf = requestAnimationFrame(rippleLoop);
-    const cv = ensureRipple();
-    if (!cv || !chart) return;
-    const box = dom.mapBox.getBoundingClientRect();
-    if (cv.width !== Math.round(box.width) || cv.height !== Math.round(box.height)) { cv.width = Math.round(box.width); cv.height = Math.round(box.height); }
-    const ctx = cv.getContext('2d');
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    const st = S.state;
-    if (!st.sk.influence || st.sk.mode3d || st.tab !== 'fact') return;
-    const t = now / 1000;
-    const facts = F.mappable(F.factsAtLevel(st)).filter(f => f.impact === 'high').slice(0, 60);
-    facts.forEach(f => {
-      let px = null;
-      try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { return; }
-      if (!Array.isArray(px) || px[0] < -40 || px[1] < -40 || px[0] > cv.width + 40 || px[1] > cv.height + 40) return;
-      const sev = f.severity || 60;
-      const period = 6 + sev / 60;                       /* 6.0–7.7s：慢，像水面波纹 */
-      const base = radiusPx(f) * 2.4;
-      for (let k = 0; k < 2; k++) {
-        const phase = ((((t + (f.lng + f.lat) * .31) / period) + k * .5) % 1 + 1) % 1;
-        const alpha = .30 * (1 - phase) * (1 - phase);    /* 越外越透明，尾段自然消失 */
-        if (alpha < .004) continue;
-        const r = base * phase;
-        if (!(r > 0.5)) continue;
-        ctx.beginPath();
-        ctx.arc(px[0], px[1], r, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(63,76,95,' + alpha.toFixed(3) + ')';
-        ctx.lineWidth = 1.1;
-        ctx.stroke();
-      }
-    });
-  }
-  function syncRipple() {
-    const on = S.state.tab === 'fact' && S.state.sk.influence && !S.state.sk.mode3d;
-    if (on && !RIPPLE.raf) { RIPPLE.raf = requestAnimationFrame(rippleLoop); }
-    if (!on && RIPPLE.raf) { cancelAnimationFrame(RIPPLE.raf); RIPPLE.raf = 0; const cv = RIPPLE.cv; if (cv) cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); }
-  }
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -637,8 +602,11 @@ window.V03Fact = (function () {
   }
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
-  /* ---------- 3D 地球（浅色） ---------- */
-  const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [] };
+  /* ---------- 3D 地球：夜间自转 + 视差星空（同一 Canvas，避免独立层错位） ---------- */
+  const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [], active: false, starOffset: 0, stars: [] };
+  let starSeed = 9137;
+  const starRnd = () => ((starSeed = (starSeed * 16807) % 2147483647) - 1) / 2147483646;
+  for (let i = 0; i < 260; i++) globe.stars.push({ x: starRnd(), y: starRnd(), r: .35 + starRnd() * 1.35, a: .24 + starRnd() * .62, speed: .15 + starRnd() * .85 });
   function resizeGlobe() {
     const c = dom.globe; if (!c) return;
     const r = dom.mapBox.getBoundingClientRect();
@@ -681,8 +649,23 @@ window.V03Fact = (function () {
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
     const st = S.state;
     ctx.clearRect(0, 0, W, H);
+    const dark = st.theme === 'dark';
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, dark ? '#000307' : '#e8f3f8'); sky.addColorStop(1, dark ? '#020a10' : '#f3f8fa');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    if (dark) {
+      globe.stars.forEach(s => {
+        const x = ((s.x * W + globe.starOffset * s.speed) % (W + 20)) - 10;
+        const y = s.y * H + Math.sin(globe.starOffset * .002 + s.x * 9) * (2 + s.speed * 4);
+        ctx.beginPath(); ctx.arc(x, y, s.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(220,239,255,' + s.a + ')'; ctx.fill();
+      });
+      const halo = ctx.createRadialGradient(cx, cy, R * .86, cx, cy, R * 1.22);
+      halo.addColorStop(0, 'rgba(16,142,196,.18)'); halo.addColorStop(.72, 'rgba(8,90,132,.10)'); halo.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2); ctx.fill();
+    }
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    g.addColorStop(0, '#f7fafd'); g.addColorStop(.7, '#eef3fa'); g.addColorStop(1, '#e4ebf6');
+    if (dark) { g.addColorStop(0, '#164d61'); g.addColorStop(.58, '#062b3b'); g.addColorStop(1, '#010a11'); }
+    else { g.addColorStop(0, '#f7fafb'); g.addColorStop(.7, '#dfecef'); g.addColorStop(1, '#cbdde2'); }
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
     ctx.fillStyle = g; ctx.fill(); ctx.clip();
@@ -691,17 +674,17 @@ window.V03Fact = (function () {
       ctx.beginPath();
       run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.closePath();
-      ctx.fillStyle = '#dfe7f3'; ctx.fill();
-      ctx.strokeStyle = 'rgba(120,145,185,.6)'; ctx.lineWidth = .8; ctx.stroke();
+      ctx.fillStyle = dark ? '#153d42' : '#dfe6e8'; ctx.fill();
+      ctx.strokeStyle = dark ? 'rgba(145,186,190,.62)' : 'rgba(94,113,119,.58)'; ctx.lineWidth = .8; ctx.stroke();
     }));
-    ctx.strokeStyle = 'rgba(120,145,185,.18)';
+    ctx.strokeStyle = dark ? 'rgba(145,186,190,.12)' : 'rgba(94,113,119,.18)';
     for (let lat = -60; lat <= 60; lat += 30) {
       const pts = [];
       for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
       clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
     }
     ctx.restore();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(120,145,185,.5)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = dark ? 'rgba(79,180,218,.62)' : 'rgba(94,113,119,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
     if (st.sk.influence) facts.forEach(f => {
@@ -720,7 +703,7 @@ window.V03Fact = (function () {
       ctx.beginPath(); ctx.arc(p.x, p.y, 3.4, 0, Math.PI * 2);
       ctx.fillStyle = hexA(catOf(f).c, .28); ctx.fill();
       ctx.strokeStyle = catOf(f).c; ctx.lineWidth = .9; ctx.stroke();
-      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#2b3444';
+      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = dark ? '#e7f4f6' : '#263238';
       ctx.fillText(emojiOf(f), p.x, p.y + 3);
       hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
     });
@@ -729,7 +712,7 @@ window.V03Fact = (function () {
       const p = gProject(m.lng, m.lat, cx, cy, R);
       if (p.z <= 0) return;
       ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.fillStyle = dark ? '#d9eef1' : '#fff'; ctx.fill();
       ctx.strokeStyle = m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1';
       ctx.lineWidth = 1; ctx.stroke();
       hits.push({ x: p.x, y: p.y, type: 'mark', id: m.objId });
@@ -749,16 +732,20 @@ window.V03Fact = (function () {
     if (now - globe.last < 42) return;
     globe.last = now;
     globe.rot = (globe.rot + .09) % 360;
+    globe.starOffset = (globe.starOffset + .42) % 100000;
     drawGlobe();
   }
   function syncMode() {
     const on3d = S.state.sk.mode3d;
     dom.globe.style.display = on3d ? 'block' : 'none';
     dom.map.style.display = on3d ? 'none' : 'block';
-    if (on3d) {
-      resizeGlobe(); globe.rot = 105;
+    if (on3d && !globe.active) {
+      globe.active = true; resizeGlobe(); globe.rot = 105;
       if (!globe.raf) globe.raf = requestAnimationFrame(loopGlobe);
-    } else if (globe.raf) { cancelAnimationFrame(globe.raf); globe.raf = 0; }
+    } else if (!on3d && globe.active) {
+      globe.active = false;
+      if (globe.raf) { cancelAnimationFrame(globe.raf); globe.raf = 0; }
+    } else if (on3d) drawGlobe();
   }
 
   /* ---------- 主更新 ---------- */
@@ -766,11 +753,10 @@ window.V03Fact = (function () {
     if (!root) return;
     const st = S.state;
     const key = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
-      st.factId, st.panels.cards, st.logOpen, st.carry, st.sk.mode3d, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.legend, st.sk.live]);
+      st.factId, st.panels.cards, st.logOpen, st.carry, st.sk.mode3d, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.legend, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
 
     syncMode();
-    syncRipple();
     const lvKey = st.geo.level + '|' + (st.geo.focus || '');
     const c = ensureChart();
     if (c && !st.sk.mode3d) {
@@ -814,7 +800,8 @@ window.V03Fact = (function () {
       emojiLeaves: new Set(pts.map(f => leafOf(f).key)).size,
       flashes: document.querySelectorAll('#layer-fact .star-flash').length,
       roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
-      dictReady: !!F.dictReady
+      dictReady: !!F.dictReady,
+      globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length
     };
   };
   const pick = {

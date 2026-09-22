@@ -155,3 +155,30 @@
 .qa-item.open{border-color:#c7d7f5}
 .sim-sec{margin-top:9px;padding-top:8px;border-top:1px dashed var(--hair)}
 .sig.fail{color:#b91c1c}
+
+/* HungerMap 夜间主题：推演层跟随全局令牌，避免切换后残留白色孤岛。 */
+html[data-theme="dark"] .sim-head{background:rgba(31,34,35,.82)}
+html[data-theme="dark"] .sim-badge,
+html[data-theme="dark"] .sim-ctl button.sec,
+html[data-theme="dark"] .sim-ctl button.ter,
+html[data-theme="dark"] .sim-cite,
+html[data-theme="dark"] .sim-tag{background:var(--panel);border-color:var(--line)}
+html[data-theme="dark"] .sim-round .rh:hover,
+html[data-theme="dark"] .qa-item .qa-q:hover:not([disabled]){background:var(--panel-2)}
+html[data-theme="dark"] .sim-pending,
+html[data-theme="dark"] .sim-log{background:var(--panel-2)}
+html[data-theme="dark"] .sim-stageblk.cur,
+html[data-theme="dark"] .sim-step.done,
+html[data-theme="dark"] .sim-step.run,
+html[data-theme="dark"] .sim-step.fail,
+html[data-theme="dark"] .sim-side.degraded{background:var(--panel-2)}
+html[data-theme="dark"] .ind-value .iv{color:var(--ink)}
+html[data-theme="dark"] .ind-trend i{background:#344247;border-color:#42545a}
+html[data-theme="dark"] .sim-tag.base,
+html[data-theme="dark"] .sim-tag.rule,
+html[data-theme="dark"] .sim-tag.simfmt,
+html[data-theme="dark"] .sim-tag.assume,
+html[data-theme="dark"] .sim-tag.infer,
+html[data-theme="dark"] .sim-tag.val,
+html[data-theme="dark"] .sim-tag.advice,
+html[data-theme="dark"] .sim-tag.review{background:var(--panel-2)}
