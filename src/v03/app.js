@@ -34,6 +34,8 @@
     plus:    ['M12 5v14', 'M5 12h14'],
     minus:   ['M5 12h14'],
     close:   ['M6 6l12 12', 'M18 6 6 18']
+    ,sun:    ['M12 3v2', 'M12 19v2', 'M3 12h2', 'M19 12h2', 'M5.6 5.6 7 7', 'M17 17l1.4 1.4', 'M18.4 5.6 17 7', 'M7 17l-1.4 1.4', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z']
+    ,moon:   ['M20.2 15.2A8.6 8.6 0 0 1 8.8 3.8 8.6 8.6 0 1 0 20.2 15.2Z']
   };
   /* 全局图标：Cursor 风格 —— 细线条 1.5px、无圆角（butt/miter）、16px */
   const svg = (name, size) => '<svg viewBox="0 0 24 24" width="' + (size || 16) + '" height="' + (size || 16) +
@@ -78,6 +80,9 @@
     set($('menuBtn'), st.menu);
     $('btnStream').disabled = st.tab === 'sim';
     $('btnCards').disabled = st.tab === 'sim';
+    $('btnTheme').innerHTML = svg(st.theme === 'dark' ? 'sun' : 'moon', 16);
+    $('btnTheme').setAttribute('aria-label', st.theme === 'dark' ? '切换到日间模式' : '切换到夜间模式');
+    $('btnTheme').title = st.theme === 'dark' ? '日间模式' : '夜间模式';
     $('btnSettings').title = '设置';
   }
 
@@ -190,36 +195,44 @@
     if (p && p.catch) p.catch(err => { S.set({ sk: { fullscreen: false } }); toast('当前环境不允许全屏：' + (err && err.message ? err.message : '被浏览器拒绝')); });
   }
 
-  /* v08：数据概览主数字 —— 与 hyperresearch.ai 同款「实时大数字」：
-     全位数 + 千分位 + tabular-nums，尾数每秒都在走；终端每处理一条再即时 +1 */
-  const OV = { node: null, model: null, base: 0, extra: 0, rate: 0, t0: 0, today: 0, raf: 0, timer: 0 };
-  const ovStill = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  /* 把「已走时间」折算进基数：菜单重绘 / 终端事件都会重绘，不折算就会掉数（只增不减的关键） */
-  function ovTick() {
-    const now = performance.now();
-    if (OV.t0) OV.base += OV.rate * (now - OV.t0) / 1000;
-    OV.t0 = now;
-  }
+  /* v08.1：数据概览模拟真实接入节奏。批次的间隔、增量都不同，也允许一次空窗；
+     终端每处理一条仍会即时 +1。固定节奏表只用于保证体验与回归稳定，不代表固定毫秒轮询。 */
+  const OV = { node: null, model: null, base: 0, extra: 0, rate: 0, today: 0, timer: 0, step: 0, history: [] };
+  const OV_PATTERN = [
+    { delay: 650, scale: .72 }, { delay: 1800, scale: 0, skip: true },
+    { delay: 920, scale: 1.45 }, { delay: 2600, scale: .62 },
+    { delay: 520, scale: 2.2 }, { delay: 1280, scale: 1.08 },
+    { delay: 3400, scale: 0, skip: true }, { delay: 760, scale: 1.7 }
+  ];
   function ovPaint() {
     const M = window.V03Mass;
     if (OV.node && M) OV.node.textContent = M.digits(OV.base + OV.extra);
   }
   function ovStop() {
-    if (OV.raf) cancelAnimationFrame(OV.raf);
-    if (OV.timer) clearInterval(OV.timer);
-    OV.raf = 0; OV.timer = 0; OV.node = null;
+    if (OV.timer) clearTimeout(OV.timer);
+    OV.timer = 0; OV.node = null;
+  }
+  function ovSchedule() {
+    if (!OV.node || OV.timer) return;
+    const p = OV_PATTERN[OV.step++ % OV_PATTERN.length];
+    OV.timer = setTimeout(() => {
+      OV.timer = 0;
+      if (!OV.node) return;
+      const delta = p.skip ? 0 : Math.max(1, Math.round(OV.rate * p.delay / 1000 * p.scale));
+      if (delta) { OV.base += delta; OV.today += delta; }
+      OV.history.push({ delay: p.delay, delta, skipped: !!p.skip });
+      if (OV.history.length > 24) OV.history.shift();
+      ovPaint();
+      ovSchedule();
+    }, p.delay);
   }
   function ovMount(node, base, rate) {
     if (!node || typeof base !== 'number') { ovStop(); return; }
     if (typeof rate === 'number') OV.rate = rate;
     if (base !== OV.model) { OV.model = base; OV.base = base; }   /* 只有体量口径变了才重置基数 */
-    if (node !== OV.node) ovTick();                              /* 换节点前先结帐，不丢时间 */
     OV.node = node;
-    if (OV.raf || OV.timer) { ovPaint(); return; }                /* 表已在走：不重启 rAF */
-    const pulse = () => { ovTick(); ovPaint(); };
-    if (ovStill()) { OV.timer = setInterval(pulse, 1000); }       /* 弱动效与源站同款降级：1s 一跳 */
-    else { const loop = () => { pulse(); OV.raf = requestAnimationFrame(loop); }; OV.raf = requestAnimationFrame(loop); }
     ovPaint();
+    ovSchedule();
   }
   function bumpOverview() {
     OV.extra += 1; OV.today += 1; ovPaint();
@@ -535,11 +548,13 @@
     $('menuBtn').innerHTML = svg('menu', 16);
     $('btnStream').innerHTML = svg('stream', 16);
     $('btnCards').innerHTML = svg('cards', 16);
+    $('btnTheme').innerHTML = svg('sun', 16);
     $('btnSettings').innerHTML = svg('gear', 16);
     $('menuBtn').onclick = () => S.set({ menu: !S.state.menu });
     $('menuClose').onclick = () => S.set({ menu: false });
     $('btnStream').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { stream: !S.state.panels.stream } }); };
     $('btnCards').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { cards: !S.state.panels.cards } }); };
+    $('btnTheme').onclick = () => S.set({ theme: S.state.theme === 'dark' ? 'light' : 'dark' });
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
@@ -550,9 +565,11 @@
   /* ---------- 启动 ---------- */
   function boot() {
     regMaps();
+    document.documentElement.dataset.theme = S.state.theme;
     bindOnce();
     mountLayers();
     S.on((st, changed) => {
+      document.documentElement.dataset.theme = st.theme;
       markDirty();
       renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); syncStream(); renderSettings(); syncDrawers();
       refreshLayers(false);
@@ -629,6 +646,7 @@
       streamLines: () => document.querySelectorAll('#streamBody .st-line').length,
       flashIds: () => (window.V03Fact && V03Fact.flashIds) ? V03Fact.flashIds() : [],
       dictF3: () => (D3 ? { groups: D3.GROUPS.length, items: D3.ITEMS.length } : null)
+      ,overview: () => ({ value: Math.floor(OV.base + OV.extra), today: OV.today, history: OV.history.slice(), running: !!OV.timer })
     };
     window.__AGRI_READY = true;
   }

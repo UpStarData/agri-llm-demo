@@ -45,11 +45,11 @@ const page = await open(browser);
 /* ---------------- G1 顶部工具条 ---------------- */
 const top = await page.evaluate(() => {
   const bar = document.querySelector('.topbar').getBoundingClientRect();
-  const order = ['#menuBtn', '.brand', '#tabs', '#btnStream', '#btnCards', '#btnSettings']
+  const order = ['#menuBtn', '.brand', '#tabs', '#btnStream', '#btnCards', '#btnTheme', '#btnSettings']
     .map(s => ({ s, x: document.querySelector(s).getBoundingClientRect().left }));
   const icons = [...document.querySelectorAll('.topbar svg')].length;
   return { h: Math.round(bar.height), order, icons,
-    ctrlH: Math.max(...['#menuBtn', '#btnStream', '#btnCards', '#btnSettings'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().height))) };
+    ctrlH: Math.max(...['#menuBtn', '#btnStream', '#btnCards', '#btnTheme', '#btnSettings'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().height))) };
 });
 check('G1 顶部工具条总高 ≤32px，图标热区 ≤32px', top.h <= 32 && top.ctrlH <= 32, JSON.stringify(top));
 check('T1 三 TAB 小巧低调（≤13px、细下划线高亮、非大块按钮）', await page.evaluate(() => {
@@ -62,16 +62,16 @@ check('T3 品牌为 🌾 AgriLink v1.0，Logo 为轻柔摇摆动画（sway）', 
   const logo = document.getElementById('logo');
   return /AgriLink v1\.0/.test(t) && !!logo;
 }));
-check('G1 顶部顺序：菜单显隐 → 🌾 AgriLink → 三 TAB → 流水显隐 → 卡片显隐 → 设置',
-  top.order[0].x < top.order[1].x && top.order[1].x < top.order[2].x && top.order[2].x < top.order[3].x && top.order[3].x < top.order[5].x,
+check('G1 顶部顺序：菜单显隐 → 🌾 AgriLink → 三 TAB → 流水显隐 → 卡片显隐 → 主题 → 设置',
+  top.order[0].x < top.order[1].x && top.order[1].x < top.order[2].x && top.order[2].x < top.order[3].x && top.order[3].x < top.order[5].x && top.order[5].x < top.order[6].x,
   JSON.stringify(top.order.map(o => o.s)));
 const iconStrokes = await page.evaluate(() => [...document.querySelectorAll('.topbar svg')].map(s => s.getAttribute('stroke')));
 const iconStyle = await page.evaluate(() => [...document.querySelectorAll('.topbar svg, #mapSk svg, #menuBody svg')].map(s => ({
   w: s.getAttribute('stroke-width'), cap: s.getAttribute('stroke-linecap'), join: s.getAttribute('stroke-linejoin'), sz: s.getAttribute('width')
 })));
-check('五 全局图标统一 Cursor 风格（stroke 1.5、无圆角 butt/miter、16px、浅灰）',
-  iconStyle.length >= 8 && iconStyle.every(i => i.w === '1.5' && i.cap === 'butt' && i.join === 'miter') &&
-  await page.evaluate(() => getComputedStyle(document.querySelector('.tb-ic')).color === 'rgb(136, 153, 170)'),
+check('五 全局图标统一 Cursor 风格（stroke 1.5、无圆角 butt/miter、16px、主题色）',
+    iconStyle.length >= 8 && iconStyle.every(i => i.w === '1.5' && i.cap === 'butt' && i.join === 'miter') &&
+  await page.evaluate(() => getComputedStyle(document.querySelector('.tb-ic')).color === 'rgb(145, 164, 169)'),
   JSON.stringify(iconStyle.slice(0, 3)));
 check('G1 TAB 为细文字 + 轻底色选中态（非黑白大块按钮）', await page.evaluate(() => {
   const b = document.querySelector('#tabs button.on');
@@ -79,7 +79,7 @@ check('G1 TAB 为细文字 + 轻底色选中态（非黑白大块按钮）', awa
   return cs.backgroundColor !== 'rgb(16, 21, 31)' && parseFloat(cs.fontSize) <= 13;
 }));
 
-/* ---------------- 视觉基线（浅色农业风） ---------------- */
+/* ---------------- 视觉基线（HungerMap 日夜主题，默认夜间） ---------------- */
 const light = await page.evaluate(() => ({
   body: getComputedStyle(document.body).backgroundColor,
   panel: getComputedStyle(document.querySelector('.fact-side')).backgroundColor,
@@ -92,8 +92,8 @@ const glassy = await page.evaluate(() => {
 check('M1 毛玻璃覆盖顶栏 / 菜单 / 右侧面板 / 快捷键条 / 图例（blur 20px saturate160%），流水保持纯黑',
   ['topbar', 'menu', 'side', 'sk', 'legend'].every(k => /blur\((2[0-9]|[3-9][0-9])px\)/.test(glassy[k])) && /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(glassy.stream),
   JSON.stringify(glassy));
-check('视觉基线：页面浅色（#f4f6fa 系）+ 白色面板 + 浅色底图，未改为暗色重设计',
-  /244, 246, 250/.test(light.body) && /255, 255, 255/.test(light.panel) && /#e9eef7|238, 243, 250/i.test(String(light.land)),
+check('视觉基线：默认 HungerMap 夜间（深青海面 + 深色面板 + 深青陆地）',
+  /7, 31, 37/.test(light.body) && /25, 27, 28/.test(light.panel) && /#0b3f47/i.test(String(light.land)),
   JSON.stringify(light));
 const fonts = await page.evaluate(() => [...document.styleSheets].map(s => { try { return [...s.cssRules].map(r => r.cssText).join('\n'); } catch (e) { return ''; } }).join('\n'));
 check('G2 IBM Plex Sans SC 三档字重齐备（300 / 400 / 600/700）',
@@ -152,8 +152,8 @@ check('L1/v08 主数字为全位数千分位 + tabular-nums 大数字，且不�
 const ovT1 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.hero .ov-i b').textContent);
 await sleep(2400);
 const ovT2 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.hero .ov-i b').textContent);
-check('L1/v08 主数字持续递增（尾数一直在走，非静态值）且分组格式稳定',
-  Number(ovT2.replace(/,/g, '')) - Number(ovT1.replace(/,/g, '')) >= 2 && /^\d{1,3}(,\d{3})+$/.test(ovT2),
+check('L1/v08 主数字按不规则批次递增（允许停顿）且分组格式稳定',
+  Number(ovT2.replace(/,/g, '')) - Number(ovT1.replace(/,/g, '')) >= 1 && /^\d{1,3}(,\d{3})+$/.test(ovT2),
   ovT1 + ' → ' + ovT2);
 /* 回归：菜单重绘 / 终端事件都会重绘数字，历史上一度会把已走时间丢掉 → 数字倒着走 */
 const ovSeries = [];
@@ -471,7 +471,8 @@ const anchor = await page.evaluate(() => {
   const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
   const opt = chart.getOption(), mass = opt.series.find(s => s.id === 'mass');
   const ll = mass.data[0].value;
-  return { ll, px: chart.convertToPixel({ geoIndex: 0 }, ll), n: mass.data.length, geo: mass.coordinateSystem, large: mass.large };
+  return { ll, px: chart.convertToPixel({ geoIndex: 0 }, ll), n: mass.data.length, geo: mass.coordinateSystem, large: mass.large,
+    detachedCanvas: !!document.querySelector('#factMapBox > .ripple-canvas') };
 });
 const mapBox = await page.locator('#factMap').boundingBox();
 const drag = [Math.round(mapBox.width * .18), Math.round(mapBox.height * .08)];
@@ -484,8 +485,8 @@ const anchoredAfter = await page.evaluate(ll => {
   return chart.convertToPixel({ geoIndex: 0 }, ll);
 }, anchor.ll);
 const projectedDelta = [anchoredAfter[0] - anchor.px[0], anchoredAfter[1] - anchor.px[1]];
-check('拖动地图后密度点与底图使用同一 geo 投影同步移动',
-  anchor.geo === 'geo' && anchor.large === true && anchor.n === 20000 && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
+check('拖动地图后密度点与底图使用同一 geo 投影同步移动（关闭独立 large 绘制路径）',
+  anchor.geo === 'geo' && anchor.large === false && anchor.n === 20000 && !anchor.detachedCanvas && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
   JSON.stringify({ count: anchor.n, projectedDelta, drag }));
 
 /* ---------------- 会话健康 ---------------- */

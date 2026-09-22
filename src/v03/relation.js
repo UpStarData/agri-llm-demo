@@ -24,6 +24,13 @@ window.V03Relation = (function () {
     '覆盖': '#a16207', '贸易': '#b45309', '替代': '#db2777', '价格传导': '#ea580c'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
+  const palette = () => S.state.theme === 'dark' ? {
+    land: '#0b3f47', land2: '#14515a', line: 'rgba(143,178,184,.58)', ink: '#f2f6f7', labelBg: 'rgba(31,34,35,.86)',
+    tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', neutral: 'rgba(163,185,190,.78)'
+  } : {
+    land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238', labelBg: 'rgba(255,255,255,.82)',
+    tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', neutral: 'rgba(126,138,158,.85)'
+  };
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -107,7 +114,7 @@ window.V03Relation = (function () {
       if (!a || !b) return;
       const isFocus = focus && (r.from === focus || r.to === focus);
       if (isFocus) related.add(r.id);
-      const color = isFocus ? typeColor(r.type) : 'rgba(126,138,158,.85)';
+      const color = isFocus ? typeColor(r.type) : palette().neutral;
       out.push({
         id: r.id, coords: [a, b],
         lineStyle: {
@@ -123,8 +130,8 @@ window.V03Relation = (function () {
       if (isFocus || (!focus && total <= 40)) {
         labels.push({
           id: r.id + '-l', coords: [a, b],
-          label: { show: true, position: 'middle', formatter: r.type, fontSize: 9, color: '#4d586a',
-            backgroundColor: 'rgba(255,255,255,.82)', padding: [1, 3], borderRadius: 3 },
+          label: { show: true, position: 'middle', formatter: r.type, fontSize: 9, color: palette().ink,
+            backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3 },
           lineStyle: { opacity: 0 }
         });
       }
@@ -141,14 +148,15 @@ window.V03Relation = (function () {
         symbolSize: isFocus ? 12 : 8 + Math.min(4, degree * .25),
         itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1 },
         label: {
-          show: isFocus || degree >= 8, position: 'right', distance: 3, fontSize: 9, color: '#2b3444',
-          backgroundColor: 'rgba(255,255,255,.82)', padding: [1, 3], borderRadius: 3,
+          show: isFocus || degree >= 8, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
+          backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3,
           formatter: p => { const n = String(p.name || ''); return n.length > 10 ? n.slice(0, 9) + '…' : n; }
         }
       };
     });
   }
   function option(objs, rels, st) {
+    const p = palette();
     const focus = focusId();
     const { lines, labels } = linesData(objs, rels, focus);
     const nodes = nodesData(objs, focus);
@@ -158,13 +166,13 @@ window.V03Relation = (function () {
       geo: {
         map: 'world110', roam: false, zoom: camera.zoom, center: camera.center.slice(),
         boundingCoords: [[-170, 72], [180, -56]],
-        itemStyle: { areaColor: '#eef2f8', borderColor: 'rgba(120,145,185,.5)', borderWidth: .7 },
-        emphasis: { itemStyle: { areaColor: '#e2eaf6' }, label: { show: false } },
+        itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
+        emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: false } },
         select: { disabled: true }, label: { show: false }
       },
       tooltip: {
-        trigger: 'item', backgroundColor: 'rgba(255,255,255,.97)', borderColor: 'rgba(15,23,42,.12)', borderWidth: 1,
-        textStyle: { color: '#10151f', fontSize: 11 }, padding: [6, 9],
+        trigger: 'item', backgroundColor: p.tipBg, borderColor: p.tipLine, borderWidth: 1,
+        textStyle: { color: p.ink, fontSize: 11 }, padding: [6, 9],
         formatter: p => {
           const sid = p.seriesId || '';
           if (sid === 'relLine') {
@@ -343,7 +351,7 @@ window.V03Relation = (function () {
     if (!root) return;
     const st = S.state;
     const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.sk.legend, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.sk.legend, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
     const c = ensureChart();
