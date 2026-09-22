@@ -261,7 +261,7 @@ svg{display:block}
 .fs-body::-webkit-scrollbar-thumb{background:rgba(15,23,42,.16);border-radius:3px}
 .fcards{column-count:2;column-gap:6px}
 .fcard{break-inside:avoid;-webkit-column-break-inside:avoid;display:block;width:100%;text-align:left;margin:0 0 6px;
-  border:1px solid var(--line);border-left:2.5px solid var(--accent);border-radius:var(--r-md);background:rgba(255,255,255,.86);
+  border:1px solid var(--line);border-left:2.5px solid var(--accent);border-radius:var(--r-md);background:rgba(255,255,255,.95);
   padding:6px 7px 7px;transition:box-shadow .15s,transform .15s,border-color .15s;cursor:pointer}
 .fcard:hover{box-shadow:0 6px 16px -14px rgba(15,23,42,.5);border-color:#c7d7f5;transform:translateY(-1px)}
 .fcard.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
@@ -306,7 +306,7 @@ svg{display:block}
 .kbar.empty i{background:#e2e8f0}
 .sym{font-weight:var(--f-light);color:var(--dim);font-size:.5625rem;margin-left:2px}
 /* 视频：仅已验证可嵌入源可播放，其余静态降级卡片（不伪造播放器） */
-.fc-static{border-radius:var(--r-sm);border:1px solid var(--line);background:var(--panel-2);padding:5px 6px;margin-bottom:4px}
+.fc-static{border-radius:var(--r-sm);border:1px solid var(--line);background:#fff;padding:5px 6px;margin-bottom:4px}
 .fc-static .fs-line{display:flex;align-items:center;gap:5px}
 .fc-static .fs-ic{width:20px;height:20px;border-radius:var(--r-sm);background:#eef2f8;display:grid;place-items:center;font-size:.625rem;color:var(--dim)}
 .fc-static b{font-size:.65625rem;font-weight:var(--f-semi)}
