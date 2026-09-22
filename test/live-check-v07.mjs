@@ -3,7 +3,8 @@
 import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-const url = 'http://192.168.1.83:3101/v0.7/';
+/* 用法：node test/live-check-v07.mjs [url]（默认局域网 v0.7） */
+const url = process.argv[2] || 'http://192.168.1.83:3101/v0.7/';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -21,6 +22,6 @@ const read = () => page.evaluate(() => {
   return { v: b.textContent, size: cs.fontSize, tnum: cs.fontVariantNumeric };
 });
 const a = await read(); await sleep(3000); const b = await read();
-await page.screenshot({ path: path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../live-v07-lan.png')) });
+await page.screenshot({ path: path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../live-v07-' + (process.argv[2] ? 'public' : 'lan') + '.png')) });
 console.log(JSON.stringify({ build: meta, t0: a, t3: b, 递增: Number(b.v.replace(/,/g, '')) - Number(a.v.replace(/,/g, '')) >= 2, errs }, null, 1));
 await browser.close();
