@@ -654,7 +654,7 @@ svg{display:block}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"d63beb7fe5b8","git":"c35c18b","builtAt":"2026-09-22T03:54:36.477Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"18d6785b9c0c","git":"b7129b3","builtAt":"2026-09-22T03:59:10.334Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -3009,7 +3009,7 @@ window.V03Mass = (function () {
     const keys = (leafKeys && leafKeys.length) ? leafKeys : ['x'];
     const want = SAMPLE[level] || 2000;
     /* 小范围抖动：数据可以重复，位置不能离开真实锚点或地图面。 */
-    const spread = level === 'L1' ? .75 : level === 'L2' ? .38 : .12;
+    const spread = level === 'L1' ? 2.4 : level === 'L2' ? 1.0 : .30;
     const out = [];
     const gauss = () => (rnd() + rnd() + rnd() - 1.5) / 1.5;
     let tries = 0;
@@ -5622,9 +5622,9 @@ window.V03Fact = (function () {
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
     const series = [
-      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 2,
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
         large: true, largeThreshold: 2000, progressive: 5000, progressiveThreshold: 3000,
-        itemStyle: { color: 'rgba(63,76,95,.34)' } },
+        itemStyle: { color: 'rgba(63,76,95,.26)' } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
     ];
