@@ -122,7 +122,11 @@ window.V03Mass = (function () {
     return out;
   }
 
-  /* ---------- 数字格式：按量级用 万 / 亿 ---------- */
+  /* ---------- 数字格式 ---------- */
+  /* v08：概览主数字用**全位数 + 千分位**（hyperresearch.ai 同款读法），不再缩写成 万/亿 */
+  const GROUP = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+  function digits(n) { return GROUP.format(Math.floor(n || 0)); }
+  /* 按量级用 万 / 亿（只用于注释类小字，不用于主数字） */
   function fmt(n) {
     if (n >= 1e8) return (n / 1e8).toFixed(2) + ' 亿';
     if (n >= 1e4) return (n / 1e4).toFixed(n >= 1e6 ? 0 : 1) + ' 万';
@@ -134,5 +138,5 @@ window.V03Mass = (function () {
     return { v: String(n), u: '' };
   }
 
-  return { QUOTA, SAMPLE, totals, sample, insideMap, fmt, fmtUnit, SEED };
+  return { QUOTA, SAMPLE, totals, sample, insideMap, fmt, fmtUnit, digits, SEED };
 })();

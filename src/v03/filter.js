@@ -181,16 +181,19 @@ window.V03Filter = (function () {
       };
     }
     const list = factsAtLevel(s);
-    const hi = list.filter(f => f.cred === 'high').length;
     const M = window.V03Mass;
     const leaves = selected(s, 'catKeys', FACT_ITEMS).size || FACT_ITEMS.length;
     const t = M ? M.totals(s.geo.level, FACT_ITEMS.length, leaves) : null;
+    const raw = t ? t.total : list.length;
     return {
       rows: [
-        ['事实条数', t ? M.fmt(t.total) : list.length, t ? t.total : list.length]
+        ['事实条数', M ? M.digits(raw) : String(raw), raw]
       ],
       note: t ? '每个三级类型 ' + M.fmt(t.per) + ' 条 · 本视野采样 ' + t.sampled + ' 点' : '',
-      real: list.length
+      real: list.length,
+      raw,
+      /* 主数字的滚动速率：当日新增折算到每秒，最低 1 条/秒 —— 数字始终在走，不是静态值 */
+      rate: t ? Math.max(1, t.todayAdded / 86400) : 0
     };
   }
 
