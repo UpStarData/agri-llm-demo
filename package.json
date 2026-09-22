@@ -1,20 +1,24 @@
 {
   "name": "agri-llm-demo",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "农链 AgriLink — 中国农产品产业地图（阶段性领导演示 Demo，示意数据）",
+  "description": "AgriLink 农链 V1.0 · 事实层 / 关联层 / 推演层（离线单文件 Demo）",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "build:partial": "node build.mjs --partial",
     "serve": "node server.mjs",
     "start": "./serve.sh start",
     "stop": "./serve.sh stop",
-    "test": "node test/e2e.mjs",
-    "test:visual": "node test/visual.mjs",
-    "test:round3": "node test/round3.mjs",
-    "test:round4": "node test/round4.mjs",
-    "test:live": "node test/live-check.mjs",
-    "test:all": "node test/e2e.mjs && node test/visual.mjs && node test/round3.mjs && node test/round4.mjs"
+    "test": "node test/v03.mjs",
+    "test:v03": "node test/v03.mjs",
+    "shots": "node test/shots-v03.mjs",
+    "test:all": "node test/v03.mjs && node test/shots-v03.mjs",
+    "compare": "node test/compare-v03.mjs",
+    "fonts": "python3 tools/subset-fonts.py",
+    "shots:v2": "node test/shots-v2.mjs",
+    "shots:v5": "node test/shots-v05.mjs",
+    "shots:v6": "node test/shots-v06.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

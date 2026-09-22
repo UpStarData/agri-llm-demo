@@ -1,0 +1,152 @@
+{
+ "facts": {
+  "total": 861,
+  "real": 90,
+  "generated": 771
+ },
+ "byLayer": {
+  "L1": {
+   "real": 67,
+   "generated": 275
+  },
+  "L3": {
+   "real": 14,
+   "generated": 330
+  },
+  "L2": {
+   "real": 9,
+   "generated": 166
+  }
+ },
+ "byCategory": {
+  "price": {
+   "real": 11,
+   "generated": 159
+  },
+  "supply": {
+   "real": 35,
+   "generated": 73
+  },
+  "customs": {
+   "real": 8,
+   "generated": 39
+  },
+  "logistics": {
+   "real": 2,
+   "generated": 57
+  },
+  "industry_event": {
+   "real": 3,
+   "generated": 23
+  },
+  "natural": {
+   "real": 8,
+   "generated": 97
+  },
+  "policy": {
+   "real": 14,
+   "generated": 44
+  },
+  "news": {
+   "real": 6,
+   "generated": 153
+  },
+  "production": {
+   "real": 2,
+   "generated": 46
+  },
+  "circulation": {
+   "real": 1,
+   "generated": 80
+  }
+ },
+ "byCardType": {
+  "price": {
+   "real": 8,
+   "generated": 229
+  },
+  "news": {
+   "real": 52,
+   "generated": 385
+  },
+  "market": {
+   "real": 5,
+   "generated": 10
+  },
+  "weather": {
+   "real": 6,
+   "generated": 97
+  },
+  "policy": {
+   "real": 15,
+   "generated": 44
+  },
+  "video": {
+   "real": 4,
+   "generated": 6
+  }
+ },
+ "byRegionIso3": {
+  "CHN": 558,
+  "MYS": 36,
+  "BRA": 35,
+  "USA": 32,
+  "CHL": 28,
+  "IND": 25,
+  "AUS": 21,
+  "THA": 18,
+  "VNM": 17,
+  "IDN": 10,
+  "FRA": 9,
+  "PHL": 8,
+  "ESP": 8,
+  "EGY": 7,
+  "UKR": 7,
+  "KEN": 6,
+  "NGA": 6,
+  "ETH": 5,
+  "NLD": 5,
+  "DEU": 5,
+  "ZAF": 4,
+  "CIV": 4,
+  "ROU": 4,
+  "MAR": 3
+ },
+ "entities": {
+  "total": 377,
+  "byType": {
+   "Market": 13,
+   "Enterprise": 22,
+   "Base": 64,
+   "Commodity": 57,
+   "Organization": 27,
+   "Region": 57,
+   "Person": 14,
+   "MetricObservation": 13,
+   "LogisticsNode": 110,
+   "Policy": 0,
+   "WeatherEvent": 0,
+   "IndustryEvent": 0
+  }
+ },
+ "relations": {
+  "total": 585,
+  "verified": 583,
+  "inferred": 2
+ },
+ "geo": {
+  "productionAreas": 64,
+  "ports": 56,
+  "airports": 49,
+  "geoNullEntities": 18
+ },
+ "densityPlan": {
+  "globalView": 342,
+  "chinaView": 175,
+  "hunanView": 281,
+  "changshaView": 98,
+  "hongxingRelated": 174,
+  "singleViewMax": 342,
+  "note": "页面按当前视野过滤渲染；单视野最多约 500 个点，SVG 圆点渲染实测无卡顿（详见 README 性能说明）"
+ }
+}

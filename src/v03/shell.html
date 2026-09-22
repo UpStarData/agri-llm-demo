@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AgriLink 农链 · 事实层 / 关联层 / 推演层</title>
+<style>/*FONT_CSS*/</style>
+<style>/*APP_CSS*/</style>
+<style>/*REL_CSS*/</style>
+<style>/*SIM_CSS*/</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
+  <header class="topbar">
+    <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>v1.0</small></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
+    <div class="tb-right">
+      <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
+      <button class="tb-ic" id="btnCards" aria-label="右侧面板显隐"></button>
+      <button class="tb-ic" id="btnSettings" aria-label="设置"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- F2：左侧菜单（从左侧滑出，固定四段：数据概览 / 分类筛选 / 地图快捷控制 / 总开关） -->
+    <aside class="menu" id="menu" aria-label="菜单" aria-hidden="true">
+      <button class="menu-close" id="menuClose" aria-label="收起菜单">×</button>
+      <div class="menu-body" id="menuBody"></div>
+    </aside>
+
+    <main id="stage">
+      <section class="layer" id="layer-fact" role="tabpanel" aria-label="事实层"></section>
+      <section class="layer" id="layer-relation" role="tabpanel" aria-label="关联层"></section>
+      <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
+
+      <!-- F7：横向图例（地图底部、流水上方；内容随筛选同步变化） -->
+      <div class="legend" id="legend" aria-label="图例"></div>
+
+      <!-- 快捷键组（地图左下角，两排；含放大 / 缩小） -->
+      <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
+      <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
+
+      <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
+      <div class="drawer-stack" id="drawerStack"></div>
+
+      <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
+      <div class="stream" id="streamBox">
+        <div class="st-bar">
+          <span class="st-tab" id="stTabName">接入流</span>
+          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
+          <span class="st-meta" id="streamMeta"></span>
+        </div>
+        <div class="st-body" id="streamBody"></div>
+        <button class="st-close" id="streamClose" aria-label="关闭流水">×</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- G1：设置入口（口令 123321；本期空白页） -->
+  <div class="pw" id="pwBox" role="dialog" aria-modal="true" aria-label="设置口令">
+    <div class="pw-box">
+      <div class="pw-t">设置</div>
+      <input id="pwInput" type="password" inputmode="numeric" autocomplete="off" placeholder="请输入口令">
+      <div class="pw-hint" id="pwHint"></div>
+      <div class="pw-act">
+        <button class="btn sec" id="pwCancel">取消</button>
+        <button class="btn" id="pwOk">进入</button>
+      </div>
+    </div>
+  </div>
+  <div class="settings" id="settingsPage">
+    <div class="set-box">
+      <div class="set-t">设置</div>
+      <p>本期设置页为空白页，内容在后续版本填充。</p>
+      <button class="btn sec" id="setBack">返回</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<!--BUILD-->
+<!--LIBS-->
+<!--DATA-->
+<!--APP_JS-->
+</body>
+</html>
