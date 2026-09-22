@@ -112,8 +112,9 @@ window.V03Fact = (function () {
     return { canIn: camera.zoom < box[1] - 1e-3, canOut: camera.zoom > box[0] + 1e-3, zoom: camera.zoom };
   };
 
-  const IMPACT_ALPHA = { high: .20, mid: .14, low: .10 };
-  const radiusPx = f => Math.max(9, Math.min(30, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
+  const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
+  const radiusPx = f => Math.max(9, Math.min(26, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
+  const DOT = { high: 6, mid: 5, low: 4.2 };   /* 事实点：小亮点 4–6px（颜色对应事实类型） */
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
@@ -128,8 +129,8 @@ window.V03Fact = (function () {
             color: {
               type: 'radial', x: .5, y: .5, r: .5,
               colorStops: [
-                { offset: 0, color: hexA(c, IMPACT_ALPHA[f.impact] || .12) },
-                { offset: .6, color: hexA(c, (IMPACT_ALPHA[f.impact] || .12) * .45) },
+                { offset: 0, color: hexA(c, IMPACT_ALPHA[f.impact] || .1) },
+                { offset: .6, color: hexA(c, (IMPACT_ALPHA[f.impact] || .1) * .4) },
                 { offset: 1, color: hexA(c, 0) }
               ]
             }
@@ -137,23 +138,25 @@ window.V03Fact = (function () {
         });
       }
       pts.push({
-        id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: f.impact === 'high' ? 11 : 9.5,
-        itemStyle: { color: hexA(c, .16), borderColor: c, borderWidth: 1.1 },
-        label: { show: true, fontSize: f.impact === 'high' ? 9.5 : 8.5, color: '#2b3444', formatter: () => emojiOf(f) }
+        id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
+        itemStyle: { color: c, borderColor: '#ffffff', borderWidth: .8 }
       });
     });
     const series = [
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 1, symbol: 'circle' },
-      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 4, cursor: 'pointer' },
-      { id: 'flash', type: 'effectScatter', coordinateSystem: 'geo', data: flashData(), z: 6, silent: true, symbol: 'circle',
-        symbolSize: 12, rippleEffect: { scale: 3.2, brushType: 'stroke', period: 1.2 },
-        itemStyle: { color: 'rgba(220,38,38,.85)', shadowBlur: 8, shadowColor: 'rgba(220,38,38,.55)' } }
+      /* 亮光（数据接入瞬间一闪而过，0.8s 内消退后落成普通小点） */
+      { id: 'flash', type: 'scatter', coordinateSystem: 'geo', data: flashData(), z: 6, silent: true, symbol: 'circle',
+        itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
+          { offset: 0, color: 'rgba(255,255,255,.95)' }, { offset: .35, color: 'rgba(255,236,150,.75)' },
+          { offset: .7, color: 'rgba(255,214,102,.28)' }, { offset: 1, color: 'rgba(255,214,102,0)' }] } },
+        label: { show: false } },
+      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 4, cursor: 'pointer' }
     ];
-    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#65a30d', '🌾').forEach(s => series.push(s));
+    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#65a30d', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
     if (st.sk.gates) {
-      markerSeries('gatesP', D.GATES.filter(g => g.kind === 'port'), '#0369a1', '⚓').forEach(s => series.push(s));
-      markerSeries('gatesA', D.GATES.filter(g => g.kind === 'airport'), '#0f766e', '✈️').forEach(s => series.push(s));
-      markerSeries('gatesN', D.GATES.filter(g => g.kind === 'node'), '#7e22ce', '🧊').forEach(s => series.push(s));
+      markerSeries('gatesP', D.GATES.filter(g => g.kind === 'port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+      markerSeries('gatesA', D.GATES.filter(g => g.kind === 'airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+      markerSeries('gatesN', D.GATES.filter(g => g.kind === 'node'), '#7e22ce', '🧊', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
     }
     return {
       backgroundColor: 'transparent',
@@ -170,25 +173,36 @@ window.V03Fact = (function () {
         textStyle: { color: '#10151f', fontSize: 11 }, padding: [6, 9],
         formatter: p => {
           const sid = p.seriesId || '';
-          if (sid === 'facts' || sid === 'flash') {
+          if (sid === 'facts') {
             const f = D.factById(p.data.id); if (!f) return '';
             return '<b>' + esc(f.title) + '</b><br>' + esc(f.region) + ' · ' + f.date + '<br>' + esc(leafOf(f).n || catOf(f).n);
           }
           const it = D.REGIONS.concat(D.GATES).find(r => r.id === (p.data || {}).id);
-          return it ? '<b>' + esc(it.name) + '</b>' : (p.name || '');
+          return it ? '<b>' + esc(it.name) + '</b>' + (it.variety ? '<br>' + esc(it.variety) : '') : (p.name || '');
         }
       },
       series
     };
   }
 
-  function markerSeries(id, list, color, emoji) {
+  function markerSeries(id, list, color, emoji, size, showLabel) {
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
-      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: 9 })),
-      symbol: 'circle', itemStyle: { color: '#ffffff', borderColor: color, borderWidth: 1.1 },
-      label: { show: true, fontSize: 8, color: color, formatter: () => emoji, position: 'inside' }
-    }];
+      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: size })),
+      symbol: 'circle', itemStyle: { color: 'rgba(255,255,255,.6)', borderColor: 'transparent', borderWidth: 0 },
+      label: {
+        show: true, fontSize: size, color: color, formatter: () => emoji, position: 'inside'
+      },
+      labelLayout: { hideOverlap: true }
+    }, showLabel ? {
+      id: id + 'Label', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 5,
+      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: 1 })),
+      symbol: 'circle', itemStyle: { color: 'transparent' },
+      label: { show: true, position: 'bottom', distance: 2, fontSize: 9, color: '#4d586a',
+        backgroundColor: 'rgba(255,255,255,.78)', padding: [1, 3], borderRadius: 3,
+        formatter: p => { const it = list.find(r => r.id === (p.data || {}).id); return it ? (it.variety || it.name).slice(0, 10) : ''; } },
+      labelLayout: { hideOverlap: true }
+    } : null].filter(Boolean);
   }
 
   /* F5：新事实接入 → 一次闪光（1.2s 内消退，不循环） */
@@ -199,7 +213,7 @@ window.V03Fact = (function () {
     if (Date.now() < FACT_READY_AT) return;
     const list = F.factsAtLevel(S.state);
     if (!list.some(x => x.id === f.id)) return;
-    flash.set(f.id, { f, until: Date.now() + 1200, bright: level === 'bright' });
+    flash.set(f.id, { f, until: Date.now() + 800, bright: level === 'bright' });
     if (chart && !S.state.sk.mode3d) chart.setOption({ series: [{ id: 'flash', data: flashData() }] }, { lazyUpdate: true });
     clearTimeout(flashFact._t);
     flashFact._t = setTimeout(() => {
@@ -211,9 +225,12 @@ window.V03Fact = (function () {
   }
   function flashData() {
     const now = Date.now();
-    return [...flash.values()].filter(x => x.until > now).map(x => ({
-      id: x.f.id, name: x.f.title, value: [x.f.lng, x.f.lat], symbolSize: x.bright ? 13 : 11
-    }));
+    return [...flash.values()].filter(x => x.until > now).map(x => {
+      const k = Math.max(0, (x.until - now) / 800);              /* 1 → 0 的衰减，越接近 0 越淡 */
+      return { id: x.f.id, name: x.f.title, value: [x.f.lng, x.f.lat],
+        symbolSize: (x.bright ? 30 : 20) * (.55 + .45 * k),
+        itemStyle: { opacity: .25 + .75 * k } };
+    });
   }
 
   /* ---------- 点击 ---------- */
@@ -282,7 +299,11 @@ window.V03Fact = (function () {
     return '⛅';
   };
   const fmtNum = v => (typeof v === 'number' ? (Math.abs(v) >= 1000 ? v.toLocaleString() : v) : v == null ? '—' : v);
-  const isPlayable = f => f.cardType === 'video' && f.card && f.card.embeddable === 'yes' && !!f.card.embedUrl;
+  /* 可嵌入播放条件：① 数据来自已核验可嵌入的公开源（响应头无 X-Frame-Options / CSP frame-ancestors）
+     ② 页面本身通过 http(s) 打开 —— 公开直播源的播放器帧会以 CSP frame-ancestors 拒绝 file:// 祖先，
+     此时按静态降级卡片处理（保留原始外链），避免控制台报错与"黑屏播放器"。 */
+  const CAN_EMBED = typeof location !== 'undefined' && (location.protocol === 'http:' || location.protocol === 'https:');
+  const isPlayable = f => CAN_EMBED && f.cardType === 'video' && f.card && f.card.embeddable === 'yes' && !!f.card.embedUrl;
   function hexA(hex, a) {
     const h = String(hex).replace('#', '');
     const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
@@ -615,7 +636,10 @@ window.V03Fact = (function () {
       regionMarks: st.sk.regions ? D.REGIONS.length : 0,
       gateMarks: st.sk.gates ? D.GATES.length : 0,
       legend: st.sk.legend, legendItems: document.querySelectorAll('#legend .lg-i').length,
-      videoTotal: vid.length, videoVerified: vid.filter(isPlayable).length, videoStatic: vid.filter(f => !isPlayable(f)).length,
+      videoTotal: vid.length,
+      videoEmbeddable: vid.filter(f => f.card && f.card.embeddable === 'yes' && f.card.embedUrl).length,   /* 已核验可嵌入的公开源 */
+      videoVerified: vid.filter(isPlayable).length,                                                        /* 当前环境下可播放（http/https） */
+      videoStatic: vid.filter(f => !isPlayable(f)).length,
       cards: document.querySelectorAll('#layer-fact .fcard').length,
       cardTypes: [...document.querySelectorAll('#layer-fact .fcard')].reduce((m, n) => { const f = D.factById(n.dataset.fid); if (f) m[f.cardType] = (m[f.cardType] || 0) + 1; return m; }, {}),
       emojiLeaves: new Set(pts.map(f => leafOf(f).key)).size,

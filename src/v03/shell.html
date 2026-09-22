@@ -39,15 +39,20 @@
       <!-- F7：横向图例（地图底部、流水上方；内容随筛选同步变化） -->
       <div class="legend" id="legend" aria-label="图例"></div>
 
-      <!-- F6：缩放（快捷键组正上方） + 快捷键组（右下角） -->
-      <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
+      <!-- 快捷键组（地图左下角，两排；含放大 / 缩小） -->
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
+      <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
 
       <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
       <div class="stream" id="streamBox">
+        <div class="st-bar">
+          <span class="st-tab" id="stTabName">接入流</span>
+          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
+          <span class="st-meta" id="streamMeta"></span>
+        </div>
         <div class="st-body" id="streamBody"></div>
         <button class="st-close" id="streamClose" aria-label="关闭流水">×</button>
       </div>

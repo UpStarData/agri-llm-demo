@@ -22,7 +22,7 @@ window.V03Store = (function () {
       mode3d: false,              // M1 2D / 3D
       influence: true,            // M2 影响力扩散动画
       fullscreen: false,          // M3 全屏
-      live: false,                // M4 直播流
+      live: true,                 // M4 直播流（默认开启：已验证可嵌入的公开直播源直接播放）
       regions: false,             // M5 产区
       gates: false,               // M6 港口与机场
       legend: true                // M11 图例

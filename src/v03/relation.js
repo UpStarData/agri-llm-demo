@@ -100,26 +100,38 @@ window.V03Relation = (function () {
   function linesData(objs, rels, focus) {
     const pos = {};
     objs.forEach(o => { if (o.geo !== false && o.lat != null) pos[o.id] = [o.lng, o.lat]; });
-    const out = [], related = new Set();
+    const out = [], labels = [], related = new Set();
+    const total = rels.filter(r => pos[r.from] && pos[r.to]).length;
     rels.forEach(r => {
       const a = pos[r.from], b = pos[r.to];
       if (!a || !b) return;
       const isFocus = focus && (r.from === focus || r.to === focus);
       if (isFocus) related.add(r.id);
+      const color = isFocus ? typeColor(r.type) : 'rgba(126,138,158,.85)';
       out.push({
         id: r.id, coords: [a, b],
         lineStyle: {
-          color: typeColor(r.type),
-          width: isFocus ? 1.8 : 0.9,
-          opacity: focus ? (isFocus ? .95 : .10) : (r.confidence < .6 ? .28 : .42),
-          type: r.confidence < .6 ? 'dashed' : 'solid',
-          curveness: .26
+          color: color,
+          width: isFocus ? 1.5 : 1,
+          opacity: focus ? (isFocus ? .95 : .07) : (total <= 60 ? .55 : .38),
+          type: 'solid',
+          curveness: .18
         },
         _focus: isFocus
       });
+      /* 关系语义标签：只在可辨认的场景出现（焦点相关线，或全局线数量很少时） */
+      if (isFocus || (!focus && total <= 40)) {
+        labels.push({
+          id: r.id + '-l', coords: [a, b],
+          label: { show: true, position: 'middle', formatter: r.type, fontSize: 9, color: '#4d586a',
+            backgroundColor: 'rgba(255,255,255,.82)', padding: [1, 3], borderRadius: 3 },
+          lineStyle: { opacity: 0 }
+        });
+      }
     });
-    return { lines: out, related };
+    return { lines: out, labels, related, total };
   }
+
   function nodesData(objs, focus) {
     return objs.filter(o => o.geo !== false && o.lat != null).map(o => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
@@ -138,8 +150,9 @@ window.V03Relation = (function () {
   }
   function option(objs, rels, st) {
     const focus = focusId();
-    const { lines } = linesData(objs, rels, focus);
+    const { lines, labels } = linesData(objs, rels, focus);
     const nodes = nodesData(objs, focus);
+    const focusLines = lines.filter(l => l._focus);
     return {
       backgroundColor: 'transparent',
       geo: {
@@ -165,23 +178,26 @@ window.V03Relation = (function () {
       },
       series: [
         { id: 'relLineGlow', type: 'lines', coordinateSystem: 'geo', silent: true, z: 2, polyline: false,
-          data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 5, opacity: .10, curveness: .26 } })) },
+          data: focusLines.map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .08, curveness: .18 } })) },
         { id: 'relLine', type: 'lines', coordinateSystem: 'geo', z: 3, polyline: false, data: lines,
-          effect: { show: true, period: 6.5, trailLength: 0, symbol: 'circle', symbolSize: 2.4, color: '#334155' },
-          lineStyle: { curveness: .26 } },
+          effect: { show: true, period: 7, trailLength: .12, symbol: 'circle', symbolSize: 2, color: '#5b6b82' },
+          lineStyle: { curveness: .18 } },
+        { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels },
         { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' }
       ]
     };
   }
+
   function paintFocus() {
     const st = S.state;
     if (!chart) return;
     const objs = F.objects(st).filter(o => o.geo !== false && o.lat != null);
-    const { lines } = linesData(objs, F.relations(st), focusId());
+    const { lines, labels } = linesData(objs, F.relations(st), focusId());
     chart.setOption({
       series: [
-        { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 5, opacity: .10, curveness: .26 } })) },
+        { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .08, curveness: .18 } })) },
         { id: 'relLine', data: lines },
+        { id: 'relLineLabel', data: labels },
         { id: 'relNode', data: nodesData(F.objects(st), focusId()) }
       ]
     }, { lazyUpdate: true });
@@ -207,15 +223,18 @@ window.V03Relation = (function () {
     const capped = st.rel.allCards ? ordered : ordered.slice(0, 16);
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
-      const sub = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位/.test(k)).slice(0, 2).map(([k, v]) => k + '：' + v).join(' · ') || o.sub || '';
+      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位|计价单位|状态/.test(k)).slice(0, 3)
+        .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
+      const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
-        '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(dm.n) + '</span></span>' +
+        '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + dm.e + ' ' + esc(dm.n) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
-        '<span class="rc-sub">' + esc(sub) + '</span>' +
-        '<span class="rc-m">' + (recentOf(o) ? '最近变化 ' + recentOf(o) + ' · ' : '') + esc(shortFacts(o)).slice(0, 26) + '</span></button>';
+        '<span class="rc-sub">' + esc(o.sub || '') + '</span>' +
+        (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
+        '<span class="rc-m">' + (o.factCount ? o.factCount + ' 条支撑事实 · ' : '') + relCount + ' 条关系 · 点击展开详情</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">当前筛选下没有不可定位的本体对象</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
-      + '<div class="rel-foot">有真实坐标的本体显示在地图上；无坐标本体仅在此列出，不编造位置。点击卡片逐层展开本体详情与关系详情。</div>';
+      + '<div class="rel-foot">有真实地理归属的本体显示在地图上；无坐标的抽象对象（品种 / 机构 / 指标 / 人物）在此列出，不编造位置。</div>';
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));

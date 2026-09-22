@@ -57,7 +57,7 @@ window.V03Pkg = (function () {
     .replace(/\s{2,}/g, ' ')
     .trim();
   /* 技术/演示用语清洗：属性值里出现 geo=null、本包、数据包、L1/L2/L3、生成器等一律不进入产品界面 */
-  const TECH = /geo\s*=\s*null|本包|数据包|数据源包|L[123]\b|生成器|generator|样例|示意|sample|debug/i;
+  const TECH = /geo\s*=\s*null|本包|数据包|数据源包|L[123]\b|生成器|generator|样例|示意|sample|debug|iframe|frame-ancestors|响应头|嵌入策略/i;
   /* 按分句剥离技术片段；剥离后为空则整条丢弃（产品界面不出现研发/演示用语） */
   const stripTech = t => String(t == null ? '' : t)
     .split(/[；;。]/).filter(part => part && !TECH.test(part)).join('；')
@@ -167,13 +167,27 @@ window.V03Pkg = (function () {
       q: '采集位置：' + anchor + '（' + prec + '）', url: '' }];
   }
 
+  /* ---------- 视频源可嵌入性核验（2026-09-21 实测 HTTP 响应头：无 X-Frame-Options / CSP frame-ancestors） ----------
+     只有核验通过的源才允许在卡片/详情内挂载播放器；其余一律静态卡片降级（不伪造播放器）。 */
+  const VERIFIED_EMBED = {
+    'real-video-cctv17-live':   { url: 'https://tv.cctv.com/live/cctv17/',      provider: '央视网', title: 'CCTV-17 农业农村频道直播' },
+    'real-video-cctv-live-index': { url: 'https://tv.cctv.com/live/cctv1/',      provider: '央视网', title: 'CCTV-1 综合频道直播' },
+    'gen-video-00': { url: 'https://tv.cctv.com/live/cctv1/',  provider: '央视网', title: 'CCTV-1 综合频道' },
+    'gen-video-01': { url: 'https://tv.cctv.com/live/cctv2/',  provider: '央视网', title: 'CCTV-2 财经频道' },
+    'gen-video-02': { url: 'https://tv.cctv.com/live/cctv7/',  provider: '央视网', title: 'CCTV-7 国防军事频道' },
+    'gen-video-03': { url: 'https://tv.cctv.com/live/cctv13/', provider: '央视网', title: 'CCTV-13 新闻频道' },
+    'gen-video-04': { url: 'https://tv.cctv.com/live/cctv4/',  provider: '央视网', title: 'CCTV-4 中文国际频道' }
+  };
+
   const FACTS = FACTS_IN.map(f => {
-    const card = (f.card && f.card.fields) || {};
+    let card = (f.card && f.card.fields) || {};
+    const vv = VERIFIED_EMBED[f.factId];
+    if (vv) card = Object.assign({}, card, { embeddable: 'yes', embedUrl: vv.url, provider: vv.provider, mediaTitle: vv.title, isLive: true });
     const pt = f.geo.geoPoint;
     const pm = f.provenanceMeta || {};
     return {
       id: f.factId, prov: pm.dataMode || 'generated',
-      title: cleanText(f.title), summary: cleanText(f.summary),
+      title: cleanText(f.title), summary: stripTech(cleanText(f.summary)),
       cat: f.category, cardType: f.cardType, card: cleanCard(card), cardTypeName: f.cardType,
       taxonomy: f.taxonomy || {}, factType: f.factType, status: f.status,
       level: f.geo.scopeLayer || 'L1',
@@ -189,6 +203,7 @@ window.V03Pkg = (function () {
       impact: IMPACT_OF(f.severity), severity: f.severity,
       radius: radiusOf(f.severity),
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
+      embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,
       confidence: f.confidence, review: (f.review || {}).state,
       evidence: evidenceOf(f), evidenceIds: f.evidenceIds || [],
@@ -270,9 +285,33 @@ window.V03Pkg = (function () {
   const REBALANCE = rebalanceGenerated(FACTS);
 
   /* ---------- Entity → 内部本体模型 ---------- */
+  /* 实体代表点：数据包对少数市场/公司未取到门址坐标（geo=null）。这些是**有真实地理归属**的物理主体，
+     不应只留在右侧列表：用其所在城市/总部的行政区代表点落图（精度标记为「行政区代表点（近似）」，不伪造门址）。 */
+  const CITY_ANCHOR = [
+    [/广州|江南市场/, [113.264, 23.129]],
+    [/深圳|海吉星.*深圳/, [114.057, 22.543]],
+    [/Talaad|泰国/, [100.601, 14.020]],
+    [/Rungis|法国/, [2.353, 48.744]],
+    [/Selayang|马来西亚/, [101.657, 3.240]],
+    [/洪九/, [106.259, 29.283]],
+    [/佳沃|中粮/, [116.407, 39.905]],
+    [/Del Monte/i, [-122.062, 37.911]],
+    [/湖南|长沙|果之友|绿叶|金胜|云辉|聚海鑫|龙源|畅农|星勤/, [112.939, 28.228]]
+  ];
+  const PHYSICAL = { Market: 1, Enterprise: 1, Base: 1, Region: 1, LogisticsNode: 1 };
+  const anchorOf = e => {
+    const nm = String(e.canonicalName || '') + ' ' + String((e.attributes || {}).anchorPlace || '');
+    const hit = CITY_ANCHOR.find(([re]) => re.test(nm));
+    if (!hit) return null;
+    const h = Math.abs(String(e.entityId).split('').reduce((a, c) => a * 31 + c.charCodeAt(0) | 0, 7));
+    return [hit[1][0] + ((h % 17) - 8) * 0.012, hit[1][1] + ((h % 13) - 6) * 0.012];
+  };
+
   const OBJECTS = ENTITIES_IN.map(e => {
-    const pt = e.geo && e.geo.geoPoint;
     const a = e.attributes || {};
+    let pt = e.geo && e.geo.geoPoint;
+    let approx = false;
+    if (!pt && PHYSICAL[e.type]) { const ap = anchorOf(e); if (ap) { pt = ap; approx = true; } }
     const dom = TYPE2DOMAIN[e.type] || 'metric';
     const props = [['对象域', ONT.lookup[e.type] || e.type], ['状态', e.status === 'active' ? '在册' : e.status]];
     if (cleanProp(a.landmark)) props.push(['定位', cleanProp(a.landmark)]);
@@ -282,7 +321,8 @@ window.V03Pkg = (function () {
     if (cleanProp(a.anchorPlace)) props.push(['地理锚点', cleanProp(a.anchorPlace)]);
     if (a.metricUnit) props.push(['单位', a.metricUnit]);
     if (a.priceUnit) props.push(['计价单位', a.priceUnit]);
-    if (e.geo && e.geo.geoPrecision) props.push(['坐标精度', { exact: '地物点', approx: '近似', region_only: '行政区代表点', none: '无坐标' }[e.geo.geoPrecision] || e.geo.geoPrecision]);
+    if (approx) props.push(['坐标精度', '行政区代表点（近似）']);
+    else if (e.geo && e.geo.geoPrecision) props.push(['坐标精度', { exact: '地物点', approx: '近似', region_only: '行政区代表点', none: '无坐标' }[e.geo.geoPrecision] || e.geo.geoPrecision]);
     return {
       id: e.entityId, prov: (e.provenanceMeta || {}).dataMode || 'generated',
       entityType: e.type, typeName: ONT.lookup[e.type] || e.type,
@@ -293,7 +333,8 @@ window.V03Pkg = (function () {
         return cleaned || (ONT.lookup[e.type] || '') + '对象';
       })(),
       alias: (e.aliases || []).join(' / '),
-      lng: pt ? pt[0] : null, lat: pt ? pt[1] : null, geo: !!pt,
+      lng: pt ? pt[0] : null, lat: pt ? pt[1] : null, geo: !!pt, geoApprox: approx,
+      factCount: (e.supportingFactIds || []).length,
       regionPath: (e.geo && e.geo.regionPath) || [],
       region: (e.geo && e.geo.regionPath) ? ((pathName(e.geo.regionPath, 'province') || '') || pathName(e.geo.regionPath, 'country') || '全球') : '全球',
       props: props, commodityTags: e.commodityTags || [], factIds: e.supportingFactIds || [],

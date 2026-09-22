@@ -110,7 +110,7 @@ const menu = await page.evaluate(() => ({
 }));
 check('F2 菜单固定四段（数据概览 / 分类筛选 / 地图快捷控制 / 总开关）', menu.secs === 4, JSON.stringify(menu));
 check('F2 数据概览四项且不含事实类型分布', menu.ovRows === 4 && !menu.hasDist, '行数 ' + menu.ovRows);
-check('F2 菜单内含地图快捷控制与总开关', menu.sk === 11 && menu.master);
+check('F2 菜单内含地图快捷控制（11 项 + 放大/缩小）与总开关', menu.sk === 13 && menu.master, '菜单内控制项 ' + menu.sk);
 
 /* ---------------- F3 事实三级分类字典 ---------------- */
 check('F3 分类字典与指令一致：一级 7 / 二级 26 / 三级 125，逐条未合并改名',
@@ -143,8 +143,13 @@ const mapSeries = await page.evaluate(() => {
 check('F4 事实层地图只画事实点 + 影响范围，不出现事实之间的线路',
   !mapSeries.some(s => s.type === 'lines' || s.type === 'graph'),
   JSON.stringify(mapSeries));
-check('F4 一级分类决定颜色、三级类型决定 Emoji（点数与 Emoji 类型齐备）',
-  (await factDbg(page)).mappable > 0 && (await factDbg(page)).emojiLeaves >= 5);
+check('F4 一级分类决定颜色（事实点为 4–6px 小亮点，点上不再贴 Emoji 标签）', await page.evaluate(() => {
+  const o = window.echarts.getInstanceByDom(document.getElementById('factMap')).getOption();
+  const facts = o.series.find(s => s.id === 'facts');
+  const sizes = facts.data.map(d => d.symbolSize);
+  const hasPointLabel = facts.data.some(d => d.label && d.label.show);
+  return sizes.length > 0 && Math.max(...sizes) <= 6.5 && Math.min(...sizes) >= 4 && !hasPointLabel;
+}));
 check('F4 影响范围半透明不遮蔽底图（径向渐变 + 低透明度）', await page.evaluate(() => {
   const o = window.echarts.getInstanceByDom(document.getElementById('factMap')).getOption();
   const halo = o.series.find(s => s.id === 'halo');
@@ -157,31 +162,34 @@ check('F5 持久事实为稳定小点（非 effectScatter 长期发光）', awai
 }));
 await sleep(2500);
 const flash = await page.evaluate(() => window.V03_DEBUG.flashIds());
-check('F5 闪光为瞬时（开屏预置事实不持续闪烁；闪光事件在 1.2s 内消退）', flash.length <= 3, '当前闪光点数 ' + flash.length);
+check('F5 亮光为一闪而过（≤0.8s 消退为普通小点，不持续发光）', flash.length <= 3, '当前闪光点数 ' + flash.length);
 
 /* ---------------- F6 快捷键与缩放 ---------------- */
-const sk = await page.evaluate(() => ({
-  mapSk: document.querySelectorAll('#mapSk .sk').length,
-  zoom: document.querySelectorAll('#mapZoom button').length,
-  zoomAbove: (() => {
-    const z = document.getElementById('mapZoom').getBoundingClientRect();
-    const s = document.getElementById('mapSk').getBoundingClientRect();
-    return z.bottom <= s.top + 1;
-  })(),
-  zoomDisabled: [...document.querySelectorAll('#mapZoom button')].filter(b => b.disabled).length
-}));
-check('F6 地图右下角默认显示完整快捷键组（11 项）', sk.mapSk === 11, JSON.stringify(sk));
-check('F6 快捷键组正上方提供放大 / 缩小两个按钮，到边界禁用', sk.zoom === 2 && sk.zoomAbove, JSON.stringify(sk));
+const sk = await page.evaluate(() => {
+  const mapSk = document.getElementById('mapSk');
+  const r = mapSk.getBoundingClientRect();
+  const rows = new Set([...mapSk.querySelectorAll('.sk')].map(b => Math.round(b.getBoundingClientRect().top)));
+  return {
+    mapSk: mapSk.querySelectorAll('.sk').length,
+    zooms: mapSk.querySelectorAll('.sk[data-k="zoomIn"], .sk[data-k="zoomOut"]').length,
+    separateZoom: document.querySelectorAll('#mapZoom button').length,
+    rows: rows.size,
+    side: r.left < 300 && (window.innerWidth - r.right) > 300,
+    zoomDisabled: mapSk.querySelectorAll('.sk.zoom[disabled]').length
+  };
+});
+check('F6 快捷键组在地图左下角，含放大 / 缩小共 13 键，排成两排', sk.mapSk === 13 && sk.zooms === 2 && sk.rows === 2 && sk.side, JSON.stringify(sk));
+check('F6 缩放键与快捷键同组（不再独立一列），到边界呈禁用态', sk.separateZoom === 0, JSON.stringify({ separate: sk.separateZoom }));
 const zoomTest = await page.evaluate(async () => {
   const z0 = window.V03Fact.debug().zoom;
-  document.querySelectorAll('#mapZoom button')[0].click();
-  await new Promise(r => setTimeout(r, 300));
+  document.querySelector('#mapSk .sk[data-k="zoomIn"]').click();
+  await new Promise(r => setTimeout(r, 350));
   const z1 = window.V03Fact.debug().zoom;
-  document.querySelectorAll('#mapZoom button')[1].click();
-  await new Promise(r => setTimeout(r, 300));
+  document.querySelector('#mapSk .sk[data-k="zoomOut"]').click();
+  await new Promise(r => setTimeout(r, 350));
   return { z0, z1, z2: window.V03Fact.debug().zoom };
 });
-check('F6 缩放按钮真实改变地图缩放', zoomTest.z1 > zoomTest.z0 && Math.abs(zoomTest.z2 - zoomTest.z0) < 1e-6, JSON.stringify(zoomTest));
+check('F6 缩放键真实改变地图缩放', zoomTest.z1 > zoomTest.z0 && Math.abs(zoomTest.z2 - zoomTest.z0) < 1e-6, JSON.stringify(zoomTest));
 await page.click('#menuBtn'); await sleep(600);
 await page.locator('#skMaster').uncheck(); await sleep(400);
 const off = await page.evaluate(() => ({
@@ -193,7 +201,7 @@ await page.locator('#menuBody .mn-sk .sk[data-k="time"]').click(); await sleep(2
 await page.locator('#menuBody .sk-pop .sk-opt').nth(1).click(); await sleep(700);
 const t1 = (await page.evaluate(() => window.V03_DEBUG.state())).time;
 check('F6 总开关只隐藏地图右下角整组快捷键，菜单内快捷控制仍可用',
-  off.hidden && off.menuSk === 11 && t0 !== t1, JSON.stringify({ ...off, t0, t1 }));
+  off.hidden && off.menuSk === 13 && t0 !== t1, JSON.stringify({ ...off, t0, t1 }));
 await page.evaluate(() => window.V03_DEBUG.set({ time: '7d' }));
 await page.locator('#skMaster').check(); await sleep(400);
 await page.click('#menuClose'); await sleep(400);
@@ -220,11 +228,14 @@ await page.evaluate(() => window.V03_DEBUG.set({ catKeys: null })); await sleep(
 /* ---------------- F8 底部流水 ---------------- */
 const stream = await page.evaluate(() => {
   const b = document.getElementById('streamBox');
-  return { h: Math.round(b.getBoundingClientRect().height), hasTitle: !!b.querySelector('h1,h2,h3,h4'),
+  return { h: Math.round(b.getBoundingClientRect().height), bg: getComputedStyle(b).backgroundColor,
+    hasTitle: !!b.querySelector('h1,h2,h3,h4'), tabs: b.querySelectorAll('.st-tab').length,
     txt: document.getElementById('streamBody').innerText.slice(0, 200), lines: document.querySelectorAll('#streamBody .st-line').length,
     close: !!document.getElementById('streamClose') };
 });
-check('F8 流水为窄条低高度、无标题、可关闭', stream.h <= 110 && !stream.hasTitle && stream.close, '高度 ' + stream.h);
+check('F8 流水为纯黑终端面板（窄条、无标题、× 可关闭、多 Tab 预留）',
+  /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(stream.bg) && stream.h >= 118 && stream.h <= 150 && !stream.hasTitle && stream.close && stream.tabs === 2,
+  JSON.stringify({ h: stream.h, bg: stream.bg, tabs: stream.tabs }));
 check('F8 流水使用产品语言（接入 / 定位 / 影响 / 关联），无技术字段',
   /接入|定位|影响范围|关联|抽取|归并|评分/.test(stream.txt) && !BANNED.test(stream.txt) && !/gen-|real-|r:\*|MERGE|API|uuid/.test(stream.txt),
   stream.txt.replace(/\n/g, ' | ').slice(0, 90));
@@ -262,10 +273,11 @@ const vidCards = await page.evaluate(async () => {
   const i = document.querySelectorAll('#layer-fact iframe').length;
   window.V03_DEBUG.set({ q: '', time: '7d', cred: 'high', infl: 'high' });
   await new Promise(r => setTimeout(r, 500));
-  return { n, p, i, verified: window.V03Fact.debug().videoVerified, total: window.V03Fact.debug().videoTotal };
+  const d = window.V03Fact.debug();
+  return { n, p, i, verified: d.videoEmbeddable, playable: d.videoVerified, total: d.videoTotal };
 });
-check('F9 视频无可播放源时为静态降级卡片（不伪造播放器）',
-  vidCards.n > 0 && vidCards.p === 0 && vidCards.i === 0 && vidCards.verified === 0 && vidCards.total === 10, JSON.stringify(vidCards));
+check('F9 已核验可嵌入的公开直播源已接入（7 路）；file:// 下按静态卡片降级、不挂 iframe 也不产生外链请求',
+  vidCards.verified >= 7 && vidCards.n > 0 && vidCards.i === 0 && vidCards.total === 10, JSON.stringify(vidCards));
 check('F9 六类内容模板仍在（价格 / 天气 / 新闻 / 政策 / 视频 / 市场分布）',
   Object.keys(cards.types).length >= 2, JSON.stringify(cards.types));
 

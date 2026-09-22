@@ -85,6 +85,8 @@
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
+    { k: 'zoomIn', i: 'plus', n: '放大', d: '放大地图', kind: 'zoom', dir: 1 },
+    { k: 'zoomOut', i: 'minus', n: '缩小', d: '缩小地图', kind: 'zoom', dir: -1 },
     { k: 'mode3d', i: 'cube3d', n: '2D / 3D', d: '切换二维地图与三维地球', kind: 'sw', get: s => s.sk.mode3d, set: v => ({ sk: { mode3d: v } }) },
     { k: 'influence', i: 'radar', n: '影响力动画', d: '事实影响范围与扩散表现', kind: 'sw', get: s => s.sk.influence, set: v => ({ sk: { influence: v } }) },
     { k: 'fullscreen', i: 'expand', n: '全屏', d: '浏览器全屏显示地图', kind: 'sw', get: s => s.sk.fullscreen, set: v => ({ sk: { fullscreen: v } }) },
@@ -97,7 +99,8 @@
     { k: 'search', i: 'search', n: '搜索', d: '按关键词搜索', kind: 'input', get: s => s.q, set: v => ({ q: v }) },
     { k: 'legend', i: 'legend', n: '图例', d: '显示 / 隐藏底部图例', kind: 'sw', get: s => s.sk.legend, set: v => ({ sk: { legend: v } }) }
   ];
-  const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关') : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
+  const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
+    : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
 
   let pop = null;
   function closePop() { if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', onDocDown, true); } }
@@ -140,15 +143,22 @@
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
     SK.forEach((sk, idx) => {
-      const on = sk.kind === 'sw' ? !!sk.get(st) : false;
-      const b = el('button', 'sk' + (on ? ' on' : ''));
+      const api = layerApi();
+      const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
+      const on = sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
+      const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
       b.dataset.k = sk.k;
       b.title = sk.n + '：' + sk.d;
       b.innerHTML = '<span class="sk-i">' + svg(sk.i, mode === 'menu' ? 14 : 13) + '</span>' +
         (mode === 'menu' ? '<span class="sk-n">' + sk.n + '</span><span class="sk-v">' + skVal(sk, st) + '</span>' : '<span class="sk-v">' + skVal(sk, st) + '</span>');
-      b.setAttribute('aria-pressed', String(!!sk.get(st)));
+      b.setAttribute('aria-pressed', String(!!(sk.get && sk.get(st))));
       if (na.includes(sk.k)) { b.disabled = true; b.title = sk.n + '：关联层为地理关联视图'; }
+      if (sk.kind === 'zoom') {
+        if (!api || !api.zoomBy) { b.disabled = true; b.title = sk.n + '：当前层不支持缩放'; }
+        else if (zs && ((sk.dir > 0 && !zs.canIn) || (sk.dir < 0 && !zs.canOut))) { b.disabled = true; b.title = sk.n + '：已到边界'; }
+      }
       b.onclick = () => {
+        if (sk.kind === 'zoom') { const a = layerApi(); if (a && a.zoomBy) a.zoomBy(sk.dir); return; }
         if (sk.kind === 'sw') {
           if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
           S.set(sk.set(!sk.get(st)));
@@ -163,27 +173,12 @@
     const key = S.state.tab === 'relation' ? 'V03Relation' : S.state.tab === 'fact' ? 'V03Fact' : null;
     return key ? window[key] : null;
   }
-  function renderZoom() {
-    const box = $('mapZoom'), api = layerApi();
-    const show = S.state.tab !== 'sim' && !!(api && api.zoomBy);
-    box.style.display = show ? '' : 'none';
-    if (!show) return;
-    const st = api.zoomState ? api.zoomState() : { canIn: true, canOut: true };
-    box.innerHTML = '';
-    const mk = (dir, icon, ok, label) => {
-      const b = el('button', null, svg(icon, 13));
-      b.title = label; b.disabled = !ok;
-      b.onclick = () => api.zoomBy(dir);
-      box.appendChild(b);
-    };
-    mk(1, 'plus', st.canIn, '放大');
-    mk(-1, 'minus', st.canOut, '缩小');
-  }
+  function renderZoom() { /* 缩放键已并入左下角快捷键组（两排） */ }
 
   function renderMapSk() {
     const box = $('mapSk'), st = S.state;
     const show = st.panels.shortcuts && st.tab !== 'sim';
-    box.style.display = show ? '' : 'none';
+    box.style.display = show ? 'grid' : 'none';
     if (!show) { closePop(); return; }
     renderShortcutBar(box, { mode: 'map' });
   }
@@ -336,7 +331,7 @@
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
-    document.documentElement.style.setProperty('--stream-h', on ? '96px' : '0px');
+    document.documentElement.style.setProperty('--stream-h', on ? '132px' : '0px');
     document.documentElement.style.setProperty('--side-w',
       (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? '420px' : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];
