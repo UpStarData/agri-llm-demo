@@ -190,6 +190,34 @@
     if (p && p.catch) p.catch(err => { S.set({ sk: { fullscreen: false } }); toast('当前环境不允许全屏：' + (err && err.message ? err.message : '被浏览器拒绝')); });
   }
 
+  /* v07：数据概览滚动 +1（终端每条数据都能在数字上看见） */
+  const OV_TICK = { today: 0, shown: null };
+  function rollNumber(node, to) {
+    if (!node) return;
+    const from = Number(node.dataset.shown || node.textContent.replace(/[^\d.]/g, '')) || 0;
+    if (to === from) return;
+    node.dataset.shown = String(to);
+    const steps = 12; let i = 0;
+    const step = () => {
+      i++;
+      const v = from + (to - from) * (i / steps);
+      const M = window.V03Mass;
+      node.textContent = M ? M.fmt(Math.round(v)) : String(Math.round(v));
+      if (i < steps) requestAnimationFrame(step);
+      else node.classList.remove('tick'), void node.offsetWidth, node.classList.add('tick');
+    };
+    step();
+  }
+  function bumpOverview() {
+    const node = document.querySelector('#menuBody .ov-i b[data-ov="0"]');
+    if (!node || !node.dataset.raw) return;
+    const base = Number(node.dataset.raw) + OV_TICK.today;
+    node.dataset.raw = String(Number(node.dataset.raw) + 1);
+    rollNumber(node, base + 1);
+    const live = document.getElementById('ovStream');
+    if (live) { OV_TICK.today++; live.textContent = '+' + OV_TICK.today.toLocaleString(); live.classList.remove('tick'); void live.offsetWidth; live.classList.add('tick'); }
+  }
+
   /* ---------- F2：左侧菜单四段 ---------- */
   function renderMenu() {
     const st = S.state, body = $('menuBody');
@@ -209,9 +237,11 @@
     /* ① 数据概览（F2 固定四项；不含事实类型分布） */
     const s1 = el('section', 'mn-sec');
     s1.appendChild(el('div', 'mn-h', '数据概览'));
-    s1.appendChild(el('div', 'mn-ov', ov.rows.filter(r => r[0]).map(([k, v]) =>
-      '<div class="ov-i"><b>' + v + '</b><span>' + k + '</span></div>').join('')));
+    s1.appendChild(el('div', 'mn-ov', ov.rows.filter(r => r[0]).map(([k, v, raw], i) =>
+      '<div class="ov-i"><b data-ov="' + i + '"' + (raw ? ' data-raw="' + raw + '"' : '') + '>' + v + '</b><span>' + k + '</span></div>').join('')));
+    s1.appendChild(el('div', 'mn-rr', '<span class="mn-rr-t">实时接入</span><b id="ovStream" class="mn-rr-v">+' + (OV_TICK.today) + '</b><span class="mn-rr-u">条 / 今日</span>'));
     body.appendChild(s1);
+    [...s1.querySelectorAll('.ov-i b')].forEach(n => { n.dataset.shown = String((n.textContent.match(/[\d.]+/) || ['0'])[0]); });
 
     /* ② 图层数据分类筛选（F3 三级字典 / A2 九类对象域） */
     const s2 = el('section', 'mn-sec');
@@ -325,7 +355,11 @@
     while (body.children.length > 90) body.removeChild(body.firstChild);
     body.scrollTop = body.scrollHeight;
     const f = e.factId ? D.factById(e.factId) : (e.star && D.factById(e.star.factId));
-    if (f) S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity });
+    if (f) {
+      bumpOverview();
+      S.set({ newFacts: (S.state.newFacts || []).concat([f.id]).slice(-12) });
+      S.emit('stream:line', { fact: f, level: (e.star && e.star.level) || (f.impact === 'high' ? 'bright' : 'dim'), severity: f.severity });
+    }
   }
   function scheduleStream() {
     clearTimeout(ST.timer);

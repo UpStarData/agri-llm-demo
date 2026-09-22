@@ -41,6 +41,7 @@ const fontCss = FACES.map(f =>
 
 const CSS = ['src/v03/app.css', 'src/v03/relation.css', 'src/v03/sim.css'];
 const JS = [
+  'src/v03/mass.js',       // 事实质量级模型（每个三级类型 1万/10万/100万 条 + 采样展示）
   'src/v03/pkg-adapter.js', // 数据包 agrilink-demo-v1（LLM-292）→ 页面内部模型
   'src/v03/atlas-data.js',  // 上一轮自带数据（数据包缺失时的兜底 + 推演层别名来源）
   'src/v03/data.js',        // 事实 / 对象 / 关系（数据包为准，自带数据作别名）

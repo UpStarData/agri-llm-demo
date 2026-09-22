@@ -14,12 +14,18 @@ window.V03Fact = (function () {
   let root, chart, dom = {}, sig = '';
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null };
 
+  /* 地图缩放规则（v07）：
+     L1 全球：铺满屏幕即最小（不能再缩小），放大到 inAt 切到中国视角
+     L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
+     L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'world110', center: [18, 10], zoom: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [0.9, 3.0], divisor: 9 },
-    L2: { map: 'china', center: [104.5, 36], zoom: 1.0, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.8, 3.4], divisor: 15 },
-    L3: { map: 'china', center: null, zoom: 4.2, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [2.6, 9.0], divisor: 7 }
+    L1: { map: 'world110', center: [18, 10], zoom: 1.06, fit: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [1.06, 2.4], inAt: 2.2, divisor: 9 },
+    L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
+    L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], divisor: 7 }
   };
   const PROV = D.PROV_CENTER || {};
+  const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
+  const DEFAULT_FOCUS = '湖南';
   const IMPACT_RANK = { high: 3, mid: 2, low: 1 };
   const catOf = f => (D.CATS[f.cat] || { n: f.cat, c: '#1d4ed8', e: '📌' });
   const leafOf = f => ((F.leafOf && F.leafOf(f)) || { e: catOf(f).e, n: '', key: '' });
@@ -90,8 +96,10 @@ window.V03Fact = (function () {
     /* 交互（滚轮/拖拽）后把相机状态同步回 camera，保证缩放按钮与层级切换一致 */
     chart.on('georoam', () => {
       const g = (chart.getOption().geo || [])[0];
-      if (g) { camera.zoom = g.zoom != null ? g.zoom : camera.zoom; if (g.center) camera.center = g.center.slice(); }
-      S.set({ sk: { zoom: Math.round(camera.zoom * 100) } });
+      if (!g) return;
+      camera.zoom = g.zoom != null ? g.zoom : camera.zoom;
+      if (g.center) camera.center = g.center.slice();
+      afterZoom();
     });
     /* 双击放大 */
     dom.map.addEventListener('dblclick', e => {
@@ -105,6 +113,28 @@ window.V03Fact = (function () {
     });
     return chart;
   }
+  /* 附近是否有可下钻的省区（供中国视角放大后自动进入省区视角） */
+  function nearProvince(center) {
+    if (!center) return null;
+    let best = null, bd = 3.4;
+    Object.keys(PROV).forEach(k => {
+      const c = PROV[k]; const d = Math.hypot(center[0] - c[0], center[1] - c[1]);
+      if (d < bd) { bd = d; best = k; }
+    });
+    return best;
+  }
+  function enterLevel(level, focus) {
+    const st = S.state;
+    if (st.geo.level === level && (!focus || st.geo.focus === focus)) return;
+    const t = LEVEL[level];
+    const c = focus && PROV[focus] ? PROV[focus] : null;
+    S.set({ geo: { level, focus: focus || null }, factId: null });
+    camera.level = level + '|' + (focus || '');
+    camera.center = c ? [c[0], c[1]] : (t.center ? t.center.slice() : camera.center);
+    camera.zoom = c ? c[2] : t.zoom;
+    sig = '';
+  }
+
   function flyTo(center, zoom, dur) {
     const from = { center: camera.center.slice(), zoom: camera.zoom }, t0 = performance.now();
     dur = dur || 800;
@@ -121,13 +151,25 @@ window.V03Fact = (function () {
       camera.raf = requestAnimationFrame(step);
     });
   }
+  /* 缩放后决策（滚轮与 +/− 按钮共用）：到阈值切层、到边界收敛 */
+  function afterZoom() {
+    const st = S.state, lv = LEVEL[st.geo.level], box = lv.zoomBox;
+    if (camera.zoom < box[0]) camera.zoom = box[0];
+    if (camera.zoom > box[1]) camera.zoom = box[1];
+    if (st.geo.level === 'L1' && camera.zoom >= lv.inAt) return enterLevel('L2', null);
+    if (st.geo.level === 'L2') {
+      if (camera.zoom <= (lv.outAt || 0)) return enterLevel('L1', null);
+      if (camera.zoom >= lv.inAt) { const pv = nearProvince(camera.center); if (pv) return enterLevel('L3', pv); }
+    }
+    if (chart) chart.setOption({ geo: { zoom: camera.zoom, center: camera.center.slice() } }, { lazyUpdate: true });
+    S.set({ sk: { zoom: Math.round(camera.zoom * 100) } });
+  }
   function zoomBy(dir) {
-    const lv = LEVEL[S.state.geo.level], box = lv.zoomBox;
+    const box = LEVEL[S.state.geo.level].zoomBox;
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.28 : 1 / 1.28)));
     if (Math.abs(next - camera.zoom) < 1e-3) return;
     camera.zoom = next;
-    if (chart) chart.setOption({ geo: { zoom: next } }, { lazyUpdate: true });
-    S.set({ sk: { zoom: Math.round(next * 100) } });
+    afterZoom();
   }
   const zoomState = () => {
     const box = LEVEL[S.state.geo.level].zoomBox;
@@ -136,40 +178,38 @@ window.V03Fact = (function () {
 
   const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
   const radiusPx = f => Math.max(9, Math.min(26, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
-  const DOT = { high: 6, mid: 5, low: 4.2 };   /* 事实点：小亮点 4–6px（颜色对应事实类型） */
+
+  const DOT = { high: 6, mid: 5.2, low: 4.6 };      /* 事实点：统一红点，大小随重要性 */
+  const RED = '#d63c3c';
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
     const lv = LEVEL[st.geo.level];
-    const halos = [], pts = [];
+    const halos = [], pts = [], high = [];
     facts.forEach(f => {
-      const c = dotColor(f);
-      if (st.sk.influence) {
-        halos.push({
-          id: f.id, value: [f.lng, f.lat], symbolSize: radiusPx(f),
-          itemStyle: {
-            color: {
-              type: 'radial', x: .5, y: .5, r: .5,
-              colorStops: [
-                { offset: 0, color: hexA(c, IMPACT_ALPHA[f.impact] || .1) },
-                { offset: .6, color: hexA(c, (IMPACT_ALPHA[f.impact] || .1) * .4) },
-                { offset: 1, color: hexA(c, 0) }
-              ]
-            }
-          }
-        });
-      }
-      pts.push({
-        id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
-        itemStyle: { color: c, borderColor: '#ffffff', borderWidth: .8 }
-      });
+      const sev = f.severity || 40;
+      halos.push({ id: f.id, value: [f.lng, f.lat], symbolSize: radiusPx(f),
+        itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
+          { offset: 0, color: hexA(RED, .16) }, { offset: .55, color: hexA(RED, .07) }, { offset: 1, color: hexA(RED, 0) }] } } });
+      pts.push({ id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
+        itemStyle: { color: RED, borderColor: '#fff', borderWidth: .7 } });
+      if (f.impact === 'high' && sev >= 70) high.push({ id: f.id, name: f.title, value: [f.lng, f.lat] });
     });
+    /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
+    const mass = (window.V03Mass && st.sk.mass !== false)
+      ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
+      : [];
     const series = [
-      { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 1, symbol: 'circle' },
-      /* 亮光（数据接入瞬间一闪而过，0.8s 内消退后落成普通小点） */
-      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 4, cursor: 'pointer' }
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], symbolSize: 2.1, i })), z: 1, silent: true, symbol: 'circle',
+        itemStyle: { color: 'rgba(214,60,60,.42)' } },
+      { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
+      /* 扩散动画重做：高影响事实用一圈缓慢扩散的细环（6s 一轮，克制不刺眼） */
+      { id: 'ring', type: 'effectScatter', coordinateSystem: 'geo', data: high.slice(0, 40), z: 3, silent: true,
+        symbolSize: 5, rippleEffect: { scale: 4.6, brushType: 'stroke', period: 6, number: 2 },
+        itemStyle: { color: 'rgba(214,60,60,.35)', borderColor: 'rgba(214,60,60,.45)' } },
+      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
     ];
-    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#65a30d', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
+    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
     if (st.sk.gates) {
       markerSeries('gatesP', D.GATES.filter(g => g.kind === 'port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
       markerSeries('gatesA', D.GATES.filter(g => g.kind === 'airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -177,7 +217,7 @@ window.V03Fact = (function () {
     }
     return {
       backgroundColor: 'transparent',
-      animationDurationUpdate: 320,
+      animationDurationUpdate: 280,
       geo: {
         map: lv.map, roam: true, zoom: camera.zoom, center: camera.center.slice(),
         zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false,
@@ -192,6 +232,10 @@ window.V03Fact = (function () {
         textStyle: { color: '#10151f', fontSize: 11 }, padding: [6, 9],
         formatter: p => {
           const sid = p.seriesId || '';
+          if (sid === 'mass') {
+            const t = V03Mass.totals(S.state.geo.level, F.FACT_ITEMS.length);
+            return '<b>' + V03Mass.fmt(t.total) + '</b> 条事实（本视野采样 ' + t.sampled + ' 点表达密度）';
+          }
           if (sid === 'facts') {
             const f = D.factById(p.data.id); if (!f) return '';
             return '<b>' + esc(f.title) + '</b><br>' + esc(f.region) + ' · ' + f.date + '<br>' + esc(leafOf(f).n || catOf(f).n);
@@ -404,7 +448,7 @@ window.V03Fact = (function () {
       '<div class="fs-why">' + esc(c.fallbackReason || '该视频源暂不可直接播放，保留静态卡片') + '</div>' +
       (c.embedUrl ? '<a class="ext" href="' + esc(c.embedUrl) + '" target="_blank" rel="noopener noreferrer">打开原始视频源</a>' : '') + '</div>';
   }
-  function cardHTML(f) {
+  function cardHTML(f, fresh) {
     const c = f.card || {}, cat = catOf(f);
     const foot = '<div class="fcard-foot"><span>' + esc(f.region) + '</span><span>·</span><span>' + f.date + '</span>' +
       '<span class="sp"></span><span class="fcard-mark">' + esc(CRED_TXT[f.cred] || '') + (f.impact === 'high' ? ' · <em>高影响</em>' : '') + '</span></div>';
@@ -449,11 +493,17 @@ window.V03Fact = (function () {
           '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
-    return '<article class="fcard" data-fid="' + f.id + '" tabindex="0" style="border-left-color:' + cat.c + '">' + body + foot + '</article>';
+    return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + f.id + '" tabindex="0">' +
+      (fresh ? '<span class="fresh-tag">新接入</span>' : '') + body + foot + '</article>';
   }
 
   function renderCards() {
-    const st = S.state, facts = F.factsAtLevel(st);
+    const st = S.state;
+    let facts = F.factsAtLevel(st);
+    /* v07：直播卡常驻（已核验可嵌入的公开源不受事实筛选影响），新接入事实置顶 */
+    const freshIds = (st.newFacts || []).filter(id => D.factById(id));
+    const playable = D.FACTS.filter(f => isPlayable(f) && facts.every(x => x.id !== f.id));
+    facts = freshIds.map(id => D.factById(id)).concat(playable).concat(facts);
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
       dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
@@ -461,7 +511,7 @@ window.V03Fact = (function () {
       if (b) b.onclick = () => S.set({ time: '7d', cred: 'high', infl: 'high', q: '', catKeys: null });
       return;
     }
-    dom.sideBody.innerHTML = '<div class="fcards">' + facts.map(cardHTML).join('') + '</div>';
+    dom.sideBody.innerHTML = '<div class="fcards">' + facts.map(f => cardHTML(f, freshIds.includes(f.id))).join('') + '</div>';
     dom.sideBody.querySelectorAll('.fcard').forEach(el => {
       const open = () => {
         const f = D.factById(el.dataset.fid);

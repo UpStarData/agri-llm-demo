@@ -4,7 +4,7 @@
    详情一律走右侧嵌套抽屉（样式复用 app.css 的 .drawer / .fd-*）
    ============================================================ */
 .rel-wrap{position:absolute;inset:0}
-.rel-main{position:absolute;inset:0 var(--side-w) 0 0;background:var(--ocean)}
+.rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-canvas{position:absolute;inset:0}
 .rel-side{position:absolute;right:0;top:0;bottom:var(--stream-h);width:var(--side-w);z-index:30;background:var(--glass);
   border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;transition:width .2s var(--ease)}
@@ -14,7 +14,7 @@
 .rel-body::-webkit-scrollbar-thumb{background:rgba(15,23,42,.16);border-radius:3px}
 .rel-grid{column-count:2;column-gap:6px}
 .rel-card{break-inside:avoid;-webkit-column-break-inside:avoid;display:block;width:100%;text-align:left;margin:0 0 6px;
-  border:1px solid var(--line);border-left:2.5px solid var(--rc,#d97706);border-radius:var(--r-md);background:var(--panel);
+  border:1px solid var(--line);border-left:2.5px solid var(--rc,#d97706);border-radius:var(--r-md);background:rgba(255,255,255,.86);
   padding:6px 7px 7px;transition:box-shadow .15s,transform .15s,border-color .15s;cursor:pointer}
 .rel-card:hover{box-shadow:0 6px 16px -14px rgba(15,23,42,.5);border-color:#c7d7f5;transform:translateY(-1px)}
 .rel-card b{font-size:.71875rem;font-weight:var(--f-semi);line-height:1.4;display:block;word-break:break-word}

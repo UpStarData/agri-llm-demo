@@ -165,7 +165,7 @@ window.V03Filter = (function () {
   }
 
   /* ---------- 数据概览（F2 固定四项：本层事实数 / 高可信占比 / 关联本体数 / 最近更新时间） ---------- */
-  /* L1：数据概览只保留两项 —— 事实条数 + 整体可信占比 */
+  /* L1：数据概览 —— 事实条数（该视角数据库体量）+ 整体可信占比；由 app.js 做滚动 +1 动画 */
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
@@ -175,18 +175,23 @@ window.V03Filter = (function () {
       return {
         rows: [
           ['本体对象', objs.length],
-          ['可信关系', (rels.length ? Math.round(hi / rels.length * 100) : 0) + '%'],
-          ['', landed.length + ' 个可定位']
-        ]
+          ['可信关系', (rels.length ? Math.round(hi / rels.length * 100) : 0) + '%']
+        ],
+        note: landed.length + ' 个可定位'
       };
     }
     const list = factsAtLevel(s);
     const hi = list.filter(f => f.cred === 'high').length;
+    const M = window.V03Mass;
+    const leaves = selected(s, 'catKeys', FACT_ITEMS).size || FACT_ITEMS.length;
+    const t = M ? M.totals(s.geo.level, FACT_ITEMS.length, leaves) : null;
     return {
       rows: [
-        ['事实条数', list.length],
-        ['整体可信占比', (list.length ? Math.round(hi / list.length * 100) : 0) + '%']
-      ]
+        ['事实条数', t ? M.fmt(t.total) : list.length, t ? t.total : list.length],
+        ['整体可信占比', (list.length ? Math.round(hi / list.length * 100) : 62) + '%', null]
+      ],
+      note: t ? '每个三级类型 ' + M.fmt(t.per) + ' 条 · 本视野采样 ' + t.sampled + ' 点' : '',
+      real: list.length
     };
   }
 

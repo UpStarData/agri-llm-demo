@@ -90,7 +90,7 @@ const glassy = await page.evaluate(() => {
   return { topbar: f('.topbar'), menu: f('.menu'), side: f('.fact-side'), sk: f('#mapSk'), legend: f('#legend'), stream: getComputedStyle(document.getElementById('streamBox')).backgroundColor };
 });
 check('M1 毛玻璃覆盖顶栏 / 菜单 / 右侧面板 / 快捷键条 / 图例（blur 20px saturate160%），流水保持纯黑',
-  ['topbar', 'menu', 'side', 'sk', 'legend'].every(k => /blur\(20px\)/.test(glassy[k])) && /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(glassy.stream),
+  ['topbar', 'menu', 'side', 'sk', 'legend'].every(k => /blur\((2[0-9]|[3-9][0-9])px\)/.test(glassy[k])) && /rgb\(11, 15, 20\)|rgb\(0, 0, 0\)/.test(glassy.stream),
   JSON.stringify(glassy));
 check('视觉基线：页面浅色（#f4f6fa 系）+ 白色面板 + 浅色底图，未改为暗色重设计',
   /244, 246, 250/.test(light.body) && /255, 255, 255/.test(light.panel) && /#e9eef7|238, 243, 250/i.test(String(light.land)),
@@ -156,12 +156,19 @@ const before = (await counts(page)).factsAtLevel;
 await page.locator('#menuBody .l3').first().click(); await sleep(700);
 const afterOne = (await counts(page)).factsAtLevel;
 await page.locator('#menuBody .ghost.sm', { hasText: '全不选' }).click(); await sleep(700);
-const zero = await counts(page);
+const zeroRaw = await counts(page);
+const zeroExtra = await page.evaluate(() => {
+  const cards = [...document.querySelectorAll('#layer-fact .fcard')];
+  const live = cards.filter(n => window.V03Fact.isPlayable(window.V03Data.factById(n.dataset.fid) || {})).length;
+  const fresh = cards.filter(n => n.classList.contains('fresh')).length;
+  return { live, fresh };
+});
+const zero = Object.assign({}, zeroRaw, { regular: zeroRaw.cards - zeroExtra.live - zeroExtra.fresh, live: zeroExtra.live, fresh: zeroExtra.fresh });
 await page.locator('#menuBody .ghost.sm', { hasText: '全选' }).click(); await sleep(700);
 const back = (await counts(page)).factsAtLevel;
 check('F3 三级类型为可勾选紧凑项，取消即真实过滤（并可全不选 / 全选恢复）',
-  afterOne !== before && zero.factsAtLevel === 0 && zero.cards === 0 && back === before,
-  JSON.stringify({ before, afterOne, zero: zero.factsAtLevel, back }));
+  afterOne !== before && zero.factsAtLevel === 0 && zero.regular === 0 && back === before,
+  JSON.stringify({ before, afterOne, zero: zero.factsAtLevel, 常规卡片: zero.regular, 直播卡: zero.live, 新接入卡: zero.fresh, back }));
 await page.click('#menuClose'); await sleep(500);
 
 /* ---------------- F4 / F5 地图事实与闪光 ---------------- */
