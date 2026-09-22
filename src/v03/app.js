@@ -190,32 +190,37 @@
     if (p && p.catch) p.catch(err => { S.set({ sk: { fullscreen: false } }); toast('当前环境不允许全屏：' + (err && err.message ? err.message : '被浏览器拒绝')); });
   }
 
-  /* v07：数据概览滚动 +1（终端每条数据都能在数字上看见） */
-  const OV_TICK = { today: 0, shown: null };
-  function rollNumber(node, to) {
-    if (!node) return;
-    const from = Number(node.dataset.shown || node.textContent.replace(/[^\d.]/g, '')) || 0;
-    if (to === from) return;
-    node.dataset.shown = String(to);
-    const steps = 12; let i = 0;
-    const step = () => {
-      i++;
-      const v = from + (to - from) * (i / steps);
-      const M = window.V03Mass;
-      node.textContent = M ? M.fmt(Math.round(v)) : String(Math.round(v));
-      if (i < steps) requestAnimationFrame(step);
-      else node.classList.remove('tick'), void node.offsetWidth, node.classList.add('tick');
-    };
-    step();
+  /* v08：数据概览主数字 —— 与 hyperresearch.ai 同款「实时大数字」：
+     全位数 + 千分位 + tabular-nums，尾数每秒都在走；终端每处理一条再即时 +1 */
+  const OV = { node: null, base: 0, extra: 0, rate: 0, t0: 0, today: 0, raf: 0, timer: 0 };
+  const ovStill = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function ovValue() {
+    const secs = (OV.raf || OV.timer) ? (performance.now() - OV.t0) / 1000 : 0;
+    return OV.base + OV.extra + OV.rate * secs;
+  }
+  function ovPaint() {
+    const M = window.V03Mass;
+    if (OV.node && M) OV.node.textContent = M.digits(ovValue());
+  }
+  function ovStop() {
+    if (OV.raf) cancelAnimationFrame(OV.raf);
+    if (OV.timer) clearInterval(OV.timer);
+    OV.raf = 0; OV.timer = 0; OV.node = null;
+  }
+  function ovMount(node, base, rate) {
+    ovStop();
+    if (!node || typeof base !== 'number') return;
+    OV.node = node; OV.base = base; OV.t0 = performance.now();
+    if (typeof rate === 'number') OV.rate = rate;
+    ovPaint();
+    /* 弱动效环境与源站同款降级：1s 一跳，不逐帧 */
+    if (ovStill()) OV.timer = setInterval(ovPaint, 1000);
+    else { const loop = () => { ovPaint(); OV.raf = requestAnimationFrame(loop); }; OV.raf = requestAnimationFrame(loop); }
   }
   function bumpOverview() {
-    const node = document.querySelector('#menuBody .ov-i b[data-ov="0"]');
-    if (!node || !node.dataset.raw) return;
-    const base = Number(node.dataset.raw) + OV_TICK.today;
-    node.dataset.raw = String(Number(node.dataset.raw) + 1);
-    rollNumber(node, base + 1);
+    OV.extra += 1; OV.today += 1; ovPaint();
     const live = document.getElementById('ovStream');
-    if (live) { OV_TICK.today++; live.textContent = '+' + OV_TICK.today.toLocaleString(); live.classList.remove('tick'); void live.offsetWidth; live.classList.add('tick'); }
+    if (live) { live.textContent = '+' + OV.today.toLocaleString('en-US'); live.classList.remove('tick'); void live.offsetWidth; live.classList.add('tick'); }
   }
 
   /* ---------- F2：左侧菜单四段 ---------- */
@@ -223,7 +228,7 @@
     const st = S.state, body = $('menuBody');
     $('menu').classList.toggle('on', st.menu);
     $('menu').setAttribute('aria-hidden', String(!st.menu));
-    if (!st.menu) return;
+    if (!st.menu) { ovStop(); return; }
 
     const ov = F.overview(st);
     const isRel = st.tab === 'relation';
@@ -234,14 +239,16 @@
 
     body.innerHTML = '';
 
-    /* ① 数据概览（F2 固定四项；不含事实类型分布） */
+    /* ① 数据概览（F2 固定四项；不含事实类型分布）—— 主数字为 hyperresearch.ai 同款大数字 */
     const s1 = el('section', 'mn-sec');
     s1.appendChild(el('div', 'mn-h', '数据概览'));
-    s1.appendChild(el('div', 'mn-ov', ov.rows.filter(r => r[0]).map(([k, v, raw], i) =>
-      '<div class="ov-i"><b data-ov="' + i + '"' + (raw ? ' data-raw="' + raw + '"' : '') + '>' + v + '</b><span>' + k + '</span></div>').join('')));
-    s1.appendChild(el('div', 'mn-rr', '<span class="mn-rr-t">实时接入</span><b id="ovStream" class="mn-rr-v">+' + (OV_TICK.today) + '</b><span class="mn-rr-u">条 / 今日</span>'));
+    const ovRows = ov.rows.filter(r => r[0]);
+    s1.appendChild(el('div', 'mn-ov' + (ovRows.length === 1 ? ' hero' : ''), ovRows.map(([k, v], i) =>
+      '<div class="ov-i"><b data-ov="' + i + '">' + v + '</b><span>' + k + '</span></div>').join('')));
+    if (ov.note) s1.appendChild(el('div', 'ov-note', ov.note));
+    s1.appendChild(el('div', 'mn-rr', '<span class="mn-rr-t">实时接入</span><b id="ovStream" class="mn-rr-v">+' + (OV.today) + '</b><span class="mn-rr-u">条 / 今日</span>'));
     body.appendChild(s1);
-    [...s1.querySelectorAll('.ov-i b')].forEach(n => { n.dataset.shown = String((n.textContent.match(/[\d.]+/) || ['0'])[0]); });
+    if (isRel) ovStop(); else ovMount(s1.querySelector('.ov-i b[data-ov="0"]'), ov.raw, ov.rate);
 
     /* ② 图层数据分类筛选（F3 三级字典 / A2 九类对象域） */
     const s2 = el('section', 'mn-sec');

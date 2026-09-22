@@ -140,6 +140,21 @@ check('L1/S2 数据概览只留「事实条数」（可信占比已按补充指�
   return big >= 20 && small <= 12 && big > small && (cs.borderStyle === 'none' || cs.borderWidth === '0px') && !/事实类型分布/.test(document.getElementById('menuBody').innerText);
 }));
 check('F2 菜单内含地图快捷控制（11 项 + 放大/缩小）与总开关', menu.sk === 13 && menu.master, '菜单内控制项 ' + menu.sk);
+/* v08：数据概览主数字 —— hyperresearch.ai 同款「实时大数字」 */
+check('L1/v08 主数字为全位数千分位 + tabular-nums 大数字，且不超过菜单宽度', await page.evaluate(() => {
+  const b = document.querySelector('#menuBody .mn-ov.hero .ov-i b');
+  if (!b) return false;
+  const cs = getComputedStyle(b), wrap = b.closest('.mn-ov').getBoundingClientRect();
+  return /^\d{1,3}(,\d{3})+$/.test(b.textContent.trim()) && parseFloat(cs.fontSize) >= 32 && cs.fontWeight === '400'
+    && /tabular-nums/.test(cs.fontVariantNumeric) && /tnum/.test(cs.fontFeatureSettings)
+    && b.getBoundingClientRect().width <= wrap.width + 1 && !!document.querySelector('#menuBody .ov-note');
+}));
+const ovT1 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.hero .ov-i b').textContent);
+await sleep(2400);
+const ovT2 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.hero .ov-i b').textContent);
+check('L1/v08 主数字持续递增（尾数一直在走，非静态值）且分组格式稳定',
+  Number(ovT2.replace(/,/g, '')) - Number(ovT1.replace(/,/g, '')) >= 2 && /^\d{1,3}(,\d{3})+$/.test(ovT2),
+  ovT1 + ' → ' + ovT2);
 
 /* ---------------- F3 事实三级分类字典 ---------------- */
 check('F3 分类字典与指令一致：一级 7 / 二级 26 / 三级 125，逐条未合并改名',
@@ -478,6 +493,12 @@ await page.close();
 const m = await open(browser, 390, 844, '390');
 check('390px 无横向溢出', (await overflow(m)) === 0);
 check('390px 顶部工具条仍 ≤32px 且三 TAB 可点', await m.evaluate(() => Math.round(document.querySelector('.topbar').getBoundingClientRect().height) <= 32));
+await m.click('#menuBtn'); await sleep(800);
+check('390px 大数字不超出菜单宽度，且菜单展开仍无横向溢出', await m.evaluate(() => {
+  const b = document.querySelector('#menuBody .mn-ov.hero .ov-i b');
+  return !!b && b.getBoundingClientRect().width <= b.closest('.mn-ov').getBoundingClientRect().width + 1
+    && window.V03_DEBUG.overflow() === 0;
+}));
 check('390px 控制台无错误', consoleErrors.filter(x => x.startsWith('390')).length === 0);
 await m.close();
 await browser.close();
