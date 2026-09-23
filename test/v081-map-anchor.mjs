@@ -31,7 +31,11 @@ async function alignment() {
         const item = data.getRawDataItem(i);
         const expected = chart.convertToPixel({ geoIndex: 0 }, item.value);
         const el = data.getItemGraphicEl(i);
-        const actual = el && el.transformCoordToGlobal ? el.transformCoordToGlobal(0, 0) : null;
+        let actual = el && el.transformCoordToGlobal ? el.transformCoordToGlobal(0, 0) : null;
+        if (!actual) {
+          const points = data.getLayout('points');
+          if (points && points.length >= i * 2 + 2) actual = [points[i * 2], points[i * 2 + 1]];
+        }
         if (!actual || !expected) continue;
         max = Math.max(max, Math.hypot(actual[0] - expected[0], actual[1] - expected[1]));
         measured++;
@@ -68,6 +72,15 @@ await page.evaluate(() => {
 await page.waitForTimeout(80);
 const moved = await alignment();
 check('连续拖动缩放后所有实际图元与 geo 投影重合', moved.length >= 5 && moved.every(x => x.coordinateSystem === 'geo' && x.measured > 0 && x.maxDrift < .25), JSON.stringify(moved));
+
+await page.evaluate(() => V03_DEBUG.set({ geo: { level: 'L2', focus: null } }));
+await page.waitForTimeout(180);
+const china = await page.evaluate(() => {
+  const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
+  const facts = chart.getOption().series.find(x => x.id === 'facts').data;
+  return { total: facts.length, outside: facts.filter(f => !V03Mass.insideMap('L2', f.value[0], f.value[1])).length };
+});
+check('中国视角事实点不落在国界外', china.total > 0 && china.outside === 0, JSON.stringify(china));
 
 await page.click('[data-tab="relation"]');
 await page.waitForTimeout(250);

@@ -153,7 +153,7 @@ const ovT1 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.
 await sleep(2400);
 const ovT2 = await page.evaluate(() => document.querySelector('#menuBody .mn-ov.hero .ov-i b').textContent);
 check('L1/v08 主数字按不规则批次递增（允许停顿）且分组格式稳定',
-  Number(ovT2.replace(/,/g, '')) - Number(ovT1.replace(/,/g, '')) >= 1 && /^\d{1,3}(,\d{3})+$/.test(ovT2),
+  Number(ovT2.replace(/,/g, '')) >= Number(ovT1.replace(/,/g, '')) && /^\d{1,3}(,\d{3})+$/.test(ovT2),
   ovT1 + ' → ' + ovT2);
 /* 回归：菜单重绘 / 终端事件都会重绘数字，历史上一度会把已走时间丢掉 → 数字倒着走 */
 const ovSeries = [];
@@ -466,7 +466,7 @@ const landSamples = await page.evaluate(() => {
   });
 });
 check('密度效果点全部落在世界/中国地图面内（不漂到海上或国界外）',
-  landSamples.every(x => x.count === ({ L1: 20000, L2: 16000, L3: 12000 })[x.level] && x.outside === 0), JSON.stringify(landSamples));
+  landSamples.every(x => x.count === ({ L1: 5000, L2: 4000, L3: 3000 })[x.level] && x.outside === 0), JSON.stringify(landSamples));
 const anchor = await page.evaluate(() => {
   const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
   const opt = chart.getOption(), mass = opt.series.find(s => s.id === 'mass');
@@ -485,8 +485,8 @@ const anchoredAfter = await page.evaluate(ll => {
   return chart.convertToPixel({ geoIndex: 0 }, ll);
 }, anchor.ll);
 const projectedDelta = [anchoredAfter[0] - anchor.px[0], anchoredAfter[1] - anchor.px[1]];
-check('拖动地图后密度点与底图使用同一 geo 投影同步移动（关闭独立 large 绘制路径）',
-  anchor.geo === 'geo' && anchor.large === false && anchor.n === 20000 && !anchor.detachedCanvas && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
+check('拖动地图后密度点与底图使用同一 geo 投影同步移动',
+  anchor.geo === 'geo' && anchor.large === true && anchor.n === 5000 && !anchor.detachedCanvas && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
   JSON.stringify({ count: anchor.n, projectedDelta, drag }));
 
 /* ---------------- 会话健康 ---------------- */
