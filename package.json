@@ -21,6 +21,7 @@
     "shots:v6": "node test/shots-v06.mjs"
     ,"test:v08": "node test/v08.mjs"
     ,"shots:v08": "node test/shots-v08.mjs"
+    ,"test:v081": "node test/v081-map-anchor.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

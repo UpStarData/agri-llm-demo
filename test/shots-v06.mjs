@@ -78,7 +78,7 @@ await page.locator('#mapSk .sk[data-k="gates"]').click(); await sleep(600);
 const star = await page.evaluate(async () => {
   const t0 = performance.now();
   while (performance.now() - t0 < 12000) {
-    if (document.querySelectorAll('#layer-fact .star-flash').length) return true;
+    if (window.V03Fact.flashIds().length) return true;
     await new Promise(r => setTimeout(r, 120));
   }
   return false;

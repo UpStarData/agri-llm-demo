@@ -12,6 +12,7 @@
 window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
+  let freshFlashes = [], flashSeq = 0;
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null };
 
   /* 地图缩放规则（v07）：
@@ -218,7 +219,8 @@ window.V03Fact = (function () {
       { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripple : [], silent: true, z: 3,
         showEffectOn: 'render', rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 },
         itemStyle: { opacity: .55 } },
-      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' }
+      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' },
+      flashSeries()
     ];
     if (st.sk.regions) markerSeries('regions', D.REGIONS, '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
     if (st.sk.gates) {
@@ -279,24 +281,34 @@ window.V03Fact = (function () {
     } : null].filter(Boolean);
   }
 
-  /* B3/M7：新事实接入 → 对应坐标闪一颗星（DOM 动画，0.9–1s 后自动移除，不长期发光） */
+  /* B3/M7：新事实接入 → 同一 geo 坐标系内闪一次；禁止另建 DOM/Canvas 覆盖层。 */
+  function flashSeries() {
+    return {
+      id: 'freshFlash', type: 'effectScatter', coordinateSystem: 'geo', silent: true, z: 8,
+      data: freshFlashes.map(x => ({
+        id: x.id, factId: x.factId, value: x.value.slice(), symbolSize: x.bright ? 9 : 6,
+        itemStyle: { color: x.bright ? '#ffe08a' : '#d8e8ea', opacity: x.bright ? .95 : .72 }
+      })),
+      showEffectOn: 'render', rippleEffect: { period: .75, scale: 5.6, brushType: 'fill', number: 2 },
+      animation: false
+    };
+  }
+  function syncFlashSeries() {
+    if (!chart || S.state.sk.mode3d) return;
+    chart.setOption({ series: [flashSeries()] }, { lazyUpdate: false, silent: true });
+  }
   function flashStar(f, level) {
     if (!f || f.lng == null || S.state.tab !== 'fact' || S.state.sk.mode3d) return;
-    if (!chart || !dom.mapBox) return;
-    let px = null;
-    try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { px = null; }
-    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
-    const box = dom.mapBox.getBoundingClientRect();
-    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;   /* 视野外不闪 */
-    const d = document.createElement('div');
-    d.className = 'star-flash ' + (level === 'bright' || f.impact === 'high' ? 'bright' : 'dim');
-    d.dataset.fid = f.id;
-    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px';
-    d.innerHTML = '<i></i>';
-    dom.mapBox.appendChild(d);
-    setTimeout(() => d.remove(), 1000);
+    if (!chart) return;
+    const id = 'fresh-' + (++flashSeq);
+    freshFlashes.push({ id, factId: f.id, value: [f.lng, f.lat], bright: level === 'bright' || f.impact === 'high' });
+    syncFlashSeries();
+    setTimeout(() => {
+      freshFlashes = freshFlashes.filter(x => x.id !== id);
+      syncFlashSeries();
+    }, 1200);
   }
-  const flashIds = () => [...document.querySelectorAll('#layer-fact .star-flash')].map(n => n.dataset.fid);
+  const flashIds = () => freshFlashes.map(x => x.factId);
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -798,7 +810,7 @@ window.V03Fact = (function () {
       cards: document.querySelectorAll('#layer-fact .fcard').length,
       cardTypes: [...document.querySelectorAll('#layer-fact .fcard')].reduce((m, n) => { const f = D.factById(n.dataset.fid); if (f) m[f.cardType] = (m[f.cardType] || 0) + 1; return m; }, {}),
       emojiLeaves: new Set(pts.map(f => leafOf(f).key)).size,
-      flashes: document.querySelectorAll('#layer-fact .star-flash').length,
+      flashes: freshFlashes.length,
       roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
       dictReady: !!F.dictReady,
       globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length

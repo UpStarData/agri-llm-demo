@@ -185,21 +185,6 @@ svg{display:block}
 .drawer-back:hover,.drawer-x:hover{background:var(--accent-soft);color:var(--accent);border-color:#c7d7f5}
 .drawer-body{flex:1;overflow-y:auto;padding:10px 12px 20px}
 
-/* ---------------- B3：地图星闪（新数据接入一闪而过，0.5–1s 消失） ---------------- */
-.star-flash{position:absolute;pointer-events:none;z-index:20;transform-origin:50% 50%;will-change:transform,opacity;
-  animation:starFlash .9s var(--ease) forwards}
-.star-flash i{display:block;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,255,255,.98),rgba(255,236,150,.85) 38%,rgba(255,214,102,.25) 62%,rgba(255,214,102,0) 78%);
-  box-shadow:0 0 10px rgba(255,220,120,.75)}
-.star-flash.dim i{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.75;box-shadow:0 0 6px rgba(255,220,120,.5)}
-.star-flash.bright i{transform:scale(1.5)}
-@keyframes starFlash{
-  0%{opacity:0;transform:scale(.3)}
-  20%{opacity:1;transform:scale(1.2)}
-  50%{opacity:.7;transform:scale(1)}
-  100%{opacity:0;transform:scale(.5)}
-}
-
 /* ---------------- 底部流水：MiroFish 式终端面板（纯黑 · 等宽 · 时间戳 + 处理信息） ---------------- */
 .stream{position:absolute;left:0;right:0;bottom:0;height:0;overflow:hidden;z-index:45;background:#0b0f14;color:#cbd5e1;
   border-top:1px solid #1f2937;transition:height .2s var(--ease);display:flex;flex-direction:column}
