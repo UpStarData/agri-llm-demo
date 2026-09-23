@@ -14,7 +14,8 @@ window.V03Mass = (function () {
   /* 每个三级类型的事实条数下限（产品定义） */
   const QUOTA = { L1: 1000000, L2: 100000, L3: 10000 };
   /* 单视野渲染采样上限：重复真实锚点来表达体量，但每个点仍是地图经纬度 */
-  const SAMPLE = { L1: 20000, L2: 16000, L3: 12000 };
+  /* 大于这个预算会让地理层级切换阻塞主线程，视觉密度只代表配额，不代表真实行数。 */
+  const SAMPLE = { L1: 5000, L2: 4000, L3: 3000 };
   const SEED = 20260922;
 
   function mulberry32(a) {
@@ -70,13 +71,29 @@ window.V03Mass = (function () {
     });
   }
   let MAP_FEATURES = null;
+  function boundsOf(geometry) {
+    const bounds = [Infinity, Infinity, -Infinity, -Infinity];
+    const visit = value => {
+      if (!Array.isArray(value)) return;
+      if (typeof value[0] === 'number' && typeof value[1] === 'number') {
+        bounds[0] = Math.min(bounds[0], value[0]); bounds[1] = Math.min(bounds[1], value[1]);
+        bounds[2] = Math.max(bounds[2], value[0]); bounds[3] = Math.max(bounds[3], value[1]);
+      } else value.forEach(visit);
+    };
+    visit(geometry.coordinates);
+    return bounds;
+  }
   function mapFeatures(level) {
-    if (!MAP_FEATURES) MAP_FEATURES = { L1: worldFeatures(), china: ((window.__CHINA_GEO || {}).features || []) };
+    if (!MAP_FEATURES) {
+      const indexed = features => features.map(f => ({ geometry: f.geometry, bounds: boundsOf(f.geometry) }));
+      MAP_FEATURES = { L1: indexed(worldFeatures()), china: indexed(((window.__CHINA_GEO || {}).features || [])) };
+    }
     return level === 'L1' ? MAP_FEATURES.L1 : MAP_FEATURES.china;
   }
   function insideMap(level, lng, lat) {
     if (level !== 'L1' && !inChina(lng, lat)) return false;
-    return mapFeatures(level).some(f => geometryContains(f.geometry, lng, lat));
+    return mapFeatures(level).some(f => lng >= f.bounds[0] && lng <= f.bounds[2] && lat >= f.bounds[1] && lat <= f.bounds[3]
+      && geometryContains(f.geometry, lng, lat));
   }
 
   /* ---------- 体量：按视角与分类字典的类型数计算 ---------- */
@@ -93,7 +110,10 @@ window.V03Mass = (function () {
   }
 
   /* ---------- 采样：确定性、围绕真实锚点分布 ---------- */
+  const sampleCache = new Map();
   function sample(level, focus, leafKeys) {
+    const cacheKey = level + '|' + (focus || '') + '|' + (leafKeys || []).join('|');
+    if (sampleCache.has(cacheKey)) return sampleCache.get(cacheKey);
     const rnd = mulberry32(SEED + (level === 'L1' ? 1 : level === 'L2' ? 2 : 3));
     const list = anchors().filter(a => insideMap(level, a.lng, a.lat));
     const keys = (leafKeys && leafKeys.length) ? leafKeys : ['x'];
@@ -119,6 +139,8 @@ window.V03Mass = (function () {
       if (!insideMap(level, fixedLng, fixedLat)) continue;
       out.push({ lng: fixedLng, lat: fixedLat, leaf: keys[i % keys.length] });
     }
+    if (sampleCache.size >= 8) sampleCache.delete(sampleCache.keys().next().value);
+    sampleCache.set(cacheKey, out);
     return out;
   }
 

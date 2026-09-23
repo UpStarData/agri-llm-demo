@@ -13,7 +13,7 @@ window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
   let freshFlashes = [], flashSeq = 0;
-  const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null };
+  const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null, roamTimer: null };
 
   /* 地图缩放规则（v07）：
      L1 全球：铺满屏幕即最小（不能再缩小），放大到 inAt 切到中国视角
@@ -100,7 +100,10 @@ window.V03Fact = (function () {
       if (!g) return;
       camera.zoom = g.zoom != null ? g.zoom : camera.zoom;
       if (g.center) camera.center = g.center.slice();
-      afterZoom();
+      /* ECharts 已在当前交互帧完成 geo roam；不要在事件内重入 setOption。
+         只在用户停手后提交层级 / 状态，避免 2 万点被每帧重复布局。 */
+      if (camera.roamTimer) clearTimeout(camera.roamTimer);
+      camera.roamTimer = setTimeout(() => { camera.roamTimer = null; afterZoom(); }, 120);
     });
     /* 双击放大 */
     dom.map.addEventListener('dblclick', e => {
@@ -191,7 +194,8 @@ window.V03Fact = (function () {
   };
 
   function mapOption() {
-    const st = S.state, all = F.factsAtLevel(st), facts = F.mappable(all);
+    const st = S.state, all = F.factsAtLevel(st);
+    const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const lv = LEVEL[st.geo.level];
     const halos = [], pts = [], high = [];
     facts.forEach(f => {
@@ -213,7 +217,7 @@ window.V03Fact = (function () {
     }));
     const series = [
       { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
-        large: false, progressive: 0, animation: false,
+        large: true, largeThreshold: 2000, progressive: 0, animation: false,
         itemStyle: { color: p.mass } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
       { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripple : [], silent: true, z: 3,
@@ -299,6 +303,7 @@ window.V03Fact = (function () {
   }
   function flashStar(f, level) {
     if (!f || f.lng == null || S.state.tab !== 'fact' || S.state.sk.mode3d) return;
+    if (window.V03Mass && !V03Mass.insideMap(S.state.geo.level, f.lng, f.lat)) return;
     if (!chart) return;
     const id = 'fresh-' + (++flashSeq);
     freshFlashes.push({ id, factId: f.id, value: [f.lng, f.lat], bright: level === 'bright' || f.impact === 'high' });
@@ -772,9 +777,8 @@ window.V03Fact = (function () {
     const lvKey = st.geo.level + '|' + (st.geo.focus || '');
     const c = ensureChart();
     if (c && !st.sk.mode3d) {
-      let justLeveled = false;
-    if (camera.level !== lvKey) {
-        camera.level = lvKey; justLeveled = true;
+      if (camera.level !== lvKey) {
+        camera.level = lvKey;
         const t = LEVEL[st.geo.level], focus = PROV[st.geo.focus || (st.geo.level === 'L3' ? '湖南' : '')];
         const target = focus ? [focus[0], focus[1]] : t.center;
         const zoom = focus ? focus[2] : t.zoom;
@@ -783,11 +787,6 @@ window.V03Fact = (function () {
         c.clear();
       }
       c.setOption(mapOption(), { notMerge: true });
-      /* Z3：层级切换时事实点淡入（世界→中国→省区 过渡自然） */
-      if (justLeveled) {
-        c.setOption({ series: [{ id: 'facts', itemStyle: { opacity: .15 } }, { id: 'mass', itemStyle: { opacity: .1 } }] }, { lazyUpdate: true });
-        setTimeout(() => c.setOption({ series: [{ id: 'facts', itemStyle: { opacity: 1 } }, { id: 'mass', itemStyle: { opacity: 1 } }] }, { lazyUpdate: true, animationDurationUpdate: 420 }), 90);
-      }
     }
     renderLegend(); renderCards();
   }
