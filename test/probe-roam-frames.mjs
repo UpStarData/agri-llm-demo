@@ -12,6 +12,8 @@ const zoomOnly = process.argv.includes('--zoom-only');
 const prewarm = process.argv.includes('--prewarm');
 const video = process.argv.includes('--video');
 const screenshot = process.argv.includes('--screenshot');
+const singleRound = process.argv.includes('--single-round');
+const assertVisual = process.argv.includes('--assert-visual');
 const artifactDir = path.join(root, 'test/artifacts');
 if (video || screenshot) await mkdir(artifactDir, { recursive: true });
 const browser = await chromium.launch();
@@ -37,11 +39,29 @@ await page.evaluate(() => {
   const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
   const ids = ['mass', 'halo', 'ripple', 'facts', 'freshFlash'];
   window.__ROAM_TRACE = { frames: [], events: 0, rendered: 0, started: performance.now() };
+  const geoModel = chart.getModel().getComponent('geo', 0);
+  const geoGroup = chart.getViewOfComponentModel(geoModel).group.childAt(0);
+  if (!geoGroup || !geoGroup.getComputedTransform()) throw new Error('Map visual transform unavailable');
+  const anchorSeries = chart.getModel().getSeries().find(s => s.id === 'facts');
+  const anchorElement = anchorSeries.getData().getItemGraphicEl(0);
+  const initialMap = geoGroup.getComputedTransform().slice();
+  const initialPoint = anchorElement.transformCoordToGlobal(0, 0);
+  const initialLevel = V03_DEBUG.state().geo.level;
+  const det = initialMap[0] * initialMap[3] - initialMap[1] * initialMap[2];
+  const dx = initialPoint[0] - initialMap[4], dy = initialPoint[1] - initialMap[5];
+  const localPoint = [(initialMap[3] * dx - initialMap[2] * dy) / det,
+    (-initialMap[1] * dx + initialMap[0] * dy) / det];
   chart.on('georoam', () => window.__ROAM_TRACE.events++);
   chart.on('rendered', () => window.__ROAM_TRACE.rendered++);
   const tick = () => {
     const now = performance.now();
     const sample = { t: now - window.__ROAM_TRACE.started, level: V03_DEBUG.state().geo.level, rows: [] };
+    const matrix = geoGroup.getComputedTransform();
+    const point = anchorElement.transformCoordToGlobal(0, 0);
+    const mapPoint = [matrix[0] * localPoint[0] + matrix[2] * localPoint[1] + matrix[4],
+      matrix[1] * localPoint[0] + matrix[3] * localPoint[1] + matrix[5]];
+    sample.visualDrift = sample.level === initialLevel ? Math.hypot(point[0] - mapPoint[0], point[1] - mapPoint[1]) : null;
+    sample.visual = { point, mapPoint, matrix: matrix.slice() };
     chart.getModel().getSeries().filter(s => ids.includes(s.id)).forEach(s => {
       const data = s.getData();
       if (!data.count()) return;
@@ -62,7 +82,7 @@ await page.evaluate(() => {
 });
 
 const box = await page.locator('#factMap').boundingBox();
-for (let round = 0; round < 3; round++) {
+for (let round = 0; round < (singleRound ? 1 : 3); round++) {
   if (!zoomOnly) {
     await page.mouse.move(box.x + 420, box.y + 380);
     await page.mouse.down();
@@ -75,7 +95,7 @@ for (let round = 0; round < 3; round++) {
   }
   if (!panOnly) {
     await page.mouse.move(box.x + 700, box.y + 410);
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < (singleRound ? 3 : 8); i++) {
       await page.mouse.wheel(0, round % 2 ? 95 : -95);
       await page.waitForTimeout(45);
     }
@@ -90,14 +110,18 @@ const outside = await page.evaluate(() => {
   return { level, count: facts.length, outside: facts.filter(f => !V03Mass.insideMap(level, f.value[0], f.value[1])).length };
 });
 const drifts = trace.frames.flatMap(f => f.rows.map(r => r.d));
+const visualDrifts = trace.frames.map(f => f.visualDrift).filter(x => x != null);
 const gaps = trace.frames.slice(1).map((f, i) => f.t - trace.frames[i].t);
 const maxGap = Math.max(0, ...gaps);
 const maxGapAt = gaps.indexOf(maxGap) + 1;
 const quantile = (a, q) => [...a].sort((x, y) => x - y)[Math.min(a.length - 1, Math.floor(a.length * q))] || 0;
 console.log('RESULT', JSON.stringify({
-  url, massOff, influenceOff, panOnly, zoomOnly, prewarm, outside, events: trace.events, rendered: trace.rendered, frames: trace.frames.length,
+  url, massOff, influenceOff, panOnly, zoomOnly, singleRound, prewarm, outside, events: trace.events, rendered: trace.rendered, frames: trace.frames.length,
   maxDrift: Math.max(0, ...drifts), p95Drift: quantile(drifts, .95),
+  maxVisualDrift: Math.max(0, ...visualDrifts), p95VisualDrift: quantile(visualDrifts, .95),
+  ...(process.argv.includes('--details') ? { firstVisual: trace.frames[0], maxVisual: trace.frames[visualDrifts.indexOf(Math.max(0,...visualDrifts))], lastVisual: trace.frames.at(-1) } : {}),
   maxFrameGap: maxGap, maxGapLevel: trace.frames[maxGapAt]?.level, p95FrameGap: quantile(gaps, .95), over32ms: gaps.filter(x => x > 32).length
 }, null, 2));
 if (screenshot) await page.screenshot({ path: path.join(artifactDir, 'roam-after.png'), fullPage: true });
 await browser.close();
+if (assertVisual && Math.max(0, ...visualDrifts) > .5) process.exitCode = 1;

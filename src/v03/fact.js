@@ -234,7 +234,8 @@ window.V03Fact = (function () {
     }
     return {
       backgroundColor: 'transparent',
-      animationDurationUpdate: 280,
+      /* Roam updates must not tween the map independently of geo scatter positions. */
+      animationDurationUpdate: 0,
       geo: {
         map: lv.map, roam: true, zoom: camera.zoom, center: camera.center.slice(),
         zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false,

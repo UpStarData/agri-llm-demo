@@ -22,6 +22,7 @@
     ,"test:v08": "node test/v08.mjs"
     ,"shots:v08": "node test/shots-v08.mjs"
     ,"test:v081": "node test/v081-map-anchor.mjs"
+    ,"test:v083": "node test/probe-roam-frames.mjs --pan-only --assert-visual && node test/probe-roam-frames.mjs --single-round --zoom-only --assert-visual"
   },
   "devDependencies": {
     "playwright": "^1.58.2"
