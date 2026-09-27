@@ -4,6 +4,7 @@
 
 | 版本 | 预览地址 | 内容 | 构建指纹 | 源码提交 / tag |
 | --- | --- | --- | --- | --- |
+| **V0.8.6** | https://upstardata.github.io/agri-llm-demo/v0.8.6/ | 恢复湖南历史资料入口：934 条事实保留，湖南相关 322 条可一键浏览，公开来源样本可单独查看 | `9f9bb11f8f49` | `c695b45` · `v0.8.6` |
 | **V0.8.5** | https://upstardata.github.io/agri-llm-demo/v0.8.5/ | 依据 V1.2 文档更新事实层筛选、叠加图层、卡片与详情；携带事实进入推演；明确标注演示数据与待接入能力 | `22ce48bb91b3` | `dd4b9fc` · `v0.8.5` |
 | **V0.8.4** | https://upstardata.github.io/agri-llm-demo/v0.8.4/ | 降低事实密度点数量，暂停隐藏视图动画，加快地球打开和切换，并修复地图移动时点位漂移 | `521451b39777` | `baf3960` · `v0.8.4` |
 | **V0.8.3** | https://upstardata.github.io/agri-llm-demo/v0.8.3/ | 修复地图更新动画与事实点不同步；实际地图图形对点位逐帧回归 | `635be6b8ea29` | `32cf33e` · `v0.8.3` |
@@ -18,7 +19,7 @@
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
 | **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
 
-> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.8.5**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.8.6**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
@@ -28,7 +29,7 @@
 agri-llm-demo/
 ├── index.html          # V0.0 原版基线（Pages 根，内容与 v0.0/ 同一份）
 ├── versions/index.html # 版本目录页
-├── v0.0/ … v0.8.5/     # 每个版本：index.html + build-meta.json（V0.0 = 起点）
+├── v0.0/ … v0.8.6/     # 每个版本：index.html + build-meta.json（V0.0 = 起点）
 └── src/ data/ test/ …  # 源码（与版本产物同仓库）
 ```
 
