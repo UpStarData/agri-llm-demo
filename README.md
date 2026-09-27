@@ -3,6 +3,8 @@
 面向农博会 / 集团展示场景的**阶段性领导演示 Demo**，用于确认展示形态与信息结构。
 线上：https://upstardata.github.io/agri-llm-demo/
 
+独立的 [MiroFish 前端体验页](https://upstardata.github.io/agri-llm-demo/mirofish/) 位于 `/mirofish/`。它只展示官方前端界面，不接入后端；图谱生成和推演不可用。源码、许可和构建说明见 [`mirofish-source/README.md`](./mirofish-source/README.md)。
+
 > ⚠️ 页面内**所有数值均为示意数据（待标定）**，仅用于表达信息结构；
 > 口径字段为真实口径框架（海关贸易量 / 产区供给规模 / 省际调运量 / 环节台账 / 元·kg）。
 > 本 Demo 为独立阶段性演示，不关联、不替代长期「农产品交易大模型」。
