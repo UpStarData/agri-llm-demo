@@ -20,7 +20,7 @@ window.V03Filter = (function () {
     { n: '宏观与公共事件', key: 'macro', color: '#b45309', subs: [{ n: '地缘与安全', items: [{ key: 'macro|地缘与安全|公共安全', n: '公共安全', e: '⚠️', kw: ['安全'] }] }] }
   ];
   const FACT_TREE_RAW = (D3 && D3.TREE && D3.TREE.length) ? D3.TREE : FALLBACK_TREE;
-  /* L2：一级分类改用低饱和配色（与整体明亮风格一致；地图点/图例/菜单同一套） */
+  /* L2：一级分类改用低饱和配色（与整体明亮风格一致） */
   const MUTED = { nature: '#5b8ea6', supply: '#6f9a6a', chain: '#5f9a94', market: '#b0736b', consume: '#8b7fa8', policy: '#6f86b8', macro: '#a08a63' };
   const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: MUTED[g.key] || g.color }));
   const leafOf = f => (D3 && D3.leafOf) ? D3.leafOf(f) : null;

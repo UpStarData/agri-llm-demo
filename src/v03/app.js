@@ -3,7 +3,6 @@
    G1 顶部 24px 轻量工具条：菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置
    F2 左侧菜单四段：数据概览 / 分类筛选（F3 字典）/ 地图快捷控制 / 地图快捷键总开关
    F6 右下角快捷键组 + 正上方缩放 ±（同一组状态，菜单内同步）
-   F7 底部横向图例（各层自行填充；不进入菜单）
    F10/A5 右侧嵌套抽屉：事实详情 / 本体详情 / 关系详情逐层展开
    F8 底部窄条流水（产品语言，无技术字段）
    ============================================================ */
@@ -29,7 +28,6 @@
     shield:  ['M12 3.2 5.4 6v6.1c0 4.8 2.9 7.9 6.6 8.7 3.7-.8 6.6-3.9 6.6-8.7V6L12 3.2Z', 'M9.2 12.1l2 2 3.6-3.9'],
     gauge:   ['M4 17.4a8.6 8.6 0 1 1 16 0', 'M12 17.4l4-5.4'],
     search:  ['M11 4.2a6.8 6.8 0 1 0 0 13.6 6.8 6.8 0 0 0 0-13.6Z', 'M16.1 16.1 21 21'],
-    legend:  ['M4 6.5h3M10 6.5h10', 'M4 12h3M10 12h10', 'M4 17.5h3M10 17.5h10'],
     play:    ['M8.5 5.4 19 12 8.5 18.6V5.4Z'],
     plus:    ['M12 5v14', 'M5 12h14'],
     minus:   ['M5 12h14'],
@@ -93,7 +91,7 @@
   }
 
   /* ---------- F6：快捷键（地图右下角 + 菜单内同一组状态） ---------- */
-  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月'], ['all', '全部历史']];
+  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月']];
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
@@ -106,8 +104,7 @@
     { k: 'regions', i: 'sprout', n: '主要产区', d: '标注主要农产品产区', kind: 'sw', get: s => s.sk.regions, set: v => ({ sk: { regions: v } }) },
     { k: 'gates', i: 'anchor', n: '港口', d: '标注主要贸易港口', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
     { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
-    { k: 'search', i: 'search', n: '搜索', d: '搜索事实标题', kind: 'input', get: s => s.q, set: v => ({ q: v }) },
-    { k: 'legend', i: 'legend', n: '图例', d: '显示 / 隐藏底部图例', kind: 'sw', get: s => s.sk.legend, set: v => ({ sk: { legend: v } }) }
+    { k: 'search', i: 'search', n: '搜索', d: '搜索事实标题', kind: 'input', get: s => s.q, set: v => ({ q: v }) }
   ];
   const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
     : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
@@ -308,7 +305,7 @@
     const bNone = el('button', 'ghost sm', '全不选');
     bNone.onclick = () => S.set({ [field]: [] });
     quick.appendChild(bAll); quick.appendChild(bNone);
-    quick.appendChild(el('span', 'mn-tip', '三级事实类型决定地图筛选与图例；默认全选'));
+    quick.appendChild(el('span', 'mn-tip', '三级事实类型决定地图和卡片筛选；默认全选'));
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');
@@ -597,7 +594,6 @@
     S.onEvent('toast', toast);
     S.onEvent('jump', p => { if (p && p.tab) S.set({ tab: p.tab }); });
     window.V03Shell = {
-      setLegend: html => { const box = $('legend'); if (box) { box.innerHTML = html; box.style.display = (S.state.sk.legend && html) ? '' : 'none'; } },
       drawers: drawerStackApi,
       toast
     };
@@ -625,8 +621,7 @@
         dictL3On: document.querySelectorAll('#menuBody .l3.on').length,
         mapSk: document.querySelectorAll('#mapSk .sk').length,
         menuSk: document.querySelectorAll('#menuBody .mn-sk .sk').length,
-        zoom: document.querySelectorAll('#mapZoom button').length,
-        legendItems: document.querySelectorAll('#legend .lg-i').length
+        zoom: document.querySelectorAll('#mapZoom button').length
       }),
       provSummary: () => {
         const groups = {

@@ -248,16 +248,6 @@ window.V03Relation = (function () {
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
   }
 
-  /* ---------- 图例（F7 横向） ---------- */
-  function renderLegend(st) {
-    if (!window.V03Shell) return;
-    if (!st.sk.legend) return window.V03Shell.setLegend('');
-    const doms = D.DOMAINS.map(d => '<span class="lg-i"><i style="background:' + d.c + '"></i>' + d.n + '</span>').join('');
-    const lines = ['供应流向', '行政归属', '运输经由', '影响']
-      .map(t => '<span class="lg-i"><svg width="16" height="6" viewBox="0 0 16 6"><path d="M0 3h16" stroke="' + typeColor(t) + '" stroke-width="1.4" stroke-dasharray="3 2"/><circle cx="12" cy="3" r="1.4" fill="' + typeColor(t) + '"/></svg>' + t + ' 等关系线（方向由流光指示）</span>').join('');
-    window.V03Shell.setLegend('<span class="lg-cat">本体对象域</span>' + doms + '<span class="lg-sep"></span>' + lines);
-  }
-
   /* ---------- A6：抽屉内容（本体详情 / 关系详情） ---------- */
   function renderDrawer(box, d) {
     if (!box) return;
@@ -351,14 +341,13 @@ window.V03Relation = (function () {
     if (!root) return;
     const st = S.state;
     const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.sk.legend, st.theme, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
     const c = ensureChart();
     if (!c) return;
     c.setOption(option(objs, rels, st), { notMerge: true });
     renderPanel(st, objs);
-    renderLegend(st);
   }
 
   const debug = () => {

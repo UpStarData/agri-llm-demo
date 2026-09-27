@@ -4,14 +4,13 @@
    F4 只画事实点 + 影响范围；不画事实之间线路；一级分类决定颜色，三级类型决定 Emoji
    F5 持久事实为稳定小点，不持续发光；新事实接入时一次瞬时闪光（约 1.2s 消退）
    F6 右下角快捷键 + 正上方缩放 ±（菜单内同步）
-   F7 底部横向图例（写入共享 #legend）
    F9 右侧两列紧凑瀑布流：无类型徽章，标题 → 摘要 → 地点/时间/来源
    F10 详情走右侧嵌套抽屉：核心事实 — 影响 — 证据来源 — 关联本体
    数据：agrilink-demo-v1（861 事实 / 377 本体 / 585 关系）· 默认口径 近 7 天 + 高可信 + 高影响
    ============================================================ */
 window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '', legendSig = '';
+  let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '';
   let freshFlashes = [], flashSeq = 0;
   let mapAnimationPaused = false;
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null, roamTimer: null };
@@ -31,7 +30,7 @@ window.V03Fact = (function () {
   const IMPACT_RANK = { high: 3, mid: 2, low: 1 };
   const catOf = f => (D.CATS[f.cat] || { n: f.cat, c: '#1d4ed8', e: '📌' });
   const leafOf = f => ((F.leafOf && F.leafOf(f)) || { e: catOf(f).e, n: '', key: '' });
-  /* F4/M6：一级分类决定颜色（低饱和色，与菜单/图例同一套） */
+  /* F4/M6：一级分类决定颜色（低饱和色，与菜单同一套） */
   const groupOf = f => {
     const g = (F.FACT_TREE || []).find(x => (x.subs || []).some(sb => (sb.items || []).some(it => it.key === leafOf(f).key)));
     return g || null;
@@ -376,24 +375,6 @@ window.V03Fact = (function () {
     }
   }
 
-  /* ---------- 图例（F7：横向，随筛选同步） ---------- */
-  function renderLegend() {
-    if (!window.V03Shell) return;
-    const st = S.state;
-    if (!st.sk.legend) return window.V03Shell.setLegend('');
-    const facts = F.mappable(F.factsAtLevel(st));
-    const byGroup = {};
-    facts.forEach(f => { const g = groupOf(f); if (g) byGroup[g.key] = (byGroup[g.key] || 0) + 1; });
-    const chips = (F.FACT_TREE || [])
-      .filter(g => byGroup[g.key])
-      .sort((a, b) => byGroup[b.key] - byGroup[a.key])
-      .map(g => '<span class="lg-i"><i style="background:' + g.color + '"></i>' + g.n + '</span>');
-    const marks = [];
-    if (st.sk.regions) marks.push('<span class="lg-i">🌾 农产品产区</span>');
-    if (st.sk.gates) marks.push('<span class="lg-i">⚓ 港口</span><span class="lg-i">✈️ 机场</span><span class="lg-i">🧊 冷链节点</span>');
-    window.V03Shell.setLegend(chips.concat(marks).join(''));
-  }
-
   /* ---------- 右侧卡片（F9） ---------- */
   const CRED_TXT = { high: '高可信', medium: '中可信', mid: '中可信', low: '低可信' };
   const WX_ICON = code => {
@@ -561,42 +542,16 @@ window.V03Fact = (function () {
   function renderCards() {
     const st = S.state;
     const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video');
-    const hunanFacts = F.facts({ ...st, time: 'all', region: '湖南', sourceMode: 'all', q: '', catKeys: null, varieties: [] });
-    const hunanTotal = hunanFacts.length;
-    const hunanPublic = hunanFacts.filter(f => f.prov === 'real').length;
-    const explore = '<div class="fc-explore"><b>历史资料仍在：' + D.FACTS.length + ' 条事实</b><span>当前筛选 ' + facts.length + ' 条</span>' +
-      '<span>湖南相关 ' + hunanTotal + ' 条（公开来源样本 ' + hunanPublic + ' 条，其余含模拟数据）</span><div>' +
-      '<button type="button" id="browseHunan"' + (st.region === '湖南' && st.time === 'all' && st.sourceMode !== 'real' ? ' aria-pressed="true"' : '') + '>浏览湖南全部历史</button>' +
-      '<button type="button" id="browseHunanPublic"' + (st.region === '湖南' && st.sourceMode === 'real' ? ' aria-pressed="true"' : '') + '>湖南公开来源</button>' +
-      '<button type="button" id="browseAll">查看全部历史</button></div></div>';
-    const wireExplore = () => {
-      dom.sideBody.querySelector('#browseHunan').onclick = () => {
-        S.set({ time: 'all', region: '湖南', sourceMode: 'all', varieties: [], catKeys: null, q: '',
-          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
-        dom.sideBody.scrollTop = 0;
-      };
-      dom.sideBody.querySelector('#browseHunanPublic').onclick = () => {
-        S.set({ time: 'all', region: '湖南', sourceMode: 'real', varieties: [], catKeys: null, q: '',
-          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
-        dom.sideBody.scrollTop = 0;
-      };
-      dom.sideBody.querySelector('#browseAll').onclick = () => {
-        S.set({ time: 'all', region: '', sourceMode: 'all', varieties: [], catKeys: null, q: '', geo: { level: 'L1', focus: null } });
-        dom.sideBody.scrollTop = 0;
-      };
-    };
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
-      dom.sideBody.innerHTML = explore + '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
-      wireExplore();
+      dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
       const b = dom.sideBody.querySelector('#clrF');
       if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '', sourceMode: 'all' });
       return;
     }
     const scroll = dom.sideBody.scrollTop;
-    dom.sideBody.innerHTML = explore + '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
+    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
-    wireExplore();
     dom.sideBody.scrollTop = scroll;
     dom.sideBody.onscroll = () => {
       if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
@@ -846,7 +801,7 @@ window.V03Fact = (function () {
     const st = S.state;
     const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
-      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.legend, st.sk.live, st.theme]);
+      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
 
     dom.searchStatus.hidden = !st.q;
@@ -871,9 +826,6 @@ window.V03Fact = (function () {
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
-      st.sk.legend, st.sk.regions, st.sk.gates]);
-    if (nextLegendSig !== legendSig) { renderLegend(); legendSig = nextLegendSig; }
     const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
@@ -887,7 +839,6 @@ window.V03Fact = (function () {
       halos: st.sk.influence ? pts.length : 0,
       regionMarks: st.sk.regions ? D.REGIONS.length : 0,
       gateMarks: st.sk.gates ? D.GATES.length : 0,
-      legend: st.sk.legend, legendItems: document.querySelectorAll('#legend .lg-i').length,
       videoTotal: vid.length,
       videoEmbeddable: vid.filter(f => f.card && f.card.embeddable === 'yes' && f.card.embedUrl).length,   /* 已核验可嵌入的公开源 */
       videoStreamable: vid.filter(f => f.card && f.card.hlsUrl).length,                                    /* 有 m3u8 直连地址 */

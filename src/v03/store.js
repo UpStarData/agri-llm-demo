@@ -29,7 +29,6 @@ window.V03Store = (function () {
       airports: false,            // 机场
       markets: false,             // 农贸市场
       risks: false,               // 地缘风险区，仅全球视角
-      legend: true,               // M11 图例
       mass: false                 // V1.2 仅绘真实存在于演示数据中的事实
     },
 
@@ -38,14 +37,14 @@ window.V03Store = (function () {
        数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
        因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
        规则见 docs/V04b-数据包接入说明.md §5。 */
-    time: '7d',                   // today | 7d | 30d | all；历史入口恢复旧版资料
+    time: '7d',                   // today | 7d | 30d；前端最多展示近 30 天
     cred: 'all',
     infl: 'all',
     q: '',
     factSearch: '',
     varieties: [],               // 首发品种，多选，跨层保留
     region: '',                   // 事实数据区域筛选，不移动地图
-    sourceMode: 'all',             // all | real；历史资料中可单独查看公开来源样本
+    sourceMode: 'all',             // 保留旧状态兼容；页面不提供来源筛选入口
 
     /* 三级分类字典的选中项：null = 默认全选 */
     catKeys: null,                // 事实层
