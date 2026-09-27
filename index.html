@@ -281,6 +281,13 @@ svg{display:block}
 .fcard-v12-meta span:last-child{color:var(--accent);font-weight:var(--f-semi)}
 .fcard-detail{display:block;margin-top:6px;padding:3px 0;border:0;background:none;color:var(--accent);font-size:.65625rem;cursor:pointer}
 .fc-more{text-align:center;padding:12px;color:var(--dim);font-size:.65625rem}
+.fc-explore{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:0 0 7px;padding:7px 8px;border:1px solid var(--glass-line);border-radius:var(--r-sm);background:var(--glass-2);color:var(--ink);font-size:.65625rem}
+.fc-explore b{font-weight:var(--f-semi)}
+.fc-explore span{color:var(--dim)}
+.fc-explore div{display:flex;gap:5px;width:100%;flex-wrap:wrap}
+.fc-explore button{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--accent);font-size:.625rem;padding:3px 7px;cursor:pointer}
+.fc-explore button:hover{border-color:var(--accent)}
+.fc-explore button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .mn-v12-filters{margin-top:10px;border-top:1px solid var(--hair);padding-top:6px}
 .mn-varieties{display:flex;gap:4px;flex-wrap:wrap}
 .mn-varieties .l3{padding:4px 8px}
@@ -741,7 +748,7 @@ html[data-theme="dark"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"22ce48bb91b3","git":"acdb785","builtAt":"2026-09-27T22:42:12.727Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"9f9bb11f8f49","git":"0d6447c","builtAt":"2026-09-27T22:59:09.859Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5284,13 +5291,14 @@ window.V03Store = (function () {
        数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
        因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
        规则见 docs/V04b-数据包接入说明.md §5。 */
-    time: '7d',                   // today | 7d | 30d
+    time: '7d',                   // today | 7d | 30d | all；历史入口恢复旧版资料
     cred: 'all',
     infl: 'all',
     q: '',
     factSearch: '',
     varieties: [],               // 首发品种，多选，跨层保留
     region: '',                   // 事实数据区域筛选，不移动地图
+    sourceMode: 'all',             // all | real；历史资料中可单独查看公开来源样本
 
     /* 三级分类字典的选中项：null = 默认全选 */
     catKeys: null,                // 事实层
@@ -5432,7 +5440,8 @@ window.V03Filter = (function () {
     const body = [f.title, f.summary, f.card && f.card.commodityName, ...(f.objects || []).map(id => (D.objById(id) || {}).name)].join(' ').toLowerCase();
     return (VARIETY_WORDS[v] || [v]).some(w => body.includes(w.toLowerCase()));
   });
-  const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region));
+  const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region)) ||
+    (region === '湖南' && f.lng >= 108 && f.lng <= 115 && f.lat >= 24 && f.lat <= 31);
 
   function facts(s) {
     s = s || window.V03Store.state;
@@ -5442,6 +5451,7 @@ window.V03Filter = (function () {
       matched(f, set) &&
       varietyOk(f, s.varieties) &&
       regionOk(f, s.region) &&
+      (s.sourceMode !== 'real' || f.prov === 'real') &&
       hit(f, s.q)
     ).sort((a, b) => String(b.ingestedAt || b.date || '').localeCompare(String(a.ingestedAt || a.date || '')) || String(b.id).localeCompare(String(a.id)));
   }
@@ -6134,16 +6144,42 @@ window.V03Fact = (function () {
   function renderCards() {
     const st = S.state;
     const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video');
+    const hunanFacts = F.facts({ ...st, time: 'all', region: '湖南', sourceMode: 'all', q: '', catKeys: null, varieties: [] });
+    const hunanTotal = hunanFacts.length;
+    const hunanPublic = hunanFacts.filter(f => f.prov === 'real').length;
+    const explore = '<div class="fc-explore"><b>历史资料仍在：' + D.FACTS.length + ' 条事实</b><span>当前筛选 ' + facts.length + ' 条</span>' +
+      '<span>湖南相关 ' + hunanTotal + ' 条（公开来源样本 ' + hunanPublic + ' 条，其余含模拟数据）</span><div>' +
+      '<button type="button" id="browseHunan"' + (st.region === '湖南' && st.time === 'all' && st.sourceMode !== 'real' ? ' aria-pressed="true"' : '') + '>浏览湖南全部历史</button>' +
+      '<button type="button" id="browseHunanPublic"' + (st.region === '湖南' && st.sourceMode === 'real' ? ' aria-pressed="true"' : '') + '>湖南公开来源</button>' +
+      '<button type="button" id="browseAll">查看全部历史</button></div></div>';
+    const wireExplore = () => {
+      dom.sideBody.querySelector('#browseHunan').onclick = () => {
+        S.set({ time: 'all', region: '湖南', sourceMode: 'all', varieties: [], catKeys: null, q: '',
+          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
+        dom.sideBody.scrollTop = 0;
+      };
+      dom.sideBody.querySelector('#browseHunanPublic').onclick = () => {
+        S.set({ time: 'all', region: '湖南', sourceMode: 'real', varieties: [], catKeys: null, q: '',
+          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
+        dom.sideBody.scrollTop = 0;
+      };
+      dom.sideBody.querySelector('#browseAll').onclick = () => {
+        S.set({ time: 'all', region: '', sourceMode: 'all', varieties: [], catKeys: null, q: '', geo: { level: 'L1', focus: null } });
+        dom.sideBody.scrollTop = 0;
+      };
+    };
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
-      dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
+      dom.sideBody.innerHTML = explore + '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
+      wireExplore();
       const b = dom.sideBody.querySelector('#clrF');
-      if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '' });
+      if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '', sourceMode: 'all' });
       return;
     }
     const scroll = dom.sideBody.scrollTop;
-    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
+    dom.sideBody.innerHTML = explore + '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
+    wireExplore();
     dom.sideBody.scrollTop = scroll;
     dom.sideBody.onscroll = () => {
       if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
@@ -6391,7 +6427,7 @@ window.V03Fact = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
       st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.legend, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
@@ -6411,17 +6447,17 @@ window.V03Fact = (function () {
         if (st.geo.level === 'L3' && focus) { camera.center = [focus[0], focus[1]]; camera.zoom = focus[2]; }
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
-      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
         st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme]);
       if (nextMapSig !== mapSig) {
         c.setOption(mapOption(), { notMerge: true });
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.sk.legend, st.sk.regions, st.sk.gates]);
     if (nextLegendSig !== legendSig) { renderLegend(); legendSig = nextLegendSig; }
-    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.panels.cards, st.sk.live]);
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 
@@ -7021,7 +7057,7 @@ window.V03Sim = (function () {
   }
 
   /* ---------- F6：快捷键（地图右下角 + 菜单内同一组状态） ---------- */
-  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月']];
+  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月'], ['all', '全部历史']];
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
