@@ -22,6 +22,12 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, dev
 await page.goto(url);
 await page.waitForFunction(() => window.__AGRI_READY === true);
 await page.waitForTimeout(1000);
+if (process.argv.includes('--toggle-globe-first')) {
+  await page.evaluate(() => V03_DEBUG.set({ sk: { mode3d: true } }));
+  await page.waitForTimeout(250);
+  await page.evaluate(() => V03_DEBUG.set({ sk: { mode3d: false } }));
+  await page.waitForTimeout(250);
+}
 if (prewarm) console.log('PREWARM', await page.evaluate(() => {
   const t = performance.now();
   const n = V03Mass.sample('L2', '湖南', V03Filter.FACT_ITEMS.map(x => x.key)).length;

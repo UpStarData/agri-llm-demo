@@ -462,16 +462,17 @@ const landSamples = await page.evaluate(() => {
   const levels = [['L1', '湖南'], ['L2', '湖南'], ['L3', '湖南']];
   return levels.map(([level, focus]) => {
     const pts = M.sample(level, focus, ['probe']);
-    return { level, count: pts.length, outside: pts.filter(p => !M.insideMap(level, p.lng, p.lat)).length };
+    return { level, count: pts.length, budget: M.SAMPLE[level], outside: pts.filter(p => !M.insideMap(level, p.lng, p.lat)).length };
   });
 });
 check('密度效果点全部落在世界/中国地图面内（不漂到海上或国界外）',
-  landSamples.every(x => x.count === ({ L1: 5000, L2: 4000, L3: 3000 })[x.level] && x.outside === 0), JSON.stringify(landSamples));
+  landSamples.every(x => x.count === x.budget && x.outside === 0), JSON.stringify(landSamples));
 const anchor = await page.evaluate(() => {
   const chart = echarts.getInstanceByDom(document.getElementById('factMap'));
   const opt = chart.getOption(), mass = opt.series.find(s => s.id === 'mass');
   const ll = mass.data[0].value;
-  return { ll, px: chart.convertToPixel({ geoIndex: 0 }, ll), n: mass.data.length, geo: mass.coordinateSystem, large: mass.large,
+  return { ll, px: chart.convertToPixel({ geoIndex: 0 }, ll), n: mass.data.length, budget: V03Mass.SAMPLE.L1,
+    geo: mass.coordinateSystem, large: mass.large,
     detachedCanvas: !!document.querySelector('#factMapBox > .ripple-canvas') };
 });
 const mapBox = await page.locator('#factMap').boundingBox();
@@ -486,7 +487,7 @@ const anchoredAfter = await page.evaluate(ll => {
 }, anchor.ll);
 const projectedDelta = [anchoredAfter[0] - anchor.px[0], anchoredAfter[1] - anchor.px[1]];
 check('拖动地图后密度点与底图使用同一 geo 投影同步移动',
-  anchor.geo === 'geo' && anchor.large === true && anchor.n === 5000 && !anchor.detachedCanvas && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
+  anchor.geo === 'geo' && anchor.large === true && anchor.n === anchor.budget && !anchor.detachedCanvas && Math.abs(projectedDelta[0] - drag[0]) <= 2 && Math.abs(projectedDelta[1] - drag[1]) <= 2,
   JSON.stringify({ count: anchor.n, projectedDelta, drag }));
 
 /* ---------------- 会话健康 ---------------- */

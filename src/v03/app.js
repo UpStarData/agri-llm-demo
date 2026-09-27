@@ -525,6 +525,7 @@
       node.classList.toggle('on', active);
       const m = window['V03' + k[0].toUpperCase() + k.slice(1)];
       if (!m || !m.update) return;
+      if (k === 'fact' && m.setVisible) m.setVisible(active);
       if (active && (force || dirty[k])) { dirty[k] = false; try { m.update(); } catch (e) { console.error('update ' + k, e); } }
     });
   }
