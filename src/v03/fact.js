@@ -561,16 +561,42 @@ window.V03Fact = (function () {
   function renderCards() {
     const st = S.state;
     const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video');
+    const hunanFacts = F.facts({ ...st, time: 'all', region: '湖南', sourceMode: 'all', q: '', catKeys: null, varieties: [] });
+    const hunanTotal = hunanFacts.length;
+    const hunanPublic = hunanFacts.filter(f => f.prov === 'real').length;
+    const explore = '<div class="fc-explore"><b>历史资料仍在：' + D.FACTS.length + ' 条事实</b><span>当前筛选 ' + facts.length + ' 条</span>' +
+      '<span>湖南相关 ' + hunanTotal + ' 条（公开来源样本 ' + hunanPublic + ' 条，其余含模拟数据）</span><div>' +
+      '<button type="button" id="browseHunan"' + (st.region === '湖南' && st.time === 'all' && st.sourceMode !== 'real' ? ' aria-pressed="true"' : '') + '>浏览湖南全部历史</button>' +
+      '<button type="button" id="browseHunanPublic"' + (st.region === '湖南' && st.sourceMode === 'real' ? ' aria-pressed="true"' : '') + '>湖南公开来源</button>' +
+      '<button type="button" id="browseAll">查看全部历史</button></div></div>';
+    const wireExplore = () => {
+      dom.sideBody.querySelector('#browseHunan').onclick = () => {
+        S.set({ time: 'all', region: '湖南', sourceMode: 'all', varieties: [], catKeys: null, q: '',
+          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
+        dom.sideBody.scrollTop = 0;
+      };
+      dom.sideBody.querySelector('#browseHunanPublic').onclick = () => {
+        S.set({ time: 'all', region: '湖南', sourceMode: 'real', varieties: [], catKeys: null, q: '',
+          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
+        dom.sideBody.scrollTop = 0;
+      };
+      dom.sideBody.querySelector('#browseAll').onclick = () => {
+        S.set({ time: 'all', region: '', sourceMode: 'all', varieties: [], catKeys: null, q: '', geo: { level: 'L1', focus: null } });
+        dom.sideBody.scrollTop = 0;
+      };
+    };
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
-      dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
+      dom.sideBody.innerHTML = explore + '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
+      wireExplore();
       const b = dom.sideBody.querySelector('#clrF');
-      if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '' });
+      if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '', sourceMode: 'all' });
       return;
     }
     const scroll = dom.sideBody.scrollTop;
-    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
+    dom.sideBody.innerHTML = explore + '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
+    wireExplore();
     dom.sideBody.scrollTop = scroll;
     dom.sideBody.onscroll = () => {
       if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
@@ -818,7 +844,7 @@ window.V03Fact = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
       st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.legend, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
@@ -838,17 +864,17 @@ window.V03Fact = (function () {
         if (st.geo.level === 'L3' && focus) { camera.center = [focus[0], focus[1]]; camera.zoom = focus[2]; }
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
-      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
         st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme]);
       if (nextMapSig !== mapSig) {
         c.setOption(mapOption(), { notMerge: true });
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.sk.legend, st.sk.regions, st.sk.gates]);
     if (nextLegendSig !== legendSig) { renderLegend(); legendSig = nextLegendSig; }
-    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.panels.cards, st.sk.live]);
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 

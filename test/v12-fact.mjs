@@ -54,8 +54,33 @@ try {
   await page.locator('#factSearchStatus').click();
   assert.equal(await page.evaluate(() => V03Store.state.q), '');
 
+  const historicId = 'real-hn-hongxing-price-20260911';
+  assert.equal(await page.evaluate(id => V03Filter.facts().some(f => f.id === id), historicId), false);
+  await page.locator('#browseHunan').click();
+  const hunan = await page.evaluate(id => ({
+    time: V03Store.state.time, region: V03Store.state.region, level: V03Store.state.geo.level,
+    total: V03Filter.facts().length, historic: V03Filter.facts().some(f => f.id === id),
+    stored: V03Data.FACTS.length, cards: document.querySelectorAll('.fcard').length
+  }), historicId);
+  assert.equal(hunan.time, 'all');
+  assert.equal(hunan.region, '湖南');
+  assert.equal(hunan.level, 'L3');
+  assert(hunan.total >= 300 && hunan.stored >= 900 && hunan.historic);
+  assert.equal(hunan.cards, 20);
+
+  await page.locator('#browseHunanPublic').click();
+  const publicFacts = await page.evaluate(id => ({
+    total: V03Filter.facts().length,
+    allPublic: V03Filter.facts().every(f => f.prov === 'real'),
+    historic: V03Filter.facts().some(f => f.id === id)
+  }), historicId);
+  assert(publicFacts.total >= 10 && publicFacts.allPublic && publicFacts.historic);
+
+  await page.locator('#browseAll').click();
+  assert.equal(await page.evaluate(() => V03Filter.facts().length), hunan.stored);
+
   assert.deepEqual(errors, []);
-  console.log('PASS V1.2 fact workflow: list, detail, simulation, map independence, filters, overlays, search');
+  console.log('PASS V1.2 fact workflow: list, detail, simulation, map independence, filters, overlays, search, Hunan history');
 } finally {
   await browser.close();
 }
