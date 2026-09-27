@@ -80,8 +80,15 @@ window.V03Filter = (function () {
   const hit = (f, q) => {
     if (!q) return true;
     const s = q.toLowerCase();
-    return (f.title + f.summary + f.region).toLowerCase().includes(s);
+    return String(f.title || '').toLowerCase().includes(s);
   };
+
+  const VARIETY_WORDS = { '榴莲': ['榴莲', 'durian'], '车厘子': ['车厘子', '樱桃', 'cherry'], '辣椒': ['辣椒', 'chili', 'pepper'] };
+  const varietyOk = (f, selected) => !selected || !selected.length || selected.some(v => {
+    const body = [f.title, f.summary, f.card && f.card.commodityName, ...(f.objects || []).map(id => (D.objById(id) || {}).name)].join(' ').toLowerCase();
+    return (VARIETY_WORDS[v] || [v]).some(w => body.includes(w.toLowerCase()));
+  });
+  const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region));
 
   function facts(s) {
     s = s || window.V03Store.state;
@@ -89,18 +96,17 @@ window.V03Filter = (function () {
     return D.FACTS.filter(f =>
       D.inWindow(f.date, s.time) &&
       matched(f, set) &&
-      credOk(f, s.cred) &&
-      inflOk(f, s.infl) &&
+      varietyOk(f, s.varieties) &&
+      regionOk(f, s.region) &&
       hit(f, s.q)
-    );
+    ).sort((a, b) => String(b.ingestedAt || b.date || '').localeCompare(String(a.ingestedAt || a.date || '')) || String(b.id).localeCompare(String(a.id)));
   }
 
   /* ---------- 空间层级（geo.scopeLayer 为准） ---------- */
   const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
   const DEFAULT_FOCUS = '湖南';
 
-  /* M6 空间漏斗：全球=全部事实；中国=落入中国范围的事实；省区=聚焦省区的事实。
-     层越深，视野内密度越高（全球各大洲都有点，缩到中国/湖南后局部更密）。 */
+  /* V1.2 地图显示层级只影响地图点位，不改变卡片数据。 */
   const inChina = f => f.lng >= 73 && f.lng <= 136 && f.lat >= 17.5 && f.lat <= 54.5;
   const inProvince = (f, focus) => {
     const prov = (PKG && PKG.PROV_BY_SHORT ? PKG.PROV_BY_SHORT[focus] : null) || {};
@@ -114,15 +120,9 @@ window.V03Filter = (function () {
     const all = facts(s);
     const lv = s.geo.level;
     const focus = shortProv(s.geo.focus || DEFAULT_FOCUS);
-    let list = lv === 'L1' ? all.slice()
-      : lv === 'L2' ? all.filter(f => f.lng != null && inChina(f))
-        : all.filter(f => f.lng != null && inProvince(f, focus));
-    (s.carry || []).forEach(id => {
-      const f = D.factById(id);
-      if (f && !list.includes(f) && all.some(x => x.id === id)) list = list.concat(f);
-    });
-    if (!list.length) list = all;
-    return list;
+    return all.filter(f => f.level !== 'hidden' && f.level !== 'L4' &&
+      (lv === 'L1' || (lv === 'L2' && ['L2', 'L3'].includes(f.level) && inChina(f)) ||
+      (lv === 'L3' && f.level === 'L3' && inProvince(f, focus))));
   }
   const mappable = list => list.filter(f => f.lng != null && f.lat != null);
 
@@ -180,20 +180,18 @@ window.V03Filter = (function () {
         note: landed.length + ' 个可定位'
       };
     }
-    const list = factsAtLevel(s);
-    const M = window.V03Mass;
-    const leaves = selected(s, 'catKeys', FACT_ITEMS).size || FACT_ITEMS.length;
-    const t = M ? M.totals(s.geo.level, FACT_ITEMS.length, leaves) : null;
-    const raw = t ? t.total : list.length;
+    const list = D.FACTS;
+    const raw = list.length;
+    const today = list.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length;
     return {
       rows: [
-        ['事实条数', M ? M.digits(raw) : String(raw), raw]
+        ['当前事实', String(raw), raw],
+        ['今日新增', String(today), today]
       ],
-      note: t ? '每个三级类型 ' + M.fmt(t.per) + ' 条 · 本视野采样 ' + t.sampled + ' 点' : '',
+      note: '演示数据集 · 无实时数据接入',
       real: list.length,
       raw,
-      /* 主数字的滚动速率：当日新增折算到每秒，最低 1 条/秒 —— 数字始终在走，不是静态值 */
-      rate: t ? Math.max(1, t.todayAdded / 86400) : 0
+      rate: 0
     };
   }
 

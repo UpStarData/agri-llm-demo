@@ -221,7 +221,7 @@ window.V03DictF3 = (function () {
   const byKey = {}; ITEMS.forEach(it => { byKey[it.key] = it; });
 
   function leafOf(fact) {
-    const text = String((fact && fact.title || '') + ' ' + (fact && fact.summary || ''));
+    const text = String(fact && fact.title || '');
     for (let i = 0; i < ITEMS.length; i++) {
       const it = ITEMS[i];
       for (let j = 0; j < it.kw.length; j++) if (text.indexOf(it.kw[j]) >= 0) return it;
