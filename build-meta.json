@@ -1,7 +1,7 @@
 {
-  "hash": "521451b39777",
-  "git": "f2b4a76",
-  "builtAt": "2026-09-27T12:39:44.948Z",
+  "hash": "22ce48bb91b3",
+  "git": "acdb785",
+  "builtAt": "2026-09-27T22:42:12.740Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -11,6 +11,7 @@
     "src/v03/mass.js",
     "src/v03/pkg-adapter.js",
     "src/v03/atlas-data.js",
+    "src/v03/overlays-v12.js",
     "src/v03/data.js",
     "src/v03/data-sim.js",
     "src/v03/dict-f3.js",
@@ -18,7 +19,7 @@
     "src/v03/filter.js",
     "src/v03/fact.js",
     "src/v03/relation.js",
-    "src/v03/sim.js",
+    "src/v03/mirofish-bridge.js",
     "src/v03/app.js",
     "data/china.geo.json",
     "data/world110.geo.json",
@@ -47,5 +48,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 7163321
+  "bytes": 7154012
 }
