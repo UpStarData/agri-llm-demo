@@ -59,12 +59,27 @@ const deltas = anchorAfter.map(a => {
 const ref = deltas.find(x => x.id === 'facts');
 check('事实点、密度点、影响动画全部绑定同一个 geo 绘制层', !anchorBefore.detachedCanvas && deltas.length >= 3 && deltas.every(x => x.geo === 'geo' && Math.abs(x.dx - ref.dx) < 1 && Math.abs(x.dy - ref.dy) < 1), JSON.stringify({ detachedCanvas: anchorBefore.detachedCanvas, deltas }));
 
+await page.evaluate(() => { window.__CARD_BEFORE_GLOBE = document.querySelector('#layer-fact .fcard'); });
 await page.click('#mapSk [data-k="mode3d"]');
 await page.waitForTimeout(450);
 const globeA = await page.evaluate(() => ({ debug: window.V03Fact.debug(), image: document.getElementById('factGlobe').toDataURL() }));
+check('切换地球不重建事实卡片', await page.evaluate(() => document.querySelector('#layer-fact .fcard') === window.__CARD_BEFORE_GLOBE));
 await page.waitForTimeout(1400);
 const globeB = await page.evaluate(() => ({ debug: window.V03Fact.debug(), image: document.getElementById('factGlobe').toDataURL() }));
 check('夜间 3D 地球持续自转并有独立移动星空', globeA.debug.starCount >= 120 && globeB.debug.globeRotation !== globeA.debug.globeRotation && globeB.debug.starOffset !== globeA.debug.starOffset && globeB.image !== globeA.image, JSON.stringify({ a: globeA.debug, b: globeB.debug }));
+
+await page.evaluate(() => V03_DEBUG.set({ tab: 'relation' }));
+const hiddenA = await page.evaluate(() => V03Fact.debug());
+await page.waitForTimeout(150);
+const hiddenB = await page.evaluate(() => V03Fact.debug());
+await page.evaluate(() => V03_DEBUG.set({ tab: 'fact' }));
+await page.waitForTimeout(150);
+const resumed = await page.evaluate(() => V03Fact.debug());
+check('离开事实层暂停隐藏地球，返回后恢复', !hiddenA.globeActive && hiddenA.mapAnimationPaused &&
+  hiddenA.globeRotation === hiddenB.globeRotation && resumed.globeActive && resumed.globeRotation !== hiddenB.globeRotation,
+  JSON.stringify({ hiddenA, hiddenB, resumed }));
+await page.click('#mapSk [data-k="mode3d"]');
+check('返回二维地图后恢复地图动画', !((await page.evaluate(() => V03Fact.debug())).mapAnimationPaused));
 
 await page.click('#menuBtn');
 await page.waitForTimeout(8200);

@@ -11,8 +11,9 @@
    ============================================================ */
 window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '';
+  let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '', legendSig = '';
   let freshFlashes = [], flashSeq = 0;
+  let mapAnimationPaused = false;
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null, roamTimer: null };
 
   /* 地图缩放规则（v07）：
@@ -217,7 +218,7 @@ window.V03Fact = (function () {
     }));
     const series = [
       { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
-        large: true, largeThreshold: 2000, progressive: 0, animation: false,
+        large: true, largeThreshold: 1000, progressive: 0, animation: false,
         itemStyle: { color: p.mass } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
       { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripple : [], silent: true, z: 3,
@@ -234,7 +235,8 @@ window.V03Fact = (function () {
     }
     return {
       backgroundColor: 'transparent',
-      /* Roam updates must not tween the map independently of geo scatter positions. */
+      /* Full map rebuilds (including level changes) must not tween independently of geo points. */
+      animation: false,
       animationDurationUpdate: 0,
       geo: {
         map: lv.map, roam: true, zoom: camera.zoom, center: camera.center.slice(),
@@ -628,8 +630,11 @@ window.V03Fact = (function () {
   function resizeGlobe() {
     const c = dom.globe; if (!c) return;
     const r = dom.mapBox.getBoundingClientRect();
-    c.width = Math.max(320, Math.round(r.width * (window.devicePixelRatio > 1 ? 1.5 : 1)));
-    c.height = Math.max(240, Math.round(r.height * (window.devicePixelRatio > 1 ? 1.5 : 1)));
+    /* The globe redraws continuously; a 1.5x backing store costs 2.25x pixels per frame. */
+    const width = Math.max(320, Math.round(r.width));
+    const height = Math.max(240, Math.round(r.height));
+    if (c.width !== width) c.width = width;
+    if (c.height !== height) c.height = height;
   }
   function globeR() { return Math.min(dom.globe.width, dom.globe.height) * (S.state.geo.level === 'L3' ? .46 : S.state.geo.level === 'L2' ? .40 : .36); }
   function gProject(lng, lat, cx, cy, R) {
@@ -747,31 +752,41 @@ window.V03Fact = (function () {
   }
   function loopGlobe(now) {
     globe.raf = requestAnimationFrame(loopGlobe);
-    if (now - globe.last < 42) return;
+    if (now - globe.last < 16) return;
     globe.last = now;
     globe.rot = (globe.rot + .09) % 360;
     globe.starOffset = (globe.starOffset + .42) % 100000;
     drawGlobe();
   }
   function syncMode() {
-    const on3d = S.state.sk.mode3d;
-    dom.globe.style.display = on3d ? 'block' : 'none';
-    dom.map.style.display = on3d ? 'none' : 'block';
+    const show3d = S.state.sk.mode3d;
+    const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
+    const on3d = show3d && visible;
+    dom.globe.style.display = show3d ? 'block' : 'none';
+    dom.map.style.display = show3d ? 'none' : 'block';
+    const animation = chart && chart.getZr().animation;
+    const shouldPauseMap = !visible || show3d;
+    if (animation && shouldPauseMap !== mapAnimationPaused) {
+      if (shouldPauseMap) animation.stop(); else animation.start();
+      mapAnimationPaused = shouldPauseMap;
+    }
     if (on3d && !globe.active) {
       globe.active = true; resizeGlobe(); globe.rot = 105;
       if (!globe.raf) globe.raf = requestAnimationFrame(loopGlobe);
     } else if (!on3d && globe.active) {
       globe.active = false;
       if (globe.raf) { cancelAnimationFrame(globe.raf); globe.raf = 0; }
-    } else if (on3d) drawGlobe();
+    }
   }
+  function setVisible() { if (dom.globe) syncMode(); }
 
   /* ---------- 主更新 ---------- */
   function update() {
     if (!root) return;
     const st = S.state;
     const key = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
-      st.factId, st.panels.cards, st.logOpen, st.carry, st.sk.mode3d, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.legend, st.sk.live, st.theme]);
+      st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
+      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.legend, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
 
     syncMode();
@@ -785,11 +800,20 @@ window.V03Fact = (function () {
         const zoom = focus ? focus[2] : t.zoom;
         if (st.geo.level === 'L3' && focus) { camera.center = [focus[0], focus[1]]; camera.zoom = focus[2]; }
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
-        c.clear();
       }
-      c.setOption(mapOption(), { notMerge: true });
+      const nextMapSig = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
+        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.theme]);
+      if (nextMapSig !== mapSig) {
+        c.setOption(mapOption(), { notMerge: true });
+        mapSig = nextMapSig;
+      } else c.resize();
     }
-    renderLegend(); renderCards();
+    const nextLegendSig = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
+      st.sk.legend, st.sk.regions, st.sk.gates]);
+    if (nextLegendSig !== legendSig) { renderLegend(); legendSig = nextLegendSig; }
+    const nextCardSig = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
+      st.factId, st.panels.cards, st.newFacts]);
+    if (nextCardSig !== cardSig) { renderCards(); cardSig = nextCardSig; }
   }
 
   const debug = () => {
@@ -813,7 +837,8 @@ window.V03Fact = (function () {
       flashes: freshFlashes.length,
       roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
       dictReady: !!F.dictReady,
-      globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length
+      globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length,
+      globeActive: globe.active, mapAnimationPaused
     };
   };
   const pick = {
@@ -823,7 +848,7 @@ window.V03Fact = (function () {
   };
   const forceEmbeddable = id => {
     const f = D.factById(id);
-    if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; update(); }
+    if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { mount, update, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar };
+  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar };
 })();

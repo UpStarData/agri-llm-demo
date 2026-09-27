@@ -15,7 +15,7 @@ window.V03Mass = (function () {
   const QUOTA = { L1: 1000000, L2: 100000, L3: 10000 };
   /* 单视野渲染采样上限：重复真实锚点来表达体量，但每个点仍是地图经纬度 */
   /* 大于这个预算会让地理层级切换阻塞主线程，视觉密度只代表配额，不代表真实行数。 */
-  const SAMPLE = { L1: 5000, L2: 4000, L3: 3000 };
+  const SAMPLE = { L1: 3000, L2: 2400, L3: 1800 };
   const SEED = 20260922;
 
   function mulberry32(a) {
