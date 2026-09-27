@@ -1,4 +1,16 @@
 /* 推演层样式（类名统一 .sim-*） */
+.miro-bridge{position:absolute;inset:0;display:flex;flex-direction:column;background:#f5f5f5;color:#161616;font-family:Inter,'Noto Sans SC',sans-serif}
+.miro-bridge-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;background:#fff;border-bottom:1px solid #ddd;z-index:1}
+.miro-bridge-title{display:flex;flex-direction:column;min-width:145px;gap:2px}
+.miro-bridge-title b{font-size:15px}.miro-bridge-title small{font-size:11px;color:#f04b1b;letter-spacing:.06em}
+.miro-bridge-evidence{display:flex;align-items:center;gap:5px;flex:1 1 250px;min-width:0;overflow:auto;white-space:nowrap;font-size:11px}
+.miro-bridge-evidence strong{white-space:nowrap}.miro-bridge-evidence span{background:#f3f3f3;border:1px solid #ddd;padding:5px 7px;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.miro-bridge-prompt{display:flex;align-items:center;gap:8px;flex:2 1 320px;min-width:220px;font-size:11px;font-weight:700}
+.miro-bridge-prompt textarea{flex:1;min-width:0;resize:vertical;max-height:100px;border:1px solid #ccc;padding:7px 9px;font:12px/1.4 inherit;color:#161616;background:#fff}
+.miro-bridge-send{background:#ff4b1f!important;color:#fff!important;padding:9px 14px!important;border:0!important;border-radius:0!important;font-size:12px!important;font-weight:700;cursor:pointer}
+.miro-bridge-note{width:100%;font-size:11px;color:#666;margin:0}
+.miro-bridge-frame{border:0;width:100%;flex:1;min-height:0;background:#fff}
+@media(max-width:700px){.miro-bridge-bar{gap:7px;padding:8px}.miro-bridge-title{min-width:100px}.miro-bridge-evidence{order:3;flex-basis:100%}.miro-bridge-prompt{order:4;flex-basis:100%}.miro-bridge-send{margin-left:auto}.miro-bridge-note{order:5}}
 .sim-wrap{position:absolute;left:0;right:0;top:var(--ctl-h);bottom:0;display:flex;flex-direction:column;min-height:0}
 .sim-head{display:flex;align-items:center;gap:var(--s2);padding:9px var(--s4);border-bottom:1px solid var(--line);flex-wrap:wrap;background:rgba(255,255,255,.72)}
 .sim-head h3{font-size:.9375rem;font-weight:700;display:flex;align-items:center;gap:7px}

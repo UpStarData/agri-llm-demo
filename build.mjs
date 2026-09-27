@@ -52,6 +52,7 @@ const JS = [
   'src/v03/fact.js',        // 事实层
   'src/v03/relation.js',    // 关联层
   'src/v03/sim.js',         // 推演层
+  'src/v03/mirofish-bridge.js', // v0.8.4 集成预览：MiroFish 推演工作台
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];
