@@ -11,7 +11,7 @@
 <style>/* ============================================================
    AgriLink 农链 V1.0 · 视觉校准版（V2 指令）
    视觉基线：参考 HungerMap LIVE 的日间 / 夜间地图配色，默认夜间
-   布局要点：顶部 24px 轻量工具条 · 左侧菜单 4 段 · 底部横向图例 · 右下快捷键 + 缩放
+   布局要点：顶部 24px 轻量工具条 · 左侧菜单 4 段 · 右下快捷键 + 缩放
              右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情）· 窄条终端式流水
    ============================================================ */
 :root{
@@ -27,7 +27,7 @@
   --blur:blur(28px) saturate(185%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
   /* 图标（Cursor 风格：细线、浅灰、hover 变深） */
   --icon:#6f858d;--icon-hover:#007dbc;--icon-on:rgba(0,125,188,.10);
-  /* 一级分类（低饱和，与明亮风格一致；同时用于地图点与图例） */
+  /* 一级分类（低饱和，与明亮风格一致） */
   --c-nature:#5b8ea6;--c-supply:#6f9a6a;--c-chain:#5f9a94;--c-market:#b0736b;--c-consume:#8b7fa8;--c-policy:#6f86b8;--c-macro:#a08a63;
   --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;
   --r-sm:6px;--r-md:8px;--r-lg:10px;
@@ -170,16 +170,6 @@ svg{display:block}
 .sk-input{width:100%;border:1px solid var(--line);border-radius:3px;padding:4px 7px;font-size:.6875rem;background:var(--panel)}
 .mapzoom{display:none}
 
-/* ---------------- 事实类型图例（地图底部居中 · 一行 · 无框线 · 不显示标题） ---------------- */
-.legend{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--stream-h) + 10px);z-index:35;
-  max-width:min(64vw, 860px);display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;
-  padding:5px 10px;border:none;border-radius:10px;background:var(--glass-2);
-  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);font-size:.625rem;color:var(--mut)}
-.legend::-webkit-scrollbar{height:0}
-.legend .lg-i{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;font-weight:var(--f-light)}
-.legend .lg-i i{width:8px;height:8px;border-radius:0;flex:0 0 8px}
-.legend .lg-cat{display:none}
-
 /* ---------------- 右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情） ---------------- */
 .drawer-stack{position:absolute;right:0;top:0;bottom:var(--stream-h);z-index:50;display:flex;flex-direction:row-reverse;pointer-events:none}
 .drawer+.drawer{width:380px;flex:0 0 380px}
@@ -281,13 +271,6 @@ svg{display:block}
 .fcard-v12-meta span:last-child{color:var(--accent);font-weight:var(--f-semi)}
 .fcard-detail{display:block;margin-top:6px;padding:3px 0;border:0;background:none;color:var(--accent);font-size:.65625rem;cursor:pointer}
 .fc-more{text-align:center;padding:12px;color:var(--dim);font-size:.65625rem}
-.fc-explore{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:0 0 7px;padding:7px 8px;border:1px solid var(--glass-line);border-radius:var(--r-sm);background:var(--glass-2);color:var(--ink);font-size:.65625rem}
-.fc-explore b{font-weight:var(--f-semi)}
-.fc-explore span{color:var(--dim)}
-.fc-explore div{display:flex;gap:5px;width:100%;flex-wrap:wrap}
-.fc-explore button{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--accent);font-size:.625rem;padding:3px 7px;cursor:pointer}
-.fc-explore button:hover{border-color:var(--accent)}
-.fc-explore button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .mn-v12-filters{margin-top:10px;border-top:1px solid var(--hair);padding-top:6px}
 .mn-varieties{display:flex;gap:4px;flex-wrap:wrap}
 .mn-varieties .l3{padding:4px 8px}
@@ -423,7 +406,6 @@ html[data-theme="dark"] .settings{background:rgba(0,5,8,.58)}
   .fcards{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mapzoom{right:8px;bottom:calc(var(--stream-h) + 40px)}
   .mapsk{right:8px;bottom:calc(var(--stream-h) + 8px);max-width:calc(100% - 16px);overflow-x:auto}
-  .legend{left:6px;right:6px;max-width:calc(100% - 12px);max-height:40px}
   .drawer{width:min(96vw,400px);flex-basis:min(96vw,400px)}
   .stream.on{height:88px}
   .kv-grid{grid-template-columns:1fr}
@@ -702,9 +684,6 @@ html[data-theme="dark"] .sim-tag.review{background:var(--panel-2)}
       <section class="layer" id="layer-relation" role="tabpanel" aria-label="关联层"></section>
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
 
-      <!-- F7：横向图例（地图底部、流水上方；内容随筛选同步变化） -->
-      <div class="legend" id="legend" aria-label="图例"></div>
-
       <!-- 快捷键组（地图左下角，两排；含放大 / 缩小） -->
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
@@ -748,7 +727,7 @@ html[data-theme="dark"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"9f9bb11f8f49","git":"0d6447c","builtAt":"2026-09-27T22:59:09.859Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"c06e2bfd599a","git":"16f54ea","builtAt":"2026-09-27T23:24:05.402Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -4741,7 +4720,7 @@ Object.assign(window.V03Data, (function () {
       output: ['上下文子图：马来西亚产区 → 出口商 → 口岸 → 进口商 → 红星／竞争市场 → 湖南零售渠道。',
                '指标基线、关系链、证据索引、缺失数据和待模拟参数。',
                'context_version：用于记录本次推演采用的现实数据快照。'],
-      page: '左侧显示图谱和类型图例，右侧显示节点／关系详情、支撑事实和构建日志。',
+      page: '左侧显示图谱，右侧显示节点／关系详情、支撑事实和构建日志。',
       next: '上下文构建完成后进入【建立独立推演世界】。' },
 
     { n: 4, stage: 'env', t: '建立独立推演世界',
@@ -5282,7 +5261,6 @@ window.V03Store = (function () {
       airports: false,            // 机场
       markets: false,             // 农贸市场
       risks: false,               // 地缘风险区，仅全球视角
-      legend: true,               // M11 图例
       mass: false                 // V1.2 仅绘真实存在于演示数据中的事实
     },
 
@@ -5291,14 +5269,14 @@ window.V03Store = (function () {
        数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
        因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
        规则见 docs/V04b-数据包接入说明.md §5。 */
-    time: '7d',                   // today | 7d | 30d | all；历史入口恢复旧版资料
+    time: '7d',                   // today | 7d | 30d；前端最多展示近 30 天
     cred: 'all',
     infl: 'all',
     q: '',
     factSearch: '',
     varieties: [],               // 首发品种，多选，跨层保留
     region: '',                   // 事实数据区域筛选，不移动地图
-    sourceMode: 'all',             // all | real；历史资料中可单独查看公开来源样本
+    sourceMode: 'all',             // 保留旧状态兼容；页面不提供来源筛选入口
 
     /* 三级分类字典的选中项：null = 默认全选 */
     catKeys: null,                // 事实层
@@ -5372,7 +5350,7 @@ window.V03Filter = (function () {
     { n: '宏观与公共事件', key: 'macro', color: '#b45309', subs: [{ n: '地缘与安全', items: [{ key: 'macro|地缘与安全|公共安全', n: '公共安全', e: '⚠️', kw: ['安全'] }] }] }
   ];
   const FACT_TREE_RAW = (D3 && D3.TREE && D3.TREE.length) ? D3.TREE : FALLBACK_TREE;
-  /* L2：一级分类改用低饱和配色（与整体明亮风格一致；地图点/图例/菜单同一套） */
+  /* L2：一级分类改用低饱和配色（与整体明亮风格一致） */
   const MUTED = { nature: '#5b8ea6', supply: '#6f9a6a', chain: '#5f9a94', market: '#b0736b', consume: '#8b7fa8', policy: '#6f86b8', macro: '#a08a63' };
   const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: MUTED[g.key] || g.color }));
   const leafOf = f => (D3 && D3.leafOf) ? D3.leafOf(f) : null;
@@ -5587,14 +5565,13 @@ window.V03Filter = (function () {
    F4 只画事实点 + 影响范围；不画事实之间线路；一级分类决定颜色，三级类型决定 Emoji
    F5 持久事实为稳定小点，不持续发光；新事实接入时一次瞬时闪光（约 1.2s 消退）
    F6 右下角快捷键 + 正上方缩放 ±（菜单内同步）
-   F7 底部横向图例（写入共享 #legend）
    F9 右侧两列紧凑瀑布流：无类型徽章，标题 → 摘要 → 地点/时间/来源
    F10 详情走右侧嵌套抽屉：核心事实 — 影响 — 证据来源 — 关联本体
    数据：agrilink-demo-v1（861 事实 / 377 本体 / 585 关系）· 默认口径 近 7 天 + 高可信 + 高影响
    ============================================================ */
 window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '', legendSig = '';
+  let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '';
   let freshFlashes = [], flashSeq = 0;
   let mapAnimationPaused = false;
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null, roamTimer: null };
@@ -5614,7 +5591,7 @@ window.V03Fact = (function () {
   const IMPACT_RANK = { high: 3, mid: 2, low: 1 };
   const catOf = f => (D.CATS[f.cat] || { n: f.cat, c: '#1d4ed8', e: '📌' });
   const leafOf = f => ((F.leafOf && F.leafOf(f)) || { e: catOf(f).e, n: '', key: '' });
-  /* F4/M6：一级分类决定颜色（低饱和色，与菜单/图例同一套） */
+  /* F4/M6：一级分类决定颜色（低饱和色，与菜单同一套） */
   const groupOf = f => {
     const g = (F.FACT_TREE || []).find(x => (x.subs || []).some(sb => (sb.items || []).some(it => it.key === leafOf(f).key)));
     return g || null;
@@ -5959,24 +5936,6 @@ window.V03Fact = (function () {
     }
   }
 
-  /* ---------- 图例（F7：横向，随筛选同步） ---------- */
-  function renderLegend() {
-    if (!window.V03Shell) return;
-    const st = S.state;
-    if (!st.sk.legend) return window.V03Shell.setLegend('');
-    const facts = F.mappable(F.factsAtLevel(st));
-    const byGroup = {};
-    facts.forEach(f => { const g = groupOf(f); if (g) byGroup[g.key] = (byGroup[g.key] || 0) + 1; });
-    const chips = (F.FACT_TREE || [])
-      .filter(g => byGroup[g.key])
-      .sort((a, b) => byGroup[b.key] - byGroup[a.key])
-      .map(g => '<span class="lg-i"><i style="background:' + g.color + '"></i>' + g.n + '</span>');
-    const marks = [];
-    if (st.sk.regions) marks.push('<span class="lg-i">🌾 农产品产区</span>');
-    if (st.sk.gates) marks.push('<span class="lg-i">⚓ 港口</span><span class="lg-i">✈️ 机场</span><span class="lg-i">🧊 冷链节点</span>');
-    window.V03Shell.setLegend(chips.concat(marks).join(''));
-  }
-
   /* ---------- 右侧卡片（F9） ---------- */
   const CRED_TXT = { high: '高可信', medium: '中可信', mid: '中可信', low: '低可信' };
   const WX_ICON = code => {
@@ -6144,42 +6103,16 @@ window.V03Fact = (function () {
   function renderCards() {
     const st = S.state;
     const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video');
-    const hunanFacts = F.facts({ ...st, time: 'all', region: '湖南', sourceMode: 'all', q: '', catKeys: null, varieties: [] });
-    const hunanTotal = hunanFacts.length;
-    const hunanPublic = hunanFacts.filter(f => f.prov === 'real').length;
-    const explore = '<div class="fc-explore"><b>历史资料仍在：' + D.FACTS.length + ' 条事实</b><span>当前筛选 ' + facts.length + ' 条</span>' +
-      '<span>湖南相关 ' + hunanTotal + ' 条（公开来源样本 ' + hunanPublic + ' 条，其余含模拟数据）</span><div>' +
-      '<button type="button" id="browseHunan"' + (st.region === '湖南' && st.time === 'all' && st.sourceMode !== 'real' ? ' aria-pressed="true"' : '') + '>浏览湖南全部历史</button>' +
-      '<button type="button" id="browseHunanPublic"' + (st.region === '湖南' && st.sourceMode === 'real' ? ' aria-pressed="true"' : '') + '>湖南公开来源</button>' +
-      '<button type="button" id="browseAll">查看全部历史</button></div></div>';
-    const wireExplore = () => {
-      dom.sideBody.querySelector('#browseHunan').onclick = () => {
-        S.set({ time: 'all', region: '湖南', sourceMode: 'all', varieties: [], catKeys: null, q: '',
-          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
-        dom.sideBody.scrollTop = 0;
-      };
-      dom.sideBody.querySelector('#browseHunanPublic').onclick = () => {
-        S.set({ time: 'all', region: '湖南', sourceMode: 'real', varieties: [], catKeys: null, q: '',
-          geo: { level: 'L3', focus: '湖南' }, sk: { regions: true, markets: true } });
-        dom.sideBody.scrollTop = 0;
-      };
-      dom.sideBody.querySelector('#browseAll').onclick = () => {
-        S.set({ time: 'all', region: '', sourceMode: 'all', varieties: [], catKeys: null, q: '', geo: { level: 'L1', focus: null } });
-        dom.sideBody.scrollTop = 0;
-      };
-    };
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
-      dom.sideBody.innerHTML = explore + '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
-      wireExplore();
+      dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
       const b = dom.sideBody.querySelector('#clrF');
       if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '', sourceMode: 'all' });
       return;
     }
     const scroll = dom.sideBody.scrollTop;
-    dom.sideBody.innerHTML = explore + '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
+    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
-    wireExplore();
     dom.sideBody.scrollTop = scroll;
     dom.sideBody.onscroll = () => {
       if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
@@ -6429,7 +6362,7 @@ window.V03Fact = (function () {
     const st = S.state;
     const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
-      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.legend, st.sk.live, st.theme]);
+      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
 
     dom.searchStatus.hidden = !st.q;
@@ -6454,9 +6387,6 @@ window.V03Fact = (function () {
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
-      st.sk.legend, st.sk.regions, st.sk.gates]);
-    if (nextLegendSig !== legendSig) { renderLegend(); legendSig = nextLegendSig; }
     const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
@@ -6470,7 +6400,6 @@ window.V03Fact = (function () {
       halos: st.sk.influence ? pts.length : 0,
       regionMarks: st.sk.regions ? D.REGIONS.length : 0,
       gateMarks: st.sk.gates ? D.GATES.length : 0,
-      legend: st.sk.legend, legendItems: document.querySelectorAll('#legend .lg-i').length,
       videoTotal: vid.length,
       videoEmbeddable: vid.filter(f => f.card && f.card.embeddable === 'yes' && f.card.embedUrl).length,   /* 已核验可嵌入的公开源 */
       videoStreamable: vid.filter(f => f.card && f.card.hlsUrl).length,                                    /* 有 m3u8 直连地址 */
@@ -6750,16 +6679,6 @@ window.V03Relation = (function () {
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
   }
 
-  /* ---------- 图例（F7 横向） ---------- */
-  function renderLegend(st) {
-    if (!window.V03Shell) return;
-    if (!st.sk.legend) return window.V03Shell.setLegend('');
-    const doms = D.DOMAINS.map(d => '<span class="lg-i"><i style="background:' + d.c + '"></i>' + d.n + '</span>').join('');
-    const lines = ['供应流向', '行政归属', '运输经由', '影响']
-      .map(t => '<span class="lg-i"><svg width="16" height="6" viewBox="0 0 16 6"><path d="M0 3h16" stroke="' + typeColor(t) + '" stroke-width="1.4" stroke-dasharray="3 2"/><circle cx="12" cy="3" r="1.4" fill="' + typeColor(t) + '"/></svg>' + t + ' 等关系线（方向由流光指示）</span>').join('');
-    window.V03Shell.setLegend('<span class="lg-cat">本体对象域</span>' + doms + '<span class="lg-sep"></span>' + lines);
-  }
-
   /* ---------- A6：抽屉内容（本体详情 / 关系详情） ---------- */
   function renderDrawer(box, d) {
     if (!box) return;
@@ -6853,14 +6772,13 @@ window.V03Relation = (function () {
     if (!root) return;
     const st = S.state;
     const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.sk.legend, st.theme, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
     const c = ensureChart();
     if (!c) return;
     c.setOption(option(objs, rels, st), { notMerge: true });
     renderPanel(st, objs);
-    renderLegend(st);
   }
 
   const debug = () => {
@@ -6967,7 +6885,6 @@ window.V03Sim = (function () {
    G1 顶部 24px 轻量工具条：菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置
    F2 左侧菜单四段：数据概览 / 分类筛选（F3 字典）/ 地图快捷控制 / 地图快捷键总开关
    F6 右下角快捷键组 + 正上方缩放 ±（同一组状态，菜单内同步）
-   F7 底部横向图例（各层自行填充；不进入菜单）
    F10/A5 右侧嵌套抽屉：事实详情 / 本体详情 / 关系详情逐层展开
    F8 底部窄条流水（产品语言，无技术字段）
    ============================================================ */
@@ -6993,7 +6910,6 @@ window.V03Sim = (function () {
     shield:  ['M12 3.2 5.4 6v6.1c0 4.8 2.9 7.9 6.6 8.7 3.7-.8 6.6-3.9 6.6-8.7V6L12 3.2Z', 'M9.2 12.1l2 2 3.6-3.9'],
     gauge:   ['M4 17.4a8.6 8.6 0 1 1 16 0', 'M12 17.4l4-5.4'],
     search:  ['M11 4.2a6.8 6.8 0 1 0 0 13.6 6.8 6.8 0 0 0 0-13.6Z', 'M16.1 16.1 21 21'],
-    legend:  ['M4 6.5h3M10 6.5h10', 'M4 12h3M10 12h10', 'M4 17.5h3M10 17.5h10'],
     play:    ['M8.5 5.4 19 12 8.5 18.6V5.4Z'],
     plus:    ['M12 5v14', 'M5 12h14'],
     minus:   ['M5 12h14'],
@@ -7057,7 +6973,7 @@ window.V03Sim = (function () {
   }
 
   /* ---------- F6：快捷键（地图右下角 + 菜单内同一组状态） ---------- */
-  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月'], ['all', '全部历史']];
+  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月']];
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
@@ -7070,8 +6986,7 @@ window.V03Sim = (function () {
     { k: 'regions', i: 'sprout', n: '主要产区', d: '标注主要农产品产区', kind: 'sw', get: s => s.sk.regions, set: v => ({ sk: { regions: v } }) },
     { k: 'gates', i: 'anchor', n: '港口', d: '标注主要贸易港口', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
     { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
-    { k: 'search', i: 'search', n: '搜索', d: '搜索事实标题', kind: 'input', get: s => s.q, set: v => ({ q: v }) },
-    { k: 'legend', i: 'legend', n: '图例', d: '显示 / 隐藏底部图例', kind: 'sw', get: s => s.sk.legend, set: v => ({ sk: { legend: v } }) }
+    { k: 'search', i: 'search', n: '搜索', d: '搜索事实标题', kind: 'input', get: s => s.q, set: v => ({ q: v }) }
   ];
   const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
     : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
@@ -7272,7 +7187,7 @@ window.V03Sim = (function () {
     const bNone = el('button', 'ghost sm', '全不选');
     bNone.onclick = () => S.set({ [field]: [] });
     quick.appendChild(bAll); quick.appendChild(bNone);
-    quick.appendChild(el('span', 'mn-tip', '三级事实类型决定地图筛选与图例；默认全选'));
+    quick.appendChild(el('span', 'mn-tip', '三级事实类型决定地图和卡片筛选；默认全选'));
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');
@@ -7561,7 +7476,6 @@ window.V03Sim = (function () {
     S.onEvent('toast', toast);
     S.onEvent('jump', p => { if (p && p.tab) S.set({ tab: p.tab }); });
     window.V03Shell = {
-      setLegend: html => { const box = $('legend'); if (box) { box.innerHTML = html; box.style.display = (S.state.sk.legend && html) ? '' : 'none'; } },
       drawers: drawerStackApi,
       toast
     };
@@ -7589,8 +7503,7 @@ window.V03Sim = (function () {
         dictL3On: document.querySelectorAll('#menuBody .l3.on').length,
         mapSk: document.querySelectorAll('#mapSk .sk').length,
         menuSk: document.querySelectorAll('#menuBody .mn-sk .sk').length,
-        zoom: document.querySelectorAll('#mapZoom button').length,
-        legendItems: document.querySelectorAll('#legend .lg-i').length
+        zoom: document.querySelectorAll('#mapZoom button').length
       }),
       provSummary: () => {
         const groups = {
