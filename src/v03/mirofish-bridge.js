@@ -1,4 +1,4 @@
-/* AgriLink v0.8.4 → MiroFish frontend preview. The payload stays in the browser. */
+/* AgriLink V1.2 experience → simulation preview. The payload stays in the browser. */
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;
@@ -17,7 +17,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v0.8.4',
+      source: 'AgriLink v0.8.5 · V1.2 事实层体验',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''

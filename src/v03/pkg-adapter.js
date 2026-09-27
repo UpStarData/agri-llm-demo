@@ -103,8 +103,9 @@ window.V03Pkg = (function () {
 
   /* ---------- 地理层级与省份下拉数据（全部来自数据包实体） ---------- */
   const REGION_PATH = path => (path || []);
-  const pathName = (path, level) => { const it = (path || []).find(p => p.level === level); return it ? it.name : null; };
-  const provinceOf = path => (path || []).find(p => p.level === 'province') || null;
+  const normalizePath = path => (path || []).map(p => Array.isArray(p) ? { level: p[0], code: p[1], name: p[2] } : p);
+  const pathName = (path, level) => { const it = normalizePath(path).find(p => p.level === level); return it ? it.name : null; };
+  const provinceOf = path => normalizePath(path).find(p => p.level === 'province') || null;
 
   const PROVINCES = (() => {
     const out = {};
@@ -123,7 +124,7 @@ window.V03Pkg = (function () {
   /* ---------- Fact → 内部事实模型 ---------- */
   const IMPACT_OF = s => (s >= 70 ? 'high' : s >= 40 ? 'mid' : 'low');
   const radiusOf = s => 80 + Math.round(s * 3.2);            /* 影响半径（公里）按 severity 折算，用于光晕与详情展示 */
-  const dateOf = f => String(f.occurredAt || f.publishedAt || f.timestamp || f.ingestedAt || '').slice(0, 10);
+  const dateOf = f => f.occurredAt ? String(f.occurredAt).slice(0, 10) : null;
   const regionLabel = f => {
     const path = f.geo.regionPath || [];
     const prov = pathName(path, 'province'), city = pathName(path, 'city');
@@ -139,7 +140,7 @@ window.V03Pkg = (function () {
   };
   const PKG_TODAY = (P.manifest && P.manifest.collectedAt) || '2026-09-21';
   const countryOf = f => {
-    const it = (f.regionPath || []).find(p => p.level === 'country');
+    const it = normalizePath(f.regionPath).find(p => p.level === 'country');
     return it ? it.code : null;
   };
   const MEDIA_NOTE = {
@@ -216,7 +217,7 @@ window.V03Pkg = (function () {
       cat: f.category, cardType: f.cardType, card: cleanCard(card), cardTypeName: f.cardType,
       taxonomy: f.taxonomy || {}, factType: f.factType, status: f.status,
       level: f.geo.scopeLayer || 'L1',
-      region: regionLabel(f), regionPath: f.geo.regionPath || [],
+      region: regionLabel(f), regionPath: normalizePath(f.geo.regionPath),
       province: (provinceOf(f.geo.regionPath) || {}).name || null,
       provinceCode: (provinceOf(f.geo.regionPath) || {}).code || null,
       city: pathName(f.geo.regionPath, 'city'),
@@ -226,7 +227,8 @@ window.V03Pkg = (function () {
       cred: f.credibility ? f.credibility.band : 'medium',
       credScore: f.credibility ? f.credibility.score : 0,
       impact: IMPACT_OF(f.severity), severity: f.severity,
-      radius: radiusOf(f.severity),
+      // 旧 severity 推算半径没有来源依据；V1.2 对缺失的 Jev 半径明确显示“未知”。
+      radius: Number.isFinite(Number(f.geo.impactRadiusKm)) && Number(f.geo.impactRadiusKm) > 0 ? Number(f.geo.impactRadiusKm) : null,
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
       embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,
@@ -307,7 +309,8 @@ window.V03Pkg = (function () {
     });
     return summary;
   }
-  const REBALANCE = rebalanceGenerated(FACTS);
+  // V1.2：不得改写事实发生时间、可信度或影响字段来制造“近期事实”。
+  const REBALANCE = { disabled: true, reason: '保留数据包原始字段' };
 
   /* ---------- Entity → 内部本体模型 ---------- */
   /* 实体代表点：数据包对少数市场/公司未取到门址坐标（geo=null）。这些是**有真实地理归属**的物理主体，

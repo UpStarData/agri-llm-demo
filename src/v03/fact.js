@@ -67,6 +67,9 @@ window.V03Fact = (function () {
       <div id="factMap"></div>
       <canvas id="factGlobe" width="1120" height="820" style="display:none"></canvas>
     </div>
+    <button class="fact-search-status" id="factSearchStatus" type="button" hidden></button>
+    <div class="fact-overlay-info" id="factOverlayInfo" hidden></div>
+    <div class="fact-chooser" id="factChooser" hidden></div>
     <aside class="fact-side" id="factSide"><div class="fs-body" id="sideBody"></div></aside>
   </div>`;
 
@@ -74,16 +77,16 @@ window.V03Fact = (function () {
     root = el; root.innerHTML = TPL;
     dom = {
       mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'),
-      side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody')
+      side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
+    dom.searchStatus.onclick = () => S.set({ q: '' });
     window.addEventListener('resize', () => { if (chart) chart.resize(); resizeGlobe(); });
     dom.globe.addEventListener('click', e => {
       const r = dom.globe.getBoundingClientRect();
       const hit = globeHit(e.clientX - r.left, e.clientY - r.top);
       if (!hit) return;
       if (hit.type === 'fact') return openFact(hit.id);
-      const o = hit.id && D.objById(hit.id);
-      if (o) S.set({ factId: null, factObj: o.id });
+      showOverlay(hit.id);
     });
     S.onEvent('stream:line', p => flashStar(p && p.fact, p && p.level));
   }
@@ -182,10 +185,31 @@ window.V03Fact = (function () {
   };
 
   const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
-  const radiusPx = f => Math.max(9, Math.min(26, (f.radius || 120) / (LEVEL[S.state.geo.level] || LEVEL.L2).divisor));
+  const radiusPx = f => {
+    if (!Number.isFinite(f.radius) || f.radius <= 0) return 0;
+    const width = (dom.map && dom.map.clientWidth) || 1000;
+    const kmPerPixel = (S.state.geo.level === 'L1' ? 40075 : 6900) / Math.max(1, width * camera.zoom);
+    return 2 * f.radius / kmPerPixel;
+  };
 
-  const DOT = { high: 6, mid: 5.2, low: 4.6 };      /* 事实点：统一红点，大小随重要性 */
+  const DOT_SIZE = 6;
   const DOTC = '#3f4c5f';          /* 统一中性色点（与关联层本体点一致，不用红色） */
+  const overlayAtLevel = list => list.filter(x => {
+    const lv = S.state.geo.level;
+    return lv === 'L1' || (lv === 'L2' ? x.lng >= 73 && x.lng <= 136 && x.lat >= 17.5 && x.lat <= 54.5
+      : x.lng >= 108 && x.lng <= 115 && x.lat >= 24 && x.lat <= 31);
+  });
+  const regionsAtLevel = () => overlayAtLevel(D.REGIONS).filter(x => !S.state.varieties.length || S.state.varieties.some(v => String(x.variety || '').includes(v) || (v === '车厘子' && String(x.variety || '').includes('樱桃'))));
+  const gatesAtLevel = kind => overlayAtLevel(D.GATES.filter(x => x.kind === kind));
+  const v12Overlay = kind => window.V03Overlays ? V03Overlays.at(kind, S.state.geo.level) : [];
+  const allOverlays = () => D.REGIONS.concat(D.GATES, window.V03Overlays ? V03Overlays.all : []);
+  function showOverlay(id) {
+    const x = allOverlays().find(o => o.id === id);
+    if (!x || !dom.overlayInfo) return;
+    dom.overlayInfo.hidden = false;
+    dom.overlayInfo.innerHTML = '<button type="button" class="overlay-close" aria-label="关闭">×</button><b>' + esc(x.name) + '</b><small>' + esc(({ region:'产区',port:'港口',airport:'机场',market:'农贸市场',risk:'地缘风险区' })[x.kind] || '叠加图层') + '</small><p>' + esc(x.description || x.variety || x.cargo || '预置对象位置示意') + '</p>';
+    dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
+  }
   const palette = () => S.state.theme === 'dark' ? {
     land: '#0b3f47', land2: '#14515a', line: 'rgba(143,178,184,.58)', ink: '#f2f6f7',
     tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', mass: 'rgba(152,190,196,.34)', dot: '#cde3e7'
@@ -198,41 +222,34 @@ window.V03Fact = (function () {
     const st = S.state, all = F.factsAtLevel(st);
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const lv = LEVEL[st.geo.level];
-    const halos = [], pts = [], high = [];
+    const halos = [], pts = [];
     facts.forEach(f => {
-      const sev = f.severity || 40;
-      halos.push({ id: f.id, value: [f.lng, f.lat], symbolSize: radiusPx(f),
-        itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-          { offset: 0, color: hexA(DOTC, .13) }, { offset: .55, color: hexA(DOTC, .06) }, { offset: 1, color: hexA(DOTC, 0) }] } } });
-      pts.push({ id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT[f.impact] || 5,
+      const diameter = radiusPx(f);
+      if (diameter >= 8) halos.push({ id: f.id, value: [f.lng, f.lat], symbolSize: diameter,
+        itemStyle: { color: hexA(DOTC, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(DOTC, .35), borderWidth: 1 } });
+      pts.push({ id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT_SIZE,
         itemStyle: { color: '#ffffff', borderColor: DOTC, borderWidth: 1.1 } });
-      if (f.impact === 'high' && sev >= 70) high.push({ id: f.id, name: f.title, value: [f.lng, f.lat] });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
     const mass = (window.V03Mass && st.sk.mass !== false)
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
     const p = palette();
-    const ripple = facts.filter(f => f.impact === 'high').slice(0, 60).map(f => ({
-      id: f.id, value: [f.lng, f.lat], symbolSize: Math.max(3, radiusPx(f) * .24), itemStyle: { color: dotColor(f) }
-    }));
     const series = [
       { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
         large: true, largeThreshold: 1000, progressive: 0, animation: false,
         itemStyle: { color: p.mass } },
-      { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: halos, silent: true, z: 2, symbol: 'circle' },
-      { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripple : [], silent: true, z: 3,
-        showEffectOn: 'render', rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 },
-        itemStyle: { opacity: .55 } },
+      { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: st.sk.influence ? halos : [], silent: true, z: 2, symbol: 'circle' },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' },
       flashSeries()
     ];
-    if (st.sk.regions) markerSeries('regions', D.REGIONS, '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
+    if (st.sk.regions) markerSeries('regions', regionsAtLevel(), '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
     if (st.sk.gates) {
-      markerSeries('gatesP', D.GATES.filter(g => g.kind === 'port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-      markerSeries('gatesA', D.GATES.filter(g => g.kind === 'airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-      markerSeries('gatesN', D.GATES.filter(g => g.kind === 'node'), '#7e22ce', '🧊', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+      markerSeries('gatesP', gatesAtLevel('port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
     }
+    if (st.sk.airports) markerSeries('gatesA', gatesAtLevel('airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+    if (st.sk.markets) markerSeries('markets', v12Overlay('market'), '#a16207', '🏪', 13, true).forEach(x => series.push(x));
+    if (st.sk.risks && st.geo.level === 'L1') markerSeries('risks', v12Overlay('risk'), '#b91c1c', '⚠️', 13, false).forEach(x => series.push(x));
     return {
       backgroundColor: 'transparent',
       /* Full map rebuilds (including level changes) must not tween independently of geo points. */
@@ -260,7 +277,7 @@ window.V03Fact = (function () {
             const f = D.factById(p.data.id); if (!f) return '';
             return '<b>' + esc(f.title) + '</b><br>' + esc(f.region) + ' · ' + f.date + '<br>' + esc(leafOf(f).n || catOf(f).n);
           }
-          const it = D.REGIONS.concat(D.GATES).find(r => r.id === (p.data || {}).id);
+          const it = allOverlays().find(r => r.id === (p.data || {}).id);
           return it ? '<b>' + esc(it.name) + '</b>' + (it.variety ? '<br>' + esc(it.variety) : '') : (p.name || '');
         }
       },
@@ -320,11 +337,20 @@ window.V03Fact = (function () {
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
+    const selected = D.factById(id);
+    const same = selected && F.mappable(F.factsAtLevel(S.state)).filter(f => Math.abs(f.lng - selected.lng) < 0.00001 && Math.abs(f.lat - selected.lat) < 0.00001);
+    if (same && same.length > 1) {
+      dom.chooser.hidden = false;
+      dom.chooser.innerHTML = '<button class="overlay-close" type="button" aria-label="关闭">×</button><b>此位置有 ' + same.length + ' 条事实</b><div class="fact-chooser-list"></div>';
+      dom.chooser.querySelector('.overlay-close').onclick = () => { dom.chooser.hidden = true; };
+      same.slice(0, 50).forEach(f => {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = (f.date || '时间待核') + ' · ' + f.title;
+        b.onclick = () => { dom.chooser.hidden = true; S.set({ factId: f.id, logOpen: false }); };
+        dom.chooser.querySelector('.fact-chooser-list').appendChild(b);
+      });
+      return;
+    }
     S.set({ factId: id, logOpen: false });
-    const card = dom.sideBody && dom.sideBody.querySelector('[data-fid="' + id + '"]');
-    if (card) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    const f = D.factById(id);
-    if (f && f.level === 'L3' && S.state.geo.level !== 'L3') S.set({ geo: { level: 'L3', focus: String(f.province || '湖南').replace(/省|市$/g, '') } });
   }
   function focusOnMap(f) {
     if (!f || f.lng == null || S.state.sk.mode3d) return;
@@ -333,9 +359,8 @@ window.V03Fact = (function () {
   }
   function onMapClick(p) {
     const st = S.state, sid = p.seriesId || '';
-    if (sid.indexOf('regions') === 0 || sid.indexOf('gates') === 0) {
-      const it = D.REGIONS.concat(D.GATES).find(r => r.id === (p.data || {}).id);
-      if (it && it.objId) S.set({ factId: null, factObj: it.objId });   /* 就地看本体详情，不切 Tab */
+    if (/^(regions|gates|markets|risks)/.test(sid)) {
+      showOverlay((p.data || {}).id);
       return;
     }
     if (sid === 'facts' && p.data && p.data.id) return openFact(p.data.id);
@@ -479,27 +504,30 @@ window.V03Fact = (function () {
       '<div class="fs-why">' + esc(c.fallbackReason || '该视频源暂不可直接播放，保留静态卡片') + '</div>' +
       (c.embedUrl ? '<a class="ext" href="' + esc(c.embedUrl) + '" target="_blank" rel="noopener noreferrer">打开原始视频源</a>' : '') + '</div>';
   }
+  const dataLabel = f => f.prov === 'real' ? '真实来源' : f.prov === 'deidentified' ? '脱敏数据' : '模拟数据';
+  const sourceCount = f => new Set((f.evidence || []).map(e => e.t || e.url || e.k).filter(Boolean)).size;
   function cardHTML(f, fresh) {
     const c = f.card || {}, cat = catOf(f);
-    const foot = '<div class="fcard-foot"><span>' + esc(f.region) + '</span><span>·</span><span>' + f.date + '</span>' +
-      '<span class="sp"></span><span class="fcard-mark">' + esc(CRED_TXT[f.cred] || '') + (f.impact === 'high' ? ' · <em>高影响</em>' : '') + '</span></div>';
+    const foot = '<div class="fcard-foot"><span>' + esc(f.region || '') + '</span>' +
+      (f.date ? '<span>·</span><span>' + esc(f.date) + '</span>' : '') +
+      '<span class="sp"></span><span class="fcard-mark">' + sourceCount(f) + ' 个来源</span></div>';
     let body = '';
     switch (f.cardType) {
       case 'price': {
-        const s = (c.trend && c.trend.length > 1) ? c.trend : [Number(c.priceValue) || 0, Number(c.priceValue) || 0];
-        const ch = typeof c.changePct === 'number' ? c.changePct : 0, up = ch >= 0;
+        const s = (c.trend && c.trend.length > 1) ? c.trend : null;
+        const ch = typeof c.changePct === 'number' ? c.changePct : null, up = ch == null || ch >= 0;
         body = '<h5>' + esc(c.commodityName || f.title) + '</h5>' +
-          '<div class="price-row"><span class="price-v">' + fmtNum(c.priceValue) + '</span>' +
-          '<span class="price-d ' + (up ? 'up' : 'down') + '">' + (up ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(1) + '%</span>' +
-          '<span class="price-u">' + esc(c.priceUnit || '') + '</span></div>' + spark(s, up) +
-          '<p>' + esc(f.summary) + '</p>';
+          (c.priceValue != null ? '<div class="price-row"><span class="price-v">' + fmtNum(c.priceValue) + '</span>' +
+          (ch == null ? '' : '<span class="price-d ' + (up ? 'up' : 'down') + '">' + (up ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(1) + '%</span>') +
+          '<span class="price-u">' + esc(c.priceUnit || '') + '</span></div>' : '') + (s ? spark(s, up) : '') +
+          '<p>' + esc(String(f.summary || '').slice(0, 50)) + '</p>';
         break;
       }
       case 'weather': {
-        const lv = c.alertLevel || 'blue';
+        const lv = c.alertLevel;
         body = '<div class="wx"><span class="wx-i">' + WX_ICON(c.weatherIconCode) + '</span><span class="wx-t">' + esc(c.regionName || f.region) + '</span>' +
-          '<span class="alert alert-' + lv + '">' + ({ red: '红色', orange: '橙色', yellow: '黄色', blue: '蓝色' }[lv] || lv) + '预警</span></div>' +
-          '<h5>' + esc(f.title) + '</h5><p>' + esc(c.impactText || f.summary) + '</p>';
+          (lv ? '<span class="alert alert-' + esc(lv) + '">' + ({ red: '红色', orange: '橙色', yellow: '黄色', blue: '蓝色' }[lv] || esc(lv)) + '预警</span>' : '') + '</div>' +
+          '<h5>' + esc(f.title) + '</h5><p>' + esc(String(c.impactText || f.summary || '').slice(0, 50)) + '</p>';
         break;
       }
       case 'policy':
@@ -510,10 +538,10 @@ window.V03Fact = (function () {
         const hasQuote = !!Number(c.lastPrice);
         const ch = typeof c.changePct === 'number' ? c.changePct : 0, up = ch >= 0;
         body = '<h5>' + esc(c.instrumentName || f.title) + '<small class="sym">' + esc(c.symbol || '') + '</small></h5>' +
-          kbar(c.kline || []) + '<div class="price-row"><span class="price-v">' + (hasQuote ? fmtNum(c.lastPrice) : '—') + '</span>' +
-          (hasQuote && ch ? '<span class="price-d ' + (up ? 'up' : 'down') + '">' + (up ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(2) + '%</span>' : '') +
-          '<span class="price-u">' + esc(c.unit || '') + '</span></div>' +
-          '<div class="fcard-note">' + esc(c.exchange || '') + (hasQuote ? '' : ' · 暂无实时报价') + '</div>';
+          (c.kline && c.kline.length >= 2 ? kbar(c.kline) : '') + (hasQuote ? '<div class="price-row"><span class="price-v">' + fmtNum(c.lastPrice) + '</span>' +
+          (ch ? '<span class="price-d ' + (up ? 'up' : 'down') + '">' + (up ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(2) + '%</span>' : '') +
+          '<span class="price-u">' + esc(c.unit || '') + '</span></div>' : '') +
+          (c.exchange ? '<div class="fcard-note">' + esc(c.exchange) + '</div>' : '');
         break;
       }
       case 'video':
@@ -524,38 +552,39 @@ window.V03Fact = (function () {
           '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
-    return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + f.id + '" tabindex="0">' +
-      (fresh ? '<span class="fresh-tag">新接入</span>' : '') + body + foot + '</article>';
+    return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
+      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span><span>' + dataLabel(f) + '</span></div>' +
+      body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 
+  let visibleCardCount = 20;
   function renderCards() {
     const st = S.state;
-    let facts = F.factsAtLevel(st);
-    /* v07：直播卡常驻（已核验可嵌入的公开源不受事实筛选影响），新接入事实置顶 */
-    const freshIds = (st.newFacts || []).filter(id => D.factById(id));
-    const playable = D.FACTS.filter(f => isPlayable(f) && facts.every(x => x.id !== f.id));
-    facts = freshIds.map(id => D.factById(id)).concat(playable).concat(facts);
+    const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video');
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
       dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
       const b = dom.sideBody.querySelector('#clrF');
-      if (b) b.onclick = () => S.set({ time: '7d', cred: 'high', infl: 'high', q: '', catKeys: null });
+      if (b) b.onclick = () => S.set({ time: '7d', q: '', catKeys: null, varieties: [], region: '' });
       return;
     }
-    dom.sideBody.innerHTML = '<div class="fcards">' + facts.map(f => cardHTML(f, freshIds.includes(f.id))).join('') + '</div>';
+    const scroll = dom.sideBody.scrollTop;
+    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
+      (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
+    dom.sideBody.scrollTop = scroll;
+    dom.sideBody.onscroll = () => {
+      if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
+        visibleCardCount += 20;
+        renderCards();
+      }
+    };
     dom.sideBody.querySelectorAll('.fcard').forEach(el => {
       const open = () => {
-        const f = D.factById(el.dataset.fid);
-        focusOnMap(f);
         S.set({ factId: el.dataset.fid, logOpen: false });
       };
       el.onclick = open;
       el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
     });
-    if (st.factId) {
-      const on = dom.sideBody.querySelector('[data-fid="' + st.factId + '"]');
-      if (on) on.classList.add('on');
-    }
     VIS.sync();
   }
 
@@ -566,56 +595,59 @@ window.V03Fact = (function () {
     if (!f) { box.innerHTML = ''; return; }
     const c = f.card || {}, cat = catOf(f), leaf = leafOf(f);
     const objs = (f.objects || []).map(id => D.objById(id)).filter(Boolean);
-    const path = (f.regionPath || []).map(x => x.name).join(' › ') || f.region;
+    const path = (f.regionPath || []).map(x => x.name).filter(Boolean).join(' › ') || f.region;
     const logs = (D.STREAM_SEQ || []).filter(e => e.factId === f.id).slice(0, 20);
+    const evidence = f.evidence || [];
+    const status = f.review === 'conflict' ? '存在冲突' : evidence.length === 1 ? '单一来源' : '待补证（尚未核实来源独立性）';
+    const scope = { L1: '全球', L2: '中国', L3: '湖南', hidden: '不显示' }[f.level] || '未判定';
+    const row = (label, value) => value == null || value === '' ? '' : '<div class="fd-row"><b>' + esc(label) + '</b><span>' + esc(value) + '</span></div>';
+    const metric = f.metric && f.metric.value != null ? [f.metric.value, f.metric.unit, f.metric.period].filter(Boolean).join(' · ') : '';
+    const typeFields = {
+      price: [['价格对象', c.commodityName], ['市场层级', c.marketLevel], ['当前值', c.priceValue != null ? c.priceValue + ' ' + (c.priceUnit || '') : ''], ['变化幅度', c.changePct != null ? c.changePct + '%' : '']],
+      weather: [['天气类型', c.weatherType], ['预警等级', c.alertLevel], ['覆盖范围', c.regionName], ['受影响环节', c.impactText]],
+      policy: [['发布机构', c.issuer], ['生效时间', c.effectiveDate], ['政策动作', c.impactSummary]],
+      market: [['指数名称', c.instrumentName], ['指数值', c.lastPrice], ['交易所', c.exchange], ['基期', c.basePeriod]]
+    }[f.cardType] || [];
     box.innerHTML = `
       <div class="fd">
-        <div class="fd-id">${esc(f.date)} · ${esc(f.region)} · ${esc(cat.n)}${leaf.n ? ' · ' + esc(leaf.n) : ''}</div>
+        <div class="fd-id">事实 ID：${esc(f.id)}</div>
         <h3>${esc(f.title)}</h3>
-        <div class="fd-chips fcard-mark">${esc(CRED_TXT[f.cred] || '')}${f.impact === 'high' ? ' · <em>高影响</em>' : ''}${f.level === 'L3' && f.province ? ' · ' + esc(f.province) : ''}</div>
-
-        <div class="fd-sec">
-          <h4>核心事实</h4>
-          <p>${esc(f.summary)}</p>
-          ${f.cardType === 'video' ? videoBlock(f) : ''}
-          ${f.cardType === 'price' && c.trend ? spark(c.trend, (c.changePct || 0) >= 0) : ''}
-          ${f.cardType === 'market' ? kbar(c.kline || []) : ''}
+        <div class="fd-sec"><h4>事实摘要</h4><p>${esc(f.summary || '来源材料未提供摘要')}</p></div>
+        <div class="fd-sec"><h4>分类与时间</h4>
+          ${row('分类', [leaf.group, leaf.sub, leaf.n].filter(Boolean).join(' › '))}
+          ${row('发生时间', f.occurredAt || f.date || '来源材料未提供发生时间')}
+          ${row('地理范围', path || '来源材料未提供可靠位置')}
         </div>
-
-        <div class="fd-sec">
-          <h4>影响 <small>当前确认影响区域与判断依据</small></h4>
-          <div class="impact">
-            <div class="viz">${f.radius}<br><span style="font-size:.5625rem">km</span></div>
-            <div class="txt">
-              <b>${f.impact === 'high' ? '高影响' : f.impact === 'mid' ? '中影响' : '低影响'}</b> · 影响范围约 ${f.radius} km<br>
-              ${esc(path)}<br>
-              判断依据：${f.severity >= 70 ? '证据明确的事实' : '模型估算为主'}
-            </div>
-          </div>
+        <div class="fd-sec"><h4>涉及本体 <small>点击进入关联层</small></h4>
+          <div>${objs.map(o => { const dm = D.domain(o.domain); return '<span class="objchip" data-obj="' + esc(o.id) + '"><span class="d" style="background:' + dm.c + '"></span><b>' + esc(o.name) + '</b>' + esc(dm.n) + '</span>'; }).join('') || '<p>暂无已确认本体；Jev 候选尚未接入。</p>'}</div>
         </div>
-
-        <div class="fd-sec">
-          <h4>证据来源 <small>${f.evidence.length} 条</small></h4>
-          ${f.evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k)}<span>${esc(e.t)}</span></div><q>${esc(e.q)}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('')}
+        <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
+        <div class="fd-sec"><h4>显示层级与地理影响</h4>
+          ${row('显示层级', scope + '（数据包标注，Jev 判断依据待接入）')}
+          ${row('地理影响半径', f.radius ? f.radius + ' km（演示数据估算）' : '未知：材料中无可核实半径')}
         </div>
-
-        <div class="fd-sec">
-          <h4>关联本体 <small>${objs.length} 个</small></h4>
-          <div>${objs.map(o => { const dm = D.domain(o.domain); return '<span class="objchip" data-obj="' + o.id + '"><span class="d" style="background:' + dm.c + '"></span><b>' + esc(o.name) + '</b>' + esc(dm.n) + '</span>'; }).join('') || '<p>本条事实暂未关联本体对象。</p>'}</div>
+        <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
+        <div class="fd-sec"><h4>证据与来源 <small>${evidence.length} 条</small></h4>
+          ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
+          ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
-
+        <div class="fd-sec"><h4>数据来源类型</h4>${row('数据状态', dataLabel(f))}${row('材料类型', f.prov === 'real' ? '公开来源' : '演示样本')}</div>
+        ${typeFields.filter(([, v]) => v != null && v !== '').length ? '<div class="fd-sec"><h4>类型字段</h4>' + typeFields.map(([k, v]) => row(k, v)).join('') + '</div>' : ''}
         <div class="fd-actions">
           <button class="btn sec" id="toRel">在关联层查看</button>
-          <button class="btn ter" id="toLog">${st.logOpen ? '收起处理记录' : '处理记录'}</button>
+          <button class="btn sec" id="toSim">基于该事实发起推演</button>
+          <button class="btn ter" id="toLog">${st.logOpen ? '收起事实形成过程' : '查看事实形成过程'}</button>
         </div>
-        ${st.logOpen ? '<div class="fd-sec"><h4>处理记录</h4><div class="rec-log">' + (logs.length ? logs.map(l => '<div>' + esc(l.text) + '</div>').join('') : '<div>暂无处理记录</div>') + '</div></div>' : ''}
+        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + row('采集时间', f.ingestedAt || '采集时间未记录') + row('抽取时间', '数据包未提供') + row('处理版本', '数据包未提供') + row('最近更新', f.ingestedAt || '更新时间未记录') + '<div class="rec-log">演示日志 ' + logs.length + ' 条，不代表实时后台任务。</div></div>' : ''}
       </div>`;
     box.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => S.set({
-      tab: 'relation', factId: null, carry: uniq([...(st.carry || []), f.id]),
+      tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]),
       rel: { sel: n.dataset.obj, kind: 'object', focusFact: f.id, stack: [{ kind: 'object', id: n.dataset.obj }] }
     }));
     const toRel = box.querySelector('#toRel');
-    if (toRel) toRel.onclick = () => S.set({ tab: 'relation', factId: null, carry: uniq([...(st.carry || []), f.id]), rel: { focusFact: f.id, sel: null, kind: null, stack: [] } });
+    if (toRel) toRel.onclick = () => S.set({ tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]), rel: { focusFact: f.id, sel: null, kind: null, stack: [] } });
+    const toSim = box.querySelector('#toSim');
+    if (toSim) toSim.onclick = () => S.set({ tab: 'sim', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]) });
     const toLog = box.querySelector('#toLog');
     if (toLog) toLog.onclick = () => S.set({ logOpen: !st.logOpen });
     VIS.sync();
@@ -710,7 +742,7 @@ window.V03Fact = (function () {
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = dark ? 'rgba(79,180,218,.62)' : 'rgba(94,113,119,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.forEach(f => {
+    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
       const p = gProject(f.lng, f.lat, cx, cy, R);
       if (p.z <= 0) return;
       const rr = radiusPx(f) * .9;
@@ -730,7 +762,9 @@ window.V03Fact = (function () {
       ctx.fillText(emojiOf(f), p.x, p.y + 3);
       hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
     });
-    const marks = (st.sk.regions ? D.REGIONS : []).concat(st.sk.gates ? D.GATES : []);
+    const marks = (st.sk.regions ? regionsAtLevel() : [])
+      .concat(st.sk.gates ? gatesAtLevel('port') : [], st.sk.airports ? gatesAtLevel('airport') : [],
+        st.sk.markets ? v12Overlay('market') : [], st.sk.risks ? v12Overlay('risk') : []);
     marks.forEach(m => {
       const p = gProject(m.lng, m.lat, cx, cy, R);
       if (p.z <= 0) return;
@@ -738,7 +772,7 @@ window.V03Fact = (function () {
       ctx.fillStyle = dark ? '#d9eef1' : '#fff'; ctx.fill();
       ctx.strokeStyle = m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1';
       ctx.lineWidth = 1; ctx.stroke();
-      hits.push({ x: p.x, y: p.y, type: 'mark', id: m.objId });
+      hits.push({ x: p.x, y: p.y, type: 'mark', id: m.id });
     });
     globe.hits = hits;
   }
@@ -748,7 +782,7 @@ window.V03Fact = (function () {
     let best = null, bd = 14 * sx;
     (globe.hits || []).forEach(h => { const d = Math.hypot(h.x - p.x, h.y - p.y); if (d < bd) { bd = d; best = h; } });
     if (!best) return null;
-    return { type: best.type === 'fact' ? 'fact' : 'obj', id: best.id };
+    return { type: best.type === 'fact' ? 'fact' : 'mark', id: best.id };
   }
   function loopGlobe(now) {
     globe.raf = requestAnimationFrame(loopGlobe);
@@ -784,10 +818,13 @@ window.V03Fact = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    const key = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
+    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
-      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.legend, st.sk.live, st.theme]);
+      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.legend, st.sk.live, st.theme]);
     if (key === sig) return; sig = key;
+
+    dom.searchStatus.hidden = !st.q;
+    if (st.q) dom.searchStatus.textContent = '搜索结果：' + st.q + ' · ' + F.facts(st).length + ' 条  ×';
 
     syncMode();
     const lvKey = st.geo.level + '|' + (st.geo.focus || '');
@@ -801,19 +838,18 @@ window.V03Fact = (function () {
         if (st.geo.level === 'L3' && focus) { camera.center = [focus[0], focus[1]]; camera.zoom = focus[2]; }
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
-      const nextMapSig = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
-        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.theme]);
+      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
+        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme]);
       if (nextMapSig !== mapSig) {
         c.setOption(mapOption(), { notMerge: true });
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextLegendSig = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
+    const nextLegendSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.geo.level, st.geo.focus,
       st.sk.legend, st.sk.regions, st.sk.gates]);
     if (nextLegendSig !== legendSig) { renderLegend(); legendSig = nextLegendSig; }
-    const nextCardSig = JSON.stringify([st.time, st.cred, st.infl, st.q, st.catKeys, st.geo.level, st.geo.focus,
-      st.factId, st.panels.cards, st.newFacts]);
-    if (nextCardSig !== cardSig) { renderCards(); cardSig = nextCardSig; }
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.panels.cards, st.sk.live]);
+    if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 
   const debug = () => {
