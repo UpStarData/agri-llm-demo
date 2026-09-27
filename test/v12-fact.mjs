@@ -54,33 +54,27 @@ try {
   await page.locator('#factSearchStatus').click();
   assert.equal(await page.evaluate(() => V03Store.state.q), '');
 
-  const historicId = 'real-hn-hongxing-price-20260911';
-  assert.equal(await page.evaluate(id => V03Filter.facts().some(f => f.id === id), historicId), false);
-  await page.locator('#browseHunan').click();
-  const hunan = await page.evaluate(id => ({
-    time: V03Store.state.time, region: V03Store.state.region, level: V03Store.state.geo.level,
-    total: V03Filter.facts().length, historic: V03Filter.facts().some(f => f.id === id),
-    stored: V03Data.FACTS.length, cards: document.querySelectorAll('.fcard').length
-  }), historicId);
-  assert.equal(hunan.time, 'all');
-  assert.equal(hunan.region, '湖南');
-  assert.equal(hunan.level, 'L3');
-  assert(hunan.total >= 300 && hunan.stored >= 900 && hunan.historic);
-  assert.equal(hunan.cards, 20);
-
-  await page.locator('#browseHunanPublic').click();
-  const publicFacts = await page.evaluate(id => ({
-    total: V03Filter.facts().length,
-    allPublic: V03Filter.facts().every(f => f.prov === 'real'),
-    historic: V03Filter.facts().some(f => f.id === id)
-  }), historicId);
-  assert(publicFacts.total >= 10 && publicFacts.allPublic && publicFacts.historic);
-
-  await page.locator('#browseAll').click();
-  assert.equal(await page.evaluate(() => V03Filter.facts().length), hunan.stored);
+  assert.equal(await page.evaluate(() => V03Data.FACTS.length), 934, 'the data package is preserved');
+  assert.equal(await page.locator('#legend, .fc-explore, #browseHunan, #browseHunanPublic, #browseAll').count(), 0);
+  assert.equal((await page.locator('body').innerText()).includes('图例'), false);
+  assert.equal((await page.locator('body').innerText()).includes('历史资料仍在'), false);
+  assert.equal((await page.locator('body').innerText()).includes('全部历史'), false);
+  const hunan = await page.evaluate(() => {
+    V03Store.set({ time: '30d', region: '湖南', varieties: [], catKeys: null, q: '' });
+    return {
+      count: V03Filter.facts().length,
+      knownSource: V03Filter.facts().some(f => f.id === 'real-hn-hongxing-price-20260911')
+    };
+  });
+  assert(hunan.count > 0 && hunan.knownSource, 'Hunan data remains reachable within the documented 30-day filter');
+  await page.locator('#tabs button[data-tab="relation"]').click();
+  assert.equal(await page.locator('#legend').count(), 0);
+  assert.equal((await page.locator('body').innerText()).includes('图例'), false);
+  await page.locator('#tabs button[data-tab="sim"]').click();
+  assert.equal((await page.locator('body').innerText()).includes('类型图例'), false);
 
   assert.deepEqual(errors, []);
-  console.log('PASS V1.2 fact workflow: list, detail, simulation, map independence, filters, overlays, search, Hunan history');
+  console.log('PASS V1.2 fact workflow: list, detail, simulation, map independence, filters, overlays, search, no extra history controls or legend');
 } finally {
   await browser.close();
 }
