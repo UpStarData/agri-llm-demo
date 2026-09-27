@@ -21,13 +21,15 @@ window.V03Store = (function () {
     /* M1–M6 / M11：开关型快捷键 */
     sk: {
       mode3d: false,              // M1 2D / 3D
-      influence: true,            // M2 影响力扩散动画
+      influence: true,            // V1.2 地理影响圆
       fullscreen: false,          // M3 全屏
       live: true,                 // M4 直播流（默认开启：已验证可嵌入的公开直播源直接播放）
       regions: false,             // M5 产区
-      gates: false,               // M6 港口与机场
-      legend: true,               // M11 图例
-      mass: true                  // 质量级采样点阵（表达数据库体量）
+      gates: false,               // 港口
+      airports: false,            // 机场
+      markets: false,             // 农贸市场
+      risks: false,               // 地缘风险区，仅全球视角
+      mass: false                 // V1.2 仅绘真实存在于演示数据中的事实
     },
 
     /* M7–M10：选择型快捷键（与筛选状态同源）
@@ -35,10 +37,14 @@ window.V03Store = (function () {
        数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
        因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
        规则见 docs/V04b-数据包接入说明.md §5。 */
-    time: '7d',                   // 7d | 30d | 90d | all
-    cred: 'high',                 // high | mid | low | all
-    infl: 'high',                 // high | mid | low | all
+    time: '7d',                   // today | 7d | 30d；前端最多展示近 30 天
+    cred: 'all',
+    infl: 'all',
     q: '',
+    factSearch: '',
+    varieties: [],               // 首发品种，多选，跨层保留
+    region: '',                   // 事实数据区域筛选，不移动地图
+    sourceMode: 'all',             // 保留旧状态兼容；页面不提供来源筛选入口
 
     /* 三级分类字典的选中项：null = 默认全选 */
     catKeys: null,                // 事实层
@@ -46,6 +52,7 @@ window.V03Store = (function () {
 
     geo: { level: 'L1', focus: null },   // L1 全球（默认）/ L2 全国 / L3 省区（focus=省名）
     factId: null, logOpen: false,        // 事实详情抽屉
+    factReturnId: null,                   // 从事实详情进入关联/推演后返回时恢复
     factObj: null,                       // 事实层内直接查看的本体对象（点击产区/口岸标记，不切 Tab）
     newFacts: [],                        // 最近接入的事实（卡片流顶部显示「新接入」）
     carousel: false,                     // 质量级点阵开关（默认开）

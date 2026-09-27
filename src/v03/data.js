@@ -6,7 +6,7 @@
 window.V03Data = (function () {
   /* 数据包（agrilink-demo-v1 · LLM-292）为准；缺失时退回上一轮自带数据（src/v03/atlas-data.js） */
   const PKG = (window.V03Pkg && window.V03Pkg.FACTS && window.V03Pkg.FACTS.length) ? window.V03Pkg : null;
-  const TODAY = PKG ? PKG.TODAY : '2026-09-20';   // 基准日取自数据包 collectedAt
+  const TODAY = new Date().toISOString().slice(0, 10); // 以实际浏览日期计算“今日”和时间窗
 
   /* 事实分类（L1 大类，10 个受控值）—— 冷色色系，与关联层暖色系完全区分 */
   const CATS = (() => {
@@ -519,9 +519,9 @@ window.V03Data = (function () {
     /* 相对时间窗口 */
     inWindow: (date, win) => {
       if (win === 'all') return true;
-      const days = { '7d': 7, '30d': 30, '90d': 90 }[win] || 90;
-      const t = Date.parse(date + 'T00:00:00Z'), now = Date.parse(TODAY + 'T00:00:00Z');
-      return (now - t) / 86400000 <= days;
+      const days = { today: 0, '7d': 7, '30d': 30 }[win] ?? 30;
+      const t = Date.parse(String(date || '').slice(0, 10) + 'T00:00:00Z'), now = Date.parse(TODAY + 'T00:00:00Z');
+      return Number.isFinite(t) && t <= now && (now - t) / 86400000 <= days;
     }
   };
 })();
