@@ -1,5 +1,4 @@
 /* AgriLink v0.8.4 → MiroFish frontend preview. The payload stays in the browser. */
-window.V03LegacySim = window.V03Sim;
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;
@@ -66,7 +65,7 @@ window.V03Sim = (function () {
   function mount(el) {
     root = document.createElement('div');
     root.className = 'miro-bridge';
-    root.innerHTML = '<div class="miro-bridge-bar"><div class="miro-bridge-title"><b>推演工作台</b><small>AgriLink × MiroFish</small></div><div class="miro-bridge-evidence" aria-live="polite"></div><label class="miro-bridge-prompt">推演问题 <textarea rows="2" aria-label="推演问题"></textarea></label><button type="button" class="miro-bridge-send">送入 MiroFish ↓</button><p class="miro-bridge-note">当前为前端体验：可查看页面及输入衔接，实际推演仍需接入 MiroFish 后端。</p></div><iframe class="miro-bridge-frame" title="MiroFish 推演前端" loading="lazy"></iframe>';
+    root.innerHTML = '<div class="miro-bridge-bar"><div class="miro-bridge-title"><b>agrilink 推演工作台</b><small>五步流程体验</small></div><div class="miro-bridge-evidence" aria-live="polite"></div><label class="miro-bridge-prompt">推演问题 <textarea rows="2" aria-label="推演问题"></textarea></label><button type="button" class="miro-bridge-send">载入推演 ↓</button><p class="miro-bridge-note">演示模式：图谱、轮次、报告及互动内容为模拟数据，不代表实际预测。</p></div><iframe class="miro-bridge-frame" title="agrilink 推演流程" loading="lazy"></iframe>';
     el.replaceChildren(root);
     frame = root.querySelector('iframe');
     promptInput = root.querySelector('textarea');
