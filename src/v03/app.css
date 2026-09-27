@@ -271,6 +271,13 @@ svg{display:block}
 .fcard-v12-meta span:last-child{color:var(--accent);font-weight:var(--f-semi)}
 .fcard-detail{display:block;margin-top:6px;padding:3px 0;border:0;background:none;color:var(--accent);font-size:.65625rem;cursor:pointer}
 .fc-more{text-align:center;padding:12px;color:var(--dim);font-size:.65625rem}
+.fc-explore{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:0 0 7px;padding:7px 8px;border:1px solid var(--glass-line);border-radius:var(--r-sm);background:var(--glass-2);color:var(--ink);font-size:.65625rem}
+.fc-explore b{font-weight:var(--f-semi)}
+.fc-explore span{color:var(--dim)}
+.fc-explore div{display:flex;gap:5px;width:100%;flex-wrap:wrap}
+.fc-explore button{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel);color:var(--accent);font-size:.625rem;padding:3px 7px;cursor:pointer}
+.fc-explore button:hover{border-color:var(--accent)}
+.fc-explore button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
 .mn-v12-filters{margin-top:10px;border-top:1px solid var(--hair);padding-top:6px}
 .mn-varieties{display:flex;gap:4px;flex-wrap:wrap}
 .mn-varieties .l3{padding:4px 8px}

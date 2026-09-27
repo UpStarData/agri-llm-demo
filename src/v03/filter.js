@@ -88,7 +88,8 @@ window.V03Filter = (function () {
     const body = [f.title, f.summary, f.card && f.card.commodityName, ...(f.objects || []).map(id => (D.objById(id) || {}).name)].join(' ').toLowerCase();
     return (VARIETY_WORDS[v] || [v]).some(w => body.includes(w.toLowerCase()));
   });
-  const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region));
+  const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region)) ||
+    (region === '湖南' && f.lng >= 108 && f.lng <= 115 && f.lat >= 24 && f.lat <= 31);
 
   function facts(s) {
     s = s || window.V03Store.state;
@@ -98,6 +99,7 @@ window.V03Filter = (function () {
       matched(f, set) &&
       varietyOk(f, s.varieties) &&
       regionOk(f, s.region) &&
+      (s.sourceMode !== 'real' || f.prov === 'real') &&
       hit(f, s.q)
     ).sort((a, b) => String(b.ingestedAt || b.date || '').localeCompare(String(a.ingestedAt || a.date || '')) || String(b.id).localeCompare(String(a.id)));
   }
