@@ -3,7 +3,7 @@
    A1 与事实层共用同一套框架与浅色视觉
    A2 固定九类对象域（商品与标准 / 生产与资源 / 经营主体 / 市场与渠道 / 物流与设施 /
       政策与机构 / 环境与事件 / 空间与行政 / 指标与状态）
-   A3 有真实坐标的本体上图（小型图标）；无坐标本体进入右侧瀑布流，不编造坐标
+   A3 默认知识图谱；地理关联图只定位有真实坐标的本体，不编造坐标
    A4 MiroFish 式可追踪关系线：细、半透明曲线 + 低速方向粒子；非焦点关系降低透明度；
       悬停/点击本体只强化直接相关线与节点
    A5 右侧只展示不可定位本体，两列紧凑瀑布流；点击后右侧嵌套本体详情抽屉，
@@ -14,7 +14,7 @@
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
-  const camera = { zoom: 1.06, center: [18, 10], raf: null, level: null };
+  const camera = { zoom: 1.06, graphZoom: 1, center: [18, 10], raf: null, level: null };
   const ZOOM_BOX = [0.9, 3.0];
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
@@ -38,6 +38,10 @@ window.V03Relation = (function () {
   <div class="rel-wrap">
     <div class="rel-main" id="relMain">
       <div class="rel-canvas" id="relCanvas"></div>
+      <div class="rel-viewbar" role="group" aria-label="关联层视图">
+        <button type="button" data-view="graph">知识图谱</button>
+        <button type="button" data-view="geo">地理关联</button>
+      </div>
     </div>
     <aside class="rel-side" id="relSide"><div class="rel-body" id="relBody"></div></aside>
   </div>`;
@@ -45,6 +49,7 @@ window.V03Relation = (function () {
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody') };
+    root.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => S.set({ rel: { view: button.dataset.view } }); });
     window.addEventListener('resize', () => { if (chart) chart.resize(); });
   }
 
@@ -62,6 +67,11 @@ window.V03Relation = (function () {
     chart = echarts.init(dom.canvas);
     chart.on('click', p => {
       const sid = p.seriesId || '';
+      if (sid === 'relGraph') {
+        if (p.dataType === 'node' && p.data && p.data.id) openObject(p.data.id);
+        if (p.dataType === 'edge' && p.data && p.data.id) S.set({ rel: { sel: p.data.id, kind: 'relation', stack: [{ kind: 'relation', id: p.data.id }] } });
+        return;
+      }
       if ((sid === 'relNode' || sid === 'relNodeLabel') && p.data && p.data.objId) return openObject(p.data.objId);
       if (sid === 'relLine' && p.data && p.data.id) {
         const r = D.relById(p.data.id);
@@ -72,10 +82,11 @@ window.V03Relation = (function () {
       if (o) openObject(o.id);
     });
     chart.on('mouseover', p => {
+      if (S.state.rel.view === 'graph') return;
       const id = (p.data && (p.data.objId || (D.relById(p.data.id) || {}).from)) || null;
       if (id && id !== hover) { hover = id; paintFocus(); }
     });
-    chart.on('globalout', () => { if (hover) { hover = null; paintFocus(); } });
+    chart.on('globalout', () => { if (S.state.rel.view === 'geo' && hover) { hover = null; paintFocus(); } });
     return chart;
   }
   let hover = null;
@@ -85,6 +96,13 @@ window.V03Relation = (function () {
   }
 
   function zoomBy(dir) {
+    if (S.state.rel.view === 'graph') {
+      const next = Math.min(ZOOM_BOX[1], Math.max(ZOOM_BOX[0], camera.graphZoom * (dir > 0 ? 1.28 : 1 / 1.28)));
+      if (Math.abs(next - camera.graphZoom) < 1e-3) return;
+      camera.graphZoom = next;
+      if (chart) chart.setOption({ series: [{ id: 'relGraph', zoom: next }] }, { lazyUpdate: true });
+      return S.set({ sk: { zoom: Math.round(next * 100) } });
+    }
     const next = Math.min(ZOOM_BOX[1], Math.max(ZOOM_BOX[0], camera.zoom * (dir > 0 ? 1.28 : 1 / 1.28)));
     if (Math.abs(next - camera.zoom) < 1e-3) return;
     camera.zoom = next;
@@ -92,7 +110,10 @@ window.V03Relation = (function () {
     if (window.V03Shell) window.V03Shell.toast('缩放 ' + next.toFixed(2) + '×');
     S.set({ sk: { zoom: Math.round(next * 100) } });
   }
-  const zoomState = () => ({ canIn: camera.zoom < ZOOM_BOX[1] - 1e-3, canOut: camera.zoom > ZOOM_BOX[0] + 1e-3, zoom: camera.zoom });
+  const zoomState = () => {
+    const zoom = S.state.rel.view === 'graph' ? camera.graphZoom : camera.zoom;
+    return { canIn: zoom < ZOOM_BOX[1] - 1e-3, canOut: zoom > ZOOM_BOX[0] + 1e-3, zoom };
+  };
 
   /* ---------- 地图：本体节点 + MiroFish 式关系线 ---------- */
   const focusId = () => {
@@ -196,7 +217,56 @@ window.V03Relation = (function () {
     };
   }
 
+  /* 预置核心图谱仅展示少量高连接对象；筛选和事实携带优先保留用户正在看的对象。 */
+  function graphOption(objs, rels, st) {
+    const p = palette(), focus = focusId();
+    const degrees = new Map();
+    rels.forEach(r => { degrees.set(r.from, (degrees.get(r.from) || 0) + 1); degrees.set(r.to, (degrees.get(r.to) || 0) + 1); });
+    const carried = new Set((st.carry || []).flatMap(id => (D.factById(id) || {}).objects || []));
+    const ranked = objs.slice().sort((a, b) =>
+      Number(b.id === focus || carried.has(b.id)) - Number(a.id === focus || carried.has(a.id)) ||
+      (degrees.get(b.id) || 0) - (degrees.get(a.id) || 0) ||
+      (b.factCount || 0) - (a.factCount || 0) || a.id.localeCompare(b.id));
+    const selected = [], ids = new Set();
+    /* 冷启动先覆盖各本体类型，剩余位置再按连接数补足。 */
+    D.DOMAINS.forEach(d => {
+      const o = ranked.find(x => x.domain === d.id);
+      if (o && !ids.has(o.id)) { selected.push(o); ids.add(o.id); }
+    });
+    ranked.forEach(o => { if (selected.length < 28 && !ids.has(o.id)) { selected.push(o); ids.add(o.id); } });
+    const nodes = selected.map((o, index) => ({
+      id: o.id, name: o.name, value: (degrees.get(o.id) || 0),
+      symbolSize: o.id === focus ? 22 : 13 + Math.min(7, (degrees.get(o.id) || 0) / 4),
+      itemStyle: { color: domOf(o).c, borderColor: p.ink, borderWidth: o.id === focus ? 2 : .6 },
+      label: { show: index < 15 || o.id === focus, color: p.ink, fontSize: 11,
+        formatter: o.name.length > 11 ? o.name.slice(0, 10) + '…' : o.name }
+    }));
+    const links = rels.filter(r => ids.has(r.from) && ids.has(r.to)).map(r => ({
+      id: r.id, source: r.from, target: r.to,
+      lineStyle: { color: typeColor(r.type), width: 1.2, opacity: .55, curveness: .08 }
+    }));
+    return {
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'item', backgroundColor: p.tipBg, borderColor: p.tipLine, borderWidth: 1,
+        textStyle: { color: p.ink, fontSize: 11 },
+        formatter: item => {
+          if (item.dataType === 'edge') {
+            const r = D.relById(item.data.id);
+            return r ? esc((D.objById(r.from) || {}).name || r.from) + ' → ' + esc((D.objById(r.to) || {}).name || r.to) + '<br>' + esc(r.type) : '';
+          }
+          const o = D.objById(item.data.id);
+          return o ? '<b>' + esc(o.name) + '</b><br>' + esc(domOf(o).n) : '';
+        } },
+      series: [{ id: 'relGraph', type: 'graph', layout: 'force', roam: true, zoom: camera.graphZoom,
+        data: nodes, links, edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 5,
+        force: { repulsion: 190, edgeLength: 95, gravity: .08 },
+        emphasis: { focus: 'adjacency', lineStyle: { width: 2 } },
+        label: { position: 'right', distance: 4 }, labelLayout: { hideOverlap: true }, animationDurationUpdate: 350 }]
+    };
+  }
+
   function paintFocus() {
+    if (S.state.rel.view !== 'geo') return;
     const st = S.state;
     if (!chart) return;
     const objs = F.objects(st).filter(o => o.geo !== false && o.lat != null);
@@ -340,13 +410,18 @@ window.V03Relation = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.domain, st.rel.sel, st.rel.kind,
+    const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
       st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
     const c = ensureChart();
     if (!c) return;
-    c.setOption(option(objs, rels, st), { notMerge: true });
+    c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
+    root.querySelectorAll('[data-view]').forEach(button => {
+      const active = button.dataset.view === st.rel.view;
+      button.classList.toggle('on', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
     renderPanel(st, objs);
   }
 
@@ -354,7 +429,7 @@ window.V03Relation = (function () {
     const st = S.state, objs = F.objects(st), rels = F.relations(st);
     const mapped = objs.filter(o => o.geo !== false && o.lat != null);
     return {
-      view: 'geo', nodes: objs.length, mapped: mapped.length, unmapped: objs.length - mapped.length,
+      view: st.rel.view, nodes: objs.length, mapped: mapped.length, unmapped: objs.length - mapped.length,
       edges: rels.length, lines: rels.filter(r => { const a = D.objById(r.from), b = D.objById(r.to); return a && b && a.geo !== false && b.geo !== false; }).length,
       drawerCards: document.querySelectorAll('#relBody .rel-card').length,
       relationRows: document.querySelectorAll('#drawerStack .rel-row').length,

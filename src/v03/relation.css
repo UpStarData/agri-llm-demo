@@ -1,11 +1,17 @@
 /* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
-   地图本体节点（小型图标） + MiroFish 式可追踪关系线 + 右侧本体瀑布流
+   默认知识图谱；可切换地理关联视图 + 右侧本体瀑布流
    详情一律走右侧嵌套抽屉（样式复用 app.css 的 .drawer / .fd-*）
    ============================================================ */
 .rel-wrap{position:absolute;inset:0}
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-canvas{position:absolute;inset:0}
+.rel-viewbar{position:absolute;top:14px;left:14px;z-index:24;display:flex;gap:4px;padding:4px;
+  border:1px solid var(--line);border-radius:var(--r-md);background:var(--glass);backdrop-filter:var(--blur)}
+.rel-viewbar button{border:0;border-radius:var(--r-sm);background:transparent;color:var(--mut);padding:6px 10px;
+  font:inherit;font-size:.6875rem;cursor:pointer}
+.rel-viewbar button.on{background:var(--accent-soft);color:var(--accent);font-weight:var(--f-semi)}
+.rel-viewbar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .rel-side{position:absolute;right:0;top:0;bottom:var(--stream-h);width:var(--side-w);z-index:30;background:var(--glass);
   border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;transition:width .2s var(--ease)}
 .rel-side.off{width:0;border-left:none;overflow:hidden}

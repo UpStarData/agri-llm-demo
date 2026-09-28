@@ -70,6 +70,18 @@ try {
   await page.locator('#tabs button[data-tab="relation"]').click();
   assert.equal(await page.locator('#legend').count(), 0);
   assert.equal((await page.locator('body').innerText()).includes('图例'), false);
+  const graph = await page.evaluate(() => {
+    const series = echarts.getInstanceByDom(document.getElementById('relCanvas')).getOption().series;
+    return { view: V03Store.state.rel.view, type: series[0].type, nodes: series[0].data.length, edges: series[0].links.length };
+  });
+  assert.equal(graph.view, 'graph');
+  assert.equal(graph.type, 'graph');
+  assert(graph.nodes > 0 && graph.nodes <= 30 && graph.edges > 0);
+  await page.locator('[data-view="geo"]').click();
+  assert.equal(await page.evaluate(() => V03Store.state.rel.view), 'geo');
+  assert(await page.evaluate(() => echarts.getInstanceByDom(document.getElementById('relCanvas')).getOption().series.some(s => s.id === 'relNode')));
+  await page.locator('[data-view="graph"]').click();
+  assert.equal(await page.evaluate(() => V03Store.state.rel.view), 'graph');
   await page.locator('#tabs button[data-tab="sim"]').click();
   assert.equal((await page.locator('body').innerText()).includes('类型图例'), false);
 
