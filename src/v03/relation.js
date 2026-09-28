@@ -233,17 +233,18 @@ window.V03Relation = (function () {
       const o = ranked.find(x => x.domain === d.id);
       if (o && !ids.has(o.id)) { selected.push(o); ids.add(o.id); }
     });
-    ranked.forEach(o => { if (selected.length < 28 && !ids.has(o.id)) { selected.push(o); ids.add(o.id); } });
-    const nodes = selected.map((o, index) => ({
+    ranked.forEach(o => { if (selected.length < 20 && !ids.has(o.id)) { selected.push(o); ids.add(o.id); } });
+    const nodes = selected.map(o => ({
       id: o.id, name: o.name, value: (degrees.get(o.id) || 0),
-      symbolSize: o.id === focus ? 22 : 13 + Math.min(7, (degrees.get(o.id) || 0) / 4),
-      itemStyle: { color: domOf(o).c, borderColor: p.ink, borderWidth: o.id === focus ? 2 : .6 },
-      label: { show: index < 15 || o.id === focus, color: p.ink, fontSize: 11,
-        formatter: o.name.length > 11 ? o.name.slice(0, 10) + '…' : o.name }
+      symbolSize: 20,
+      itemStyle: { color: domOf(o).c, borderColor: o.id === focus ? '#e91e63' : '#fff', borderWidth: o.id === focus ? 4 : 2.5 },
+      label: { show: true, color: p.ink, fontSize: 11, fontWeight: 500,
+        formatter: o.name.length > 9 ? o.name.slice(0, 8) + '…' : o.name }
     }));
     const links = rels.filter(r => ids.has(r.from) && ids.has(r.to)).map(r => ({
-      id: r.id, source: r.from, target: r.to,
-      lineStyle: { color: typeColor(r.type), width: 1.2, opacity: .55, curveness: .08 }
+      id: r.id, name: r.type, source: r.from, target: r.to,
+      lineStyle: { color: focus && (r.from === focus || r.to === focus) ? '#e91e63' : '#c0c0c0',
+        width: focus && (r.from === focus || r.to === focus) ? 2.5 : 1.5, opacity: 1, curveness: .08 }
     }));
     return {
       backgroundColor: 'transparent',
@@ -258,9 +259,11 @@ window.V03Relation = (function () {
           return o ? '<b>' + esc(o.name) + '</b><br>' + esc(domOf(o).n) : '';
         } },
       series: [{ id: 'relGraph', type: 'graph', layout: 'force', roam: true, zoom: camera.graphZoom,
-        data: nodes, links, edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 5,
-        force: { repulsion: 190, edgeLength: 95, gravity: .08 },
-        emphasis: { focus: 'adjacency', lineStyle: { width: 2 } },
+        data: nodes, links, edgeSymbol: ['none', 'none'],
+        edgeLabel: { show: true, color: p.ink, fontSize: 9, formatter: item => item.data.name,
+          backgroundColor: p.labelBg, padding: [2, 4], borderRadius: 3 },
+        force: { repulsion: 400, edgeLength: 150, gravity: .04, friction: .65 },
+        emphasis: { focus: 'adjacency', itemStyle: { borderColor: '#333', borderWidth: 3 }, lineStyle: { color: '#e91e63', width: 2.5 } },
         label: { position: 'right', distance: 4 }, labelLayout: { hideOverlap: true }, animationDurationUpdate: 350 }]
     };
   }
@@ -416,6 +419,8 @@ window.V03Relation = (function () {
     const objs = F.objects(st), rels = F.relations(st);
     const c = ensureChart();
     if (!c) return;
+    dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
+    c.resize();
     c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
     root.querySelectorAll('[data-view]').forEach(button => {
       const active = button.dataset.view === st.rel.view;
