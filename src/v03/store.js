@@ -58,7 +58,7 @@ window.V03Store = (function () {
     carousel: false,                     // 质量级点阵开关（默认开）
     carry: [],
 
-    rel: { view: 'geo', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
+    rel: { view: 'graph', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
 
     sim: {
       /* 统一用户故事：马来西亚榴莲 → 红星市场份额；五阶段承载十二步骤 */
