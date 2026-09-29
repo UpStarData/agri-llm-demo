@@ -10,6 +10,8 @@
   body{background:var(--bg);color:var(--ink);padding:32px 28px 56px;line-height:1.5;
     font-family:'IBM Plex Sans SC','PingFang SC',-apple-system,'Helvetica Neue',sans-serif}
   .wrap{max-width:920px;margin:0 auto}
+  .requirements{position:sticky;top:12px;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;padding:12px 16px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.08);backdrop-filter:blur(10px);font-size:13px;color:var(--mut)}
+  .requirements a{font-weight:600;white-space:nowrap}
   h1{font-size:22px;font-weight:600;letter-spacing:.01em}
   .sub{margin-top:6px;font-size:13px;color:var(--mut)}
   .sub code{font-size:12px;color:var(--dim)}
@@ -27,11 +29,15 @@
   .foot{margin-top:18px;font-size:12px;color:var(--dim);line-height:1.7}
   .foot code{background:#fff;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:11.5px}
   .base{margin-top:22px;padding:13px 16px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--mut)}
-  @media (max-width:640px){.row{grid-template-columns:1fr;gap:4px}.row.head{display:none}}
+  @media (max-width:640px){.requirements{align-items:flex-start;flex-direction:column;gap:6px}.row{grid-template-columns:1fr;gap:4px}.row.head{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="requirements">
+    <span>项目需求文档</span>
+    <a target="_blank" rel="noopener noreferrer" href="https://github.com/UpStarData/Project_Design/tree/main/%F0%9F%8C%BE%E5%86%9C%E4%BA%A7%E5%93%81%E4%BA%A4%E6%98%93%E5%A4%A7%E6%A8%A1%E5%9E%8B/%E9%9C%80%E6%B1%82">查看需求文档 →</a>
+  </div>
   <h1>AgriLink 农链 · 版本目录</h1>
   <p class="sub">每个版本一个地址，旧版本一直保留 —— 全部在<strong>同一个仓库</strong> <code>UpStarData/agri-llm-demo</code> 里，按版本分目录；<strong>V0.0</strong> 是原版基线（迭代起点），之后每次发版在最新版本上加一个号。</p>
 
@@ -40,109 +46,109 @@
 
     <div class="row">
       <div class="v now">V0.8.9</div>
-      <div class="d">关联层知识图谱沿用推演图谱的点阵背景、彩色圆节点、关系线与文字、高亮交互视觉；保留关联层自身数据和详情<br><a href="../v0.8.9/">进入 /v0.8.9/ →</a></div>
+      <div class="d">关联层知识图谱沿用推演图谱的点阵背景、彩色圆节点、关系线与文字、高亮交互视觉；保留关联层自身数据和详情<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.9/">进入 /v0.8.9/ →</a></div>
       <div class="m">d7161ac45599<br>968cbaa</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.8</div>
-      <div class="d">关联层首次进入默认展示预置核心知识图谱，保留地理关联切换；事实数据与旧版本不变<br><a href="../v0.8.8/">进入 /v0.8.8/ →</a></div>
+      <div class="d">关联层首次进入默认展示预置核心知识图谱，保留地理关联切换；事实数据与旧版本不变<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.8/">进入 /v0.8.8/ →</a></div>
       <div class="m">565db85bbed3<br>3160221</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.7</div>
-      <div class="d">按 V1.2 删除额外历史入口和全部历史选项，移除事实层与关联层图例；原数据包保留<br><a href="../v0.8.7/">进入 /v0.8.7/ →</a></div>
+      <div class="d">按 V1.2 删除额外历史入口和全部历史选项，移除事实层与关联层图例；原数据包保留<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.7/">进入 /v0.8.7/ →</a></div>
       <div class="m">c06e2bfd599a<br>30167ba</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.6</div>
-      <div class="d">含 V1.2 未要求的历史控件，已由 V0.8.7 修正<br><a href="../v0.8.6/">查看旧版 /v0.8.6/ →</a></div>
+      <div class="d">含 V1.2 未要求的历史控件，已由 V0.8.7 修正<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.6/">查看旧版 /v0.8.6/ →</a></div>
       <div class="m">9f9bb11f8f49<br>c695b45</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.5</div>
-      <div class="d">V1.2 事实层体验：筛选、叠加图层、卡片与详情、事实携带进入推演；演示数据明确标注<br><a href="../v0.8.5/">进入 /v0.8.5/ →</a></div>
+      <div class="d">V1.2 事实层体验：筛选、叠加图层、卡片与详情、事实携带进入推演；演示数据明确标注<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.5/">进入 /v0.8.5/ →</a></div>
       <div class="m">22ce48bb91b3<br>dd4b9fc</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.4</div>
-      <div class="d">降低事实密度点数量，暂停隐藏视图动画，加快地球打开和切换，并修复地图移动时点位漂移<br><a href="../v0.8.4/">进入 /v0.8.4/ →</a></div>
+      <div class="d">降低事实密度点数量，暂停隐藏视图动画，加快地球打开和切换，并修复地图移动时点位漂移<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.4/">进入 /v0.8.4/ →</a></div>
       <div class="m">521451b39777<br>baf3960</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.3</div>
-      <div class="d">修复底图更新动画与事实点不同步；实际地图图形逐帧对点位验证<br><a href="../v0.8.3/">进入 /v0.8.3/ →</a></div>
+      <div class="d">修复底图更新动画与事实点不同步；实际地图图形逐帧对点位验证<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.3/">进入 /v0.8.3/ →</a></div>
       <div class="m">635be6b8ea29<br>32cf33e</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.2</div>
-      <div class="d">地图连续交互实测修复：国界外事实点清零，拖动缩放卡顿降低<br><a href="../v0.8.2/">进入 /v0.8.2/ →</a></div>
+      <div class="d">地图连续交互实测修复：国界外事实点清零，拖动缩放卡顿降低<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.2/">进入 /v0.8.2/ →</a></div>
       <div class="m">2768363179f7<br>61c82f6</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8.1</div>
-      <div class="d">地图锚定补丁：新事实瞬时闪点迁入 <code>geo</code>，事实层五类点位连续拖动缩放实测零漂移<br><a href="../v0.8.1/">进入 /v0.8.1/ →</a></div>
+      <div class="d">地图锚定补丁：新事实瞬时闪点迁入 <code>geo</code>，事实层五类点位连续拖动缩放实测零漂移<br><a target="_blank" rel="noopener noreferrer" href="../v0.8.1/">进入 /v0.8.1/ →</a></div>
       <div class="m">cb2166ad01b7<br>ef5e5a8</div>
     </div>
 
     <div class="row">
       <div class="v">V0.8</div>
-      <div class="d">HungerMap 日夜主题（默认夜间）、3D 自转地球 + 视差星空、事实点与地图同层锚定、不规则数据概览<br><a href="../v0.8/">进入 /v0.8/ →</a></div>
+      <div class="d">HungerMap 日夜主题（默认夜间）、3D 自转地球 + 视差星空、事实点与地图同层锚定、不规则数据概览<br><a target="_blank" rel="noopener noreferrer" href="../v0.8/">进入 /v0.8/ →</a></div>
       <div class="m">4bbc94fe4f2a<br>8e5334f</div>
     </div>
 
     <div class="row">
       <div class="v">V0.7</div>
-      <div class="d">数据概览主数字改为实时大数字：全位数千分位、等宽数字、尾数持续递增（终端每处理一条即时 +1）<br><a href="../v0.7/">进入 /v0.7/ →</a></div>
+      <div class="d">数据概览主数字改为实时大数字：全位数千分位、等宽数字、尾数持续递增（终端每处理一条即时 +1）<br><a target="_blank" rel="noopener noreferrer" href="../v0.7/">进入 /v0.7/ →</a></div>
       <div class="m">680e567a1986<br>b28b433</div>
     </div>
 
     <div class="row">
       <div class="v">V0.6.2</div>
-      <div class="d">密度效果修复：2 万 / 1.6 万 / 1.2 万地图坐标点，世界与中国边界校验，拖动缩放与底图同投影<br><a href="../v0.6.2/">进入 /v0.6.2/ →</a></div>
+      <div class="d">密度效果修复：2 万 / 1.6 万 / 1.2 万地图坐标点，世界与中国边界校验，拖动缩放与底图同投影<br><a target="_blank" rel="noopener noreferrer" href="../v0.6.2/">进入 /v0.6.2/ →</a></div>
       <div class="m">18d6785b9c0c<br>b7129b3</div>
     </div>
 
     <div class="row">
       <div class="v">V0.6.1</div>
-      <div class="d">第三轮补充指令：概览只留事实条数 + 翻牌、终端 3 行、直播卡、全屏地图 + 浮层、中性点 + 自绘水波纹、毛玻璃增强<br><a href="../v0.6.1/">进入 /v0.6.1/ →</a></div>
+      <div class="d">第三轮补充指令：概览只留事实条数 + 翻牌、终端 3 行、直播卡、全屏地图 + 浮层、中性点 + 自绘水波纹、毛玻璃增强<br><a target="_blank" rel="noopener noreferrer" href="../v0.6.1/">进入 /v0.6.1/ →</a></div>
       <div class="m">c01d17c112d4<br>4250f26</div>
     </div>
 
     <div class="row">
       <div class="v">V0.6</div>
-      <div class="d">体量口径（每个三级类型 1 万 / 10 万 / 100 万）+ 实时滚动计数、地图缩放三项规则、铺满整屏 + 浮层、毛玻璃、统一中性点、克制动效、直播卡常驻<br><a href="../v0.6/">进入 /v0.6/ →</a></div>
+      <div class="d">体量口径（每个三级类型 1 万 / 10 万 / 100 万）+ 实时滚动计数、地图缩放三项规则、铺满整屏 + 浮层、毛玻璃、统一中性点、克制动效、直播卡常驻<br><a target="_blank" rel="noopener noreferrer" href="../v0.6/">进入 /v0.6/ →</a></div>
       <div class="m">60dd9ba775e5<br>e6c236a</div>
     </div>
 
     <div class="row">
       <div class="v">V0.5</div>
-      <div class="d">浅色视觉校准 + 第二轮反馈：MiroFish 式细灰连线与方向流光、纯黑终端流水、真实直播接入、左下两排快捷键<br><a href="../v0.5/">进入 /v0.5/ →</a></div>
+      <div class="d">浅色视觉校准 + 第二轮反馈：MiroFish 式细灰连线与方向流光、纯黑终端流水、真实直播接入、左下两排快捷键<br><a target="_blank" rel="noopener noreferrer" href="../v0.5/">进入 /v0.5/ →</a></div>
       <div class="m">c44a4783ed88<br>13ed739</div>
     </div>
 
     <div class="row">
       <div class="v">V0.4</div>
-      <div class="d">暗色重设计版，<strong>已否决</strong>，仅留档对照<br><a href="../v0.4/">进入 /v0.4/ →</a></div>
+      <div class="d">暗色重设计版，<strong>已否决</strong>，仅留档对照<br><a target="_blank" rel="noopener noreferrer" href="../v0.4/">进入 /v0.4/ →</a></div>
       <div class="m">013d9c717e3d<br>57e6582</div>
     </div>
 
     <div class="row">
       <div class="v">V0.0</div>
-      <div class="d">原版基线（三层 Demo 起始版）—— <strong>迭代起点</strong>，之后每次发版从它往上加一个版本号<br><a href="../v0.0/">进入 /v0.0/ →</a></div>
+      <div class="d">原版基线（三层 Demo 起始版）—— <strong>迭代起点</strong>，之后每次发版从它往上加一个版本号<br><a target="_blank" rel="noopener noreferrer" href="../v0.0/">进入 /v0.0/ →</a></div>
       <div class="m">7710f0006c28<br>72e78d1</div>
     </div>
   </div>
 
   <div class="base">
-    仓库根地址 <a href="../">/agri-llm-demo/</a> 显示的就是 <strong>V0.0</strong>（和 <a href="../v0.0/">/v0.0/</a> 是同一份文件）；以后每次发版在最新版本上加一个号（当前 <strong>V0.8.4</strong>），旧版本地址一直保留。
+    仓库根地址 <a target="_blank" rel="noopener noreferrer" href="../">/agri-llm-demo/</a> 显示的就是 <strong>V0.0</strong>（和 <a target="_blank" rel="noopener noreferrer" href="../v0.0/">/v0.0/</a> 是同一份文件）；以后每次发版在最新版本上加一个号（当前 <strong>V0.8.9</strong>），旧版本地址一直保留。
   </div>
 
   <p class="foot">
