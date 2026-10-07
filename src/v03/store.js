@@ -49,6 +49,7 @@ window.V03Store = (function () {
     /* 三级分类字典的选中项：null = 默认全选 */
     catKeys: null,                // 事实层
     relKeys: null,                // 关联层
+    relTypes: null,               // 关系类型筛选；null 为全选
 
     geo: { level: 'L1', focus: null },   // L1 全球（默认）/ L2 全国 / L3 省区（focus=省名）
     factId: null, logOpen: false,        // 事实详情抽屉
@@ -58,7 +59,7 @@ window.V03Store = (function () {
     carousel: false,                     // 质量级点阵开关（默认开）
     carry: [],
 
-    rel: { view: 'globe', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
+    rel: { view: 'globe', search: '', crossRegion: true, domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
 
     sim: {
       /* 统一用户故事：马来西亚榴莲 → 红星市场份额；五阶段承载十二步骤 */

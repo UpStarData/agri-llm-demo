@@ -25,27 +25,33 @@ window.V03Filter = (function () {
   const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: MUTED[g.key] || g.color }));
   const leafOf = f => (D3 && D3.leafOf) ? D3.leafOf(f) : null;
 
-  /* ---------- 关联层：A2 固定九类对象域（不得缩减） ---------- */
+  /* PRD 关联层 V1.3：四个一级类、十七个二级类。旧数据保留原始类型，只做可核对的映射。 */
   const REL_TREE = [
-    { n: '要素与商品', subs: [
-      { n: '商品与要素', items: [mk('commodity'), mk('resource')] },
-      { n: '环境', items: [mk('environment')] }
-    ] },
-    { n: '主体与机构', subs: [
-      { n: '经营主体', items: [mk('operator')] },
-      { n: '政策机构', items: [mk('institution')] }
-    ] },
-    { n: '空间与流通', subs: [
-      { n: '空间', items: [mk('admin')] },
-      { n: '市场与物流', items: [mk('channel'), mk('logistics')] },
-      { n: '状态', items: [mk('metric')] }
-    ] }
+    { n:'地理与设施', subs:[{n:'类型',items:['产区与基地','市场','港口','机场','地缘风险区','行政区划'].map(mkRel)}] },
+    { n:'主体与组织', subs:[{n:'类型',items:['企业与贸易主体','政府与机构','政策与法规'].map(mkRel)}] },
+    { n:'农作物', subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
+    { n:'事件', subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
   ];
-  function mk(key) {
-    const d = D.DOMAINS.find(x => x.id === key) || { n: key, e: '📌', c: '#64707f' };
-    return { key, n: d.n, e: d.e, c: key };
+  function mkRel(name){return {key:name,n:name,e:''};}
+  function relKind(o){
+    if(o.domain==='resource')return '产区与基地';
+    if(o.domain==='channel')return '市场';
+    if(o.domain==='admin')return '行政区划';
+    if(o.domain==='logistics')return /air|airport|机场/i.test(o.id+' '+o.name)?'机场':'港口';
+    if(o.domain==='operator')return '企业与贸易主体';
+    if(o.domain==='institution')return '政府与机构';
+    if(o.domain==='environment')return '自然与生态';
+    if(o.domain==='commodity'){
+      const text=(o.name+' '+(o.sub||'')).toLowerCase();
+      if(/辣椒|蒜|姜|蔬菜|pepper|chili/.test(text))return '蔬菜';
+      if(/稻|米|麦|豆|玉米|花生|粮|油/.test(text))return '粮油与油料';
+      if(/棉|橡胶|咖啡/.test(text))return '经济作物';
+      return '水果';
+    }
+    return null; // 价格、库存、天气指标不是本体，不伪装成 PRD 分类
   }
-
+  const PRD_REL_TYPES=['生产','供应','采购','运营','入驻','合作','位于','运输至','储存于','发布','适用于','监管','影响','发生于'];
+  const legacyTypes=()=>[...new Set(D.RELATIONS.map(r=>r.type))].filter(t=>!PRD_REL_TYPES.includes(t));
   const flat = tree => tree.reduce((a, g) => a.concat(g.subs.reduce((b, s) => b.concat(s.items), [])), []);
   const FACT_ITEMS = flat(FACT_TREE), REL_ITEMS = flat(REL_TREE);
   const itemBy = (items, key) => items.find(x => x.key === key) || null;
@@ -143,11 +149,17 @@ window.V03Filter = (function () {
     const carried = new Set();
     (s.carry || []).forEach(id => { const f = D.factById(id); if (f) (f.objects || []).forEach(o => carried.add(o)); });
 
-    let list = D.OBJECTS.filter(o => set.has(o.domain));
+    let list = D.OBJECTS.filter(o => set.has(relKind(o)));
     if (rel.domain && rel.domain !== 'all') list = list.filter(o => o.domain === rel.domain);
-    if (s.q) {
-      const q = s.q.toLowerCase();
+    if (rel.search) {
+      const q = rel.search.toLowerCase();
       list = list.filter(o => (o.name + ' ' + (o.sub || '')).toLowerCase().includes(q));
+    }
+    if (s.varieties && s.varieties.length) {
+      const supported = new Set(D.RELATIONS.filter(r => (r.factIds||[]).some(id => {
+        const f = D.factById(id);return f && varietyOk(f,s.varieties);
+      })).flatMap(r => [r.from,r.to]));
+      list=list.filter(o => supported.has(o.id) || (o.domain==='commodity' && s.varieties.some(v => o.name.includes(v))));
     }
     if (rel.focusFact) {
       const f = D.factById(rel.focusFact);
@@ -162,7 +174,8 @@ window.V03Filter = (function () {
     s = s || window.V03Store.state;
     const ids = new Set(objects(s).map(o => o.id));
     const need = MIN_CONF[s.cred] != null ? MIN_CONF[s.cred] : 0;
-    return D.RELATIONS.filter(r => ids.has(r.from) && ids.has(r.to) && r.confidence >= need)
+    const relTypes=s.relTypes;
+    return D.RELATIONS.filter(r => ids.has(r.from) && ids.has(r.to) && r.confidence >= need && (!Array.isArray(relTypes)||relTypes.includes(r.type)))
       .map(r => Object.assign({}, r, { _carried: (r.factIds || []).some(f => (s.carry || []).includes(f)) }));
   }
 
@@ -171,16 +184,8 @@ window.V03Filter = (function () {
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
-      const objs = objects(s), rels = relations(s);
-      const landed = objs.filter(o => o.geo !== false && o.lat != null);
-      const hi = rels.filter(r => r.confidence >= .75).length;
-      return {
-        rows: [
-          ['本体对象', objs.length],
-          ['可信关系', (rels.length ? Math.round(hi / rels.length * 100) : 0) + '%']
-        ],
-        note: landed.length + ' 个可定位'
-      };
+      const today = D.TODAY || new Date().toISOString().slice(0,10);
+      return { rows:[['当前本体',D.OBJECTS.filter(o=>relKind(o)).length],['今日新增本体',D.OBJECTS.filter(o=>o.createdAt?.startsWith(today)).length],['今日新增关系',D.RELATIONS.filter(r=>r.createdAt?.startsWith(today)).length]],note:'全库口径 · 不随筛选变化；演示数据无实时写入' };
     }
     const list = D.FACTS;
     const raw = list.length;
@@ -219,7 +224,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, mappable, levelMixed, objects, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
