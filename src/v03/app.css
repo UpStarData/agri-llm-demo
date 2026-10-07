@@ -5,18 +5,17 @@
              右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情）· 窄条终端式流水
    ============================================================ */
 :root{
-  /* —— HungerMap LIVE 日间：冰蓝海面、冷灰陆地、WFP 蓝绿强调 —— */
-  --bg:#edf5f8;--panel:#ffffff;--panel-2:#f5f8f9;--panel-alpha:rgba(255,255,255,.94);--line:rgba(40,61,68,.16);--hair:rgba(40,61,68,.13);
-  --ink:#263238;--mut:#4f5e63;--dim:#6f7d81;--hint:#7c898d;
-  --accent:#007dbc;--accent-soft:#e4f3fa;--green:#4a9a61;--orange:#d88538;--purple:#7769a8;--red:#d64545;
+  /* 配色 1：矿物蓝灰底图、暖沙与冷蓝区域、暖白面板。 */
+  --bg:#d7e0e3;--panel:#fbfaf6;--panel-2:#f0f2ef;--panel-alpha:rgba(251,250,246,.95);--line:rgba(50,73,86,.24);--hair:rgba(50,73,86,.16);
+  --ink:#263d4c;--mut:#526672;--dim:#6c7c83;--hint:#77878d;
+  --accent:#126588;--accent-soft:#d7e9ee;--green:#48866b;--orange:#bc8049;--purple:#716b9b;--red:#b65c5d;
   --warn:#b45309;--warn-bg:#fef3c7;
-  /* 地图底图（浅色农业风） */
-  --ocean:#e5f2f6;--land:#e8e9e5;--land-2:#d4e2d9;--map-line:rgba(94,113,119,.58);--map-label:#66767b;
+  --ocean:#c8d9de;--land:#a5b7b9;--land-2:#809aaa;--map-line:rgba(55,79,95,.68);--map-label:#344e60;
   /* 面板与阴影（浅色，不用暗色玻璃） */
-  --glass:rgba(255,255,255,.74);--glass-2:rgba(255,255,255,.66);--glass-line:rgba(255,255,255,.5);
+  --glass:rgba(251,250,246,.86);--glass-2:rgba(251,250,246,.78);--glass-line:rgba(76,99,110,.2);
   --blur:blur(28px) saturate(185%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
   /* 图标（Cursor 风格：细线、浅灰、hover 变深） */
-  --icon:#6f858d;--icon-hover:#007dbc;--icon-on:rgba(0,125,188,.10);
+  --icon:#587586;--icon-hover:#126588;--icon-on:rgba(18,101,136,.13);
   /* 一级分类（低饱和，与明亮风格一致） */
   --c-nature:#5b8ea6;--c-supply:#6f9a6a;--c-chain:#5f9a94;--c-market:#b0736b;--c-consume:#8b7fa8;--c-policy:#6f86b8;--c-macro:#a08a63;
   --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;
@@ -29,13 +28,15 @@
 }
 html[data-theme="color"]{
   color-scheme:light;
-  --bg:#d4e7e9;--panel:#f9fcfb;--panel-2:#edf4f3;--panel-alpha:rgba(249,252,251,.96);--line:rgba(42,82,101,.23);--hair:rgba(42,82,101,.15);
-  --ink:#183d51;--mut:#3d6371;--dim:#587985;--hint:#5d7e88;
-  --accent:#005f95;--accent-soft:rgba(13,112,149,.12);--green:#337857;--orange:#b46d33;--purple:#6a6196;--red:#bf4840;
-  --warn:#9c580d;--warn-bg:#f9e8c5;
-  --ocean:#95bec9;--land:#b2cecd;--land-2:#9cbdba;--map-line:rgba(42,82,101,.5);--map-label:#355c6d;
-  --glass:rgba(243,251,250,.88);--glass-2:rgba(243,251,250,.82);--glass-line:rgba(61,108,120,.22);
-  --shadow:0 12px 32px -18px rgba(24,65,80,.42);--icon:#4d7381;--icon-hover:#005f95;--icon-on:rgba(0,95,149,.12);
+  /* 配色 2：展陈用深海蓝底图、青铜与靛蓝区域、浅蓝灰面板。 */
+  --bg:#b6cbd1;--panel:#eaf0ef;--panel-2:#dbe5e5;--panel-alpha:rgba(234,240,239,.96);--line:rgba(24,62,81,.32);--hair:rgba(24,62,81,.22);
+  --ink:#102f43;--mut:#36586b;--dim:#557484;--hint:#5c7b89;
+  --accent:#a55c31;--accent-soft:rgba(165,92,49,.15);--green:#2e765e;--orange:#ab663a;--purple:#635a8d;--red:#aa4a4e;
+  --warn:#97510f;--warn-bg:#f2dbaa;
+  --ocean:#496f85;--land:#58798c;--land-2:#3f657c;--map-line:rgba(20,54,75,.76);--map-label:#123d53;
+  --glass:rgba(228,239,241,.92);--glass-2:rgba(225,237,239,.84);--glass-line:rgba(30,74,96,.25);
+  --shadow:0 12px 32px -18px rgba(15,48,70,.48);--icon:#3c6478;--icon-hover:#a55c31;--icon-on:rgba(165,92,49,.15);
+  --c-nature:#357887;--c-supply:#4b805e;--c-chain:#347d73;--c-market:#a06253;--c-consume:#6d5e94;--c-policy:#4b6da1;--c-macro:#977142;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}

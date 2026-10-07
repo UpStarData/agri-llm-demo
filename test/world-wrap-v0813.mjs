@@ -18,9 +18,12 @@ try {
     const southAmerica = chart.convertToPixel(geo, [310, -14]);
     const pos = chart.getOption();
     const nodes = (pos.series || []).find(x => x.id === (view === 'fact' ? 'facts' : 'relNode'));
-    return { map: pos.geo[0].map, china, northAmerica, southAmerica,
+    const region = name => pos.geo[0].regions.find(r => r.name === name)?.itemStyle.areaColor;
+    return { map: pos.geo[0].map, roam: pos.geo[0].roam, china, northAmerica, southAmerica,
+      usaColor: region('United States of America'), canadaColor: region('Canada'),
       nodes: (nodes?.data || []).length,
       westCount: (nodes?.data || []).filter(x => x.value?.[0] < -25).length,
+      worldFeatures: echarts.getMap('worldChina').geoJSON.features.length,
       palette: document.documentElement.dataset.theme,
       tabLabel: document.querySelector('#btnTheme .theme-name')?.textContent };
   }, view);
@@ -33,14 +36,25 @@ try {
         await page.waitForFunction(() => echarts.getInstanceByDom(document.querySelector('#relCanvas'))?.getOption()?.geo?.[0]?.map === 'worldChina');
       } else await page.evaluate(() => V03Store.set({ tab: 'fact' }));
       const data = await inspect(view);
-      if (data.map !== 'worldChina' || data.northAmerica[0] <= data.china[0] ||
-          data.southAmerica[0] <= data.china[0] || data.northAmerica[0] > 1020 ||
-          data.southAmerica[0] > 1020 || data.westCount || !data.nodes ||
+      if (data.map !== 'worldChina' || data.roam !== true || data.worldFeatures !== 531 ||
+          data.northAmerica[0] <= data.china[0] || data.southAmerica[0] <= data.china[0] ||
+          data.nodes % 3 !== 0 || data.westCount !== data.nodes / 3 ||
+          !data.usaColor || !data.canadaColor || data.usaColor === data.canadaColor ||
           data.palette !== theme || data.tabLabel !== (theme === 'light' ? '配色 1' : '配色 2'))
         throw new Error(`${view}/${theme}: ${JSON.stringify(data)}`);
     }
   }
+  await page.evaluate(() => V03Store.set({ tab: 'fact', geo: { level: 'L1' }, theme: 'light' }));
+  const map = page.locator('#factMap');
+  const rect = await map.boundingBox();
+  await page.mouse.move(rect.x + rect.width * .76, rect.y + rect.height * .5);
+  await page.mouse.down();
+  await page.mouse.move(rect.x + rect.width * .08, rect.y + rect.height * .5, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(250);
+  const moved = await inspect('fact');
+  if (Math.abs(moved.china[0] - 510) < 100 || moved.worldFeatures !== 531) throw new Error('World did not wrap after drag: ' + JSON.stringify(moved));
   if (errors.length) throw new Error(errors.join('\n'));
-  console.log('Two palettes render without errors; both geographic views recenter China and position the Americas to its right with correctly wrapped data.');
+  console.log('Two full palettes render; neighboring USA/Canada differ; both maps repeat the world and points while preserving drag navigation.');
   await page.close();
 } finally { await browser.close(); }
