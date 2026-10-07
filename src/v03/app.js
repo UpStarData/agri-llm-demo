@@ -18,6 +18,7 @@
     stream:  ['M3 5h18v14H3z', 'M6.5 9.5l2.5 2.5-2.5 2.5', 'M12 14.5h4'],
     cards:   ['M3.5 4.5h7v15h-7z', 'M13 4.5h7.5v8H13z', 'M13 14.5h7.5V19.5H13z'],
     gear:    ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z', 'M12 2.8v2.6', 'M12 18.6v2.6', 'M2.8 12h2.6', 'M18.6 12h2.6', 'M5.5 5.5l1.8 1.8', 'M16.7 16.7l1.8 1.8', 'M18.5 5.5l-1.8 1.8', 'M7.3 16.7l-1.8 1.8'],
+    map:     ['M4 5h16v14H4z', 'M12 5v14', 'M4 12h16'],
     cube3d:  ['M12 2.8 3.8 7.1v9.8L12 21.2l8.2-4.3V7.1L12 2.8Z', 'M3.8 7.1 12 11.4l8.2-4.3', 'M12 11.4v9.8'],
     radar:   ['M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2Z', 'M12 7.8a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4Z'],
     expand:  ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
@@ -99,6 +100,9 @@
     { k: 'zoomIn', i: 'plus', n: '放大', d: '放大地图', kind: 'zoom', dir: 1 },
     { k: 'zoomOut', i: 'minus', n: '缩小', d: '缩小地图', kind: 'zoom', dir: -1 },
     { k: 'mode3d', i: 'cube3d', n: '2D / 3D', d: '切换二维地图与三维地球', kind: 'sw', get: s => s.sk.mode3d, set: v => ({ sk: { mode3d: v } }) },
+    { k: 'view3d', i: 'cube3d', n: '3D', d: '三维地球', kind: 'view', value: 'globe' },
+    { k: 'view2d', i: 'map', n: '2D', d: '二维地图', kind: 'view', value: 'geo' },
+    { k: 'viewGraph', i: 'radar', n: '图谱', d: '图谱视图', kind: 'view', value: 'graph' },
     { k: 'influence', i: 'radar', n: '地理影响圆', d: '显示或隐藏事实的地理影响圆', kind: 'sw', get: s => s.sk.influence, set: v => ({ sk: { influence: v } }) },
     { k: 'crossRegion', i: 'anchor', n: '跨区域关系', d: '显示跨出当前视角的关系线', kind: 'sw', get: s => s.rel.crossRegion, set: v => ({ rel: { crossRegion: v } }) },
     { k: 'fullscreen', i: 'expand', n: '全屏', d: '浏览器全屏显示地图', kind: 'sw', get: s => s.sk.fullscreen, set: v => ({ sk: { fullscreen: v } }) },
@@ -108,7 +112,7 @@
     { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
     { k: 'search', i: 'search', n: '搜索', d: '搜索事实或本体名称', kind: 'input', get: s => s.tab === 'relation' ? s.rel.search : s.q, set: v => S.state.tab === 'relation' ? ({ rel: { search: v } }) : ({ q: v }) }
   ];
-  const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
+  const skVal = (sk, s) => (sk.kind === 'view' ? (s.rel.view === sk.value ? '当前' : '') : sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
     : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (sk.get(s) ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
 
   let pop = null;
@@ -133,13 +137,29 @@
         box.appendChild(b);
       }
     } else if (sk.kind === 'input') {
+      box.classList.add('search-pop');
       const inp = el('input', 'sk-input');
       inp.type = 'search'; inp.value = sk.get(S.state) || ''; inp.placeholder = S.state.tab === 'relation' ? '搜索本体名称' : '搜索事实标题';
-      let t = null;
-      inp.oninput = () => { clearTimeout(t); t = setTimeout(() => S.set({ q: inp.value.trim() }), 160); };
-      inp.onkeydown = e => { if (e.key === 'Enter') { closePop(); rerender(); } };
       box.appendChild(inp);
-      setTimeout(() => inp.focus(), 20);
+      const results = el('div', 'search-results');box.appendChild(results);
+      const actions=el('div','search-actions');
+      const confirm=el('button','','搜索');const clear=el('button','','清空 ×');
+      actions.append(clear,confirm);box.appendChild(actions);
+      const isRel = S.state.tab === 'relation';
+      const preview = () => {
+        results.replaceChildren();
+        const q=inp.value.trim().toLowerCase();
+        if(!q) return;
+        const hits=(isRel ? D.OBJECTS : D.FACTS).filter(x=>String(isRel?x.name:x.title).toLowerCase().includes(q)).slice(0,6);
+        results.appendChild(el('div','search-count',hits.length ? '匹配结果（最多 6 条）' : '暂无匹配结果'));
+        hits.forEach(x=>{const b=el('button','search-result',isRel?x.name:x.title);b.onclick=()=>{closePop();S.set(isRel?{rel:{search:x.name,sel:x.id,kind:'object',stack:[{kind:'object',id:x.id}]}}:{q:x.title,factId:x.id});};results.appendChild(b);});
+      };
+      const commit=()=>{const q=inp.value.trim();closePop();S.set(sk.set(q));};
+      clear.onclick=()=>{closePop();S.set(sk.set(''));};
+      confirm.onclick=commit;
+      inp.oninput=preview;
+      inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape')closePop();};
+      preview();setTimeout(() => inp.focus(), 20);
     }
     anchor.parentElement.appendChild(box);
     pop = box;
@@ -151,18 +171,19 @@
     const na = [];
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
+    mount.classList.toggle('rel-mode', st.tab === 'relation');
     SK.forEach((sk, idx) => {
-      if (st.tab === 'relation' && !['zoomIn','zoomOut','fullscreen','crossRegion','search'].includes(sk.k)) return;
-      if (st.tab !== 'relation' && sk.k === 'crossRegion') return;
+      if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','fullscreen','crossRegion','search'].includes(sk.k)) return;
+      if (st.tab !== 'relation' && (sk.k === 'crossRegion' || sk.kind === 'view')) return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
-      const on = sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
+      const on = sk.kind === 'view' ? st.rel.view === sk.value : sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
       const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
       b.dataset.k = sk.k;
       b.title = sk.n + '：' + sk.d;
       b.innerHTML = '<span class="sk-i">' + svg(sk.i, mode === 'menu' ? 15 : 16) + '</span>' +
         (mode === 'menu' ? '<span class="sk-n">' + sk.n + '</span><span class="sk-v">' + skVal(sk, st) + '</span>' : '<span class="sk-v">' + skVal(sk, st) + '</span>');
-      b.setAttribute('aria-pressed', String(!!(sk.get && sk.get(st))));
+      b.setAttribute('aria-pressed', String(on));
       if (na.includes(sk.k)) { b.disabled = true; b.title = sk.n + '：关联层为地理关联视图'; }
       if (sk.kind === 'zoom') {
         if (!api || !api.zoomBy) { b.disabled = true; b.title = sk.n + '：当前层不支持缩放'; }
@@ -170,6 +191,7 @@
       }
       b.onclick = () => {
         if (sk.kind === 'zoom') { const a = layerApi(); if (a && a.zoomBy) a.zoomBy(sk.dir); return; }
+        if (sk.kind === 'view') { S.set({rel:{view:sk.value}});return; }
         if (sk.kind === 'sw') {
           if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
           S.set(sk.set(!sk.get(st)));
@@ -265,7 +287,7 @@
     const s1 = el('section', 'mn-sec');
     s1.appendChild(el('div', 'mn-h', '数据概览'));
     const ovRows = ov.rows.filter(r => r[0]);
-    s1.appendChild(el('div', 'mn-ov' + (ovRows.length === 1 ? ' hero' : ''), ovRows.map(([k, v], i) =>
+    s1.appendChild(el('div', 'mn-ov' + (isRel ? ' relation-overview' : ovRows.length === 1 ? ' hero' : ''), ovRows.map(([k, v], i) =>
       '<div class="ov-i"><b data-ov="' + i + '">' + v + '</b><span>' + k + '</span></div>').join('')));
     if (ov.note) s1.appendChild(el('div', 'ov-note', ov.note));
     body.appendChild(s1);
@@ -334,11 +356,21 @@
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
       const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
-      const available=[...new Set(D.RELATIONS.map(r=>r.type))];
       const groups=[['生产供应','#4d966a',['生产','供应','采购']],['经营组织','#cf854a',['运营','入驻','合作']],['空间','#547baa',['位于','发生于']],['物流','#24a6a1',['运输至','储存于']],['政策','#8a6dba',['发布','适用于','监管']],['影响','#ca6975',['影响']]];
       const selected=st.relTypes;
-      groups.forEach(([name,color,types])=>{relFilter.appendChild(el('div','mn-l2',name));types.forEach(t=>{const label=el('label','mn-overlay');label.innerHTML='<input type="checkbox"'+(!Array.isArray(selected)||selected.includes(t)?' checked':'')+'><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+color+';margin:0 5px"></i><span>'+t+(available.includes(t)?'':' · 暂无记录')+'</span>';label.querySelector('input').onchange=e=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:available);e.target.checked?set.add(t):set.delete(t);S.set({relTypes:[...set]});};relFilter.appendChild(label);});});
-      const legacy=F.legacyTypes();if(legacy.length){relFilter.appendChild(el('div','mn-l2','历史数据原始关系'));legacy.forEach(t=>{const label=el('label','mn-overlay');label.innerHTML='<input type="checkbox"'+(!Array.isArray(selected)||selected.includes(t)?' checked':'')+'><span>'+t+'</span>';label.querySelector('input').onchange=e=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:available);e.target.checked?set.add(t):set.delete(t);S.set({relTypes:[...set]});};relFilter.appendChild(label);});}
+      groups.forEach(([name,color,types])=>{
+        relFilter.appendChild(el('div','mn-l2',name));
+        const row=el('div','mn-rel-types');
+        types.forEach(t=>{
+          const on=!Array.isArray(selected)||selected.includes(t);
+          const b=el('button','l3'+(on?' on':''));
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
+          b.setAttribute('aria-pressed',String(on));
+          b.onclick=()=>{const all=F.PRD_REL_TYPES.concat(F.legacyTypes());const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:all);on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
+          row.appendChild(b);
+        });
+        relFilter.appendChild(row);
+      });
       body.appendChild(relFilter);
       const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
       const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
@@ -399,7 +431,6 @@
   }
   const SEQ = D.STREAM_SEQ || [];
   const BATCHES = { fact: seqBatches(SEQ), relation: seqBatches(SEQ.filter(e => REL_STAGES[e.stage])) };
-  const SPEED = 2.6;
   /* B2：单条日志写长写细（阶段 · 来源 · 标题 · 可信度 · 影响 · 坐标 · 关联本体 · 耗时），超过 800 字截断 */
   const STAGE_TAG = { ingest: '接入', extract: '抽取', resolve: '归并', geo: '定位', score: '评分', link: '关联', graph: '图谱', warn: '提醒' };
   const pad2 = n => String(n).padStart(2, '0');
@@ -435,14 +466,14 @@
       const step = () => {
         pushStreamLine(batch.items[k]); k++;
         if (k < n) ST.timer = setTimeout(step, 90 + Math.random() * 80);
-        else ST.timer = setTimeout(scheduleStream, 1000 + Math.random() * 1200);   /* 批间停顿 1–2.2s */
+        else ST.timer = setTimeout(scheduleStream, 420 + Math.random() * 480);   /* 批间停顿 0.4–0.9s */
       };
       step();
       return;
     }
-    if (roll < .58) { pushStreamLine(batch.items[0]); ST.timer = setTimeout(scheduleStream, 1500 + Math.random() * 900); return; }
+    if (roll < .58) { pushStreamLine(batch.items[0]); ST.timer = setTimeout(scheduleStream, 580 + Math.random() * 500); return; }
     pushStreamLine(batch.items[0]);
-    ST.timer = setTimeout(scheduleStream, 260 + Math.random() * 900);
+    ST.timer = setTimeout(scheduleStream, 360 + Math.random() * 400);
   }
   function syncStream() {
     const st = S.state, box = $('streamBox');
@@ -481,10 +512,10 @@
     if (st.tab === 'fact') return S.set({ factId: null, logOpen: false, factObj: null });
     const stack = drawerStack();
     if (!stack.length) return;
-    if (stack.length === 1) return S.set({ rel: { sel: null, kind: null, stack: [] } });
+    if (stack.length === 1) return S.set({ factId: null, rel: { sel: null, kind: null, stack: [] } });
     const next = stack.slice(0, -1);
     const top = next[next.length - 1];
-    S.set({ rel: { stack: next, sel: top.id, kind: top.kind } });
+    S.set({ factId: top.kind === 'fact' ? top.id : null, rel: { stack: next, sel: top.id, kind: top.kind } });
   }
   function syncDrawers() {
     const stack = drawerStack();
@@ -499,7 +530,7 @@
       const wrap = el('div', 'drawer');
       const isTop = i === stack.length - 1;
       const head = el('div', 'drawer-head');
-      const title = d.kind === 'fact' ? '事实详情' : d.kind === 'relation' ? '关联详情' : '本体详情';
+      const title = d.kind === 'fact' ? '事实详情' : d.kind === 'relation' ? '关系详情' : '本体详情';
       head.innerHTML = '<b>' + title + '</b><span class="sp"></span>';
       if ((stack.length > 1 || d.kind === 'fact') && isTop) {
         const back = el('button', 'drawer-back', '← 返回');

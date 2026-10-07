@@ -1,7 +1,9 @@
 /* 关联层正交地球：与二维地图共用真实本体经纬度和关系，不依赖在线底图。 */
 window.V03RelGlobe = (function () {
   let canvas, ctx, visible = false, raf = 0, last = 0, rotation = 105, tilt = .22, radiusScale = .38;
-  let nodes = [], routes = [], hits = [], onSelect = () => {}, pointer = null, pauseUntil = 0;
+  let nodes = [], routes = [], hits = [], onSelect = () => {}, pointer = null, pauseUntil = 0, glowUntil = 0;
+  let seed = 7301; const random=()=>((seed=seed*16807%2147483647)-1)/2147483646;
+  const stars=Array.from({length:145},()=>({x:random(),y:random(),r:.4+random()*1.15,a:.2+random()*.55,s:.08+random()*.4}));
   const rad = Math.PI / 180;
   const polygons = window.V03Fact.worldGeoJSON(false).features.flatMap(f =>
     (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
@@ -78,7 +80,8 @@ window.V03RelGlobe = (function () {
   }
   function draw(now) {
     const w=canvas.clientWidth,h=canvas.clientHeight,cx=w*.5,cy=h*.5,R=Math.min(w,h)*radiusScale,scheme=colors();
-    ctx.clearRect(0,0,w,h);ctx.fillStyle=scheme.ocean;ctx.fillRect(0,0,w,h);
+    ctx.clearRect(0,0,w,h);ctx.fillStyle='#071725';ctx.fillRect(0,0,w,h);
+    stars.forEach(st=>{ctx.globalAlpha=st.a*(.7+.3*Math.sin(now*.001*st.s+st.x*19));ctx.fillStyle='#e3f3ff';ctx.beginPath();ctx.arc(((st.x+now*.000003*st.s)%1)*w,st.y*h,st.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
     const sphere=ctx.createRadialGradient(cx-R*.32,cy-R*.4,R*.12,cx,cy,R*1.08);
     sphere.addColorStop(0,'#5693a5');sphere.addColorStop(.68,'#276076');sphere.addColorStop(1,'#153c55');
     ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fillStyle=sphere;ctx.fill();ctx.save();ctx.clip();
@@ -103,6 +106,7 @@ window.V03RelGlobe = (function () {
     });
     nodes.forEach(o=>{
       const p=project(o.lng,o.lat,cx,cy,R);if(p.z<=0)return;
+      if(now<glowUntil && nodes.indexOf(o)<3){ctx.beginPath();ctx.arc(p.x,p.y,7+3*Math.sin(now*.006),0,Math.PI*2);ctx.fillStyle='rgba(255,208,105,.22)';ctx.fill();}
       ctx.beginPath();ctx.arc(p.x,p.y,2.7,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();
       ctx.strokeStyle=scheme.accent;ctx.lineWidth=1.4;ctx.stroke();hits.push({x:p.x,y:p.y,id:o.id});
     });
@@ -117,6 +121,7 @@ window.V03RelGlobe = (function () {
     resize();draw(now);
   }
   function setVisible(next) {
+    if(next && !visible && !glowUntil) glowUntil=performance.now()+3000;
     visible=next;
     if(!next){if(raf)cancelAnimationFrame(raf);raf=0;return;}
     resize();if(!raf)raf=requestAnimationFrame(loop);

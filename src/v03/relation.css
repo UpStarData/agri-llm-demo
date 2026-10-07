@@ -62,3 +62,7 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
   .rel-side.off{width:auto;height:0}
   .rel-grid{column-count:2}
 }
+
+.rel-start-sim{width:100%;margin:10px 0 14px;padding:10px 13px;background:var(--accent);color:#fff;border:0;border-radius:7px;font-weight:600;cursor:pointer;text-align:left}
+
+.rel-evidence,.rel-endpoint{display:block;width:100%;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--accent);text-align:left;margin:4px 0;padding:6px 8px;cursor:pointer;font-size:.7rem}.rel-evidence:hover,.rel-endpoint:hover{background:var(--accent-soft)}

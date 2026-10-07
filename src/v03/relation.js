@@ -13,7 +13,7 @@
    ============================================================ */
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '';
+  let root, chart, dom = {}, sig = '', glowUntil = 0, glowTimer = 0;
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, level: null, roamTimer: null };
   const ZOOM_BOX = [1.26, 3.0];
   let dragging = false;
@@ -44,19 +44,18 @@ window.V03Relation = (function () {
       <div class="rel-canvas" id="relCanvas"></div>
       <canvas class="rel-globe" id="relGlobe" aria-label="关联层三维地球：可拖动旋转、滚轮缩放、点击本体"></canvas>
       <div class="rel-viewbar" role="group" aria-label="关联层视图">
-        <button type="button" data-view="globe">3D 地球</button>
-        <button type="button" data-view="geo">2D 地图</button>
-        <button type="button" data-view="graph">知识图谱</button>
+
       </div>
     </div>
     <aside class="rel-side" id="relSide"><div class="rel-body" id="relBody"></div></aside>
   </div>`;
 
   function mount(el) {
-    root = el; root.innerHTML = TPL;
+    root = el; root.innerHTML = TPL;glowUntil=performance.now()+3000;
+    clearTimeout(glowTimer);glowTimer=setTimeout(()=>{sig='';if(S.state.tab==='relation')update();},3100);
     dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), globe: root.querySelector('#relGlobe'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody') };
     window.V03RelGlobe.mount(dom.globe, openObject);
-    root.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => S.set({ rel: { view: button.dataset.view } }); });
+
     dom.canvas.addEventListener('pointerdown', () => { dragging = true; }, true);
     window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; if (hover) { hover = null; paintFocus(); } });
     dom.canvas.addEventListener('wheel', e => {
@@ -263,7 +262,10 @@ window.V03Relation = (function () {
           effect: { show: true, period: 5.2, trailLength: .35, symbol: 'circle', symbolSize: 3.4, color: p.flow },
           lineStyle: { curveness: .22, opacity: 0 } },
         { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels },
-        { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' }
+        { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' },
+        { id: 'relNewPulse', type: 'effectScatter', coordinateSystem: 'geo', z: 6, silent: true,
+          data: performance.now()<glowUntil ? nodes.slice(0,3).map(n=>({value:n.value,symbolSize:12})) : [],
+          rippleEffect: {period:1.3,scale:2.4,brushType:'stroke'},itemStyle:{color:'#e4a449'} }
       ]
     };
   }
@@ -354,15 +356,15 @@ window.V03Relation = (function () {
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
-      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位|计价单位|状态/.test(k)).slice(0, 3)
+      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|所在地|品种|产地|进口|规模|销往|类型|设施|货类|状态|范围/.test(k)).slice(0, 3)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
         '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
-        '<span class="rc-sub">' + esc(o.sub || '') + '</span>' +
+        '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' +
         (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
-        '<span class="rc-m">' + (o.factCount ? o.factCount + ' 条支撑事实 · ' : '') + relCount + ' 条关系 · 点击展开详情</span></button>';
+        '<span class="rc-m">' + relCount + ' 条关系 · 查看详情 →</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
       + '<div class="rel-foot">卡片按筛选展示全部本体，与地图视角独立；无坐标本体不在地图造点。</div>';
@@ -376,6 +378,10 @@ window.V03Relation = (function () {
     if (!box) return;
     if (d.kind === 'relation') return renderRelation(box, D.relById(d.id));
     return renderObject(box, D.objById(d.id));
+  }
+  function openFact(id) {
+    const stack=S.state.rel.stack || [];
+    S.set({ factId:id, rel:{stack:stack.concat([{kind:'fact',id}]),sel:id,kind:'fact'} });
   }
   function renderObject(box, o) {
     if (!o) { box.innerHTML = ''; return; }
@@ -391,17 +397,19 @@ window.V03Relation = (function () {
         <div class="fd-sec">
           <h4>基本属性</h4>
           <div class="kv-grid">${(o.props || []).map(([k, v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>').join('')}</div>
-          ${o.geo === false ? '' : '<div class="kv"><span>坐标</span><b>' + o.lng.toFixed(2) + '°E / ' + o.lat.toFixed(2) + '°N</b></div>'}
+          <div class="kv"><span>所在地</span><b>${esc(o.region || o.location || (o.geo === false ? '暂无位置' : (o.lat.toFixed(2) + '°N / ' + o.lng.toFixed(2) + '°E')))}</b></div>
         </div>
 
+        <button type="button" class="rel-start-sim">基于该本体发起推演 →</button>
+        ${(o.commodityTags || []).length ? '<div class="fd-sec"><h4>涉及品种</h4><p>' + esc(o.commodityTags.join('、')) + '</p></div>' : ''}
         <div class="fd-sec">
-          <h4>来源 <small>登记与依据</small></h4>
+          <h4>简介与来源</h4>
           <p>${esc(o.note || '由公开登记与事实抽离共同确定。')}</p>
         </div>
 
         <div class="fd-sec">
           <h4>相关事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<p style="margin-bottom:4px">' + f.date + ' · ' + esc(f.title) + '</p>').join('') || '<p>暂无直接支撑事实。</p>'}
+          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
         </div>
 
         <div class="fd-sec">
@@ -416,6 +424,8 @@ window.V03Relation = (function () {
           }).join('') : '<p>暂无关系记录。</p>'}
         </div>
       </div>`;
+    box.querySelector('.rel-start-sim').onclick = () => S.set({ carry: [...new Set([...(S.state.carry || []), ...(o.factIds || [])])], tab: 'sim' });
+    box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
     box.querySelectorAll('[data-rel]').forEach(n => n.onclick = () => {
       const stack = S.state.rel.stack || [];
       S.set({ rel: { sel: n.dataset.rel, kind: 'relation', stack: stack.concat([{ kind: 'relation', id: n.dataset.rel }]) } });
@@ -428,7 +438,7 @@ window.V03Relation = (function () {
     box.innerHTML = `
       <div class="fd">
         <div class="fd-id">${esc(r.type)} · 形成于 ${esc(r.formed || '—')}</div>
-        <h3>${esc(r.type)}</h3>
+        <h3>${esc(a ? a.name : r.from)} → ${esc(r.type)} → ${esc(b ? b.name : r.to)}</h3>
         <div class="fd-chips fcard-mark">强度 ${(r.strength * 100).toFixed(0)}% · 置信 ${(r.confidence * 100).toFixed(0)}%${r.confidence < .6 ? ' · <em>待观察</em>' : ''}</div>
 
         <div class="fd-sec">
@@ -440,8 +450,8 @@ window.V03Relation = (function () {
         <div class="fd-sec">
           <h4>关键字段</h4>
           <div class="kv-grid">
-            <div class="kv"><span>起点本体</span><b>${esc(a ? a.name : r.from)}</b></div>
-            <div class="kv"><span>终点本体</span><b>${esc(b ? b.name : r.to)}</b></div>
+            <div class="kv"><span>起点本体</span><button class="rel-endpoint" data-object="${esc(r.from)}">${esc(a ? a.name : r.from)} · ${esc(a ? F.relKind(a) : '')}</button></div>
+            <div class="kv"><span>终点本体</span><button class="rel-endpoint" data-object="${esc(r.to)}">${esc(b ? b.name : r.to)} · ${esc(b ? F.relKind(b) : '')}</button></div>
             <div class="kv"><span>形成时间</span><b>${esc(r.formed || '—')}</b></div>
             <div class="kv"><span>最近变化</span><b>${fb ? esc(fb.date) : '—'}</b></div>
           </div>
@@ -449,14 +459,18 @@ window.V03Relation = (function () {
 
         <div class="fd-sec">
           <h4>支持事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<p style="margin-bottom:4px">' + f.date + ' · ' + esc(f.title) + '</p>').join('') || '<p>暂无直接支撑事实。</p>'}
+          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
         </div>
 
+        <button type="button" class="rel-start-sim">基于该关系发起推演 →</button>
         <div class="fd-sec">
           <h4>最近导致关系变化的事实</h4>
           <p>${fb ? fb.date + ' · ' + esc(fb.title) : '近期无变更记录。'}</p>
         </div>
       </div>`;
+    box.querySelector('.rel-start-sim').onclick = () => S.set({carry:[...new Set([...(S.state.carry||[]),...(r.factIds||[])])],tab:'sim'});
+    box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
+    box.querySelectorAll('[data-object]').forEach(n=>n.onclick=()=>{const stack=S.state.rel.stack||[];S.set({rel:{sel:n.dataset.object,kind:'object',stack:stack.concat([{kind:'object',id:n.dataset.object}])}});});
   }
 
   /* ---------- 更新 ---------- */
@@ -476,11 +490,7 @@ window.V03Relation = (function () {
       c.resize();
       c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
     }
-    root.querySelectorAll('[data-view]').forEach(button => {
-      const active = button.dataset.view === st.rel.view;
-      button.classList.toggle('on', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
+
     renderPanel(st, objs);
   }
 

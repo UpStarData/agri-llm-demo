@@ -1,0 +1,43 @@
+#!/usr/bin/env node
+import { chromium } from 'playwright';
+import { pathToFileURL } from 'node:url';
+import path from 'node:path';
+
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  await page.goto(pathToFileURL(path.resolve('index.html')).href);
+  await page.waitForFunction(() => window.__AGRI_READY === true);
+  await page.evaluate(() => V03Store.set({ time: '30d', panels: { cards: false, stream: false } }));
+  const fact = await page.evaluate(() => {
+    const chart = echarts.getInstanceByDom(document.querySelector('#factMap'));
+    return { rings: chart.getOption().series.find(x => x.id === 'halo').data.length,
+      theme: V03Store.state.theme, enabled: V03Store.state.sk.influence };
+  });
+  if (fact.rings < 10 || !fact.enabled || fact.theme !== 'color') throw Error('事实影响圈或主配色失效');
+
+  await page.evaluate(() => V03Store.set({ tab: 'relation', menu: true, panels: { cards: true } }));
+  await page.waitForFunction(() => document.querySelectorAll('.rel-card').length > 0);
+  const rel = await page.evaluate(() => ({ view: V03Relation.debug().view,
+    controls: [...document.querySelectorAll('#mapSk button')].map(b => b.dataset.k),
+    total: document.querySelector('#menuBody .relation-overview')?.textContent }));
+  if (rel.view !== 'globe' || !rel.controls.includes('viewGraph') || !rel.total.includes('4128')) throw Error('关联层默认视图、控制或概览失效');
+  if ((await page.locator('#menuBody').textContent()).includes('暂无记录')) throw Error('图例仍包含无数据提示');
+  await page.locator('#mapSk button[data-k=view2d]').click();
+  if (await page.evaluate(() => V03Relation.debug().view) !== 'geo') throw Error('快捷视图切换失效');
+  await page.locator('#mapSk button[data-k=search]').click();
+  await page.locator('.sk-input').fill('榴莲');
+  if (!await page.locator('.search-result').count()) throw Error('本体搜索没有结果');
+  await page.locator('.search-actions button').last().click();
+  if (!await page.evaluate(() => V03Store.state.rel.search)) throw Error('本体搜索未提交');
+  await page.evaluate(() => V03Store.set({ rel: { search: '' } }));
+  await page.locator('#relBody .rel-card').first().click();
+  await page.locator('.rel-start-sim').click();
+  if (await page.evaluate(() => V03Store.state.tab) !== 'sim') throw Error('本体发起推演未切换页面');
+  const iframe = await page.locator('.miro-bridge-frame').getAttribute('src');
+  if (!iframe.includes('/mirofish-frontend-preview/')) throw Error('推演层未恢复旧版工作台');
+  if (errors.length) throw Error(errors.join('\n'));
+  console.log('V1.0.1: fact rings, relation controls/search, ontology-to-simulation and restored preview passed');
+} finally { await browser.close(); }
