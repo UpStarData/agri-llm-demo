@@ -11,7 +11,7 @@ window.V03Store = (function () {
 
   const state = {
     tab: 'fact',                  // fact | relation | sim
-    theme: 'light',               // light | color；Felt 清爽与 Outdoors 户外两套整页配色
+    theme: 'color',               // light | color；配色 2 Outdoors 为默认主配色，Felt 仍可切换
 
     /* 左侧图层菜单（从左侧滑出）与顶部快捷图标组 */
     menu: false,
