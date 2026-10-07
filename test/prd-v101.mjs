@@ -35,6 +35,14 @@ try {
   if (!await page.evaluate(() => V03Store.state.rel.search)) throw Error('本体搜索未提交');
   await page.evaluate(() => V03Store.set({ rel: { search: '' } }));
   await page.locator('#relBody .rel-card').first().click();
+  await page.locator('#drawerStack .drawer').waitFor();
+  await page.waitForTimeout(280); // wait for the drawer slide animation to finish
+  const [drawerBox, cardBox] = await Promise.all([
+    page.locator('#drawerStack .drawer').first().boundingBox(),
+    page.locator('#relBody').boundingBox()
+  ]);
+  if (!drawerBox || !cardBox || drawerBox.x + drawerBox.width > cardBox.x + 2)
+    throw Error('本体详情遮挡了右侧卡片列表: ' + JSON.stringify({drawerBox,cardBox}));
   await page.locator('.rel-start-sim').click();
   if (await page.evaluate(() => V03Store.state.tab) !== 'sim') throw Error('本体发起推演未切换页面');
   const iframe = await page.locator('.miro-bridge-frame').getAttribute('src');

@@ -776,7 +776,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.2</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.3</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -841,7 +841,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"7ec1a095a1de","git":"5dcf9d9","builtAt":"2026-10-07T20:40:17.239Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"12a565bc850a","git":"cca70df","builtAt":"2026-10-07T20:49:29.093Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -7375,7 +7375,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.0.2',
+      source: 'AgriLink v1.0.3',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -7943,7 +7943,8 @@ window.V03Sim = (function () {
   function syncDrawers() {
     const stack = drawerStack();
     const box = $('drawerStack');
-    box.style.right = S.state.tab === 'fact' && S.state.panels.cards && stack.some(d => d.kind === 'fact') ? 'var(--side-w)' : '0px';
+    box.style.right = S.state.panels.cards && (S.state.tab === 'relation' || stack.some(d => d.kind === 'fact'))
+      ? 'var(--side-w)' : '0px';
     const sig = JSON.stringify([S.state.tab, stack, S.state.logOpen, S.state.sk.live]);
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
