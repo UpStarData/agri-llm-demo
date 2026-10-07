@@ -115,5 +115,5 @@ fs.writeFileSync(path.join(root, 'build-meta.json'), JSON.stringify({
   hash, git, builtAt: new Date().toISOString(), partial: PARTIAL, inputs: INPUTS, missing,
   bytes: Buffer.byteLength(html)
 }, null, 2) + '\n');
-console.log(`index.html  ${(Buffer.byteLength(html) / 1024).toFixed(0)} KB  single-file / offline-ready  build=${hash} git=${git}` +
+console.log(`index.html  ${(Buffer.byteLength(html) / 1024).toFixed(0)} KB  single-file / simulation-online  build=${hash} git=${git}` +
   (missing.length ? `  缺文件 ${missing.length} 个：${missing.join(', ')}` : ''));
