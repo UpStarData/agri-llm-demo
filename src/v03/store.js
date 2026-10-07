@@ -11,7 +11,7 @@ window.V03Store = (function () {
 
   const state = {
     tab: 'fact',                  // fact | relation | sim
-    theme: 'dark',                // dark | light；默认夜间，参考 HungerMap LIVE
+    theme: 'light',               // light | color；两套日间可读的配色，默认 WFP 风格浅色
 
     /* 左侧图层菜单（从左侧滑出）与顶部快捷图标组 */
     menu: false,
