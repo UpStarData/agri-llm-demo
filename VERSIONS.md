@@ -4,6 +4,7 @@
 
 | 版本 | 预览地址 | 内容 | 构建指纹 | 源码提交 / tag |
 | --- | --- | --- | --- | --- |
+| **V0.8.14** | https://upstardata.github.io/agri-llm-demo/v0.8.14/ | 撤换无来源的高饱和地图配色；配色 2 使用石板蓝与低饱和地理区域色，保留事实点与地图循环；更正来源说明 | `1e83081e5af8` | `5e1d1ec` · `v0.8.14` |
 | **V0.8.13** | https://upstardata.github.io/agri-llm-demo/v0.8.13/ | 全球地图左右连续循环；国家／省区接壤异色；两套完整配色；旧版同标签页直达最新版 | `f0fdab66b152` | `5127dc8` · `v0.8.13` |
 | **V0.8.12** | https://upstardata.github.io/agri-llm-demo/v0.8.12/ | 两套大屏配色；中国居中的世界投影（美洲在右）；事实点与关联线统一经度坐标 | `38c334ee6aed` | `2d438a9` · `v0.8.12` |
 | **V0.8.11** | https://upstardata.github.io/agri-llm-demo/v0.8.11/ | 暗色地图收敛为蓝、青、靛色；事实层和关联层地理地图以中国为可见视野中心 | `f4fbbfab3928` | `811a8ec` · `v0.8.11` |
@@ -26,7 +27,7 @@
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
 | **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
 
-> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.8.13**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.8.14**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
