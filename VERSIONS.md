@@ -4,6 +4,7 @@
 
 | 版本 | 预览地址 | 内容 | 构建指纹 | 源码提交 / tag |
 | --- | --- | --- | --- | --- |
+| **V1.0.1** | https://upstardata.github.io/agri-llm-demo/v1.0.1/ | 恢复此前 MiroFish 风格的图谱、运行和报告工作台；推演发起页改为 GPT 式对话输入。关联层补齐分类图例、搜索、视图切换、星空和详情发起推演；事实层只展示点与影响圈；推演工作台需联网加载 | `973911f1bfa3` | `5dcf9d9` · `v1.0.1` |
 | **V1.0.0** | https://upstardata.github.io/agri-llm-demo/v1.0.0/ | 三份 PRD 调整：关联层两级本体分类、品种和关系筛选、全本体卡片；推演层发起、七阶段运行、报告与证据回溯原型；事实层延续 V1.2 交互 | `d33ff7d28aa6` | `6036196` · `v1.0.0` |
 | **V0.8.17** | https://upstardata.github.io/agri-llm-demo/v0.8.17/ | 配色 2 成为事实层、关联层默认主配色；配色 1 保留可切换；其余交互沿用 V0.8.16 | `23036830bc45` | `9b33be6` · `v0.8.17` |
 | **V0.8.16** | https://upstardata.github.io/agri-llm-demo/v0.8.16/ | Felt／Mapbox Outdoors 参考的两套整体页面配色；关联层默认动态 3D 地球、2D 地图、知识图谱；2D 最小级再缩小进入 3D；可见本体点数量收敛并保持拖动贴图 | `9ead82883645` | `3a0cd8a` · `v0.8.16` |
@@ -30,7 +31,7 @@
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
 | **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
 
-> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V1.0.0**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V1.0.1**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
