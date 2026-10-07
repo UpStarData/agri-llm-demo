@@ -10,19 +10,20 @@
     "serve": "node server.mjs",
     "start": "./serve.sh start",
     "stop": "./serve.sh stop",
-    "test": "node test/v03.mjs",
+    "test": "node test/prd-v100.mjs",
     "test:v03": "node test/v03.mjs",
     "shots": "node test/shots-v03.mjs",
-    "test:all": "node test/v03.mjs && node test/shots-v03.mjs",
+    "test:all": "node test/prd-v100.mjs && node test/world-wrap-v0813.mjs && node test/relation-roam.mjs",
     "compare": "node test/compare-v03.mjs",
     "fonts": "python3 tools/subset-fonts.py",
     "shots:v2": "node test/shots-v2.mjs",
     "shots:v5": "node test/shots-v05.mjs",
-    "shots:v6": "node test/shots-v06.mjs"
-    ,"test:v08": "node test/v08.mjs"
-    ,"shots:v08": "node test/shots-v08.mjs"
-    ,"test:v081": "node test/v081-map-anchor.mjs"
-    ,"test:v083": "node test/probe-roam-frames.mjs --pan-only --assert-visual && node test/probe-roam-frames.mjs --single-round --zoom-only --assert-visual"
+    "shots:v6": "node test/shots-v06.mjs",
+    "test:v08": "node test/v08.mjs",
+    "shots:v08": "node test/shots-v08.mjs",
+    "test:v081": "node test/v081-map-anchor.mjs",
+    "test:v083": "node test/probe-roam-frames.mjs --pan-only --assert-visual && node test/probe-roam-frames.mjs --single-round --zoom-only --assert-visual",
+    "test:prd": "node test/prd-v100.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

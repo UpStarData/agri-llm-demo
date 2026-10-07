@@ -81,7 +81,8 @@
     const set = (btn, on) => { btn.classList.toggle('on', !!on); btn.setAttribute('aria-pressed', String(!!on)); };
     set($('btnStream'), st.panels.stream && st.tab !== 'sim');
     set($('btnCards'), st.panels.cards && st.tab !== 'sim');
-    set($('menuBtn'), st.menu);
+    set($('menuBtn'), st.menu && st.tab !== 'sim');
+    $('menuBtn').disabled = st.tab === 'sim';
     $('btnStream').disabled = st.tab === 'sim';
     $('btnCards').disabled = st.tab === 'sim';
     $('btnTheme').innerHTML = svg('sun', 16) + '<span class="theme-name">' + (st.theme === 'color' ? '配色 2' : '配色 1') + '</span>';
@@ -99,15 +100,16 @@
     { k: 'zoomOut', i: 'minus', n: '缩小', d: '缩小地图', kind: 'zoom', dir: -1 },
     { k: 'mode3d', i: 'cube3d', n: '2D / 3D', d: '切换二维地图与三维地球', kind: 'sw', get: s => s.sk.mode3d, set: v => ({ sk: { mode3d: v } }) },
     { k: 'influence', i: 'radar', n: '地理影响圆', d: '显示或隐藏事实的地理影响圆', kind: 'sw', get: s => s.sk.influence, set: v => ({ sk: { influence: v } }) },
+    { k: 'crossRegion', i: 'anchor', n: '跨区域关系', d: '显示跨出当前视角的关系线', kind: 'sw', get: s => s.rel.crossRegion, set: v => ({ rel: { crossRegion: v } }) },
     { k: 'fullscreen', i: 'expand', n: '全屏', d: '浏览器全屏显示地图', kind: 'sw', get: s => s.sk.fullscreen, set: v => ({ sk: { fullscreen: v } }) },
     { k: 'live', i: 'video', n: '视频', d: '显示或隐藏视频事实卡', kind: 'sw', get: s => s.sk.live, set: v => ({ sk: { live: v } }) },
     { k: 'regions', i: 'sprout', n: '主要产区', d: '标注主要农产品产区', kind: 'sw', get: s => s.sk.regions, set: v => ({ sk: { regions: v } }) },
     { k: 'gates', i: 'anchor', n: '港口', d: '标注主要贸易港口', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
     { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
-    { k: 'search', i: 'search', n: '搜索', d: '搜索事实标题', kind: 'input', get: s => s.q, set: v => ({ q: v }) }
+    { k: 'search', i: 'search', n: '搜索', d: '搜索事实或本体名称', kind: 'input', get: s => s.tab === 'relation' ? s.rel.search : s.q, set: v => S.state.tab === 'relation' ? ({ rel: { search: v } }) : ({ q: v }) }
   ];
   const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
-    : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (s.q ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
+    : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (sk.get(s) ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
 
   let pop = null;
   function closePop() { if (pop) { pop.remove(); pop = null; document.removeEventListener('mousedown', onDocDown, true); } }
@@ -132,7 +134,7 @@
       }
     } else if (sk.kind === 'input') {
       const inp = el('input', 'sk-input');
-      inp.type = 'search'; inp.value = S.state.q; inp.placeholder = '搜索事实标题';
+      inp.type = 'search'; inp.value = sk.get(S.state) || ''; inp.placeholder = S.state.tab === 'relation' ? '搜索本体名称' : '搜索事实标题';
       let t = null;
       inp.oninput = () => { clearTimeout(t); t = setTimeout(() => S.set({ q: inp.value.trim() }), 160); };
       inp.onkeydown = e => { if (e.key === 'Enter') { closePop(); rerender(); } };
@@ -150,7 +152,8 @@
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
     SK.forEach((sk, idx) => {
-      if (st.tab === 'relation' && sk.k === 'mode3d') return;
+      if (st.tab === 'relation' && !['zoomIn','zoomOut','fullscreen','crossRegion','search'].includes(sk.k)) return;
+      if (st.tab !== 'relation' && sk.k === 'crossRegion') return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
       const on = sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
@@ -245,9 +248,9 @@
   /* ---------- F2：左侧菜单四段 ---------- */
   function renderMenu() {
     const st = S.state, body = $('menuBody');
-    $('menu').classList.toggle('on', st.menu);
-    $('menu').setAttribute('aria-hidden', String(!st.menu));
-    if (!st.menu) { ovStop(); return; }
+    $('menu').classList.toggle('on', st.menu && st.tab !== 'sim');
+    $('menu').setAttribute('aria-hidden', String(!st.menu || st.tab === 'sim'));
+    if (!st.menu || st.tab === 'sim') { ovStop(); return; }
 
     const ov = F.overview(st);
     const isRel = st.tab === 'relation';
@@ -284,7 +287,7 @@
       };
       blk.appendChild(groupHead);
       g.subs.forEach(sub => {
-        blk.appendChild(el('div', 'mn-l2', sub.n));
+        if (!isRel) blk.appendChild(el('div', 'mn-l2', sub.n));
         const row = el('div', 'mn-l3');
         sub.items.forEach(it => {
           const on = onSet.has(it.key);
@@ -306,7 +309,7 @@
     const bNone = el('button', 'ghost sm', '全不选');
     bNone.onclick = () => S.set({ [field]: [] });
     quick.appendChild(bAll); quick.appendChild(bNone);
-    quick.appendChild(el('span', 'mn-tip', '三级事实类型决定地图和卡片筛选；默认全选'));
+    quick.appendChild(el('span', 'mn-tip', isRel ? '两级本体类型同时筛选地图、图谱和卡片' : '三级事实类型决定地图和卡片筛选；默认全选'));
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');
@@ -324,6 +327,22 @@
       s2.appendChild(selector);
     }
     body.appendChild(s2);
+
+    if (isRel) {
+      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选 · 跨层同步'));
+      const row=el('div','mn-varieties');
+      ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
+      variety.appendChild(row);body.appendChild(variety);
+      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
+      const available=[...new Set(D.RELATIONS.map(r=>r.type))];
+      const groups=[['生产供应','#4d966a',['生产','供应','采购']],['经营组织','#cf854a',['运营','入驻','合作']],['空间','#547baa',['位于','发生于']],['物流','#24a6a1',['运输至','储存于']],['政策','#8a6dba',['发布','适用于','监管']],['影响','#ca6975',['影响']]];
+      const selected=st.relTypes;
+      groups.forEach(([name,color,types])=>{relFilter.appendChild(el('div','mn-l2',name));types.forEach(t=>{const label=el('label','mn-overlay');label.innerHTML='<input type="checkbox"'+(!Array.isArray(selected)||selected.includes(t)?' checked':'')+'><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+color+';margin:0 5px"></i><span>'+t+(available.includes(t)?'':' · 暂无记录')+'</span>';label.querySelector('input').onchange=e=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:available);e.target.checked?set.add(t):set.delete(t);S.set({relTypes:[...set]});};relFilter.appendChild(label);});});
+      const legacy=F.legacyTypes();if(legacy.length){relFilter.appendChild(el('div','mn-l2','历史数据原始关系'));legacy.forEach(t=>{const label=el('label','mn-overlay');label.innerHTML='<input type="checkbox"'+(!Array.isArray(selected)||selected.includes(t)?' checked':'')+'><span>'+t+'</span>';label.querySelector('input').onchange=e=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:available);e.target.checked?set.add(t):set.delete(t);S.set({relTypes:[...set]});};relFilter.appendChild(label);});}
+      body.appendChild(relFilter);
+      const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
+      const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
+    }
 
     if (!isRel) {
       const overlay = el('section', 'mn-sec');

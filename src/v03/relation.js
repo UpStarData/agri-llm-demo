@@ -20,9 +20,12 @@ window.V03Relation = (function () {
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
   const TYPE_COLOR = {
-    '行政归属': '#7ea0cf', '生产': '#65a30d', '供应流向': '#d97706', '流入': '#0891b2',
-    '流出': '#0d9488', '运输经由': '#0369a1', '影响': '#dc2626', '依赖': '#7e22ce',
-    '覆盖': '#a16207', '贸易': '#b45309', '替代': '#db2777', '价格传导': '#ea580c'
+    '生产':'#4d966a','供应':'#4d966a','采购':'#4d966a','供应流向':'#4d966a','贸易':'#4d966a',
+    '运营':'#cf854a','入驻':'#cf854a','合作':'#cf854a','依赖':'#cf854a','替代':'#cf854a',
+    '位于':'#547baa','发生于':'#547baa','行政归属':'#547baa',
+    '运输至':'#24a6a1','储存于':'#24a6a1','运输经由':'#24a6a1','流入':'#24a6a1','流出':'#24a6a1',
+    '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba',
+    '影响':'#ca6975','价格传导':'#ca6975'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'color' ? {
@@ -162,6 +165,10 @@ window.V03Relation = (function () {
     rels.forEach(r => {
       const from = pos[r.from], to = pos[r.to];
       if (!from || !to) return;
+      if (!S.state.rel.crossRegion && chart && S.state.rel.view === 'geo') {
+        const inside = point => {const xy=chart.convertToPixel({geoIndex:0},point);return xy && xy[0]>=0 && xy[0]<=dom.canvas.clientWidth && xy[1]>=0 && xy[1]<=dom.canvas.clientHeight;};
+        if (inside(from[1]) !== inside(to[1])) return;
+      }
       const isFocus = focus && (r.from === focus || r.to === focus);
       if (isFocus) related.add(r.id);
       const color = isFocus ? typeColor(r.type) : palette().neutral;
@@ -173,7 +180,7 @@ window.V03Relation = (function () {
         id: r.id, coords: [a, b],
         lineStyle: {
           color: color,
-          width: isFocus ? 1.5 : 1,
+          width: Math.max(isFocus ? 1.5 : 1, (r.factIds||[]).length>=5 ? 2.4 : (r.factIds||[]).length>=2 ? 1.6 : 1),
           opacity: focus ? (isFocus ? .95 : .07) : (total <= 60 ? .55 : .38),
           type: 'solid',
           curveness: .18
@@ -204,7 +211,7 @@ window.V03Relation = (function () {
       const isFocus = focus === o.id;
       return window.V03Fact.worldCopies(o.lng, o.lat).map(value => ({
         id: o.id, objId: o.id, name: o.name, domain: o.domain, value,
-        symbolSize: isFocus ? 12 : 8 + Math.min(4, degree * .25),
+        symbolSize: 8,
         itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1 },
         label: {
           show: isFocus || degree >= 8, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
@@ -330,7 +337,7 @@ window.V03Relation = (function () {
     }, { lazyUpdate: true });
   }
 
-  /* ---------- A5：右侧本体瀑布流（仅不可定位本体，无关系清单） ---------- */
+  /* ---------- PRD V1.3：右侧本体卡片与地图视角分离，包含可定位和不可定位本体 ---------- */
   const shortFacts = o => {
     const fs = (o.factIds || []).map(id => D.factById(id)).filter(Boolean);
     return fs.slice(0, 1).map(f => f.title)[0] || '';
@@ -341,27 +348,24 @@ window.V03Relation = (function () {
   };
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
-    const nogeo = objs.filter(o => o.geo === false || o.lat == null);
-    const buckets = {};
-    nogeo.forEach(o => (buckets[o.domain] = buckets[o.domain] || []).push(o));
-    const order = D.DOMAINS.map(d => d.id).filter(k => buckets[k]);
-    const ordered = [];
-    for (let i = 0; ordered.length < nogeo.length; i++) order.forEach(k => { if (buckets[k][i]) ordered.push(buckets[k][i]); });
-    const capped = st.rel.allCards ? ordered : ordered.slice(0, 16);
+    const nogeo = objs.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
+    const ordered = nogeo;
+    const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
+      const kind = F.relKind(o) || dm.n;
       const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位|计价单位|状态/.test(k)).slice(0, 3)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
-        '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + dm.e + ' ' + esc(dm.n) + '</span></span>' +
+        '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
         '<span class="rc-sub">' + esc(o.sub || '') + '</span>' +
         (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
         '<span class="rc-m">' + (o.factCount ? o.factCount + ' 条支撑事实 · ' : '') + relCount + ' 条关系 · 点击展开详情</span></button>';
-    }).join('') + '</div>' : '<div class="rel-empty">当前筛选下没有不可定位的本体对象</div>')
+    }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
-      + '<div class="rel-foot">有真实地理归属的本体显示在地图上；无坐标的抽象对象（品种 / 机构 / 指标 / 人物）在此列出，不编造位置。</div>';
+      + '<div class="rel-foot">卡片按筛选展示全部本体，与地图视角独立；无坐标本体不在地图造点。</div>';
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
@@ -376,13 +380,13 @@ window.V03Relation = (function () {
   function renderObject(box, o) {
     if (!o) { box.innerHTML = ''; return; }
     const dm = domOf(o);
-    const rels = D.relationsOf(o.id);
+    const rels = D.relationsOf(o.id).filter(r => !Array.isArray(S.state.relTypes) || S.state.relTypes.includes(r.type));
     const facts = (o.factIds || []).map(id => D.factById(id)).filter(Boolean).sort((a, b) => a.date < b.date ? 1 : -1);
     box.innerHTML = `
       <div class="fd">
         <div class="fd-id">${esc(dm.n)} · ${o.geo === false ? '不可定位（右侧列出）' : '可定位'}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
         <h3>${esc(o.name)}</h3>
-        <div class="fd-chips fcard-mark">${dm.e} ${esc(dm.n)}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
+        <div class="fd-chips fcard-mark">${esc(F.relKind(o)||dm.n)}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
 
         <div class="fd-sec">
           <h4>基本属性</h4>
@@ -460,7 +464,7 @@ window.V03Relation = (function () {
     if (!root) return;
     const st = S.state;
     window.V03RelGlobe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
-    const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
+    const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
       st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
