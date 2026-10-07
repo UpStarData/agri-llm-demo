@@ -29,6 +29,8 @@
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
+旧版页面顶部的“去最新版”按钮统一指向 `latest/`。发布新版本时只需更新 `latest/index.html` 的目标版本和显示文案，旧版按钮无需逐页修改。
+
 ## 目录约定
 
 ```
