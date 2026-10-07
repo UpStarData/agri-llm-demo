@@ -146,10 +146,11 @@
 
   function renderShortcutBar(mount, opts) {
     const st = S.state, mode = (opts || {}).mode || 'map';
-    const na = st.tab === 'relation' ? ['mode3d'] : [];
+    const na = [];
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
     SK.forEach((sk, idx) => {
+      if (st.tab === 'relation' && sk.k === 'mode3d') return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
       const on = sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
@@ -541,7 +542,7 @@
       node.classList.toggle('on', active);
       const m = window['V03' + k[0].toUpperCase() + k.slice(1)];
       if (!m || !m.update) return;
-      if (k === 'fact' && m.setVisible) m.setVisible(active);
+      if (m.setVisible && (k === 'fact' || k === 'relation')) m.setVisible(active);
       if (active && (force || dirty[k])) { dirty[k] = false; try { m.update(); } catch (e) { console.error('update ' + k, e); } }
     });
   }

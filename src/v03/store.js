@@ -11,7 +11,7 @@ window.V03Store = (function () {
 
   const state = {
     tab: 'fact',                  // fact | relation | sim
-    theme: 'light',               // light | color；两套日间可读的配色，默认 WFP 风格浅色
+    theme: 'light',               // light | color；Felt 清爽与 Outdoors 户外两套整页配色
 
     /* 左侧图层菜单（从左侧滑出）与顶部快捷图标组 */
     menu: false,
@@ -58,7 +58,7 @@ window.V03Store = (function () {
     carousel: false,                     // 质量级点阵开关（默认开）
     carry: [],
 
-    rel: { view: 'graph', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
+    rel: { view: 'globe', domain: 'all', sel: null, kind: null, focusFact: null, onlyCarry: false, allCards: false, stack: [] },
 
     sim: {
       /* 统一用户故事：马来西亚榴莲 → 红星市场份额；五阶段承载十二步骤 */
