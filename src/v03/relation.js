@@ -348,6 +348,36 @@ window.V03Relation = (function () {
     const fs = (o.factIds || []).map(id => D.factById(id)).filter(Boolean).sort((a, b) => a.date < b.date ? 1 : -1);
     return fs.length ? fs[0].date : '';
   };
+  const CARD_SUMMARY = {
+    '水果':['品种名称','主要产地','主要进口来源'], '蔬菜':['品种名称','主要产地','主要进口来源'],
+    '粮油与油料':['品种名称','主要产地','主要进口来源'], '经济作物':['品种名称','主要产地','主要进口来源'],
+    '产区与基地':['主要品种','年产量','规模','主要销往地区'],
+    '市场':['市场类型','主营品种','辐射范围'],
+    '港口':['设施类型','主要货类','运营状态'], '机场':['设施类型','主要货类','运营状态'],
+    '企业与贸易主体':['经营角色','主营品种','所在地'],
+    '政府与机构':['机构类型','适用地区','生效状态'], '政策与法规':['政策类型','适用地区','生效状态'],
+    '自然与生态':['事件类型','事件状态','发生地区'], '政策与贸易':['事件类型','事件状态','发生地区'],
+    '地缘与安全':['事件类型','事件状态','发生地区'], '公共事件':['事件类型','事件状态','发生地区'],
+    '行政区划':['行政级别','上级区域']
+  };
+  const DETAIL_FIELDS = {
+    '水果':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '蔬菜':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '粮油与油料':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '经济作物':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '产区与基地':['主要品种','产季','种植或养殖面积','年产量','主要销往地区','经营主体'],
+    '市场':['市场类型','主营品种','辐射范围','交易规模','运营主体','主要货源地'],
+    '港口':['设施类型','主要货类','是否具备冷链能力','主要航线或线路','吞吐或库容规模','运营状态','运营主体'],
+    '机场':['设施类型','主要货类','是否具备冷链能力','主要航线或线路','吞吐或库容规模','运营状态','运营主体'],
+    '企业与贸易主体':['主体类型','经营角色','主营品种','注册地','主要合作方'],
+    '政府与机构':['机构或政策类型','发布机构','适用地区','适用对象','生效状态','主要内容'],
+    '政策与法规':['机构或政策类型','发布机构','适用地区','适用对象','生效状态','主要内容'],
+    '自然与生态':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '政策与贸易':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '地缘与安全':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '公共事件':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '行政区划':['行政级别','上级区域','主要农产品']
+  };
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     const nogeo = objs.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
@@ -356,7 +386,7 @@ window.V03Relation = (function () {
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
-      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|所在地|品种|产地|进口|规模|销往|类型|设施|货类|状态|范围/.test(k)).slice(0, 3)
+      const kv = (o.props || []).filter(([k]) => (CARD_SUMMARY[kind] || []).includes(k)).slice(0, 3)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
@@ -367,7 +397,7 @@ window.V03Relation = (function () {
         '<span class="rc-m">' + relCount + ' 条关系 · 查看详情 →</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
-      + '<div class="rel-foot">卡片按筛选展示全部本体，与地图视角独立；无坐标本体不在地图造点。</div>';
+      ;
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
@@ -390,39 +420,35 @@ window.V03Relation = (function () {
     const facts = (o.factIds || []).map(id => D.factById(id)).filter(Boolean).sort((a, b) => a.date < b.date ? 1 : -1);
     box.innerHTML = `
       <div class="fd">
-        <div class="fd-id">${esc(dm.n)} · ${o.geo === false ? '不可定位（右侧列出）' : '可定位'}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
+        <div class="fd-id">${esc(F.relKind(o)||dm.n)}</div>
         <h3>${esc(o.name)}</h3>
-        <div class="fd-chips fcard-mark">${esc(F.relKind(o)||dm.n)}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
 
         <div class="fd-sec">
-          <h4>基本属性</h4>
-          <div class="kv-grid">${(o.props || []).map(([k, v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>').join('')}</div>
+          <h4>分类与所在地</h4>
+          <div class="kv"><span>分类</span><b>${esc(F.relKind(o)||dm.n)}</b></div>
           <div class="kv"><span>所在地</span><b>${esc(o.region || o.location || (o.geo === false ? '暂无位置' : (o.lat.toFixed(2) + '°N / ' + o.lng.toFixed(2) + '°E')))}</b></div>
         </div>
-
-        <button type="button" class="rel-start-sim">基于该本体发起推演 →</button>
         ${(o.commodityTags || []).length ? '<div class="fd-sec"><h4>涉及品种</h4><p>' + esc(o.commodityTags.join('、')) + '</p></div>' : ''}
+        ${o.note ? '<div class="fd-sec"><h4>简介</h4><p>' + esc(o.note) + '</p></div>' : ''}
+        ${(o.props || []).some(([k]) => (DETAIL_FIELDS[F.relKind(o)] || []).includes(k)) ? '<div class="fd-sec"><h4>分类字段</h4><div class="kv-grid">' + (o.props || []).filter(([k]) => (DETAIL_FIELDS[F.relKind(o)] || []).includes(k)).map(([k,v])=>'<div class="kv"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>').join('') + '</div></div>' : ''}
+
         <div class="fd-sec">
-          <h4>简介与来源</h4>
-          <p>${esc(o.note || '由公开登记与事实抽离共同确定。')}</p>
+          <h4>证据与来源 <small>${facts.length} 条</small></h4>
+          ${facts.map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实</p>'}
         </div>
 
         <div class="fd-sec">
-          <h4>相关事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
-        </div>
-
-        <div class="fd-sec">
-          <h4>当前关系 <small>${rels.length} 条 · 点击查看关系详情</small></h4>
-          ${rels.length ? rels.slice(0, 12).map(r => {
+          <h4>关系 <small>${rels.length} 条</small></h4>
+          ${rels.length ? rels.map(r => {
             const other = D.objById(r.from === o.id ? r.to : r.from);
             return '<button class="rel-row" data-rel="' + r.id + '" style="--rc:' + typeColor(r.type) + '">' +
               '<span class="rr-bar"></span>' +
               '<span class="rr-t"><b>' + esc(r.type) + '</b><i>·</i>' + esc(other ? other.name : '') + '</span>' +
               '<span class="rr-m">' + esc(o.name) + ' ' + (r.from === o.id ? '→' : '←') + ' ' + esc(other ? other.name : '') + '</span>' +
-              '<span class="rr-n">强度 ' + (r.strength * 100).toFixed(0) + '% · 置信 ' + (r.confidence * 100).toFixed(0) + '%</span></button>';
-          }).join('') : '<p>暂无关系记录。</p>'}
+              '</button>';
+          }).join('') : '<p>暂无关系</p>'}
         </div>
+        <button type="button" class="rel-start-sim">基于该本体发起推演</button>
       </div>`;
     box.querySelector('.rel-start-sim').onclick = () => S.set({ carry: [...new Set([...(S.state.carry || []), ...(o.factIds || [])])], tab: 'sim' });
     box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
@@ -433,40 +459,32 @@ window.V03Relation = (function () {
   }
   function renderRelation(box, r) {
     if (!r) { box.innerHTML = ''; return; }
-    const a = D.objById(r.from), b = D.objById(r.to), fb = D.factById(r.changedBy);
+    const a = D.objById(r.from), b = D.objById(r.to);
     const facts = (r.factIds || []).map(id => D.factById(id)).filter(Boolean);
     box.innerHTML = `
       <div class="fd">
-        <div class="fd-id">${esc(r.type)} · 形成于 ${esc(r.formed || '—')}</div>
+        <div class="fd-id">关系详情</div>
         <h3>${esc(a ? a.name : r.from)} → ${esc(r.type)} → ${esc(b ? b.name : r.to)}</h3>
-        <div class="fd-chips fcard-mark">强度 ${(r.strength * 100).toFixed(0)}% · 置信 ${(r.confidence * 100).toFixed(0)}%${r.confidence < .6 ? ' · <em>待观察</em>' : ''}</div>
 
         <div class="fd-sec">
-          <h4>关系语义</h4>
-          <p><b>${esc(a ? a.name : r.from)}</b> → <b>${esc(b ? b.name : r.to)}</b></p>
-          <p>${esc(r.note || '由事实与规则生成，可回溯至支撑事实。')}</p>
+          <h4>关系类型</h4><p>${esc(r.type)}</p>
         </div>
 
         <div class="fd-sec">
-          <h4>关键字段</h4>
+          <h4>起点、终点</h4>
           <div class="kv-grid">
             <div class="kv"><span>起点本体</span><button class="rel-endpoint" data-object="${esc(r.from)}">${esc(a ? a.name : r.from)} · ${esc(a ? F.relKind(a) : '')}</button></div>
             <div class="kv"><span>终点本体</span><button class="rel-endpoint" data-object="${esc(r.to)}">${esc(b ? b.name : r.to)} · ${esc(b ? F.relKind(b) : '')}</button></div>
-            <div class="kv"><span>形成时间</span><b>${esc(r.formed || '—')}</b></div>
-            <div class="kv"><span>最近变化</span><b>${fb ? esc(fb.date) : '—'}</b></div>
           </div>
         </div>
 
         <div class="fd-sec">
-          <h4>支持事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
+          <h4>支撑事实 <small>${facts.length} 条</small></h4>
+          ${facts.map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实</p>'}
         </div>
-
-        <button type="button" class="rel-start-sim">基于该关系发起推演 →</button>
-        <div class="fd-sec">
-          <h4>最近导致关系变化的事实</h4>
-          <p>${fb ? fb.date + ' · ' + esc(fb.title) : '近期无变更记录。'}</p>
-        </div>
+        ${r.note ? '<div class="fd-sec"><h4>判断依据</h4><p>' + esc(r.note) + '</p></div>' : ''}
+        ${r.formed ? '<div class="fd-sec"><h4>形成过程</h4><p>首次写入时间：' + esc(r.formed) + '</p></div>' : ''}
+        <button type="button" class="rel-start-sim">基于该关系发起推演</button>
       </div>`;
     box.querySelector('.rel-start-sim').onclick = () => S.set({carry:[...new Set([...(S.state.carry||[]),...(r.factIds||[])])],tab:'sim'});
     box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
