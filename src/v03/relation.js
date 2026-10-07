@@ -25,11 +25,11 @@ window.V03Relation = (function () {
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'color' ? {
-    land: '#80909a', land2: '#6b838d', line: 'rgba(23,47,60,.83)', ink: '#e8f0ed', labelBg: 'rgba(243,243,237,.93)',
-    tipBg: 'rgba(243,243,237,.98)', tipLine: 'rgba(40,70,82,.28)', neutral: 'rgba(40,70,82,.82)'
+    land: '#e9ecd9', land2: '#bcd7ac', line: 'rgba(74,105,98,.67)', ink: '#243c42', labelBg: 'rgba(255,253,248,.94)',
+    tipBg: 'rgba(255,253,248,.98)', tipLine: 'rgba(61,96,84,.25)', neutral: 'rgba(54,92,98,.78)'
   } : {
-    land: '#a5b7b9', land2: '#809aaa', line: 'rgba(55,79,95,.68)', ink: '#263d4c', labelBg: 'rgba(253,251,246,.87)',
-    tipBg: 'rgba(253,251,246,.98)', tipLine: 'rgba(56,78,92,.22)', neutral: 'rgba(55,79,95,.82)'
+    land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
+    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)'
   };
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
