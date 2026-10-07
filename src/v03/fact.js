@@ -20,7 +20,7 @@ window.V03Fact = (function () {
      L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
      L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'world110', center: [105, 35], zoom: 1.06, fit: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [1.06, 2.4], inAt: 2.2, divisor: 9 },
+    L1: { map: 'worldChina', center: [105, 35], zoom: 0.92, fit: 0.92, bounds: [[-25, 72], [335, -56]], zoomBox: [0.92, 2.4], inAt: 2.2, divisor: 9 },
     L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
     L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], divisor: 7 }
   };
@@ -39,23 +39,53 @@ window.V03Fact = (function () {
   const emojiOf = f => leafOf(f).e || catOf(f).e;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  function worldGeoJSON() {
+  /* 以大西洋西经 25° 为接缝重新接合世界地图；美洲在中国右侧。
+     原始坐标始终保留给 3D 地球和数据模型，仅 2D 世界图做显示坐标转换。 */
+  const WORLD_SEAM = -25;
+  const worldLongitude = lng => lng < WORLD_SEAM ? lng + 360 : lng;
+  const mapPoint = (lng, lat) => [S.state.geo.level === 'L1' ? worldLongitude(lng) : lng, lat];
+  function seamHalf(ring, west) {
+    const inside = p => west ? p[0] < WORLD_SEAM : p[0] >= WORLD_SEAM;
+    const clipped = [];
+    let prev = ring[ring.length - 1];
+    for (const point of ring) {
+      if (inside(prev) !== inside(point)) {
+        const t = (WORLD_SEAM - prev[0]) / (point[0] - prev[0]);
+        clipped.push([WORLD_SEAM, prev[1] + t * (point[1] - prev[1])]);
+      }
+      if (inside(point)) clipped.push(point);
+      prev = point;
+    }
+    if (clipped.length < 3) return null;
+    const result = clipped.map(([lng, lat]) => [west ? lng + 360 : lng, lat]);
+    if (result[0][0] !== result[result.length - 1][0] || result[0][1] !== result[result.length - 1][1]) result.push(result[0].slice());
+    return result;
+  }
+  function worldGeoJSON(pacific = false) {
     const raw = window.__WORLD110 || [];
     const depth = x => { let d = 0; while (Array.isArray(x) && x.length) { d++; x = x[0]; } return d; };
     return {
       type: 'FeatureCollection',
       features: raw.map(o => {
         const d = depth(o.c);
-        const geometry = d >= 4 ? { type: 'MultiPolygon', coordinates: o.c } : { type: 'Polygon', coordinates: d === 3 ? o.c : [o.c] };
+        const original = d >= 4 ? o.c : [d === 3 ? o.c : [o.c]];
+        const coordinates = pacific ? original.flatMap(polygon => {
+          const outer = polygon[0];
+          if (outer.some(p => p[0] < WORLD_SEAM) && outer.some(p => p[0] >= WORLD_SEAM)) {
+            return [seamHalf(outer, true), seamHalf(outer, false)].filter(Boolean).map(ring => [ring]);
+          }
+          return [polygon.map(ring => ring.map(([lng, lat]) => [worldLongitude(lng), lat]))];
+        }) : original;
+        const geometry = { type: 'MultiPolygon', coordinates };
         return { type: 'Feature', properties: { name: o.n }, geometry };
       })
     };
   }
   function mapReady() {
     if (!window.echarts) return;
-    const cur = echarts.getMap('world110');
+    const cur = echarts.getMap('worldChina');
     if (!cur || !(cur.geoJSON && cur.geoJSON.features && cur.geoJSON.features.length)) {
-      try { echarts.registerMap('world110', worldGeoJSON()); } catch (e) { console.error('registerMap world110', e); }
+      try { echarts.registerMap('worldChina', worldGeoJSON(true)); } catch (e) { console.error('registerMap worldChina', e); }
     }
     if (window.__CHINA_GEO && !echarts.getMap('china')) { try { echarts.registerMap('china', window.__CHINA_GEO); } catch (e) { console.error('registerMap china', e); } }
   }
@@ -211,12 +241,12 @@ window.V03Fact = (function () {
     dom.overlayInfo.innerHTML = '<button type="button" class="overlay-close" aria-label="关闭">×</button><b>' + esc(x.name) + '</b><small>' + esc(({ region:'产区',port:'港口',airport:'机场',market:'农贸市场',risk:'地缘风险区' })[x.kind] || '叠加图层') + '</small><p>' + esc(x.description || x.variety || x.cargo || '预置对象位置示意') + '</p>';
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
-  const palette = () => S.state.theme === 'dark' ? {
-    land: '#24465d', land2: '#39637a', line: 'rgba(153,191,208,.48)', ink: '#f0f7fa',
-    regions: ['#254861', '#2f596e', '#385872', '#345267', '#34567b', '#286066', '#485775'],
-    tipBg: 'rgba(17,31,45,.97)', tipLine: 'rgba(145,181,201,.24)', mass: 'rgba(152,190,208,.3)', dot: '#d1e6f0'
+  const palette = () => S.state.theme === 'color' ? {
+    land: '#a6c7c9', land2: '#8fb8bd', line: 'rgba(42,82,101,.5)', ink: '#1c3e51',
+    regions: ['#a4c8c1', '#bac9ac', '#b2cbd5', '#cfc9aa', '#d9bfae', '#b9c6dc', '#a2c9c7'],
+    tipBg: 'rgba(250,254,253,.97)', tipLine: 'rgba(42,82,101,.22)', mass: 'rgba(35,88,110,.38)', dot: '#215a75'
   } : {
-    land: '#e3e8e4', land2: '#cadfda', line: 'rgba(77,105,115,.55)', ink: '#263238',
+    land: '#e8e9e5', land2: '#d4e2d9', line: 'rgba(73,109,123,.43)', ink: '#263238',
     regions: ['#c9e0dc', '#d5e2cd', '#d6dfe5', '#e6dfc8', '#e7d7c7', '#d2d9e9', '#c8dfd5'],
     tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', mass: 'rgba(63,76,95,.26)', dot: '#3f4c5f'
   };
@@ -239,9 +269,9 @@ window.V03Fact = (function () {
     const halos = [], pts = [];
     facts.forEach(f => {
       const diameter = radiusPx(f);
-      if (diameter >= 8) halos.push({ id: f.id, value: [f.lng, f.lat], symbolSize: diameter,
+      if (diameter >= 8) halos.push({ id: f.id, value: mapPoint(f.lng, f.lat), symbolSize: diameter,
         itemStyle: { color: hexA(DOTC, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(DOTC, .35), borderWidth: 1 } });
-      pts.push({ id: f.id, name: f.title, value: [f.lng, f.lat], symbolSize: DOT_SIZE,
+      pts.push({ id: f.id, name: f.title, value: mapPoint(f.lng, f.lat), symbolSize: DOT_SIZE,
         itemStyle: { color: '#ffffff', borderColor: DOTC, borderWidth: 1.1 } });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
@@ -250,7 +280,7 @@ window.V03Fact = (function () {
       : [];
     const p = palette();
     const series = [
-      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: [m.lng, m.lat], i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: mapPoint(m.lng, m.lat), i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
         large: true, largeThreshold: 1000, progressive: 0, animation: false,
         itemStyle: { color: p.mass } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: st.sk.influence ? halos : [], silent: true, z: 2, symbol: 'circle' },
@@ -303,7 +333,7 @@ window.V03Fact = (function () {
   function markerSeries(id, list, color, emoji, size, showLabel) {
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
-      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: size })),
+      data: list.map(r => ({ id: r.id, name: r.name, value: mapPoint(r.lng, r.lat), symbolSize: size })),
       symbol: 'circle', itemStyle: { color: 'rgba(255,255,255,.6)', borderColor: 'transparent', borderWidth: 0 },
       label: {
         show: true, fontSize: size, color: color, formatter: () => emoji, position: 'inside'
@@ -311,7 +341,7 @@ window.V03Fact = (function () {
       labelLayout: { hideOverlap: true }
     }, showLabel ? {
       id: id + 'Label', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 5,
-      data: list.map(r => ({ id: r.id, name: r.name, value: [r.lng, r.lat], symbolSize: 1 })),
+      data: list.map(r => ({ id: r.id, name: r.name, value: mapPoint(r.lng, r.lat), symbolSize: 1 })),
       symbol: 'circle', itemStyle: { color: 'transparent' },
       label: { show: true, position: 'bottom', distance: 2, fontSize: 9, color: '#4d586a',
         backgroundColor: 'rgba(255,255,255,.78)', padding: [1, 3], borderRadius: 3,
@@ -341,7 +371,7 @@ window.V03Fact = (function () {
     if (window.V03Mass && !V03Mass.insideMap(S.state.geo.level, f.lng, f.lat)) return;
     if (!chart) return;
     const id = 'fresh-' + (++flashSeq);
-    freshFlashes.push({ id, factId: f.id, value: [f.lng, f.lat], bright: level === 'bright' || f.impact === 'high' });
+    freshFlashes.push({ id, factId: f.id, value: mapPoint(f.lng, f.lat), bright: level === 'bright' || f.impact === 'high' });
     syncFlashSeries();
     setTimeout(() => {
       freshFlashes = freshFlashes.filter(x => x.id !== id);
@@ -369,8 +399,8 @@ window.V03Fact = (function () {
   }
   function focusOnMap(f) {
     if (!f || f.lng == null || S.state.sk.mode3d) return;
-    const p = camera.center, d = Math.hypot(f.lng - p[0], f.lat - p[1]);
-    if (d > 8) flyTo([f.lng, f.lat], Math.max(camera.zoom, LEVEL[S.state.geo.level].zoom), 800);
+    const p = camera.center, target = mapPoint(f.lng, f.lat), d = Math.hypot(target[0] - p[0], target[1] - p[1]);
+    if (d > 8) flyTo(target, Math.max(camera.zoom, LEVEL[S.state.geo.level].zoom), 800);
   }
   function onMapClick(p) {
     const st = S.state, sid = p.seriesId || '';
@@ -768,11 +798,11 @@ window.V03Fact = (function () {
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
     const st = S.state;
     ctx.clearRect(0, 0, W, H);
-    const dark = st.theme === 'dark';
+    const dark = st.theme === 'color';
     const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, dark ? '#000307' : '#e8f3f8'); sky.addColorStop(1, dark ? '#020a10' : '#f3f8fa');
+    sky.addColorStop(0, dark ? '#7faeb9' : '#e8f3f8'); sky.addColorStop(1, dark ? '#b6d1d0' : '#f3f8fa');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    if (dark) {
+    if (false) {
       globe.stars.forEach(s => {
         const x = ((s.x * W + globe.starOffset * s.speed) % (W + 20)) - 10;
         const y = s.y * H + Math.sin(globe.starOffset * .002 + s.x * 9) * (2 + s.speed * 4);
@@ -783,7 +813,7 @@ window.V03Fact = (function () {
       ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2); ctx.fill();
     }
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    if (dark) { g.addColorStop(0, '#22506b'); g.addColorStop(.58, '#10334d'); g.addColorStop(1, '#041420'); }
+    if (dark) { g.addColorStop(0, '#e3f0ed'); g.addColorStop(.58, '#a3caca'); g.addColorStop(1, '#72a4b3'); }
     else { g.addColorStop(0, '#f7fafb'); g.addColorStop(.7, '#dfecef'); g.addColorStop(1, '#cbdde2'); }
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
@@ -797,7 +827,7 @@ window.V03Fact = (function () {
       ctx.fillStyle = regionFill(feature.name, p); ctx.fill();
       ctx.strokeStyle = p.line; ctx.lineWidth = .8; ctx.stroke();
     }));
-    ctx.strokeStyle = dark ? 'rgba(145,186,190,.12)' : 'rgba(94,113,119,.18)';
+    ctx.strokeStyle = dark ? 'rgba(46,101,117,.18)' : 'rgba(94,113,119,.18)';
     for (let lat = -60; lat <= 60; lat += 30) {
       const pts = [];
       for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
@@ -805,7 +835,7 @@ window.V03Fact = (function () {
     }
     drawGlobeRoutes(ctx, cx, cy, R);
     ctx.restore();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = dark ? 'rgba(79,180,218,.62)' : 'rgba(94,113,119,.5)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = dark ? 'rgba(38,108,130,.62)' : 'rgba(94,113,119,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
     if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
@@ -824,7 +854,7 @@ window.V03Fact = (function () {
       ctx.beginPath(); ctx.arc(p.x, p.y, 3.4, 0, Math.PI * 2);
       ctx.fillStyle = hexA(catOf(f).c, .28); ctx.fill();
       ctx.strokeStyle = catOf(f).c; ctx.lineWidth = .9; ctx.stroke();
-      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = dark ? '#e7f4f6' : '#263238';
+      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = dark ? '#1c3e51' : '#263238';
       ctx.fillText(emojiOf(f), p.x, p.y + 3);
       hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
     });
@@ -949,5 +979,5 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar };
+  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude };
 })();

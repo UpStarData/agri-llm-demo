@@ -7,7 +7,7 @@
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-main.graph-view{background-color:#fafafa;
   background-image:radial-gradient(#d0d0d0 1.5px,transparent 1.5px);background-size:24px 24px}
-html[data-theme="dark"] .rel-main.graph-view{background-color:#111f2d;
+html[data-theme="color"] .rel-main.graph-view{background-color:#dcebef;
   background-image:radial-gradient(rgba(218,232,235,.2) 1.5px,transparent 1.5px)}
 .rel-canvas{position:absolute;inset:0}
 .rel-main.graph-view .rel-canvas{right:var(--side-w);bottom:var(--stream-h)}

@@ -14,8 +14,8 @@
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
-  const camera = { zoom: 1.06, graphZoom: 1, center: [105, 35], raf: null, level: null };
-  const ZOOM_BOX = [0.9, 3.0];
+  const camera = { zoom: 0.92, graphZoom: 1, center: [105, 35], raf: null, level: null };
+  const ZOOM_BOX = [0.92, 3.0];
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
   const TYPE_COLOR = {
@@ -24,9 +24,9 @@ window.V03Relation = (function () {
     '覆盖': '#a16207', '贸易': '#b45309', '替代': '#db2777', '价格传导': '#ea580c'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
-  const palette = () => S.state.theme === 'dark' ? {
-    land: '#24465d', land2: '#39637a', line: 'rgba(153,191,208,.48)', ink: '#f0f7fa', labelBg: 'rgba(17,31,45,.88)',
-    tipBg: 'rgba(17,31,45,.97)', tipLine: 'rgba(145,181,201,.24)', neutral: 'rgba(163,190,207,.78)'
+  const palette = () => S.state.theme === 'color' ? {
+    land: '#b2cecd', land2: '#9cbdba', line: 'rgba(42,82,101,.5)', ink: '#1c3e51', labelBg: 'rgba(250,254,253,.88)',
+    tipBg: 'rgba(250,254,253,.97)', tipLine: 'rgba(42,82,101,.22)', neutral: 'rgba(45,94,115,.78)'
   } : {
     land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238', labelBg: 'rgba(255,255,255,.82)',
     tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', neutral: 'rgba(126,138,158,.85)'
@@ -55,9 +55,9 @@ window.V03Relation = (function () {
 
   function mapReady() {
     if (!window.echarts) return;
-    const cur = echarts.getMap('world110');
+    const cur = echarts.getMap('worldChina');
     if (!cur || !(cur.geoJSON && cur.geoJSON.features && cur.geoJSON.features.length)) {
-      try { echarts.registerMap('world110', window.V03Fact.worldGeoJSON()); } catch (e) { console.error('registerMap world110', e); }
+      try { echarts.registerMap('worldChina', window.V03Fact.worldGeoJSON(true)); } catch (e) { console.error('registerMap worldChina', e); }
     }
   }
   function ensureChart() {
@@ -127,7 +127,7 @@ window.V03Relation = (function () {
 
   function linesData(objs, rels, focus) {
     const pos = {};
-    objs.forEach(o => { if (o.geo !== false && o.lat != null) pos[o.id] = [o.lng, o.lat]; });
+    objs.forEach(o => { if (o.geo !== false && o.lat != null) pos[o.id] = [window.V03Fact.worldLongitude(o.lng), o.lat]; });
     const out = [], labels = [], related = new Set();
     const total = rels.filter(r => pos[r.from] && pos[r.to]).length;
     rels.forEach(r => {
@@ -165,7 +165,7 @@ window.V03Relation = (function () {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
       const isFocus = focus === o.id;
       return {
-        id: o.id, objId: o.id, name: o.name, domain: o.domain, value: [o.lng, o.lat],
+        id: o.id, objId: o.id, name: o.name, domain: o.domain, value: [window.V03Fact.worldLongitude(o.lng), o.lat],
         symbolSize: isFocus ? 12 : 8 + Math.min(4, degree * .25),
         itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1 },
         label: {
@@ -185,8 +185,8 @@ window.V03Relation = (function () {
     return {
       backgroundColor: 'transparent',
       geo: {
-        map: 'world110', roam: false, zoom: camera.zoom, center: camera.center.slice(),
-        boundingCoords: [[-170, 72], [180, -56]],
+        map: 'worldChina', roam: false, zoom: camera.zoom, center: camera.center.slice(),
+        boundingCoords: [[-25, 72], [335, -56]],
         itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
         emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: false } },
         select: { disabled: true }, label: { show: false }

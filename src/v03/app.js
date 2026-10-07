@@ -84,9 +84,9 @@
     set($('menuBtn'), st.menu);
     $('btnStream').disabled = st.tab === 'sim';
     $('btnCards').disabled = st.tab === 'sim';
-    $('btnTheme').innerHTML = svg(st.theme === 'dark' ? 'sun' : 'moon', 16);
-    $('btnTheme').setAttribute('aria-label', st.theme === 'dark' ? '切换到日间模式' : '切换到夜间模式');
-    $('btnTheme').title = st.theme === 'dark' ? '日间模式' : '夜间模式';
+    $('btnTheme').innerHTML = svg('sun', 16) + '<span class="theme-name">' + (st.theme === 'color' ? '配色 2' : '配色 1') + '</span>';
+    $('btnTheme').setAttribute('aria-label', st.theme === 'color' ? '切换到配色 1' : '切换到配色 2');
+    $('btnTheme').title = st.theme === 'color' ? '当前配色 2，切换到配色 1' : '当前配色 1，切换到配色 2';
     $('btnSettings').title = '设置';
   }
 
@@ -571,7 +571,7 @@
     $('menuClose').onclick = () => S.set({ menu: false });
     $('btnStream').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { stream: !S.state.panels.stream } }); };
     $('btnCards').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { cards: !S.state.panels.cards } }); };
-    $('btnTheme').onclick = () => S.set({ theme: S.state.theme === 'dark' ? 'light' : 'dark' });
+    $('btnTheme').onclick = () => S.set({ theme: S.state.theme === 'color' ? 'light' : 'color' });
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
