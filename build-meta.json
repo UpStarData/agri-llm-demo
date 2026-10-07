@@ -1,7 +1,7 @@
 {
-  "hash": "6a7ec71cbc33",
-  "git": "5e1d1ec",
-  "builtAt": "2026-10-07T18:03:03.753Z",
+  "hash": "9ead82883645",
+  "git": "71920bc",
+  "builtAt": "2026-10-07T18:16:56.295Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -18,6 +18,7 @@
     "src/v03/store.js",
     "src/v03/filter.js",
     "src/v03/fact.js",
+    "src/v03/rel-globe.js",
     "src/v03/relation.js",
     "src/v03/mirofish-bridge.js",
     "src/v03/app.js",
@@ -48,5 +49,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 7168688
+  "bytes": 7179318
 }

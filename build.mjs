@@ -51,6 +51,7 @@ const JS = [
   'src/v03/store.js',       // 唯一状态源
   'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
   'src/v03/fact.js',        // 事实层
+  'src/v03/rel-globe.js',   // 关联层正交地球与真实关系流线
   'src/v03/relation.js',    // 关联层
   'src/v03/mirofish-bridge.js', // v0.8.4 集成预览：MiroFish 推演工作台
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗

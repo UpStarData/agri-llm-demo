@@ -3,7 +3,7 @@
    A1 与事实层共用同一套框架与浅色视觉
    A2 固定九类对象域（商品与标准 / 生产与资源 / 经营主体 / 市场与渠道 / 物流与设施 /
       政策与机构 / 环境与事件 / 空间与行政 / 指标与状态）
-   A3 默认知识图谱；地理关联图只定位有真实坐标的本体，不编造坐标
+   A3 默认三维地球；二维地理关联图只定位有真实坐标的本体，不编造坐标
    A4 MiroFish 式可追踪关系线：细、半透明曲线 + 低速方向粒子；非焦点关系降低透明度；
       悬停/点击本体只强化直接相关线与节点
    A5 右侧只展示不可定位本体，两列紧凑瀑布流；点击后右侧嵌套本体详情抽屉，
@@ -16,6 +16,7 @@ window.V03Relation = (function () {
   let root, chart, dom = {}, sig = '';
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, level: null, roamTimer: null };
   const ZOOM_BOX = [1.26, 3.0];
+  let dragging = false;
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
   const TYPE_COLOR = {
@@ -26,10 +27,10 @@ window.V03Relation = (function () {
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'color' ? {
     land: '#e9ecd9', land2: '#bcd7ac', line: 'rgba(74,105,98,.67)', ink: '#243c42', labelBg: 'rgba(255,253,248,.94)',
-    tipBg: 'rgba(255,253,248,.98)', tipLine: 'rgba(61,96,84,.25)', neutral: 'rgba(54,92,98,.78)'
+    tipBg: 'rgba(255,253,248,.98)', tipLine: 'rgba(61,96,84,.25)', neutral: 'rgba(54,92,98,.78)', flow: '#355fd0'
   } : {
     land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
-    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)'
+    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
   };
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -38,9 +39,11 @@ window.V03Relation = (function () {
   <div class="rel-wrap">
     <div class="rel-main" id="relMain">
       <div class="rel-canvas" id="relCanvas"></div>
+      <canvas class="rel-globe" id="relGlobe" aria-label="关联层三维地球：可拖动旋转、滚轮缩放、点击本体"></canvas>
       <div class="rel-viewbar" role="group" aria-label="关联层视图">
+        <button type="button" data-view="globe">3D 地球</button>
+        <button type="button" data-view="geo">2D 地图</button>
         <button type="button" data-view="graph">知识图谱</button>
-        <button type="button" data-view="geo">地理关联</button>
       </div>
     </div>
     <aside class="rel-side" id="relSide"><div class="rel-body" id="relBody"></div></aside>
@@ -48,9 +51,17 @@ window.V03Relation = (function () {
 
   function mount(el) {
     root = el; root.innerHTML = TPL;
-    dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody') };
+    dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), globe: root.querySelector('#relGlobe'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody') };
+    window.V03RelGlobe.mount(dom.globe, openObject);
     root.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => S.set({ rel: { view: button.dataset.view } }); });
-    window.addEventListener('resize', () => { if (chart) chart.resize(); });
+    dom.canvas.addEventListener('pointerdown', () => { dragging = true; }, true);
+    window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; if (hover) { hover = null; paintFocus(); } });
+    dom.canvas.addEventListener('wheel', e => {
+      if (S.state.rel.view === 'geo' && e.deltaY > 0 && camera.zoom <= ZOOM_BOX[0] + .003) {
+        e.preventDefault(); e.stopImmediatePropagation(); S.set({ rel: { view: 'globe' } });
+      }
+    }, { capture: true, passive: false });
+    window.addEventListener('resize', () => { if (chart) chart.resize(); window.V03RelGlobe.setVisible(S.state.tab === 'relation' && S.state.rel.view === 'globe'); });
   }
 
   function mapReady() {
@@ -82,11 +93,11 @@ window.V03Relation = (function () {
       if (o) openObject(o.id);
     });
     chart.on('mouseover', p => {
-      if (S.state.rel.view === 'graph') return;
+      if (S.state.rel.view !== 'geo' || dragging) return;
       const id = (p.data && (p.data.objId || (D.relById(p.data.id) || {}).from)) || null;
       if (id && id !== hover) { hover = id; paintFocus(); }
     });
-    chart.on('globalout', () => { if (S.state.rel.view === 'geo' && hover) { hover = null; paintFocus(); } });
+    chart.on('globalout', () => { if (S.state.rel.view === 'geo' && !dragging && hover) { hover = null; paintFocus(); } });
     chart.on('georoam', () => {
       if (S.state.rel.view !== 'geo') return;
       const geo = (chart.getOption().geo || [])[0];
@@ -111,6 +122,7 @@ window.V03Relation = (function () {
   }
 
   function zoomBy(dir) {
+    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomBy(dir);
     if (S.state.rel.view === 'graph') {
       const next = Math.min(ZOOM_BOX[1], Math.max(ZOOM_BOX[0], camera.graphZoom * (dir > 0 ? 1.28 : 1 / 1.28)));
       if (Math.abs(next - camera.graphZoom) < 1e-3) return;
@@ -119,6 +131,7 @@ window.V03Relation = (function () {
       return S.set({ sk: { zoom: Math.round(next * 100) } });
     }
     const next = Math.min(ZOOM_BOX[1], Math.max(ZOOM_BOX[0], camera.zoom * (dir > 0 ? 1.28 : 1 / 1.28)));
+    if (dir < 0 && camera.zoom <= ZOOM_BOX[0] + .003) return S.set({ rel: { view: 'globe' } });
     if (Math.abs(next - camera.zoom) < 1e-3) return;
     camera.zoom = next;
     if (chart) chart.setOption({ geo: { zoom: next } }, { lazyUpdate: true });
@@ -126,8 +139,9 @@ window.V03Relation = (function () {
     S.set({ sk: { zoom: Math.round(next * 100) } });
   }
   const zoomState = () => {
+    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomState();
     const zoom = S.state.rel.view === 'graph' ? camera.graphZoom : camera.zoom;
-    return { canIn: zoom < ZOOM_BOX[1] - 1e-3, canOut: zoom > ZOOM_BOX[0] + 1e-3, zoom };
+    return { canIn: zoom < ZOOM_BOX[1] - 1e-3, canOut: S.state.rel.view === 'geo' || zoom > ZOOM_BOX[0] + 1e-3, zoom };
   };
 
   /* ---------- 地图：本体节点 + MiroFish 式关系线 ---------- */
@@ -181,7 +195,11 @@ window.V03Relation = (function () {
   }
 
   function nodesData(objs, focus) {
-    return objs.filter(o => o.geo !== false && o.lat != null).flatMap(o => {
+    let peripheral = 0;
+    return objs.filter(o => o.geo !== false && o.lat != null).filter(o => {
+      if (focus === o.id || D.relationsOf(o.id).length) return true;
+      return peripheral++ % 3 === 0;
+    }).flatMap(o => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
       const isFocus = focus === o.id;
       return window.V03Fact.worldCopies(o.lng, o.lat).map(value => ({
@@ -202,6 +220,7 @@ window.V03Relation = (function () {
     const { lines, labels } = linesData(objs, rels, focus);
     const nodes = nodesData(objs, focus);
     const focusLines = lines.filter(l => l._focus);
+    const flowLines = (focusLines.length ? focusLines : lines.slice().sort((a,b) => (b.lineStyle.opacity||0)-(a.lineStyle.opacity||0))).slice(0,24);
     return {
       backgroundColor: 'transparent',
       geo: {
@@ -231,8 +250,11 @@ window.V03Relation = (function () {
         { id: 'relLineGlow', type: 'lines', coordinateSystem: 'geo', silent: true, z: 2, polyline: false,
           data: focusLines.map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .08, curveness: .18 } })) },
         { id: 'relLine', type: 'lines', coordinateSystem: 'geo', z: 3, polyline: false, data: lines,
-          effect: { show: true, period: 7, trailLength: .12, symbol: 'circle', symbolSize: 2, color: '#5b6b82' },
-          lineStyle: { curveness: .18 } },
+          lineStyle: { curveness: .22 } },
+        { id: 'relFlow', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false,
+          data: flowLines.map(l => ({ coords:l.coords, lineStyle:{opacity:0,curveness:.22} })),
+          effect: { show: true, period: 5.2, trailLength: .35, symbol: 'circle', symbolSize: 3.4, color: p.flow },
+          lineStyle: { curveness: .22, opacity: 0 } },
         { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels },
         { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' }
       ]
@@ -296,8 +318,10 @@ window.V03Relation = (function () {
     if (!chart) return;
     const objs = F.objects(st).filter(o => o.geo !== false && o.lat != null);
     const { lines, labels } = linesData(objs, F.relations(st), focusId());
+    const flowLines = (lines.some(l=>l._focus) ? lines.filter(l=>l._focus) : lines).slice(0,24);
     chart.setOption({
       series: [
+        { id: 'relFlow', data: flowLines.map(l=>({coords:l.coords,lineStyle:{opacity:0,curveness:.22}})) },
         { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .08, curveness: .18 } })) },
         { id: 'relLine', data: lines },
         { id: 'relLineLabel', data: labels },
@@ -435,15 +459,19 @@ window.V03Relation = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
+    window.V03RelGlobe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.time, st.cred, st.q, st.relKeys, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
       st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
-    const c = ensureChart();
-    if (!c) return;
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
-    c.resize();
-    c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
+    dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
+    if (st.rel.view === 'globe') window.V03RelGlobe.update(objs, rels);
+    else {
+      const c = ensureChart(); if (!c) return;
+      c.resize();
+      c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
+    }
     root.querySelectorAll('[data-view]').forEach(button => {
       const active = button.dataset.view === st.rel.view;
       button.classList.toggle('on', active);
@@ -460,8 +488,9 @@ window.V03Relation = (function () {
       edges: rels.length, lines: rels.filter(r => { const a = D.objById(r.from), b = D.objById(r.to); return a && b && a.geo !== false && b.geo !== false; }).length,
       drawerCards: document.querySelectorAll('#relBody .rel-card').length,
       relationRows: document.querySelectorAll('#drawerStack .rel-row').length,
-      domains: D.DOMAINS.length, zoom: camera.zoom, focus: focusId()
+      domains: D.DOMAINS.length, zoom: camera.zoom, focus: focusId(), globe: window.V03RelGlobe.debug()
     };
   };
-  return { mount, update, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomState };
+  const setVisible = active => window.V03RelGlobe.setVisible(active && S.state.rel.view === 'globe');
+  return { mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomState };
 })();
