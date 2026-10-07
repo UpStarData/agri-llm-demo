@@ -6,7 +6,8 @@
 window.V03Data = (function () {
   /* 数据包（agrilink-demo-v1 · LLM-292）为准；缺失时退回上一轮自带数据（src/v03/atlas-data.js） */
   const PKG = (window.V03Pkg && window.V03Pkg.FACTS && window.V03Pkg.FACTS.length) ? window.V03Pkg : null;
-  const TODAY = new Date().toISOString().slice(0, 10); // 以实际浏览日期计算“今日”和时间窗
+  /* 离线原型按数据截面解释相对时间；否则数周后默认 7 天会把整个静态演示清空。 */
+  const TODAY = (PKG && PKG.TODAY) || new Date().toISOString().slice(0, 10);
 
   /* 事实分类（L1 大类，10 个受控值）—— 冷色色系，与关联层暖色系完全区分 */
   const CATS = (() => {

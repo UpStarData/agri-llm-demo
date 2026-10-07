@@ -39,13 +39,13 @@
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#071f25;--panel:#1f2223;--panel-2:#25292a;--panel-alpha:rgba(31,34,35,.94);--line:rgba(163,185,190,.20);--hair:rgba(163,185,190,.16);
-  --ink:#f2f6f7;--mut:#c6d0d2;--dim:#97a8ac;--hint:#84979b;
-  --accent:#16a6df;--accent-soft:rgba(22,166,223,.16);--green:#57ad70;--orange:#e39449;--purple:#9b8dd0;--red:#f26363;
+  --bg:#061923;--panel:#142630;--panel-2:#1c3039;--panel-alpha:rgba(20,38,48,.95);--line:rgba(153,194,194,.23);--hair:rgba(153,194,194,.17);
+  --ink:#f1f8f7;--mut:#c8dad8;--dim:#9bb9b9;--hint:#88a8aa;
+  --accent:#67d4e5;--accent-soft:rgba(103,212,229,.16);--green:#9bd483;--orange:#f0bf75;--purple:#b6a7e5;--red:#f09282;
   --warn:#e3ad66;--warn-bg:rgba(227,173,102,.14);
-  --ocean:#00313b;--land:#0b3f47;--land-2:#14515a;--map-line:rgba(143,178,184,.58);--map-label:#afc0c4;
-  --glass:rgba(25,27,28,.78);--glass-2:rgba(31,34,35,.72);--glass-line:rgba(185,205,209,.18);
-  --shadow:0 14px 36px -18px rgba(0,0,0,.88);--icon:#91a4a9;--icon-hover:#1bb4ec;--icon-on:rgba(22,166,223,.16);
+  --ocean:#041e2b;--land:#173f4a;--land-2:#356d70;--map-line:rgba(157,194,199,.48);--map-label:#c6dada;
+  --glass:rgba(13,29,39,.82);--glass-2:rgba(20,38,48,.78);--glass-line:rgba(170,211,210,.22);
+  --shadow:0 14px 36px -18px rgba(0,0,0,.88);--icon:#a7c4c4;--icon-hover:#80e1ed;--icon-on:rgba(103,212,229,.17);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased;font-size:16px}
@@ -253,6 +253,23 @@ svg{display:block}
 .fact-mapbox{position:absolute;inset:0;background:var(--ocean)}   /* v07：地图铺满整屏，面板浮在上面 */
 .fact-mapbox #factMap{position:absolute;inset:0}
 .fact-mapbox #factGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
+.data-snapshot{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(8,27,38,.74);color:#c9dfe0;font-size:11px;letter-spacing:.03em;backdrop-filter:blur(12px);pointer-events:none}
+.fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:54px}
+.globe-caption{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(8,27,38,.74);color:#e4f4f4;font-size:11px;letter-spacing:.08em;backdrop-filter:blur(12px);pointer-events:none}
+.globe-caption span{margin-left:9px;color:#99bdc3;font-size:10px;letter-spacing:0}
+.globe-caption[hidden]{display:none}
+@media (min-width:2200px){
+  html{font-size:20px;--topbar-h:44px}
+  .topbar{padding:0 14px}
+  .tb-ic{width:38px;height:38px}
+  .menu{width:440px}
+  .mapsk{grid-template-rows:repeat(2,34px);padding:8px 12px;gap:0 4px}
+  .sk{min-width:34px;height:34px}
+  .globe-caption{left:28px;top:28px;padding:12px 16px;font-size:14px}
+  .globe-caption span{font-size:12px}
+  .data-snapshot{left:28px;top:28px;padding:12px 16px;font-size:14px}
+  .fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:74px}
+}
 /* 事实卡片面板（右侧瀑布流；不设标题与计数） */
 .fact-side{position:absolute;right:0;top:0;bottom:var(--stream-h);width:var(--side-w);z-index:30;background:var(--glass);
   backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-left:1px solid var(--glass-line);display:flex;flex-direction:column;min-height:0;transition:width .2s var(--ease)}
@@ -738,7 +755,7 @@ html[data-theme="dark"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"d7161ac45599","git":"968cbaa","builtAt":"2026-09-28T01:33:21.027Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"519fc625270e","git":"7fee570","builtAt":"2026-10-07T07:50:58.660Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -4156,7 +4173,8 @@ window.V03Overlays = (function () {
 window.V03Data = (function () {
   /* 数据包（agrilink-demo-v1 · LLM-292）为准；缺失时退回上一轮自带数据（src/v03/atlas-data.js） */
   const PKG = (window.V03Pkg && window.V03Pkg.FACTS && window.V03Pkg.FACTS.length) ? window.V03Pkg : null;
-  const TODAY = new Date().toISOString().slice(0, 10); // 以实际浏览日期计算“今日”和时间窗
+  /* 离线原型按数据截面解释相对时间；否则数周后默认 7 天会把整个静态演示清空。 */
+  const TODAY = (PKG && PKG.TODAY) || new Date().toISOString().slice(0, 10);
 
   /* 事实分类（L1 大类，10 个受控值）—— 冷色色系，与关联层暖色系完全区分 */
   const CATS = (() => {
@@ -5637,6 +5655,8 @@ window.V03Fact = (function () {
     <div class="fact-mapbox" id="factMapBox">
       <div id="factMap"></div>
       <canvas id="factGlobe" width="1120" height="820" style="display:none"></canvas>
+      <div class="data-snapshot">演示数据截面 · ${D.TODAY}</div>
+      <div class="globe-caption" id="globeCaption" hidden>关系流线 <span>关联层演示数据</span></div>
     </div>
     <button class="fact-search-status" id="factSearchStatus" type="button" hidden></button>
     <div class="fact-overlay-info" id="factOverlayInfo" hidden></div>
@@ -5647,7 +5667,7 @@ window.V03Fact = (function () {
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = {
-      mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'),
+      mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'), globeCaption: root.querySelector('#globeCaption'),
       side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
     dom.searchStatus.onclick = () => S.set({ q: '' });
@@ -5782,11 +5802,24 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   const palette = () => S.state.theme === 'dark' ? {
-    land: '#0b3f47', land2: '#14515a', line: 'rgba(143,178,184,.58)', ink: '#f2f6f7',
+    land: '#173f4a', land2: '#356d70', line: 'rgba(157,194,199,.48)', ink: '#f2f6f7',
+    regions: ['#205467', '#235b57', '#3c5963', '#535c4b', '#625748', '#36516c', '#3f625f'],
     tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', mass: 'rgba(152,190,196,.34)', dot: '#cde3e7'
   } : {
-    land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238',
+    land: '#e3e8e4', land2: '#cadfda', line: 'rgba(77,105,115,.55)', ink: '#263238',
+    regions: ['#c9e0dc', '#d5e2cd', '#d6dfe5', '#e6dfc8', '#e7d7c7', '#d2d9e9', '#c8dfd5'],
     tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', mass: 'rgba(63,76,95,.26)', dot: '#3f4c5f'
+  };
+  const regionIndex = name => {
+    let hash = 0;
+    for (const char of String(name || '')) hash = (hash * 31 + char.codePointAt(0)) >>> 0;
+    return hash % 7;
+  };
+  const regionFill = (name, p) => p.regions[regionIndex(name)];
+  const mapRegions = (level, p) => {
+    const names = level === 'L1' ? (window.__WORLD110 || []).map(x => x.n)
+      : ((window.__CHINA_GEO || {}).features || []).map(x => x.properties && x.properties.name);
+    return names.filter(Boolean).map(name => ({ name, itemStyle: { areaColor: regionFill(name, p) } }));
   };
 
   function mapOption() {
@@ -5832,6 +5865,7 @@ window.V03Fact = (function () {
         scaleLimit: { min: lv.zoomBox[0], max: lv.zoomBox[1] },
         boundingCoords: lv.bounds || undefined,
         itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
+        regions: mapRegions(st.geo.level, p),
         emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: true, color: p.ink, fontSize: 10 } },
         select: { disabled: true }, label: { show: false }
       },
@@ -6247,11 +6281,78 @@ window.V03Fact = (function () {
     if (cur) { if (prev && prev.z > 0) cur.push(cur[0]); out.push(cur); }
     return out;
   }
-  const landRings = (() => {
+  const landFeatures = (() => {
     const geo = worldGeoJSON();
-    return geo.features.map(f => f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
-      .reduce((a, mp) => a.concat(mp), []).map(rings => rings[0]);
+    return geo.features.flatMap(f => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
+      .map(rings => ({ name: f.properties.name, ring: rings[0] })));
   })();
+  const routeColors = ['#61d6e8', '#f1c778', '#a7dc88', '#ef9e83', '#aab8f3'];
+  const routeColor = type => routeColors[/供应|流入|流出|贸易/.test(type) ? 0 :
+    /运输|通道|设施/.test(type) ? 1 : /生产|产区|基地/.test(type) ? 2 :
+    /影响|政策|价格/.test(type) ? 3 : 4];
+  const toUnit = (lng, lat) => {
+    const a = lng * Math.PI / 180, b = lat * Math.PI / 180;
+    return [Math.cos(b) * Math.cos(a), Math.cos(b) * Math.sin(a), Math.sin(b)];
+  };
+  function routePoints(a, b) {
+    const u = toUnit(a.lng, a.lat), v = toUnit(b.lng, b.lat);
+    const angle = Math.acos(Math.max(-1, Math.min(1, u.reduce((s, n, i) => s + n * v[i], 0))));
+    const denominator = Math.sin(angle);
+    return Array.from({ length: 33 }, (_, i) => {
+      const t = i / 32;
+      const ka = denominator > .0001 ? Math.sin((1 - t) * angle) / denominator : 1 - t;
+      const kb = denominator > .0001 ? Math.sin(t * angle) / denominator : t;
+      const xyz = u.map((n, j) => n * ka + v[j] * kb);
+      return { lng: Math.atan2(xyz[1], xyz[0]) * 180 / Math.PI,
+        lat: Math.atan2(xyz[2], Math.hypot(xyz[0], xyz[1])) * 180 / Math.PI,
+        altitude: 1 + .11 * Math.sin(Math.PI * t) };
+    });
+  }
+  const routeCandidates = D.RELATIONS.map(r => {
+    const a = D.objById(r.from), b = D.objById(r.to);
+    if (!a || !b || a.geo === false || b.geo === false || !Number.isFinite(a.lng) || !Number.isFinite(a.lat) || !Number.isFinite(b.lng) || !Number.isFinite(b.lat)) return null;
+    const distance = Math.hypot(a.lng - b.lng, a.lat - b.lat);
+    if (distance < 2 || (r.confidence || 0) < .6) return null;
+    return { id: r.id, color: routeColor(r.type), width: 1 + Math.min(1.4, (r.strength || .5) * 1.3),
+      score: Math.min(distance, 110) + (r.confidence || 0) * 25, points: routePoints(a, b) };
+  }).filter(Boolean).sort((a, b) => b.score - a.score);
+  const routeCounts = new Map();
+  const globeRoutes = routeCandidates.filter(route => {
+    const count = routeCounts.get(route.color) || 0;
+    if (count >= 4) return false;
+    routeCounts.set(route.color, count + 1);
+    return true;
+  }).slice(0, 16);
+  function drawGlobeRoutes(ctx, cx, cy, R) {
+    globeRoutes.forEach((route, index) => {
+      const projected = route.points.map(p => {
+        const v = gProject(p.lng, p.lat, cx, cy, R);
+        return { x: cx + (v.x - cx) * p.altitude, y: cy + (v.y - cy) * p.altitude, z: v.z };
+      });
+      ctx.beginPath();
+      projected.forEach((p, i) => {
+        if (p.z <= 0) return;
+        if (!i || projected[i - 1].z <= 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.strokeStyle = route.color; ctx.globalAlpha = .28; ctx.lineWidth = route.width; ctx.stroke();
+      const head = Math.floor(((globe.starOffset * .0075 * (1 + index % 3 * .18) + index * .19) % 1) * 32);
+      const bead = projected[head];
+      if (bead && bead.z > 0) {
+        ctx.beginPath();
+        for (let j = Math.max(0, head - 5); j <= head; j++) {
+          const p = projected[j];
+          if (p.z <= 0) continue;
+          if (j === Math.max(0, head - 5) || projected[j - 1].z <= 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.globalAlpha = .82; ctx.lineWidth = route.width + .6; ctx.shadowColor = route.color; ctx.shadowBlur = 5; ctx.stroke();
+        ctx.beginPath(); ctx.arc(bead.x, bead.y, 1.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.globalAlpha = 1;
+    });
+  }
   function drawGlobe() {
     const c = dom.globe, ctx = c.getContext('2d');
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
@@ -6277,13 +6378,14 @@ window.V03Fact = (function () {
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
     ctx.fillStyle = g; ctx.fill(); ctx.clip();
-    landRings.forEach(ring => clipRing(ring, cx, cy, R).forEach(run => {
+    const p = palette();
+    landFeatures.forEach(feature => clipRing(feature.ring, cx, cy, R).forEach(run => {
       if (run.length < 2) return;
       ctx.beginPath();
       run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.closePath();
-      ctx.fillStyle = dark ? '#153d42' : '#dfe6e8'; ctx.fill();
-      ctx.strokeStyle = dark ? 'rgba(145,186,190,.62)' : 'rgba(94,113,119,.58)'; ctx.lineWidth = .8; ctx.stroke();
+      ctx.fillStyle = regionFill(feature.name, p); ctx.fill();
+      ctx.strokeStyle = p.line; ctx.lineWidth = .8; ctx.stroke();
     }));
     ctx.strokeStyle = dark ? 'rgba(145,186,190,.12)' : 'rgba(94,113,119,.18)';
     for (let lat = -60; lat <= 60; lat += 30) {
@@ -6291,6 +6393,7 @@ window.V03Fact = (function () {
       for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
       clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
     }
+    drawGlobeRoutes(ctx, cx, cy, R);
     ctx.restore();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = dark ? 'rgba(79,180,218,.62)' : 'rgba(94,113,119,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
@@ -6350,6 +6453,7 @@ window.V03Fact = (function () {
     const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
     const on3d = show3d && visible;
     dom.globe.style.display = show3d ? 'block' : 'none';
+    dom.globeCaption.hidden = !show3d;
     dom.map.style.display = show3d ? 'none' : 'block';
     const animation = chart && chart.getZr().animation;
     const shouldPauseMap = !visible || show3d;
@@ -7401,9 +7505,10 @@ window.V03Sim = (function () {
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
-    document.documentElement.style.setProperty('--stream-h', on ? '74px' : '0px');
+    const largeScreen = window.innerWidth >= 2200;
+    document.documentElement.style.setProperty('--stream-h', on ? (largeScreen ? '104px' : '74px') : '0px');
     document.documentElement.style.setProperty('--side-w',
-      (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? '420px' : '0px');
+      (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? (largeScreen ? '620px' : '420px') : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];
     if (ST.lastTab !== st.tab || !ST.started) {
       ST.lastTab = st.tab; ST.i = 0; ST.started = true; $('streamBody').innerHTML = '';

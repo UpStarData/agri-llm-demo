@@ -29,13 +29,13 @@
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#071f25;--panel:#1f2223;--panel-2:#25292a;--panel-alpha:rgba(31,34,35,.94);--line:rgba(163,185,190,.20);--hair:rgba(163,185,190,.16);
-  --ink:#f2f6f7;--mut:#c6d0d2;--dim:#97a8ac;--hint:#84979b;
-  --accent:#16a6df;--accent-soft:rgba(22,166,223,.16);--green:#57ad70;--orange:#e39449;--purple:#9b8dd0;--red:#f26363;
+  --bg:#061923;--panel:#142630;--panel-2:#1c3039;--panel-alpha:rgba(20,38,48,.95);--line:rgba(153,194,194,.23);--hair:rgba(153,194,194,.17);
+  --ink:#f1f8f7;--mut:#c8dad8;--dim:#9bb9b9;--hint:#88a8aa;
+  --accent:#67d4e5;--accent-soft:rgba(103,212,229,.16);--green:#9bd483;--orange:#f0bf75;--purple:#b6a7e5;--red:#f09282;
   --warn:#e3ad66;--warn-bg:rgba(227,173,102,.14);
-  --ocean:#00313b;--land:#0b3f47;--land-2:#14515a;--map-line:rgba(143,178,184,.58);--map-label:#afc0c4;
-  --glass:rgba(25,27,28,.78);--glass-2:rgba(31,34,35,.72);--glass-line:rgba(185,205,209,.18);
-  --shadow:0 14px 36px -18px rgba(0,0,0,.88);--icon:#91a4a9;--icon-hover:#1bb4ec;--icon-on:rgba(22,166,223,.16);
+  --ocean:#041e2b;--land:#173f4a;--land-2:#356d70;--map-line:rgba(157,194,199,.48);--map-label:#c6dada;
+  --glass:rgba(13,29,39,.82);--glass-2:rgba(20,38,48,.78);--glass-line:rgba(170,211,210,.22);
+  --shadow:0 14px 36px -18px rgba(0,0,0,.88);--icon:#a7c4c4;--icon-hover:#80e1ed;--icon-on:rgba(103,212,229,.17);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased;font-size:16px}
@@ -243,6 +243,23 @@ svg{display:block}
 .fact-mapbox{position:absolute;inset:0;background:var(--ocean)}   /* v07：地图铺满整屏，面板浮在上面 */
 .fact-mapbox #factMap{position:absolute;inset:0}
 .fact-mapbox #factGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
+.data-snapshot{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(8,27,38,.74);color:#c9dfe0;font-size:11px;letter-spacing:.03em;backdrop-filter:blur(12px);pointer-events:none}
+.fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:54px}
+.globe-caption{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(8,27,38,.74);color:#e4f4f4;font-size:11px;letter-spacing:.08em;backdrop-filter:blur(12px);pointer-events:none}
+.globe-caption span{margin-left:9px;color:#99bdc3;font-size:10px;letter-spacing:0}
+.globe-caption[hidden]{display:none}
+@media (min-width:2200px){
+  html{font-size:20px;--topbar-h:44px}
+  .topbar{padding:0 14px}
+  .tb-ic{width:38px;height:38px}
+  .menu{width:440px}
+  .mapsk{grid-template-rows:repeat(2,34px);padding:8px 12px;gap:0 4px}
+  .sk{min-width:34px;height:34px}
+  .globe-caption{left:28px;top:28px;padding:12px 16px;font-size:14px}
+  .globe-caption span{font-size:12px}
+  .data-snapshot{left:28px;top:28px;padding:12px 16px;font-size:14px}
+  .fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:74px}
+}
 /* 事实卡片面板（右侧瀑布流；不设标题与计数） */
 .fact-side{position:absolute;right:0;top:0;bottom:var(--stream-h);width:var(--side-w);z-index:30;background:var(--glass);
   backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-left:1px solid var(--glass-line);display:flex;flex-direction:column;min-height:0;transition:width .2s var(--ease)}
