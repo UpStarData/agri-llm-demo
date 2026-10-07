@@ -519,7 +519,8 @@
   function syncDrawers() {
     const stack = drawerStack();
     const box = $('drawerStack');
-    box.style.right = S.state.tab === 'fact' && S.state.panels.cards && stack.some(d => d.kind === 'fact') ? 'var(--side-w)' : '0px';
+    box.style.right = S.state.panels.cards && (S.state.tab === 'relation' || stack.some(d => d.kind === 'fact'))
+      ? 'var(--side-w)' : '0px';
     const sig = JSON.stringify([S.state.tab, stack, S.state.logOpen, S.state.sk.live]);
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
