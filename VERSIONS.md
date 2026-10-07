@@ -4,6 +4,7 @@
 
 | 版本 | 预览地址 | 内容 | 构建指纹 | 源码提交 / tag |
 | --- | --- | --- | --- | --- |
+| **V0.8.17** | https://upstardata.github.io/agri-llm-demo/v0.8.17/ | 配色 2 成为事实层、关联层默认主配色；配色 1 保留可切换；其余交互沿用 V0.8.16 | `23036830bc45` | `9b33be6` · `v0.8.17` |
 | **V0.8.16** | https://upstardata.github.io/agri-llm-demo/v0.8.16/ | Felt／Mapbox Outdoors 参考的两套整体页面配色；关联层默认动态 3D 地球、2D 地图、知识图谱；2D 最小级再缩小进入 3D；可见本体点数量收敛并保持拖动贴图 | `9ead82883645` | `3a0cd8a` · `v0.8.16` |
 | **V0.8.14** | https://upstardata.github.io/agri-llm-demo/v0.8.14/ | 撤换无来源的高饱和地图配色；配色 2 使用石板蓝与低饱和地理区域色，保留事实点与地图循环；更正来源说明 | `1e83081e5af8` | `5e1d1ec` · `v0.8.14` |
 | **V0.8.13** | https://upstardata.github.io/agri-llm-demo/v0.8.13/ | 全球地图左右连续循环；国家／省区接壤异色；两套完整配色；旧版同标签页直达最新版 | `f0fdab66b152` | `5127dc8` · `v0.8.13` |
@@ -28,7 +29,7 @@
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
 | **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
 
-> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.8.16**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V0.8.17**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
