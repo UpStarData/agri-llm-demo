@@ -20,7 +20,7 @@ window.V03Fact = (function () {
      L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
      L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'world110', center: [18, 10], zoom: 1.06, fit: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [1.06, 2.4], inAt: 2.2, divisor: 9 },
+    L1: { map: 'world110', center: [105, 35], zoom: 1.06, fit: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [1.06, 2.4], inAt: 2.2, divisor: 9 },
     L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
     L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], divisor: 7 }
   };
@@ -212,9 +212,9 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   const palette = () => S.state.theme === 'dark' ? {
-    land: '#173f4a', land2: '#356d70', line: 'rgba(157,194,199,.48)', ink: '#f2f6f7',
-    regions: ['#205467', '#235b57', '#3c5963', '#535c4b', '#625748', '#36516c', '#3f625f'],
-    tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', mass: 'rgba(152,190,196,.34)', dot: '#cde3e7'
+    land: '#24465d', land2: '#39637a', line: 'rgba(153,191,208,.48)', ink: '#f0f7fa',
+    regions: ['#254861', '#2f596e', '#385872', '#345267', '#34567b', '#286066', '#485775'],
+    tipBg: 'rgba(17,31,45,.97)', tipLine: 'rgba(145,181,201,.24)', mass: 'rgba(152,190,208,.3)', dot: '#d1e6f0'
   } : {
     land: '#e3e8e4', land2: '#cadfda', line: 'rgba(77,105,115,.55)', ink: '#263238',
     regions: ['#c9e0dc', '#d5e2cd', '#d6dfe5', '#e6dfc8', '#e7d7c7', '#d2d9e9', '#c8dfd5'],
@@ -783,7 +783,7 @@ window.V03Fact = (function () {
       ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2); ctx.fill();
     }
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    if (dark) { g.addColorStop(0, '#164d61'); g.addColorStop(.58, '#062b3b'); g.addColorStop(1, '#010a11'); }
+    if (dark) { g.addColorStop(0, '#22506b'); g.addColorStop(.58, '#10334d'); g.addColorStop(1, '#041420'); }
     else { g.addColorStop(0, '#f7fafb'); g.addColorStop(.7, '#dfecef'); g.addColorStop(1, '#cbdde2'); }
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();

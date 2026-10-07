@@ -39,13 +39,13 @@
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#061923;--panel:#142630;--panel-2:#1c3039;--panel-alpha:rgba(20,38,48,.95);--line:rgba(153,194,194,.23);--hair:rgba(153,194,194,.17);
-  --ink:#f1f8f7;--mut:#c8dad8;--dim:#9bb9b9;--hint:#88a8aa;
-  --accent:#67d4e5;--accent-soft:rgba(103,212,229,.16);--green:#9bd483;--orange:#f0bf75;--purple:#b6a7e5;--red:#f09282;
+  --bg:#07131f;--panel:#111f2d;--panel-2:#182a39;--panel-alpha:rgba(17,31,45,.96);--line:rgba(145,181,201,.22);--hair:rgba(145,181,201,.16);
+  --ink:#f0f7fa;--mut:#c0d2dc;--dim:#91acba;--hint:#829eae;
+  --accent:#76c9ea;--accent-soft:rgba(118,201,234,.15);--green:#9bd483;--orange:#f0bf75;--purple:#b6a7e5;--red:#f09282;
   --warn:#e3ad66;--warn-bg:rgba(227,173,102,.14);
-  --ocean:#041e2b;--land:#173f4a;--land-2:#356d70;--map-line:rgba(157,194,199,.48);--map-label:#c6dada;
-  --glass:rgba(13,29,39,.82);--glass-2:rgba(20,38,48,.78);--glass-line:rgba(170,211,210,.22);
-  --shadow:0 14px 36px -18px rgba(0,0,0,.88);--icon:#a7c4c4;--icon-hover:#80e1ed;--icon-on:rgba(103,212,229,.17);
+  --ocean:#071a2a;--land:#24465d;--land-2:#39637a;--map-line:rgba(153,191,208,.48);--map-label:#c0d8e4;
+  --glass:rgba(12,25,38,.88);--glass-2:rgba(17,31,45,.84);--glass-line:rgba(145,181,201,.2);
+  --shadow:0 14px 36px -18px rgba(0,0,0,.88);--icon:#a6bfcd;--icon-hover:#a1def5;--icon-on:rgba(118,201,234,.17);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-font-smoothing:antialiased;font-size:16px}
@@ -252,6 +252,7 @@ svg{display:block}
 .fact-wrap{position:absolute;inset:0 0 0 0}
 .fact-mapbox{position:absolute;inset:0;background:var(--ocean)}   /* v07：地图铺满整屏，面板浮在上面 */
 .fact-mapbox #factMap{position:absolute;inset:0}
+@media (min-width:821px){.fact-mapbox #factMap{right:var(--side-w)}}
 .fact-mapbox #factGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
 .data-snapshot{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(8,27,38,.74);color:#c9dfe0;font-size:11px;letter-spacing:.03em;backdrop-filter:blur(12px);pointer-events:none}
 .fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:54px}
@@ -437,10 +438,11 @@ html[data-theme="dark"] .settings{background:rgba(0,5,8,.58)}
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-main.graph-view{background-color:#fafafa;
   background-image:radial-gradient(#d0d0d0 1.5px,transparent 1.5px);background-size:24px 24px}
-html[data-theme="dark"] .rel-main.graph-view{background-color:#17232a;
+html[data-theme="dark"] .rel-main.graph-view{background-color:#111f2d;
   background-image:radial-gradient(rgba(218,232,235,.2) 1.5px,transparent 1.5px)}
 .rel-canvas{position:absolute;inset:0}
 .rel-main.graph-view .rel-canvas{right:var(--side-w);bottom:var(--stream-h)}
+@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:var(--side-w)}}
 .rel-viewbar{position:absolute;top:14px;left:14px;z-index:24;display:flex;gap:4px;padding:4px;
   border:1px solid var(--line);border-radius:var(--r-md);background:var(--glass);backdrop-filter:var(--blur)}
 .rel-viewbar button{border:0;border-radius:var(--r-sm);background:transparent;color:var(--mut);padding:6px 10px;
@@ -755,7 +757,7 @@ html[data-theme="dark"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"519fc625270e","git":"7fee570","builtAt":"2026-10-07T07:50:58.660Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"f4fbbfab3928","git":"90fd00c","builtAt":"2026-10-07T08:26:58.548Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5610,7 +5612,7 @@ window.V03Fact = (function () {
      L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
      L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'world110', center: [18, 10], zoom: 1.06, fit: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [1.06, 2.4], inAt: 2.2, divisor: 9 },
+    L1: { map: 'world110', center: [105, 35], zoom: 1.06, fit: 1.06, bounds: [[-170, 72], [180, -56]], zoomBox: [1.06, 2.4], inAt: 2.2, divisor: 9 },
     L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
     L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], divisor: 7 }
   };
@@ -5802,9 +5804,9 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   const palette = () => S.state.theme === 'dark' ? {
-    land: '#173f4a', land2: '#356d70', line: 'rgba(157,194,199,.48)', ink: '#f2f6f7',
-    regions: ['#205467', '#235b57', '#3c5963', '#535c4b', '#625748', '#36516c', '#3f625f'],
-    tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', mass: 'rgba(152,190,196,.34)', dot: '#cde3e7'
+    land: '#24465d', land2: '#39637a', line: 'rgba(153,191,208,.48)', ink: '#f0f7fa',
+    regions: ['#254861', '#2f596e', '#385872', '#345267', '#34567b', '#286066', '#485775'],
+    tipBg: 'rgba(17,31,45,.97)', tipLine: 'rgba(145,181,201,.24)', mass: 'rgba(152,190,208,.3)', dot: '#d1e6f0'
   } : {
     land: '#e3e8e4', land2: '#cadfda', line: 'rgba(77,105,115,.55)', ink: '#263238',
     regions: ['#c9e0dc', '#d5e2cd', '#d6dfe5', '#e6dfc8', '#e7d7c7', '#d2d9e9', '#c8dfd5'],
@@ -6373,7 +6375,7 @@ window.V03Fact = (function () {
       ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2); ctx.fill();
     }
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    if (dark) { g.addColorStop(0, '#164d61'); g.addColorStop(.58, '#062b3b'); g.addColorStop(1, '#010a11'); }
+    if (dark) { g.addColorStop(0, '#22506b'); g.addColorStop(.58, '#10334d'); g.addColorStop(1, '#041420'); }
     else { g.addColorStop(0, '#f7fafb'); g.addColorStop(.7, '#dfecef'); g.addColorStop(1, '#cbdde2'); }
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
@@ -6560,7 +6562,7 @@ window.V03Fact = (function () {
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
-  const camera = { zoom: 1.06, graphZoom: 1, center: [18, 10], raf: null, level: null };
+  const camera = { zoom: 1.06, graphZoom: 1, center: [105, 35], raf: null, level: null };
   const ZOOM_BOX = [0.9, 3.0];
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
@@ -6571,8 +6573,8 @@ window.V03Relation = (function () {
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'dark' ? {
-    land: '#0b3f47', land2: '#14515a', line: 'rgba(143,178,184,.58)', ink: '#f2f6f7', labelBg: 'rgba(31,34,35,.86)',
-    tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', neutral: 'rgba(163,185,190,.78)'
+    land: '#24465d', land2: '#39637a', line: 'rgba(153,191,208,.48)', ink: '#f0f7fa', labelBg: 'rgba(17,31,45,.88)',
+    tipBg: 'rgba(17,31,45,.97)', tipLine: 'rgba(145,181,201,.24)', neutral: 'rgba(163,190,207,.78)'
   } : {
     land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238', labelBg: 'rgba(255,255,255,.82)',
     tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', neutral: 'rgba(126,138,158,.85)'
