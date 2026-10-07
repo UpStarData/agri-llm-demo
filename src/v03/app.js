@@ -331,7 +331,6 @@
     const bNone = el('button', 'ghost sm', '全不选');
     bNone.onclick = () => S.set({ [field]: [] });
     quick.appendChild(bAll); quick.appendChild(bNone);
-    quick.appendChild(el('span', 'mn-tip', isRel ? '两级本体类型同时筛选地图、图谱和卡片' : '三级事实类型决定地图和卡片筛选；默认全选'));
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');

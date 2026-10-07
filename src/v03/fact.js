@@ -104,8 +104,6 @@ window.V03Fact = (function () {
     <div class="fact-mapbox" id="factMapBox">
       <div id="factMap"></div>
       <canvas id="factGlobe" width="1120" height="820" style="display:none"></canvas>
-      <div class="data-snapshot">演示数据截面 · ${D.TODAY}</div>
-      <div class="globe-caption" id="globeCaption" hidden>关系流线 <span>关联层演示数据</span></div>
     </div>
     <button class="fact-search-status" id="factSearchStatus" type="button" hidden></button>
     <div class="fact-overlay-info" id="factOverlayInfo" hidden></div>
@@ -116,7 +114,7 @@ window.V03Fact = (function () {
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = {
-      mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'), globeCaption: root.querySelector('#globeCaption'),
+      mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'),
       side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
     dom.searchStatus.onclick = () => S.set({ q: '' });
@@ -322,12 +320,9 @@ window.V03Fact = (function () {
     const halos = [], pts = [];
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
-      // The demo data omits Jev impact radii. Mark a bounded set of points with
-      // unscaled visual rings; the detail still reports the radius as unknown.
-      const visualRing = !diameter && index < 150 && f.impact === 'high' ? 22 : 0;
       mapPoints(f.lng, f.lat).forEach(value => {
-        if (diameter >= 8 || visualRing) halos.push({ id: f.id, value, symbolSize: diameter || visualRing,
-          itemStyle: { color: hexA(p.dot, diameter ? .1 : .12), borderColor: hexA(p.dot, diameter ? .55 : .48), borderWidth: 1 } });
+        if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
+          itemStyle: { color: hexA(p.dot, .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
@@ -637,7 +632,7 @@ window.V03Fact = (function () {
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
     return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span><span>' + dataLabel(f) + '</span></div>' +
+      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
       body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 
@@ -707,22 +702,21 @@ window.V03Fact = (function () {
         </div>
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
         <div class="fd-sec"><h4>显示层级与地理影响</h4>
-          ${row('显示层级', scope + '（数据包标注，Jev 判断依据待接入）')}
-          ${row('地理影响半径', f.radius ? f.radius + ' km（演示数据估算）' : '未知：材料中无可核实半径')}
+          ${row('显示层级', scope)}
+          ${row('地理影响半径', f.radius ? f.radius + ' km' : '未知')}
         </div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
         <div class="fd-sec"><h4>证据与来源 <small>${evidence.length} 条</small></h4>
           ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
-        <div class="fd-sec"><h4>数据来源类型</h4>${row('数据状态', dataLabel(f))}${row('材料类型', f.prov === 'real' ? '公开来源' : '演示样本')}</div>
         ${typeFields.filter(([, v]) => v != null && v !== '').length ? '<div class="fd-sec"><h4>类型字段</h4>' + typeFields.map(([k, v]) => row(k, v)).join('') + '</div>' : ''}
         <div class="fd-actions">
           <button class="btn sec" id="toRel">在关联层查看</button>
           <button class="btn sec" id="toSim">基于该事实发起推演</button>
           <button class="btn ter" id="toLog">${st.logOpen ? '收起事实形成过程' : '查看事实形成过程'}</button>
         </div>
-        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + row('采集时间', f.ingestedAt || '采集时间未记录') + row('抽取时间', '数据包未提供') + row('处理版本', '数据包未提供') + row('最近更新', f.ingestedAt || '更新时间未记录') + '<div class="rec-log">演示日志 ' + logs.length + ' 条，不代表实时后台任务。</div></div>' : ''}
+        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + '</div>' : ''}
       </div>`;
     box.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => S.set({
       tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]),
@@ -885,10 +879,10 @@ window.V03Fact = (function () {
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = strong ? 'rgba(220,235,230,.7)' : 'rgba(55,79,95,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.filter((f,i) => radiusPx(f) >= 8 || (i<150 && f.impact==='high')).forEach(f => {
+    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
       const p = gProject(f.lng, f.lat, cx, cy, R);
       if (p.z <= 0) return;
-      const rr = radiusPx(f) >= 8 ? radiusPx(f) * .9 : 11;
+      const rr = radiusPx(f) * .9;
       const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
       const col = catOf(f).c;
       grd.addColorStop(0, hexA(col, IMPACT_ALPHA[f.impact] || .12));
@@ -940,7 +934,6 @@ window.V03Fact = (function () {
     const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
     const on3d = show3d && visible;
     dom.globe.style.display = show3d ? 'block' : 'none';
-    dom.globeCaption.hidden = !show3d;
     dom.map.style.display = show3d ? 'none' : 'block';
     const animation = chart && chart.getZr().animation;
     const shouldPauseMap = !visible || show3d;

@@ -313,27 +313,8 @@ window.V03Pkg = (function () {
   const REBALANCE = { disabled: true, reason: '保留数据包原始字段' };
 
   /* ---------- Entity → 内部本体模型 ---------- */
-  /* 实体代表点：数据包对少数市场/公司未取到门址坐标（geo=null）。这些是**有真实地理归属**的物理主体，
-     不应只留在右侧列表：用其所在城市/总部的行政区代表点落图（精度标记为「行政区代表点（近似）」，不伪造门址）。 */
-  const CITY_ANCHOR = [
-    [/广州|江南市场/, [113.264, 23.129]],
-    [/深圳|海吉星.*深圳/, [114.057, 22.543]],
-    [/Talaad|泰国/, [100.601, 14.020]],
-    [/Rungis|法国/, [2.353, 48.744]],
-    [/Selayang|马来西亚/, [101.657, 3.240]],
-    [/洪九/, [106.259, 29.283]],
-    [/佳沃|中粮/, [116.407, 39.905]],
-    [/Del Monte/i, [-122.062, 37.911]],
-    [/湖南|长沙|果之友|绿叶|金胜|云辉|聚海鑫|龙源|畅农|星勤/, [112.939, 28.228]]
-  ];
-  const PHYSICAL = { Market: 1, Enterprise: 1, Base: 1, Region: 1, LogisticsNode: 1 };
-  const anchorOf = e => {
-    const nm = String(e.canonicalName || '') + ' ' + String((e.attributes || {}).anchorPlace || '');
-    const hit = CITY_ANCHOR.find(([re]) => re.test(nm));
-    if (!hit) return null;
-    const h = Math.abs(String(e.entityId).split('').reduce((a, c) => a * 31 + c.charCodeAt(0) | 0, 7));
-    return [hit[1][0] + ((h % 17) - 8) * 0.012, hit[1][1] + ((h % 13) - 6) * 0.012];
-  };
+  // Only source coordinates may be used for map nodes. Entities without them
+  // remain available in the right-side card list and graph view.
 
   /* 大型机场若不在原实体表内，补一个轻量本体对象（点标记即可打开详情） */
   const ENTITIES_ALL = ENTITIES_IN.concat(AIRPORT_FEATURES
@@ -350,7 +331,8 @@ window.V03Pkg = (function () {
     const a = e.attributes || {};
     let pt = e.geo && e.geo.geoPoint;
     let approx = false;
-    if (!pt && PHYSICAL[e.type]) { const ap = anchorOf(e); if (ap) { pt = ap; approx = true; } }
+    // A physical entity with no source coordinate stays off the map (PRD 4.3.2.1).
+    // The previous city-anchor jitter placed invented points on the map.
     const dom = TYPE2DOMAIN[e.type] || 'metric';
     const props = [['对象域', ONT.lookup[e.type] || e.type], ['状态', e.status === 'active' ? '在册' : e.status]];
     if (cleanProp(a.landmark)) props.push(['定位', cleanProp(a.landmark)]);

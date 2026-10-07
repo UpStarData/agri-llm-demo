@@ -776,7 +776,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.1 原型</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.2</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -841,7 +841,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"973911f1bfa3","git":"21fd24a","builtAt":"2026-10-07T20:14:23.859Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"7ec1a095a1de","git":"5dcf9d9","builtAt":"2026-10-07T20:40:17.239Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -3577,27 +3577,8 @@ window.V03Pkg = (function () {
   const REBALANCE = { disabled: true, reason: '保留数据包原始字段' };
 
   /* ---------- Entity → 内部本体模型 ---------- */
-  /* 实体代表点：数据包对少数市场/公司未取到门址坐标（geo=null）。这些是**有真实地理归属**的物理主体，
-     不应只留在右侧列表：用其所在城市/总部的行政区代表点落图（精度标记为「行政区代表点（近似）」，不伪造门址）。 */
-  const CITY_ANCHOR = [
-    [/广州|江南市场/, [113.264, 23.129]],
-    [/深圳|海吉星.*深圳/, [114.057, 22.543]],
-    [/Talaad|泰国/, [100.601, 14.020]],
-    [/Rungis|法国/, [2.353, 48.744]],
-    [/Selayang|马来西亚/, [101.657, 3.240]],
-    [/洪九/, [106.259, 29.283]],
-    [/佳沃|中粮/, [116.407, 39.905]],
-    [/Del Monte/i, [-122.062, 37.911]],
-    [/湖南|长沙|果之友|绿叶|金胜|云辉|聚海鑫|龙源|畅农|星勤/, [112.939, 28.228]]
-  ];
-  const PHYSICAL = { Market: 1, Enterprise: 1, Base: 1, Region: 1, LogisticsNode: 1 };
-  const anchorOf = e => {
-    const nm = String(e.canonicalName || '') + ' ' + String((e.attributes || {}).anchorPlace || '');
-    const hit = CITY_ANCHOR.find(([re]) => re.test(nm));
-    if (!hit) return null;
-    const h = Math.abs(String(e.entityId).split('').reduce((a, c) => a * 31 + c.charCodeAt(0) | 0, 7));
-    return [hit[1][0] + ((h % 17) - 8) * 0.012, hit[1][1] + ((h % 13) - 6) * 0.012];
-  };
+  // Only source coordinates may be used for map nodes. Entities without them
+  // remain available in the right-side card list and graph view.
 
   /* 大型机场若不在原实体表内，补一个轻量本体对象（点标记即可打开详情） */
   const ENTITIES_ALL = ENTITIES_IN.concat(AIRPORT_FEATURES
@@ -3614,7 +3595,8 @@ window.V03Pkg = (function () {
     const a = e.attributes || {};
     let pt = e.geo && e.geo.geoPoint;
     let approx = false;
-    if (!pt && PHYSICAL[e.type]) { const ap = anchorOf(e); if (ap) { pt = ap; approx = true; } }
+    // A physical entity with no source coordinate stays off the map (PRD 4.3.2.1).
+    // The previous city-anchor jitter placed invented points on the map.
     const dom = TYPE2DOMAIN[e.type] || 'metric';
     const props = [['对象域', ONT.lookup[e.type] || e.type], ['状态', e.status === 'active' ? '在册' : e.status]];
     if (cleanProp(a.landmark)) props.push(['定位', cleanProp(a.landmark)]);
@@ -5641,7 +5623,7 @@ window.V03Filter = (function () {
         ['当前事实', String(raw), raw],
         ['今日新增', String(today), today]
       ],
-      note: '演示数据集 · 无实时数据接入',
+      note: '',
       real: list.length,
       raw,
       rate: 0
@@ -5786,8 +5768,6 @@ window.V03Fact = (function () {
     <div class="fact-mapbox" id="factMapBox">
       <div id="factMap"></div>
       <canvas id="factGlobe" width="1120" height="820" style="display:none"></canvas>
-      <div class="data-snapshot">演示数据截面 · ${D.TODAY}</div>
-      <div class="globe-caption" id="globeCaption" hidden>关系流线 <span>关联层演示数据</span></div>
     </div>
     <button class="fact-search-status" id="factSearchStatus" type="button" hidden></button>
     <div class="fact-overlay-info" id="factOverlayInfo" hidden></div>
@@ -5798,7 +5778,7 @@ window.V03Fact = (function () {
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = {
-      mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'), globeCaption: root.querySelector('#globeCaption'),
+      mapBox: root.querySelector('#factMapBox'), map: root.querySelector('#factMap'), globe: root.querySelector('#factGlobe'),
       side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
     dom.searchStatus.onclick = () => S.set({ q: '' });
@@ -6004,12 +5984,9 @@ window.V03Fact = (function () {
     const halos = [], pts = [];
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
-      // The demo data omits Jev impact radii. Mark a bounded set of points with
-      // unscaled visual rings; the detail still reports the radius as unknown.
-      const visualRing = !diameter && index < 150 && f.impact === 'high' ? 22 : 0;
       mapPoints(f.lng, f.lat).forEach(value => {
-        if (diameter >= 8 || visualRing) halos.push({ id: f.id, value, symbolSize: diameter || visualRing,
-          itemStyle: { color: hexA(p.dot, diameter ? .1 : .12), borderColor: hexA(p.dot, diameter ? .55 : .48), borderWidth: 1 } });
+        if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
+          itemStyle: { color: hexA(p.dot, .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
@@ -6319,7 +6296,7 @@ window.V03Fact = (function () {
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
     return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span><span>' + dataLabel(f) + '</span></div>' +
+      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
       body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 
@@ -6389,22 +6366,21 @@ window.V03Fact = (function () {
         </div>
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
         <div class="fd-sec"><h4>显示层级与地理影响</h4>
-          ${row('显示层级', scope + '（数据包标注，Jev 判断依据待接入）')}
-          ${row('地理影响半径', f.radius ? f.radius + ' km（演示数据估算）' : '未知：材料中无可核实半径')}
+          ${row('显示层级', scope)}
+          ${row('地理影响半径', f.radius ? f.radius + ' km' : '未知')}
         </div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
         <div class="fd-sec"><h4>证据与来源 <small>${evidence.length} 条</small></h4>
           ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
-        <div class="fd-sec"><h4>数据来源类型</h4>${row('数据状态', dataLabel(f))}${row('材料类型', f.prov === 'real' ? '公开来源' : '演示样本')}</div>
         ${typeFields.filter(([, v]) => v != null && v !== '').length ? '<div class="fd-sec"><h4>类型字段</h4>' + typeFields.map(([k, v]) => row(k, v)).join('') + '</div>' : ''}
         <div class="fd-actions">
           <button class="btn sec" id="toRel">在关联层查看</button>
           <button class="btn sec" id="toSim">基于该事实发起推演</button>
           <button class="btn ter" id="toLog">${st.logOpen ? '收起事实形成过程' : '查看事实形成过程'}</button>
         </div>
-        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + row('采集时间', f.ingestedAt || '采集时间未记录') + row('抽取时间', '数据包未提供') + row('处理版本', '数据包未提供') + row('最近更新', f.ingestedAt || '更新时间未记录') + '<div class="rec-log">演示日志 ' + logs.length + ' 条，不代表实时后台任务。</div></div>' : ''}
+        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + '</div>' : ''}
       </div>`;
     box.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => S.set({
       tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]),
@@ -6567,10 +6543,10 @@ window.V03Fact = (function () {
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = strong ? 'rgba(220,235,230,.7)' : 'rgba(55,79,95,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.filter((f,i) => radiusPx(f) >= 8 || (i<150 && f.impact==='high')).forEach(f => {
+    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
       const p = gProject(f.lng, f.lat, cx, cy, R);
       if (p.z <= 0) return;
-      const rr = radiusPx(f) >= 8 ? radiusPx(f) * .9 : 11;
+      const rr = radiusPx(f) * .9;
       const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
       const col = catOf(f).c;
       grd.addColorStop(0, hexA(col, IMPACT_ALPHA[f.impact] || .12));
@@ -6622,7 +6598,6 @@ window.V03Fact = (function () {
     const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
     const on3d = show3d && visible;
     dom.globe.style.display = show3d ? 'block' : 'none';
-    dom.globeCaption.hidden = !show3d;
     dom.map.style.display = show3d ? 'none' : 'block';
     const animation = chart && chart.getZr().animation;
     const shouldPauseMap = !visible || show3d;
@@ -7200,6 +7175,36 @@ window.V03Relation = (function () {
     const fs = (o.factIds || []).map(id => D.factById(id)).filter(Boolean).sort((a, b) => a.date < b.date ? 1 : -1);
     return fs.length ? fs[0].date : '';
   };
+  const CARD_SUMMARY = {
+    '水果':['品种名称','主要产地','主要进口来源'], '蔬菜':['品种名称','主要产地','主要进口来源'],
+    '粮油与油料':['品种名称','主要产地','主要进口来源'], '经济作物':['品种名称','主要产地','主要进口来源'],
+    '产区与基地':['主要品种','年产量','规模','主要销往地区'],
+    '市场':['市场类型','主营品种','辐射范围'],
+    '港口':['设施类型','主要货类','运营状态'], '机场':['设施类型','主要货类','运营状态'],
+    '企业与贸易主体':['经营角色','主营品种','所在地'],
+    '政府与机构':['机构类型','适用地区','生效状态'], '政策与法规':['政策类型','适用地区','生效状态'],
+    '自然与生态':['事件类型','事件状态','发生地区'], '政策与贸易':['事件类型','事件状态','发生地区'],
+    '地缘与安全':['事件类型','事件状态','发生地区'], '公共事件':['事件类型','事件状态','发生地区'],
+    '行政区划':['行政级别','上级区域']
+  };
+  const DETAIL_FIELDS = {
+    '水果':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '蔬菜':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '粮油与油料':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '经济作物':['学名或别名','主要产地','主要进口来源国','主要产季','适宜生长条件'],
+    '产区与基地':['主要品种','产季','种植或养殖面积','年产量','主要销往地区','经营主体'],
+    '市场':['市场类型','主营品种','辐射范围','交易规模','运营主体','主要货源地'],
+    '港口':['设施类型','主要货类','是否具备冷链能力','主要航线或线路','吞吐或库容规模','运营状态','运营主体'],
+    '机场':['设施类型','主要货类','是否具备冷链能力','主要航线或线路','吞吐或库容规模','运营状态','运营主体'],
+    '企业与贸易主体':['主体类型','经营角色','主营品种','注册地','主要合作方'],
+    '政府与机构':['机构或政策类型','发布机构','适用地区','适用对象','生效状态','主要内容'],
+    '政策与法规':['机构或政策类型','发布机构','适用地区','适用对象','生效状态','主要内容'],
+    '自然与生态':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '政策与贸易':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '地缘与安全':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '公共事件':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
+    '行政区划':['行政级别','上级区域','主要农产品']
+  };
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     const nogeo = objs.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
@@ -7208,7 +7213,7 @@ window.V03Relation = (function () {
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
-      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|所在地|品种|产地|进口|规模|销往|类型|设施|货类|状态|范围/.test(k)).slice(0, 3)
+      const kv = (o.props || []).filter(([k]) => (CARD_SUMMARY[kind] || []).includes(k)).slice(0, 3)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
@@ -7219,7 +7224,7 @@ window.V03Relation = (function () {
         '<span class="rc-m">' + relCount + ' 条关系 · 查看详情 →</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
-      + '<div class="rel-foot">卡片按筛选展示全部本体，与地图视角独立；无坐标本体不在地图造点。</div>';
+      ;
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
@@ -7242,39 +7247,35 @@ window.V03Relation = (function () {
     const facts = (o.factIds || []).map(id => D.factById(id)).filter(Boolean).sort((a, b) => a.date < b.date ? 1 : -1);
     box.innerHTML = `
       <div class="fd">
-        <div class="fd-id">${esc(dm.n)} · ${o.geo === false ? '不可定位（右侧列出）' : '可定位'}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
+        <div class="fd-id">${esc(F.relKind(o)||dm.n)}</div>
         <h3>${esc(o.name)}</h3>
-        <div class="fd-chips fcard-mark">${esc(F.relKind(o)||dm.n)}${o.prov === 'real' ? ' · 公开登记' : ''}</div>
 
         <div class="fd-sec">
-          <h4>基本属性</h4>
-          <div class="kv-grid">${(o.props || []).map(([k, v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>').join('')}</div>
+          <h4>分类与所在地</h4>
+          <div class="kv"><span>分类</span><b>${esc(F.relKind(o)||dm.n)}</b></div>
           <div class="kv"><span>所在地</span><b>${esc(o.region || o.location || (o.geo === false ? '暂无位置' : (o.lat.toFixed(2) + '°N / ' + o.lng.toFixed(2) + '°E')))}</b></div>
         </div>
-
-        <button type="button" class="rel-start-sim">基于该本体发起推演 →</button>
         ${(o.commodityTags || []).length ? '<div class="fd-sec"><h4>涉及品种</h4><p>' + esc(o.commodityTags.join('、')) + '</p></div>' : ''}
+        ${o.note ? '<div class="fd-sec"><h4>简介</h4><p>' + esc(o.note) + '</p></div>' : ''}
+        ${(o.props || []).some(([k]) => (DETAIL_FIELDS[F.relKind(o)] || []).includes(k)) ? '<div class="fd-sec"><h4>分类字段</h4><div class="kv-grid">' + (o.props || []).filter(([k]) => (DETAIL_FIELDS[F.relKind(o)] || []).includes(k)).map(([k,v])=>'<div class="kv"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>').join('') + '</div></div>' : ''}
+
         <div class="fd-sec">
-          <h4>简介与来源</h4>
-          <p>${esc(o.note || '由公开登记与事实抽离共同确定。')}</p>
+          <h4>证据与来源 <small>${facts.length} 条</small></h4>
+          ${facts.map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实</p>'}
         </div>
 
         <div class="fd-sec">
-          <h4>相关事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
-        </div>
-
-        <div class="fd-sec">
-          <h4>当前关系 <small>${rels.length} 条 · 点击查看关系详情</small></h4>
-          ${rels.length ? rels.slice(0, 12).map(r => {
+          <h4>关系 <small>${rels.length} 条</small></h4>
+          ${rels.length ? rels.map(r => {
             const other = D.objById(r.from === o.id ? r.to : r.from);
             return '<button class="rel-row" data-rel="' + r.id + '" style="--rc:' + typeColor(r.type) + '">' +
               '<span class="rr-bar"></span>' +
               '<span class="rr-t"><b>' + esc(r.type) + '</b><i>·</i>' + esc(other ? other.name : '') + '</span>' +
               '<span class="rr-m">' + esc(o.name) + ' ' + (r.from === o.id ? '→' : '←') + ' ' + esc(other ? other.name : '') + '</span>' +
-              '<span class="rr-n">强度 ' + (r.strength * 100).toFixed(0) + '% · 置信 ' + (r.confidence * 100).toFixed(0) + '%</span></button>';
-          }).join('') : '<p>暂无关系记录。</p>'}
+              '</button>';
+          }).join('') : '<p>暂无关系</p>'}
         </div>
+        <button type="button" class="rel-start-sim">基于该本体发起推演</button>
       </div>`;
     box.querySelector('.rel-start-sim').onclick = () => S.set({ carry: [...new Set([...(S.state.carry || []), ...(o.factIds || [])])], tab: 'sim' });
     box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
@@ -7285,40 +7286,32 @@ window.V03Relation = (function () {
   }
   function renderRelation(box, r) {
     if (!r) { box.innerHTML = ''; return; }
-    const a = D.objById(r.from), b = D.objById(r.to), fb = D.factById(r.changedBy);
+    const a = D.objById(r.from), b = D.objById(r.to);
     const facts = (r.factIds || []).map(id => D.factById(id)).filter(Boolean);
     box.innerHTML = `
       <div class="fd">
-        <div class="fd-id">${esc(r.type)} · 形成于 ${esc(r.formed || '—')}</div>
+        <div class="fd-id">关系详情</div>
         <h3>${esc(a ? a.name : r.from)} → ${esc(r.type)} → ${esc(b ? b.name : r.to)}</h3>
-        <div class="fd-chips fcard-mark">强度 ${(r.strength * 100).toFixed(0)}% · 置信 ${(r.confidence * 100).toFixed(0)}%${r.confidence < .6 ? ' · <em>待观察</em>' : ''}</div>
 
         <div class="fd-sec">
-          <h4>关系语义</h4>
-          <p><b>${esc(a ? a.name : r.from)}</b> → <b>${esc(b ? b.name : r.to)}</b></p>
-          <p>${esc(r.note || '由事实与规则生成，可回溯至支撑事实。')}</p>
+          <h4>关系类型</h4><p>${esc(r.type)}</p>
         </div>
 
         <div class="fd-sec">
-          <h4>关键字段</h4>
+          <h4>起点、终点</h4>
           <div class="kv-grid">
             <div class="kv"><span>起点本体</span><button class="rel-endpoint" data-object="${esc(r.from)}">${esc(a ? a.name : r.from)} · ${esc(a ? F.relKind(a) : '')}</button></div>
             <div class="kv"><span>终点本体</span><button class="rel-endpoint" data-object="${esc(r.to)}">${esc(b ? b.name : r.to)} · ${esc(b ? F.relKind(b) : '')}</button></div>
-            <div class="kv"><span>形成时间</span><b>${esc(r.formed || '—')}</b></div>
-            <div class="kv"><span>最近变化</span><b>${fb ? esc(fb.date) : '—'}</b></div>
           </div>
         </div>
 
         <div class="fd-sec">
-          <h4>支持事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
+          <h4>支撑事实 <small>${facts.length} 条</small></h4>
+          ${facts.map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实</p>'}
         </div>
-
-        <button type="button" class="rel-start-sim">基于该关系发起推演 →</button>
-        <div class="fd-sec">
-          <h4>最近导致关系变化的事实</h4>
-          <p>${fb ? fb.date + ' · ' + esc(fb.title) : '近期无变更记录。'}</p>
-        </div>
+        ${r.note ? '<div class="fd-sec"><h4>判断依据</h4><p>' + esc(r.note) + '</p></div>' : ''}
+        ${r.formed ? '<div class="fd-sec"><h4>形成过程</h4><p>首次写入时间：' + esc(r.formed) + '</p></div>' : ''}
+        <button type="button" class="rel-start-sim">基于该关系发起推演</button>
       </div>`;
     box.querySelector('.rel-start-sim').onclick = () => S.set({carry:[...new Set([...(S.state.carry||[]),...(r.factIds||[])])],tab:'sim'});
     box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
@@ -7382,7 +7375,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.0.1 · V1.2 事实层体验',
+      source: 'AgriLink v1.0.2',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -7762,7 +7755,6 @@ window.V03Sim = (function () {
     const bNone = el('button', 'ghost sm', '全不选');
     bNone.onclick = () => S.set({ [field]: [] });
     quick.appendChild(bAll); quick.appendChild(bNone);
-    quick.appendChild(el('span', 'mn-tip', isRel ? '两级本体类型同时筛选地图、图谱和卡片' : '三级事实类型决定地图和卡片筛选；默认全选'));
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');

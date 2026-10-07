@@ -14,9 +14,10 @@ try {
   const fact = await page.evaluate(() => {
     const chart = echarts.getInstanceByDom(document.querySelector('#factMap'));
     return { rings: chart.getOption().series.find(x => x.id === 'halo').data.length,
+      validRadii: V03Filter.mappable(V03Filter.factsAtLevel(V03Store.state)).filter(f => Number.isFinite(f.radius) && f.radius > 0).length,
       theme: V03Store.state.theme, enabled: V03Store.state.sk.influence };
   });
-  if (fact.rings < 10 || !fact.enabled || fact.theme !== 'color') throw Error('事实影响圈或主配色失效');
+  if (fact.rings > fact.validRadii * 3 || !fact.enabled || fact.theme !== 'color') throw Error('地理影响圆含无半径事实，或主配色失效');
 
   await page.evaluate(() => V03Store.set({ tab: 'relation', menu: true, panels: { cards: true } }));
   await page.waitForFunction(() => document.querySelectorAll('.rel-card').length > 0);
@@ -39,5 +40,5 @@ try {
   const iframe = await page.locator('.miro-bridge-frame').getAttribute('src');
   if (!iframe.includes('/mirofish-frontend-preview/')) throw Error('推演层未恢复旧版工作台');
   if (errors.length) throw Error(errors.join('\n'));
-  console.log('V1.0.1: fact rings, relation controls/search, ontology-to-simulation and restored preview passed');
+  console.log('Fact radius gate, relation controls/search, ontology-to-simulation and restored preview passed');
 } finally { await browser.close(); }

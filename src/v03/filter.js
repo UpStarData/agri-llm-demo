@@ -195,7 +195,7 @@ window.V03Filter = (function () {
         ['当前事实', String(raw), raw],
         ['今日新增', String(today), today]
       ],
-      note: '演示数据集 · 无实时数据接入',
+      note: '',
       real: list.length,
       raw,
       rate: 0
