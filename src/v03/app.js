@@ -428,9 +428,10 @@
     const st = S.state, box = $('streamBox');
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
-    document.documentElement.style.setProperty('--stream-h', on ? '74px' : '0px');
+    const largeScreen = window.innerWidth >= 2200;
+    document.documentElement.style.setProperty('--stream-h', on ? (largeScreen ? '104px' : '74px') : '0px');
     document.documentElement.style.setProperty('--side-w',
-      (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? '420px' : '0px');
+      (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? (largeScreen ? '620px' : '420px') : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];
     if (ST.lastTab !== st.tab || !ST.started) {
       ST.lastTab = st.tab; ST.i = 0; ST.started = true; $('streamBody').innerHTML = '';
