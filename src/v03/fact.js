@@ -253,13 +253,13 @@ window.V03Fact = (function () {
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
   const palette = () => S.state.theme === 'color' ? {
-    land: '#80909a', land2: '#6b838d', line: 'rgba(23,47,60,.83)', ink: '#e8f0ed',
-    regions: ['#81999f', '#a39780', '#7f8fa4', '#9d8e8e', '#8ea19a', '#a39d8f', '#87959e'],
-    tipBg: 'rgba(243,243,237,.98)', tipLine: 'rgba(40,70,82,.28)', mass: 'rgba(235,210,155,.28)', dot: '#f9d79c'
+    land: '#e9ecd9', land2: '#bcd7ac', line: 'rgba(74,105,98,.67)', ink: '#243c42',
+    regions: ['#d7e5c7', '#eee6d2', '#d5e8df', '#e7dec8', '#dce9be', '#e3eacb', '#cfe0ca'],
+    tipBg: 'rgba(255,253,248,.98)', tipLine: 'rgba(61,96,84,.25)', mass: 'rgba(37,103,83,.26)', dot: '#315fb8'
   } : {
-    land: '#a5b7b9', land2: '#809aaa', line: 'rgba(55,79,95,.68)', ink: '#263d4c',
-    regions: ['#51899b', '#d09a49', '#7484ad', '#60997b', '#bd7465', '#6e9aa8', '#a8879a'],
-    tipBg: 'rgba(253,251,246,.98)', tipLine: 'rgba(56,78,92,.22)', mass: 'rgba(52,79,94,.38)', dot: '#344d5e'
+    land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
+    regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
+    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
   };
   /* 共享至少两个边界顶点才算相邻；贪心图着色保证接壤区域异色。 */
   function regionColors(features) {
@@ -326,7 +326,7 @@ window.V03Fact = (function () {
         if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
           itemStyle: { color: hexA(p.dot, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
-          itemStyle: { color: S.state.theme === 'color' ? '#244b64' : '#fdfaf0', borderColor: p.dot, borderWidth: 1.2 } });
+          itemStyle: { color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */

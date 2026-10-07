@@ -1,21 +1,21 @@
 /* ============================================================
    AgriLink 农链 V1.0 · 视觉校准版（V2 指令）
-   视觉基线：参考 WFP HungerMap 的中性底图与信息层级；区域色仅辅助辨认，不编码指标
+   视觉基线：参考用户提供的 Felt 地图与 Mapbox Outdoors 截图，覆盖底图、面板、卡片和控件
    布局要点：顶部 24px 轻量工具条 · 左侧菜单 4 段 · 右下快捷键 + 缩放
              右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情）· 窄条终端式流水
    ============================================================ */
 :root{
-  /* 配色 1：矿物蓝灰底图、暖沙与冷蓝区域、暖白面板。 */
-  --bg:#d7e0e3;--panel:#fbfaf6;--panel-2:#f0f2ef;--panel-alpha:rgba(251,250,246,.95);--line:rgba(50,73,86,.24);--hair:rgba(50,73,86,.16);
-  --ink:#263d4c;--mut:#526672;--dim:#6c7c83;--hint:#77878d;
-  --accent:#126588;--accent-soft:#d7e9ee;--green:#48866b;--orange:#bc8049;--purple:#716b9b;--red:#b65c5d;
+  /* 配色 1：Felt 式清爽地图；低对比底图 + 白色浮层 + 蓝色交互。 */
+  --bg:#edf2f5;--panel:#ffffff;--panel-2:#f2f6f8;--panel-alpha:rgba(255,255,255,.98);--line:rgba(58,88,112,.22);--hair:rgba(58,88,112,.14);
+  --ink:#20384b;--mut:#496476;--dim:#667c8b;--hint:#738796;
+  --accent:#236bad;--accent-soft:#e6f2fb;--green:#368b6f;--orange:#ae7650;--purple:#74658f;--red:#b65c5d;
   --warn:#b45309;--warn-bg:#fef3c7;
-  --ocean:#c8d9de;--land:#a5b7b9;--land-2:#809aaa;--map-line:rgba(55,79,95,.68);--map-label:#344e60;
+  --ocean:#b8cee0;--land:#f1efe8;--land-2:#dce8df;--map-line:rgba(79,108,123,.67);--map-label:#344f60;
   /* 面板与阴影（浅色，不用暗色玻璃） */
-  --glass:rgba(251,250,246,.86);--glass-2:rgba(251,250,246,.78);--glass-line:rgba(76,99,110,.2);
+  --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.89);--glass-line:rgba(70,105,125,.18);
   --blur:blur(28px) saturate(185%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
   /* 图标（Cursor 风格：细线、浅灰、hover 变深） */
-  --icon:#587586;--icon-hover:#126588;--icon-on:rgba(18,101,136,.13);
+  --icon:#466475;--icon-hover:#236bad;--icon-on:rgba(35,107,173,.12);
   /* 一级分类（低饱和，与明亮风格一致） */
   --c-nature:#5b8ea6;--c-supply:#6f9a6a;--c-chain:#5f9a94;--c-market:#b0736b;--c-consume:#8b7fa8;--c-policy:#6f86b8;--c-macro:#a08a63;
   --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;
@@ -28,15 +28,15 @@
 }
 html[data-theme="color"]{
   color-scheme:light;
-  /* 配色 2：深海蓝展示底图、克制的中性区域、暖白面板；高彩度留给事实点与操作。 */
-  --bg:#dce4e4;--panel:#f3f3ed;--panel-2:#e7ebea;--panel-alpha:rgba(243,243,237,.97);--line:rgba(30,60,73,.28);--hair:rgba(30,60,73,.17);
-  --ink:#172e3b;--mut:#435866;--dim:#5d6e76;--hint:#64747d;
-  --accent:#a96837;--accent-soft:rgba(169,104,55,.14);--green:#32715c;--orange:#a96837;--purple:#626582;--red:#a24748;
+  /* 配色 2：Mapbox Outdoors 式地理色彩；青蓝水域、叶绿陆地、象牙色面板和钴蓝控件。 */
+  --bg:#eaf1e9;--panel:#fffdf8;--panel-2:#f2f5ed;--panel-alpha:rgba(255,253,248,.98);--line:rgba(61,96,84,.23);--hair:rgba(61,96,84,.14);
+  --ink:#243c42;--mut:#506c6a;--dim:#68827f;--hint:#778d88;
+  --accent:#355fd0;--accent-soft:#e5ecff;--green:#378c69;--orange:#b77d43;--purple:#756bc3;--red:#b74d53;
   --warn:#97510f;--warn-bg:#f2dbaa;
-  --ocean:#314a59;--land:#80909a;--land-2:#6b838d;--map-line:rgba(23,47,60,.83);--map-label:#e3ebed;
-  --glass:rgba(243,243,237,.94);--glass-2:rgba(238,240,235,.88);--glass-line:rgba(40,70,82,.21);
-  --shadow:0 12px 32px -18px rgba(15,48,70,.48);--icon:#456174;--icon-hover:#a96837;--icon-on:rgba(169,104,55,.14);
-  --c-nature:#30738b;--c-supply:#497b60;--c-chain:#247f7c;--c-market:#ad6943;--c-consume:#6f638b;--c-policy:#3d6996;--c-macro:#9a773e;
+  --ocean:#78c4df;--land:#e9ecd9;--land-2:#bcd7ac;--map-line:rgba(74,105,98,.67);--map-label:#355c63;
+  --glass:rgba(255,253,248,.96);--glass-2:rgba(255,253,248,.9);--glass-line:rgba(66,103,93,.2);
+  --shadow:0 12px 32px -20px rgba(28,71,81,.38);--icon:#416a75;--icon-hover:#355fd0;--icon-on:rgba(53,95,208,.12);
+  --c-nature:#327fb1;--c-supply:#458c61;--c-chain:#318f8b;--c-market:#ac714f;--c-consume:#7a70aa;--c-policy:#4c72be;--c-macro:#96804f;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -219,7 +219,7 @@ svg{display:block}
 /* ---------------- 通用控件 ---------------- */
 .btn{display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--accent);background:var(--accent);color:#fff;
   border-radius:var(--r-sm);padding:6px 12px;font-size:.75rem;font-weight:var(--f-semi)}
-.btn:hover{background:#1b45c4;border-color:#1b45c4}
+.btn:hover{filter:brightness(.9)}
 .btn.sec{background:var(--panel);color:var(--accent)}
 .btn.sec:hover{background:var(--accent-soft)}
 .btn.ter{background:var(--panel);color:var(--mut);border-color:var(--line);font-weight:var(--f-reg)}
@@ -385,7 +385,25 @@ svg{display:block}
 .rec-log{background:var(--panel-2);border:1px dashed var(--hair);border-radius:var(--r-sm);padding:5px 7px;
   font-family:ui-monospace,Menlo,monospace;font-size:.59375rem;line-height:1.7;color:var(--dim);max-height:130px;overflow:auto}
 
-/* ---------------- HungerMap 夜间细节覆盖 ---------------- */
+/* ---------------- 统一地图控件、卡片与浮层 ---------------- */
+.topbar{box-shadow:0 2px 12px rgba(28,62,74,.09)}
+.tb-ic,.sk{border-radius:6px}
+.mapsk{background:var(--panel-alpha);border:1px solid var(--line);box-shadow:var(--shadow);backdrop-filter:none;grid-template-rows:repeat(2,28px);padding:6px 8px}
+.mapsk .sk{min-width:28px;height:28px}.mapsk .sk svg,.tb-ic svg{stroke-width:1.8}
+#btnTheme{border:1px solid var(--line);background:var(--panel);border-radius:7px}
+#btnTheme:hover{background:var(--accent-soft);border-color:var(--accent)}
+.data-snapshot,.globe-caption{background:var(--panel-alpha);border-color:var(--line);box-shadow:var(--shadow)}
+.fact-side,.rel-side{background:var(--panel-2)}
+.fcards{gap:8px}.fs-body,.rel-body{padding:10px 10px 16px}
+.fcard,.rel-card{background:var(--panel);border-left:1px solid var(--line);padding:9px 10px;box-shadow:0 2px 8px rgba(37,74,83,.05)}
+.fcard:hover,.rel-card:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(37,74,83,.13)}
+.fcard h5,.rel-card b{font-size:.75rem}
+.fcard p,.rel-card .rc-sub{font-size:.6875rem}
+.fact-overlay-info,.fact-search-status,.rel-viewbar{background:var(--panel-alpha);box-shadow:var(--shadow)}
+.stream{background:#193646;color:#e6f2f5;border-top-color:#315261}
+.st-bar{border-bottom-color:#315261}.st-line{color:#d3e3e9}
+html[data-theme="color"] .stream{background:#24444d;border-top-color:#406773}
+html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 
 /* ================= 窄屏（390px） ================= */
 @media (max-width:820px){
