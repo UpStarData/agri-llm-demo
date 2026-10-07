@@ -14,8 +14,8 @@
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
-  const camera = { zoom: 0.92, graphZoom: 1, center: [105, 35], raf: null, level: null };
-  const ZOOM_BOX = [0.92, 3.0];
+  const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, level: null, roamTimer: null };
+  const ZOOM_BOX = [1.26, 3.0];
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
   const TYPE_COLOR = {
@@ -25,11 +25,11 @@ window.V03Relation = (function () {
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'color' ? {
-    land: '#b2cecd', land2: '#9cbdba', line: 'rgba(42,82,101,.5)', ink: '#1c3e51', labelBg: 'rgba(250,254,253,.88)',
-    tipBg: 'rgba(250,254,253,.97)', tipLine: 'rgba(42,82,101,.22)', neutral: 'rgba(45,94,115,.78)'
+    land: '#58798c', land2: '#3f657c', line: 'rgba(20,54,75,.76)', ink: '#12354a', labelBg: 'rgba(239,247,248,.91)',
+    tipBg: 'rgba(239,247,248,.98)', tipLine: 'rgba(28,65,87,.28)', neutral: 'rgba(28,69,96,.82)'
   } : {
-    land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238', labelBg: 'rgba(255,255,255,.82)',
-    tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', neutral: 'rgba(126,138,158,.85)'
+    land: '#a5b7b9', land2: '#809aaa', line: 'rgba(55,79,95,.68)', ink: '#263d4c', labelBg: 'rgba(253,251,246,.87)',
+    tipBg: 'rgba(253,251,246,.98)', tipLine: 'rgba(56,78,92,.22)', neutral: 'rgba(55,79,95,.82)'
   };
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -87,6 +87,21 @@ window.V03Relation = (function () {
       if (id && id !== hover) { hover = id; paintFocus(); }
     });
     chart.on('globalout', () => { if (S.state.rel.view === 'geo' && hover) { hover = null; paintFocus(); } });
+    chart.on('georoam', () => {
+      if (S.state.rel.view !== 'geo') return;
+      const geo = (chart.getOption().geo || [])[0];
+      if (!geo) return;
+      if (geo.center) camera.center = geo.center.slice();
+      if (geo.zoom != null) camera.zoom = geo.zoom;
+      if (camera.roamTimer) clearTimeout(camera.roamTimer);
+      camera.roamTimer = setTimeout(() => {
+        camera.roamTimer = null;
+        if (Math.abs(camera.center[0] - 105) > 180) {
+          camera.center = [((camera.center[0] - 105 + 180) % 360 + 360) % 360 - 180 + 105, camera.center[1]];
+          chart.setOption({ geo: { center: camera.center.slice() } }, { silent: true });
+        }
+      }, 120);
+    });
     return chart;
   }
   let hover = null;
@@ -127,15 +142,19 @@ window.V03Relation = (function () {
 
   function linesData(objs, rels, focus) {
     const pos = {};
-    objs.forEach(o => { if (o.geo !== false && o.lat != null) pos[o.id] = [window.V03Fact.worldLongitude(o.lng), o.lat]; });
+    objs.forEach(o => { if (o.geo !== false && o.lat != null) pos[o.id] = window.V03Fact.worldCopies(o.lng, o.lat); });
     const out = [], labels = [], related = new Set();
     const total = rels.filter(r => pos[r.from] && pos[r.to]).length;
     rels.forEach(r => {
-      const a = pos[r.from], b = pos[r.to];
-      if (!a || !b) return;
+      const from = pos[r.from], to = pos[r.to];
+      if (!from || !to) return;
       const isFocus = focus && (r.from === focus || r.to === focus);
       if (isFocus) related.add(r.id);
       const color = isFocus ? typeColor(r.type) : palette().neutral;
+      for (let copy = 0; copy < 3; copy++) {
+      const a = from[copy], b = to[copy].slice();
+      if (b[0] - a[0] > 180) b[0] -= 360;
+      if (b[0] - a[0] < -180) b[0] += 360;
       out.push({
         id: r.id, coords: [a, b],
         lineStyle: {
@@ -156,16 +175,17 @@ window.V03Relation = (function () {
           lineStyle: { opacity: 0 }
         });
       }
+      }
     });
     return { lines: out, labels, related, total };
   }
 
   function nodesData(objs, focus) {
-    return objs.filter(o => o.geo !== false && o.lat != null).map(o => {
+    return objs.filter(o => o.geo !== false && o.lat != null).flatMap(o => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
       const isFocus = focus === o.id;
-      return {
-        id: o.id, objId: o.id, name: o.name, domain: o.domain, value: [window.V03Fact.worldLongitude(o.lng), o.lat],
+      return window.V03Fact.worldCopies(o.lng, o.lat).map(value => ({
+        id: o.id, objId: o.id, name: o.name, domain: o.domain, value,
         symbolSize: isFocus ? 12 : 8 + Math.min(4, degree * .25),
         itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1 },
         label: {
@@ -173,7 +193,7 @@ window.V03Relation = (function () {
           backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3,
           formatter: p => { const n = String(p.name || ''); return n.length > 10 ? n.slice(0, 9) + '…' : n; }
         }
-      };
+      }));
     });
   }
   function option(objs, rels, st) {
@@ -185,9 +205,11 @@ window.V03Relation = (function () {
     return {
       backgroundColor: 'transparent',
       geo: {
-        map: 'worldChina', roam: false, zoom: camera.zoom, center: camera.center.slice(),
+        map: 'worldChina', roam: true, zoom: camera.zoom, center: camera.center.slice(),
         boundingCoords: [[-25, 72], [335, -56]],
         itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
+        regions: (window.__WORLD110 || []).flatMap(x => [-1, 0, 1].map(copy => ({ name: copy ? x.n + '@' + copy : x.n,
+          itemStyle: { areaColor: window.V03Fact.mapRegionColor(x.n) } }))),
         emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: false } },
         select: { disabled: true }, label: { show: false }
       },

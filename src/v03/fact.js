@@ -20,7 +20,7 @@ window.V03Fact = (function () {
      L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
      L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'worldChina', center: [105, 35], zoom: 0.92, fit: 0.92, bounds: [[-25, 72], [335, -56]], zoomBox: [0.92, 2.4], inAt: 2.2, divisor: 9 },
+    L1: { map: 'worldChina', center: [105, 35], zoom: 1.26, fit: 1.26, bounds: [[-25, 72], [335, -56]], zoomBox: [1.26, 2.4], inAt: 2.2, divisor: 9 },
     L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
     L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], divisor: 7 }
   };
@@ -43,7 +43,13 @@ window.V03Fact = (function () {
      原始坐标始终保留给 3D 地球和数据模型，仅 2D 世界图做显示坐标转换。 */
   const WORLD_SEAM = -25;
   const worldLongitude = lng => lng < WORLD_SEAM ? lng + 360 : lng;
-  const mapPoint = (lng, lat) => [S.state.geo.level === 'L1' ? worldLongitude(lng) : lng, lat];
+  const worldCopies = (lng, lat) => [-1, 0, 1].map(copy => [worldLongitude(lng) + copy * 360, lat]);
+  const mapPoints = (lng, lat) => S.state.geo.level === 'L1' ? worldCopies(lng, lat) : [[lng, lat]];
+  const nearestWorldPoint = (lng, lat, centerLng) => {
+    const base = worldLongitude(lng);
+    return [base + Math.round((centerLng - base) / 360) * 360, lat];
+  };
+  const wrappedCenter = center => [((center[0] - 105 + 180) % 360 + 360) % 360 - 180 + 105, center[1]];
   function seamHalf(ring, west) {
     const inside = p => west ? p[0] < WORLD_SEAM : p[0] >= WORLD_SEAM;
     const clipped = [];
@@ -64,22 +70,25 @@ window.V03Fact = (function () {
   function worldGeoJSON(pacific = false) {
     const raw = window.__WORLD110 || [];
     const depth = x => { let d = 0; while (Array.isArray(x) && x.length) { d++; x = x[0]; } return d; };
-    return {
-      type: 'FeatureCollection',
-      features: raw.map(o => {
-        const d = depth(o.c);
-        const original = d >= 4 ? o.c : [d === 3 ? o.c : [o.c]];
-        const coordinates = pacific ? original.flatMap(polygon => {
-          const outer = polygon[0];
-          if (outer.some(p => p[0] < WORLD_SEAM) && outer.some(p => p[0] >= WORLD_SEAM)) {
-            return [seamHalf(outer, true), seamHalf(outer, false)].filter(Boolean).map(ring => [ring]);
-          }
-          return [polygon.map(ring => ring.map(([lng, lat]) => [worldLongitude(lng), lat]))];
-        }) : original;
-        const geometry = { type: 'MultiPolygon', coordinates };
-        return { type: 'Feature', properties: { name: o.n }, geometry };
-      })
-    };
+    const features = raw.map(o => {
+      const d = depth(o.c);
+      const original = d >= 4 ? o.c : [d === 3 ? o.c : [o.c]];
+      const coordinates = pacific ? original.flatMap(polygon => {
+        const outer = polygon[0];
+        if (outer.some(p => p[0] < WORLD_SEAM) && outer.some(p => p[0] >= WORLD_SEAM)) {
+          return [seamHalf(outer, true), seamHalf(outer, false)].filter(Boolean).map(ring => [ring]);
+        }
+        return [polygon.map(ring => ring.map(([lng, lat]) => [worldLongitude(lng), lat]))];
+      }) : original;
+      return { type: 'Feature', properties: { name: o.n }, geometry: { type: 'MultiPolygon', coordinates } };
+    });
+    if (!pacific) return { type: 'FeatureCollection', features };
+    const repeated = [-1, 0, 1].flatMap(copy => features.map(feature => ({
+      type: 'Feature',
+      properties: { name: copy ? feature.properties.name + '@' + copy : feature.properties.name, originalName: feature.properties.name },
+      geometry: { type: 'MultiPolygon', coordinates: feature.geometry.coordinates.map(poly => poly.map(ring => ring.map(([lng, lat]) => [lng + copy * 360, lat]))) }
+    })));
+    return { type: 'FeatureCollection', features: repeated };
   }
   function mapReady() {
     if (!window.echarts) return;
@@ -193,6 +202,8 @@ window.V03Fact = (function () {
   /* 缩放后决策（滚轮与 +/− 按钮共用）：到阈值切层、到边界收敛 */
   function afterZoom() {
     const st = S.state, lv = LEVEL[st.geo.level], box = lv.zoomBox;
+    /* 三份相同的世界互相接续；停手后按 360° 回到中央副本，视觉位置不跳变。 */
+    if (st.geo.level === 'L1' && Math.abs(camera.center[0] - 105) > 180) camera.center = wrappedCenter(camera.center);
     if (camera.zoom < box[0]) camera.zoom = box[0];
     if (camera.zoom > box[1]) camera.zoom = box[1];
     if (st.geo.level === 'L1' && camera.zoom >= lv.inAt) return enterLevel('L2', null);
@@ -224,7 +235,6 @@ window.V03Fact = (function () {
   };
 
   const DOT_SIZE = 6;
-  const DOTC = '#3f4c5f';          /* 统一中性色点（与关联层本体点一致，不用红色） */
   const overlayAtLevel = list => list.filter(x => {
     const lv = S.state.geo.level;
     return lv === 'L1' || (lv === 'L2' ? x.lng >= 73 && x.lng <= 136 && x.lat >= 17.5 && x.lat <= 54.5
@@ -241,46 +251,90 @@ window.V03Fact = (function () {
     dom.overlayInfo.innerHTML = '<button type="button" class="overlay-close" aria-label="关闭">×</button><b>' + esc(x.name) + '</b><small>' + esc(({ region:'产区',port:'港口',airport:'机场',market:'农贸市场',risk:'地缘风险区' })[x.kind] || '叠加图层') + '</small><p>' + esc(x.description || x.variety || x.cargo || '预置对象位置示意') + '</p>';
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
+  /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
   const palette = () => S.state.theme === 'color' ? {
-    land: '#a6c7c9', land2: '#8fb8bd', line: 'rgba(42,82,101,.5)', ink: '#1c3e51',
-    regions: ['#a4c8c1', '#bac9ac', '#b2cbd5', '#cfc9aa', '#d9bfae', '#b9c6dc', '#a2c9c7'],
-    tipBg: 'rgba(250,254,253,.97)', tipLine: 'rgba(42,82,101,.22)', mass: 'rgba(35,88,110,.38)', dot: '#215a75'
+    land: '#58798c', land2: '#3f657c', line: 'rgba(20,54,75,.76)', ink: '#12354a',
+    regions: ['#805b83', '#b86a36', '#318c82', '#9b9249', '#4775a0', '#a65d68', '#4e8266'],
+    tipBg: 'rgba(239,247,248,.98)', tipLine: 'rgba(28,65,87,.28)', mass: 'rgba(234,240,223,.54)', dot: '#f5e7b8'
   } : {
-    land: '#e8e9e5', land2: '#d4e2d9', line: 'rgba(73,109,123,.43)', ink: '#263238',
-    regions: ['#c9e0dc', '#d5e2cd', '#d6dfe5', '#e6dfc8', '#e7d7c7', '#d2d9e9', '#c8dfd5'],
-    tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', mass: 'rgba(63,76,95,.26)', dot: '#3f4c5f'
+    land: '#a5b7b9', land2: '#809aaa', line: 'rgba(55,79,95,.68)', ink: '#263d4c',
+    regions: ['#51899b', '#d09a49', '#7484ad', '#60997b', '#bd7465', '#6e9aa8', '#a8879a'],
+    tipBg: 'rgba(253,251,246,.98)', tipLine: 'rgba(56,78,92,.22)', mass: 'rgba(52,79,94,.38)', dot: '#344d5e'
   };
-  const regionIndex = name => {
-    let hash = 0;
-    for (const char of String(name || '')) hash = (hash * 31 + char.codePointAt(0)) >>> 0;
-    return hash % 7;
+  /* 共享至少两个边界顶点才算相邻；贪心图着色保证接壤区域异色。 */
+  function regionColors(features) {
+    const byVertex = new Map(), neighbors = new Map();
+    features.forEach(({ name, coordinates }) => {
+      neighbors.set(name, new Set());
+      const seen = new Set();
+      const visit = value => {
+        if (Array.isArray(value) && typeof value[0] === 'number') {
+          seen.add(value[0].toFixed(3) + ',' + value[1].toFixed(3));
+        } else if (Array.isArray(value)) value.forEach(visit);
+      };
+      visit(coordinates);
+      seen.forEach(key => {
+        if (!byVertex.has(key)) byVertex.set(key, []);
+        byVertex.get(key).push(name);
+      });
+    });
+    const pairs = new Map();
+    byVertex.forEach(names => {
+      for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
+        const key = [names[i], names[j]].sort().join('|');
+        pairs.set(key, (pairs.get(key) || 0) + 1);
+      }
+    });
+    pairs.forEach((count, pair) => {
+      if (count < 2) return;
+      const [a, b] = pair.split('|');
+      neighbors.get(a).add(b); neighbors.get(b).add(a);
+    });
+    const colors = new Map();
+    [...neighbors.keys()].sort((a, b) => neighbors.get(b).size - neighbors.get(a).size || a.localeCompare(b)).forEach(name => {
+      const used = new Set([...neighbors.get(name)].map(next => colors.get(next)));
+      let index = 0; while (used.has(index)) index++;
+      colors.set(name, index);
+    });
+    return colors;
+  }
+  let countryColors, provinceColors;
+  const regionIndex = (name, level) => {
+    if (level === 'L1') {
+      if (!countryColors) countryColors = regionColors((window.__WORLD110 || []).map(x => ({ name: x.n, coordinates: x.c })));
+      return countryColors.get(String(name).replace(/@[-\d]+$/, '')) || 0;
+    }
+    if (!provinceColors) provinceColors = regionColors(((window.__CHINA_GEO || {}).features || []).map(x => ({ name: x.properties.name, coordinates: x.geometry.coordinates })));
+    return provinceColors.get(name) || 0;
   };
-  const regionFill = (name, p) => p.regions[regionIndex(name)];
+  const regionFill = (name, p, level = 'L1') => p.regions[regionIndex(name, level) % p.regions.length];
   const mapRegions = (level, p) => {
     const names = level === 'L1' ? (window.__WORLD110 || []).map(x => x.n)
       : ((window.__CHINA_GEO || {}).features || []).map(x => x.properties && x.properties.name);
-    return names.filter(Boolean).map(name => ({ name, itemStyle: { areaColor: regionFill(name, p) } }));
+    return names.filter(Boolean).flatMap(name => (level === 'L1' ? [-1, 0, 1].map(copy => copy ? name + '@' + copy : name) : [name])
+      .map(displayName => ({ name: displayName, itemStyle: { areaColor: regionFill(name, p, level) } })));
   };
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st);
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
-    const lv = LEVEL[st.geo.level];
+    const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [];
     facts.forEach(f => {
       const diameter = radiusPx(f);
-      if (diameter >= 8) halos.push({ id: f.id, value: mapPoint(f.lng, f.lat), symbolSize: diameter,
-        itemStyle: { color: hexA(DOTC, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(DOTC, .35), borderWidth: 1 } });
-      pts.push({ id: f.id, name: f.title, value: mapPoint(f.lng, f.lat), symbolSize: DOT_SIZE,
-        itemStyle: { color: '#ffffff', borderColor: DOTC, borderWidth: 1.1 } });
+      mapPoints(f.lng, f.lat).forEach(value => {
+        if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
+          itemStyle: { color: hexA(p.dot, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
+        pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
+          itemStyle: { color: S.state.theme === 'color' ? '#244b64' : '#fdfaf0', borderColor: p.dot, borderWidth: 1.2 } });
+      });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
     const mass = (window.V03Mass && st.sk.mass !== false)
       ? V03Mass.sample(st.geo.level, shortProv(st.geo.focus || DEFAULT_FOCUS), F.FACT_ITEMS.map(x => x.key))
       : [];
-    const p = palette();
     const series = [
-      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.map((m, i) => ({ value: mapPoint(m.lng, m.lat), i })), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
+      { id: 'mass', type: 'scatter', coordinateSystem: 'geo', data: mass.flatMap((m, i) => mapPoints(m.lng, m.lat).map(value => ({ value, i }))), z: 1, silent: true, symbol: 'circle', symbolSize: 1.8,
         large: true, largeThreshold: 1000, progressive: 0, animation: false,
         itemStyle: { color: p.mass } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: st.sk.influence ? halos : [], silent: true, z: 2, symbol: 'circle' },
@@ -306,7 +360,7 @@ window.V03Fact = (function () {
         boundingCoords: lv.bounds || undefined,
         itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
         regions: mapRegions(st.geo.level, p),
-        emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: true, color: p.ink, fontSize: 10 } },
+        emphasis: { itemStyle: { areaColor: p.land2 }, label: { show: true, color: p.ink, fontSize: 10, formatter: x => x.name.replace(/@[-\d]+$/, '') } },
         select: { disabled: true }, label: { show: false }
       },
       tooltip: {
@@ -333,7 +387,7 @@ window.V03Fact = (function () {
   function markerSeries(id, list, color, emoji, size, showLabel) {
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
-      data: list.map(r => ({ id: r.id, name: r.name, value: mapPoint(r.lng, r.lat), symbolSize: size })),
+      data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: size }))),
       symbol: 'circle', itemStyle: { color: 'rgba(255,255,255,.6)', borderColor: 'transparent', borderWidth: 0 },
       label: {
         show: true, fontSize: size, color: color, formatter: () => emoji, position: 'inside'
@@ -341,7 +395,7 @@ window.V03Fact = (function () {
       labelLayout: { hideOverlap: true }
     }, showLabel ? {
       id: id + 'Label', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 5,
-      data: list.map(r => ({ id: r.id, name: r.name, value: mapPoint(r.lng, r.lat), symbolSize: 1 })),
+      data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: 1 }))),
       symbol: 'circle', itemStyle: { color: 'transparent' },
       label: { show: true, position: 'bottom', distance: 2, fontSize: 9, color: '#4d586a',
         backgroundColor: 'rgba(255,255,255,.78)', padding: [1, 3], borderRadius: 3,
@@ -371,7 +425,7 @@ window.V03Fact = (function () {
     if (window.V03Mass && !V03Mass.insideMap(S.state.geo.level, f.lng, f.lat)) return;
     if (!chart) return;
     const id = 'fresh-' + (++flashSeq);
-    freshFlashes.push({ id, factId: f.id, value: mapPoint(f.lng, f.lat), bright: level === 'bright' || f.impact === 'high' });
+    mapPoints(f.lng, f.lat).forEach(value => freshFlashes.push({ id, factId: f.id, value, bright: level === 'bright' || f.impact === 'high' }));
     syncFlashSeries();
     setTimeout(() => {
       freshFlashes = freshFlashes.filter(x => x.id !== id);
@@ -399,7 +453,7 @@ window.V03Fact = (function () {
   }
   function focusOnMap(f) {
     if (!f || f.lng == null || S.state.sk.mode3d) return;
-    const p = camera.center, target = mapPoint(f.lng, f.lat), d = Math.hypot(target[0] - p[0], target[1] - p[1]);
+    const p = camera.center, target = S.state.geo.level === 'L1' ? nearestWorldPoint(f.lng, f.lat, p[0]) : [f.lng, f.lat], d = Math.hypot(target[0] - p[0], target[1] - p[1]);
     if (d > 8) flyTo(target, Math.max(camera.zoom, LEVEL[S.state.geo.level].zoom), 800);
   }
   function onMapClick(p) {
@@ -681,7 +735,7 @@ window.V03Fact = (function () {
   }
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
-  /* ---------- 3D 地球：夜间自转 + 视差星空（同一 Canvas，避免独立层错位） ---------- */
+  /* ---------- 3D 地球：自转和关系流线（同一 Canvas，避免独立层错位） ---------- */
   const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [], active: false, starOffset: 0, stars: [] };
   let starSeed = 9137;
   const starRnd = () => ((starSeed = (starSeed * 16807) % 2147483647) - 1) / 2147483646;
@@ -798,23 +852,13 @@ window.V03Fact = (function () {
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
     const st = S.state;
     ctx.clearRect(0, 0, W, H);
-    const dark = st.theme === 'color';
+    const strong = st.theme === 'color';
     const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, dark ? '#7faeb9' : '#e8f3f8'); sky.addColorStop(1, dark ? '#b6d1d0' : '#f3f8fa');
+    sky.addColorStop(0, strong ? '#315770' : '#c7d7dc'); sky.addColorStop(1, strong ? '#557f91' : '#e1e7e4');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    if (false) {
-      globe.stars.forEach(s => {
-        const x = ((s.x * W + globe.starOffset * s.speed) % (W + 20)) - 10;
-        const y = s.y * H + Math.sin(globe.starOffset * .002 + s.x * 9) * (2 + s.speed * 4);
-        ctx.beginPath(); ctx.arc(x, y, s.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(220,239,255,' + s.a + ')'; ctx.fill();
-      });
-      const halo = ctx.createRadialGradient(cx, cy, R * .86, cx, cy, R * 1.22);
-      halo.addColorStop(0, 'rgba(16,142,196,.18)'); halo.addColorStop(.72, 'rgba(8,90,132,.10)'); halo.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2); ctx.fill();
-    }
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    if (dark) { g.addColorStop(0, '#e3f0ed'); g.addColorStop(.58, '#a3caca'); g.addColorStop(1, '#72a4b3'); }
-    else { g.addColorStop(0, '#f7fafb'); g.addColorStop(.7, '#dfecef'); g.addColorStop(1, '#cbdde2'); }
+    if (strong) { g.addColorStop(0, '#90b8c2'); g.addColorStop(.58, '#5b879b'); g.addColorStop(1, '#284f68'); }
+    else { g.addColorStop(0, '#e7e9e2'); g.addColorStop(.7, '#b1c4c9'); g.addColorStop(1, '#819ea9'); }
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
     ctx.fillStyle = g; ctx.fill(); ctx.clip();
@@ -827,7 +871,7 @@ window.V03Fact = (function () {
       ctx.fillStyle = regionFill(feature.name, p); ctx.fill();
       ctx.strokeStyle = p.line; ctx.lineWidth = .8; ctx.stroke();
     }));
-    ctx.strokeStyle = dark ? 'rgba(46,101,117,.18)' : 'rgba(94,113,119,.18)';
+    ctx.strokeStyle = strong ? 'rgba(205,230,225,.2)' : 'rgba(55,79,95,.2)';
     for (let lat = -60; lat <= 60; lat += 30) {
       const pts = [];
       for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
@@ -835,7 +879,7 @@ window.V03Fact = (function () {
     }
     drawGlobeRoutes(ctx, cx, cy, R);
     ctx.restore();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = dark ? 'rgba(38,108,130,.62)' : 'rgba(94,113,119,.5)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = strong ? 'rgba(220,235,230,.7)' : 'rgba(55,79,95,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
     if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
@@ -854,7 +898,7 @@ window.V03Fact = (function () {
       ctx.beginPath(); ctx.arc(p.x, p.y, 3.4, 0, Math.PI * 2);
       ctx.fillStyle = hexA(catOf(f).c, .28); ctx.fill();
       ctx.strokeStyle = catOf(f).c; ctx.lineWidth = .9; ctx.stroke();
-      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = dark ? '#1c3e51' : '#263238';
+      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = strong ? '#f5e7b8' : '#263d4c';
       ctx.fillText(emojiOf(f), p.x, p.y + 3);
       hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
     });
@@ -865,7 +909,7 @@ window.V03Fact = (function () {
       const p = gProject(m.lng, m.lat, cx, cy, R);
       if (p.z <= 0) return;
       ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = dark ? '#d9eef1' : '#fff'; ctx.fill();
+      ctx.fillStyle = strong ? '#e4f1ed' : '#fff'; ctx.fill();
       ctx.strokeStyle = m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1';
       ctx.lineWidth = 1; ctx.stroke();
       hits.push({ x: p.x, y: p.y, type: 'mark', id: m.id });
@@ -979,5 +1023,6 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude };
+  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude, worldCopies,
+    mapRegionColor: name => regionFill(name, palette(), 'L1') };
 })();
