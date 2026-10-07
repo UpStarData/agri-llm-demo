@@ -253,9 +253,9 @@ window.V03Fact = (function () {
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
   const palette = () => S.state.theme === 'color' ? {
-    land: '#58798c', land2: '#3f657c', line: 'rgba(20,54,75,.76)', ink: '#12354a',
-    regions: ['#805b83', '#b86a36', '#318c82', '#9b9249', '#4775a0', '#a65d68', '#4e8266'],
-    tipBg: 'rgba(239,247,248,.98)', tipLine: 'rgba(28,65,87,.28)', mass: 'rgba(234,240,223,.54)', dot: '#f5e7b8'
+    land: '#80909a', land2: '#6b838d', line: 'rgba(23,47,60,.83)', ink: '#e8f0ed',
+    regions: ['#81999f', '#a39780', '#7f8fa4', '#9d8e8e', '#8ea19a', '#a39d8f', '#87959e'],
+    tipBg: 'rgba(243,243,237,.98)', tipLine: 'rgba(40,70,82,.28)', mass: 'rgba(235,210,155,.28)', dot: '#f9d79c'
   } : {
     land: '#a5b7b9', land2: '#809aaa', line: 'rgba(55,79,95,.68)', ink: '#263d4c',
     regions: ['#51899b', '#d09a49', '#7484ad', '#60997b', '#bd7465', '#6e9aa8', '#a8879a'],

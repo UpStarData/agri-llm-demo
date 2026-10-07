@@ -15,4 +15,4 @@
 | 国家／省区色 | 钢蓝、琥珀、靛蓝、草绿、陶红 | 紫铜、赭橙、青绿、橄榄、深蓝 |
 | 事实点 | 暖白芯、深蓝边 | 深蓝芯、浅金边 |
 
-参考用户提供的 [WFP HungerMap](https://hungermap.wfp.org/) 的地图与信息面板层级，以及 [World Monitor](https://www.worldmonitor.app/dashboard) 的大屏情报布局。未使用 WFP 的灾害／饥饿分级色来暗示无来源数据。
+来源更正：这一版的紫铜、赭橙、青绿等地图色块由项目自行拼配，**并非从 WFP HungerMap、World Monitor 或站酷提取的配色**。只参考了所列页面的界面层级；未使用 WFP 的粮食危机分级色。V0.8.14 已撤换这组色值。

@@ -25,8 +25,8 @@ window.V03Relation = (function () {
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'color' ? {
-    land: '#58798c', land2: '#3f657c', line: 'rgba(20,54,75,.76)', ink: '#12354a', labelBg: 'rgba(239,247,248,.91)',
-    tipBg: 'rgba(239,247,248,.98)', tipLine: 'rgba(28,65,87,.28)', neutral: 'rgba(28,69,96,.82)'
+    land: '#80909a', land2: '#6b838d', line: 'rgba(23,47,60,.83)', ink: '#e8f0ed', labelBg: 'rgba(243,243,237,.93)',
+    tipBg: 'rgba(243,243,237,.98)', tipLine: 'rgba(40,70,82,.28)', neutral: 'rgba(40,70,82,.82)'
   } : {
     land: '#a5b7b9', land2: '#809aaa', line: 'rgba(55,79,95,.68)', ink: '#263d4c', labelBg: 'rgba(253,251,246,.87)',
     tipBg: 'rgba(253,251,246,.98)', tipLine: 'rgba(56,78,92,.22)', neutral: 'rgba(55,79,95,.82)'
