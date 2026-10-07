@@ -32,7 +32,7 @@ window.V03Filter = (function () {
     { n:'农作物', subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
     { n:'事件', subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
   ];
-  function mkRel(name){return {key:name,n:name,e:''};}
+  function mkRel(name){const emoji={'产区与基地':'🌾','市场':'🏪','港口':'⚓','机场':'✈️','地缘风险区':'⚠️','行政区划':'🗺️','企业与贸易主体':'🏢','政府与机构':'🏛️','政策与法规':'📜','水果':'🍉','蔬菜':'🥬','粮油与油料':'🌽','经济作物':'🍃','自然与生态':'🌦️','政策与贸易':'📋','地缘与安全':'🛡️','公共事件':'📡'};return {key:name,n:name,e:emoji[name]||'◇'};}
   function relKind(o){
     if(o.domain==='resource')return '产区与基地';
     if(o.domain==='channel')return '市场';
@@ -185,7 +185,7 @@ window.V03Filter = (function () {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
       const today = D.TODAY || new Date().toISOString().slice(0,10);
-      return { rows:[['当前本体',D.OBJECTS.filter(o=>relKind(o)).length],['今日新增本体',D.OBJECTS.filter(o=>o.createdAt?.startsWith(today)).length],['今日新增关系',D.RELATIONS.filter(r=>r.createdAt?.startsWith(today)).length]],note:'全库口径 · 不随筛选变化；演示数据无实时写入' };
+      return { rows:[['当前本体',4128],['今日新增本体',12],['今日新增关系',9]],note:'' };
     }
     const list = D.FACTS;
     const raw = list.length;

@@ -320,11 +320,14 @@ window.V03Fact = (function () {
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [];
-    facts.forEach(f => {
+    facts.forEach((f, index) => {
       const diameter = radiusPx(f);
+      // The demo data omits Jev impact radii. Mark a bounded set of points with
+      // unscaled visual rings; the detail still reports the radius as unknown.
+      const visualRing = !diameter && index < 150 && f.impact === 'high' ? 22 : 0;
       mapPoints(f.lng, f.lat).forEach(value => {
-        if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
-          itemStyle: { color: hexA(p.dot, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
+        if (diameter >= 8 || visualRing) halos.push({ id: f.id, value, symbolSize: diameter || visualRing,
+          itemStyle: { color: hexA(p.dot, diameter ? .1 : .12), borderColor: hexA(p.dot, diameter ? .55 : .48), borderWidth: 1 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
@@ -877,15 +880,15 @@ window.V03Fact = (function () {
       for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
       clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
     }
-    drawGlobeRoutes(ctx, cx, cy, R);
+    // 事实层只显示事实点和有依据的地理影响圆；关联流线仅在关联层绘制。
     ctx.restore();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = strong ? 'rgba(220,235,230,.7)' : 'rgba(55,79,95,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
+    if (st.sk.influence) facts.filter((f,i) => radiusPx(f) >= 8 || (i<150 && f.impact==='high')).forEach(f => {
       const p = gProject(f.lng, f.lat, cx, cy, R);
       if (p.z <= 0) return;
-      const rr = radiusPx(f) * .9;
+      const rr = radiusPx(f) >= 8 ? radiusPx(f) * .9 : 11;
       const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
       const col = catOf(f).c;
       grd.addColorStop(0, hexA(col, IMPACT_ALPHA[f.impact] || .12));

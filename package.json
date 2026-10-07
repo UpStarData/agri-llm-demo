@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
-  "description": "AgriLink 农链 V1.0 · 事实层 / 关联层 / 推演层（离线单文件 Demo）",
+  "description": "AgriLink 农链 V1.0.1 · 事实层 / 关联层 / 旧版推演工作台",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -10,10 +10,10 @@
     "serve": "node server.mjs",
     "start": "./serve.sh start",
     "stop": "./serve.sh stop",
-    "test": "node test/prd-v100.mjs",
+    "test": "node test/prd-v101.mjs",
     "test:v03": "node test/v03.mjs",
     "shots": "node test/shots-v03.mjs",
-    "test:all": "node test/prd-v100.mjs && node test/world-wrap-v0813.mjs && node test/relation-roam.mjs",
+    "test:all": "node test/prd-v101.mjs && node test/world-wrap-v0813.mjs && node test/relation-roam.mjs",
     "compare": "node test/compare-v03.mjs",
     "fonts": "python3 tools/subset-fonts.py",
     "shots:v2": "node test/shots-v2.mjs",
@@ -23,7 +23,7 @@
     "shots:v08": "node test/shots-v08.mjs",
     "test:v081": "node test/v081-map-anchor.mjs",
     "test:v083": "node test/probe-roam-frames.mjs --pan-only --assert-visual && node test/probe-roam-frames.mjs --single-round --zoom-only --assert-visual",
-    "test:prd": "node test/prd-v100.mjs"
+    "test:prd": "node test/prd-v101.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

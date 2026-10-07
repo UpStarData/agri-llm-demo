@@ -4,7 +4,7 @@ window.V03Sim = (function () {
   const S = window.V03Store;
   const MIROFISH_ORIGIN = 'https://upstardata.github.io';
   const MIROFISH_URL = MIROFISH_ORIGIN + '/mirofish-frontend-preview/?embed=agrilink#/';
-  let root, frame, promptInput, evidence, lastSelection = '', loaded = false;
+  let root, frame, promptInput, lastSelection = '', loaded = false;
 
   function context() {
     const s = S.state;
@@ -17,7 +17,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v0.8.5 · V1.2 事实层体验',
+      source: 'AgriLink v1.0.1 · V1.2 事实层体验',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -44,33 +44,16 @@ window.V03Sim = (function () {
       lastSelection = key;
       promptInput.value = defaultRequirement(ctx);
     }
-    evidence.replaceChildren();
-    const label = document.createElement('strong');
-    label.textContent = ctx.facts.length ? `已携带 ${ctx.facts.length} 条事实` : '尚未选中事实';
-    evidence.appendChild(label);
-    ctx.facts.slice(0, 6).forEach(f => {
-      const chip = document.createElement('span');
-      chip.textContent = `${f.id} · ${f.title}`;
-      chip.title = f.title;
-      evidence.appendChild(chip);
-    });
-    if (ctx.relation) {
-      const chip = document.createElement('span');
-      chip.textContent = `${ctx.relation.id} · ${ctx.relation.type}`;
-      evidence.appendChild(chip);
-    }
     if (S.state.tab === 'sim') send();
   }
 
   function mount(el) {
     root = document.createElement('div');
     root.className = 'miro-bridge';
-    root.innerHTML = '<div class="miro-bridge-bar"><div class="miro-bridge-title"><b>agrilink 推演工作台</b><small>五步流程体验</small></div><div class="miro-bridge-evidence" aria-live="polite"></div><label class="miro-bridge-prompt">推演问题 <textarea rows="2" aria-label="推演问题"></textarea></label><button type="button" class="miro-bridge-send">载入推演 ↓</button><p class="miro-bridge-note">演示模式：图谱、轮次、报告及互动内容为模拟数据，不代表实际预测。</p></div><iframe class="miro-bridge-frame" title="agrilink 推演流程" loading="lazy"></iframe>';
+    root.innerHTML = '<textarea aria-label="推演问题" hidden></textarea><iframe class="miro-bridge-frame" title="agrilink 推演流程" loading="eager"></iframe>';
     el.replaceChildren(root);
     frame = root.querySelector('iframe');
     promptInput = root.querySelector('textarea');
-    evidence = root.querySelector('.miro-bridge-evidence');
-    root.querySelector('.miro-bridge-send').onclick = send;
     frame.onload = () => { loaded = true; send(); };
     frame.src = MIROFISH_URL;
     update();

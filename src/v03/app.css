@@ -424,3 +424,24 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 /* 配色标签在桌面和大屏上始终可见；窄屏收起文本 */
 #btnTheme{display:flex;align-items:center;justify-content:center;gap:5px;width:auto;min-width:69px;padding:0 6px;white-space:nowrap;font-size:11px}
 @media(max-width:820px){#btnTheme{min-width:26px;width:26px;padding:0}#btnTheme .theme-name{display:none}}
+
+/* Relation overview uses a large total above the two small daily figures. */
+.mn-ov.relation-overview{grid-template-columns:1fr 1fr;gap:10px 14px}
+.mn-ov.relation-overview .ov-i:first-child{grid-column:1/-1;padding-bottom:4px}
+.mn-ov.relation-overview .ov-i:first-child b{font-size:2rem;font-variant-numeric:tabular-nums}
+.mn-ov.relation-overview .ov-i:not(:first-child) b{font-size:1.15rem}
+.mn-rel-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.mn-rel-types .l3{font-size:.6875rem;min-height:28px}
+.mn-rel-types .l3 i{flex:0 0 9px;width:9px;height:9px;border-radius:50%}
+.mn-rel-types .l3 span{flex:1}
+/* Two row map controls; search opens a glass panel to the left. */
+.mapsk{grid-auto-flow:row;grid-template-columns:repeat(5,28px);grid-template-rows:repeat(2,28px);gap:3px;padding:6px}
+.mapsk .sk{height:28px;min-width:28px}
+.mapsk .sk[data-k=zoomIn]{grid-row:1;grid-column:1}.mapsk .sk[data-k=zoomOut]{grid-row:1;grid-column:2}
+.mapsk .sk[data-k=mode3d],.mapsk .sk[data-k=view3d]{grid-row:1;grid-column:3}
+.mapsk .sk[data-k=influence],.mapsk .sk[data-k=view2d]{grid-row:1;grid-column:4}
+.mapsk .sk[data-k=fullscreen],.mapsk .sk[data-k=viewGraph]{grid-row:1;grid-column:5}
+.mapsk .sk[data-k=search]{grid-row:2;grid-column:1}.mapsk .sk[data-k=crossRegion]{grid-row:2;grid-column:2}
+.mapsk.rel-mode .sk[data-k=fullscreen]{grid-row:2;grid-column:3}
+.mapsk .sk-pop.search-pop{width:min(360px,80vw);right:0;bottom:calc(100% + 9px);padding:12px;gap:8px;background:var(--panel-alpha);backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:0 12px 32px #1234}
+.search-pop .sk-input{font-size:13px;padding:9px}.search-pop .search-actions{display:flex;justify-content:flex-end;gap:6px}.search-pop .search-actions button,.search-pop .search-result{font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 10px;border-radius:5px;cursor:pointer}.search-pop .search-result{display:block;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.search-pop .search-count{font-size:11px;color:var(--dim)}

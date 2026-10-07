@@ -53,7 +53,7 @@ const JS = [
   'src/v03/fact.js',        // 事实层
   'src/v03/rel-globe.js',   // 关联层正交地球与真实关系流线
   'src/v03/relation.js',    // 关联层
-  'src/v03/sim-prd.js', // V0.2 推演发起 / 七阶段运行 / 报告原型
+  'src/v03/mirofish-bridge.js', // 旧版工作台 iframe 桥接；发起页在工作台内按 PRD 调整
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];
