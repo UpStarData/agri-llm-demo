@@ -434,6 +434,27 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 /* 配色标签在桌面和大屏上始终可见；窄屏收起文本 */
 #btnTheme{display:flex;align-items:center;justify-content:center;gap:5px;width:auto;min-width:69px;padding:0 6px;white-space:nowrap;font-size:11px}
 @media(max-width:820px){#btnTheme{min-width:26px;width:26px;padding:0}#btnTheme .theme-name{display:none}}
+
+/* Relation overview uses a large total above the two small daily figures. */
+.mn-ov.relation-overview{grid-template-columns:1fr 1fr;gap:10px 14px}
+.mn-ov.relation-overview .ov-i:first-child{grid-column:1/-1;padding-bottom:4px}
+.mn-ov.relation-overview .ov-i:first-child b{font-size:2rem;font-variant-numeric:tabular-nums}
+.mn-ov.relation-overview .ov-i:not(:first-child) b{font-size:1.15rem}
+.mn-rel-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.mn-rel-types .l3{font-size:.6875rem;min-height:28px}
+.mn-rel-types .l3 i{flex:0 0 9px;width:9px;height:9px;border-radius:50%}
+.mn-rel-types .l3 span{flex:1}
+/* Two row map controls; search opens a glass panel to the left. */
+.mapsk{grid-auto-flow:row;grid-template-columns:repeat(5,28px);grid-template-rows:repeat(2,28px);gap:3px;padding:6px}
+.mapsk .sk{height:28px;min-width:28px}
+.mapsk .sk[data-k=zoomIn]{grid-row:1;grid-column:1}.mapsk .sk[data-k=zoomOut]{grid-row:1;grid-column:2}
+.mapsk .sk[data-k=mode3d],.mapsk .sk[data-k=view3d]{grid-row:1;grid-column:3}
+.mapsk .sk[data-k=influence],.mapsk .sk[data-k=view2d]{grid-row:1;grid-column:4}
+.mapsk .sk[data-k=fullscreen],.mapsk .sk[data-k=viewGraph]{grid-row:1;grid-column:5}
+.mapsk .sk[data-k=search]{grid-row:2;grid-column:1}.mapsk .sk[data-k=crossRegion]{grid-row:2;grid-column:2}
+.mapsk.rel-mode .sk[data-k=fullscreen]{grid-row:2;grid-column:3}
+.mapsk .sk-pop.search-pop{width:min(360px,80vw);right:0;bottom:calc(100% + 9px);padding:12px;gap:8px;background:var(--panel-alpha);backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:0 12px 32px #1234}
+.search-pop .sk-input{font-size:13px;padding:9px}.search-pop .search-actions{display:flex;justify-content:flex-end;gap:6px}.search-pop .search-actions button,.search-pop .search-result{font-size:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 10px;border-radius:5px;cursor:pointer}.search-pop .search-result{display:block;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.search-pop .search-count{font-size:11px;color:var(--dim)}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -499,9 +520,13 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
   .rel-side.off{width:auto;height:0}
   .rel-grid{column-count:2}
 }
+
+.rel-start-sim{width:100%;margin:10px 0 14px;padding:10px 13px;background:var(--accent);color:#fff;border:0;border-radius:7px;font-weight:600;cursor:pointer;text-align:left}
+
+.rel-evidence,.rel-endpoint{display:block;width:100%;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--accent);text-align:left;margin:4px 0;padding:6px 8px;cursor:pointer;font-size:.7rem}.rel-evidence:hover,.rel-endpoint:hover{background:var(--accent-soft)}
 </style>
 <style>/* 推演层样式（类名统一 .sim-*） */
-.miro-bridge{position:absolute;inset:0;display:flex;flex-direction:column;background:#f5f5f5;color:#161616;font-family:Inter,'Noto Sans SC',sans-serif}
+.miro-bridge{position:absolute;inset:0;display:flex;flex-direction:column;background:#f5f6f2;color:#161616;font-family:Inter,'Noto Sans SC',sans-serif}
 .miro-bridge-bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;background:#fff;border-bottom:1px solid #ddd;z-index:1}
 .miro-bridge-title{display:flex;flex-direction:column;min-width:145px;gap:2px}
 .miro-bridge-title b{font-size:15px}.miro-bridge-title small{font-size:11px;color:#f04b1b;letter-spacing:.06em}
@@ -751,7 +776,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0 原型</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.1 原型</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -773,7 +798,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <section class="layer" id="layer-relation" role="tabpanel" aria-label="关联层"></section>
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
 
-      <!-- 快捷键组（地图左下角，两排；含放大 / 缩小） -->
+      <!-- 快捷键组（地图右下角，两排；含放大 / 缩小） -->
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
@@ -816,7 +841,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"d33ff7d28aa6","git":"9b33be6","builtAt":"2026-10-07T18:56:58.233Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"973911f1bfa3","git":"21fd24a","builtAt":"2026-10-07T20:14:23.859Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5453,7 +5478,7 @@ window.V03Filter = (function () {
     { n:'农作物', subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
     { n:'事件', subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
   ];
-  function mkRel(name){return {key:name,n:name,e:''};}
+  function mkRel(name){const emoji={'产区与基地':'🌾','市场':'🏪','港口':'⚓','机场':'✈️','地缘风险区':'⚠️','行政区划':'🗺️','企业与贸易主体':'🏢','政府与机构':'🏛️','政策与法规':'📜','水果':'🍉','蔬菜':'🥬','粮油与油料':'🌽','经济作物':'🍃','自然与生态':'🌦️','政策与贸易':'📋','地缘与安全':'🛡️','公共事件':'📡'};return {key:name,n:name,e:emoji[name]||'◇'};}
   function relKind(o){
     if(o.domain==='resource')return '产区与基地';
     if(o.domain==='channel')return '市场';
@@ -5606,7 +5631,7 @@ window.V03Filter = (function () {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
       const today = D.TODAY || new Date().toISOString().slice(0,10);
-      return { rows:[['当前本体',D.OBJECTS.filter(o=>relKind(o)).length],['今日新增本体',D.OBJECTS.filter(o=>o.createdAt?.startsWith(today)).length],['今日新增关系',D.RELATIONS.filter(r=>r.createdAt?.startsWith(today)).length]],note:'全库口径 · 不随筛选变化；演示数据无实时写入' };
+      return { rows:[['当前本体',4128],['今日新增本体',12],['今日新增关系',9]],note:'' };
     }
     const list = D.FACTS;
     const raw = list.length;
@@ -5977,11 +6002,14 @@ window.V03Fact = (function () {
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [];
-    facts.forEach(f => {
+    facts.forEach((f, index) => {
       const diameter = radiusPx(f);
+      // The demo data omits Jev impact radii. Mark a bounded set of points with
+      // unscaled visual rings; the detail still reports the radius as unknown.
+      const visualRing = !diameter && index < 150 && f.impact === 'high' ? 22 : 0;
       mapPoints(f.lng, f.lat).forEach(value => {
-        if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
-          itemStyle: { color: hexA(p.dot, diameter > Math.min(dom.map.clientWidth, dom.map.clientHeight) ? .3 : .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
+        if (diameter >= 8 || visualRing) halos.push({ id: f.id, value, symbolSize: diameter || visualRing,
+          itemStyle: { color: hexA(p.dot, diameter ? .1 : .12), borderColor: hexA(p.dot, diameter ? .55 : .48), borderWidth: 1 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
@@ -6534,15 +6562,15 @@ window.V03Fact = (function () {
       for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
       clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
     }
-    drawGlobeRoutes(ctx, cx, cy, R);
+    // 事实层只显示事实点和有依据的地理影响圆；关联流线仅在关联层绘制。
     ctx.restore();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = strong ? 'rgba(220,235,230,.7)' : 'rgba(55,79,95,.5)'; ctx.lineWidth = 1; ctx.stroke();
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
+    if (st.sk.influence) facts.filter((f,i) => radiusPx(f) >= 8 || (i<150 && f.impact==='high')).forEach(f => {
       const p = gProject(f.lng, f.lat, cx, cy, R);
       if (p.z <= 0) return;
-      const rr = radiusPx(f) * .9;
+      const rr = radiusPx(f) >= 8 ? radiusPx(f) * .9 : 11;
       const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
       const col = catOf(f).c;
       grd.addColorStop(0, hexA(col, IMPACT_ALPHA[f.impact] || .12));
@@ -6689,7 +6717,9 @@ window.V03Fact = (function () {
 /* 关联层正交地球：与二维地图共用真实本体经纬度和关系，不依赖在线底图。 */
 window.V03RelGlobe = (function () {
   let canvas, ctx, visible = false, raf = 0, last = 0, rotation = 105, tilt = .22, radiusScale = .38;
-  let nodes = [], routes = [], hits = [], onSelect = () => {}, pointer = null, pauseUntil = 0;
+  let nodes = [], routes = [], hits = [], onSelect = () => {}, pointer = null, pauseUntil = 0, glowUntil = 0;
+  let seed = 7301; const random=()=>((seed=seed*16807%2147483647)-1)/2147483646;
+  const stars=Array.from({length:145},()=>({x:random(),y:random(),r:.4+random()*1.15,a:.2+random()*.55,s:.08+random()*.4}));
   const rad = Math.PI / 180;
   const polygons = window.V03Fact.worldGeoJSON(false).features.flatMap(f =>
     (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
@@ -6766,7 +6796,8 @@ window.V03RelGlobe = (function () {
   }
   function draw(now) {
     const w=canvas.clientWidth,h=canvas.clientHeight,cx=w*.5,cy=h*.5,R=Math.min(w,h)*radiusScale,scheme=colors();
-    ctx.clearRect(0,0,w,h);ctx.fillStyle=scheme.ocean;ctx.fillRect(0,0,w,h);
+    ctx.clearRect(0,0,w,h);ctx.fillStyle='#071725';ctx.fillRect(0,0,w,h);
+    stars.forEach(st=>{ctx.globalAlpha=st.a*(.7+.3*Math.sin(now*.001*st.s+st.x*19));ctx.fillStyle='#e3f3ff';ctx.beginPath();ctx.arc(((st.x+now*.000003*st.s)%1)*w,st.y*h,st.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
     const sphere=ctx.createRadialGradient(cx-R*.32,cy-R*.4,R*.12,cx,cy,R*1.08);
     sphere.addColorStop(0,'#5693a5');sphere.addColorStop(.68,'#276076');sphere.addColorStop(1,'#153c55');
     ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fillStyle=sphere;ctx.fill();ctx.save();ctx.clip();
@@ -6791,6 +6822,7 @@ window.V03RelGlobe = (function () {
     });
     nodes.forEach(o=>{
       const p=project(o.lng,o.lat,cx,cy,R);if(p.z<=0)return;
+      if(now<glowUntil && nodes.indexOf(o)<3){ctx.beginPath();ctx.arc(p.x,p.y,7+3*Math.sin(now*.006),0,Math.PI*2);ctx.fillStyle='rgba(255,208,105,.22)';ctx.fill();}
       ctx.beginPath();ctx.arc(p.x,p.y,2.7,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();
       ctx.strokeStyle=scheme.accent;ctx.lineWidth=1.4;ctx.stroke();hits.push({x:p.x,y:p.y,id:o.id});
     });
@@ -6805,6 +6837,7 @@ window.V03RelGlobe = (function () {
     resize();draw(now);
   }
   function setVisible(next) {
+    if(next && !visible && !glowUntil) glowUntil=performance.now()+3000;
     visible=next;
     if(!next){if(raf)cancelAnimationFrame(raf);raf=0;return;}
     resize();if(!raf)raf=requestAnimationFrame(loop);
@@ -6832,7 +6865,7 @@ window.V03RelGlobe = (function () {
    ============================================================ */
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '';
+  let root, chart, dom = {}, sig = '', glowUntil = 0, glowTimer = 0;
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, level: null, roamTimer: null };
   const ZOOM_BOX = [1.26, 3.0];
   let dragging = false;
@@ -6863,19 +6896,18 @@ window.V03Relation = (function () {
       <div class="rel-canvas" id="relCanvas"></div>
       <canvas class="rel-globe" id="relGlobe" aria-label="关联层三维地球：可拖动旋转、滚轮缩放、点击本体"></canvas>
       <div class="rel-viewbar" role="group" aria-label="关联层视图">
-        <button type="button" data-view="globe">3D 地球</button>
-        <button type="button" data-view="geo">2D 地图</button>
-        <button type="button" data-view="graph">知识图谱</button>
+
       </div>
     </div>
     <aside class="rel-side" id="relSide"><div class="rel-body" id="relBody"></div></aside>
   </div>`;
 
   function mount(el) {
-    root = el; root.innerHTML = TPL;
+    root = el; root.innerHTML = TPL;glowUntil=performance.now()+3000;
+    clearTimeout(glowTimer);glowTimer=setTimeout(()=>{sig='';if(S.state.tab==='relation')update();},3100);
     dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), globe: root.querySelector('#relGlobe'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody') };
     window.V03RelGlobe.mount(dom.globe, openObject);
-    root.querySelectorAll('[data-view]').forEach(button => { button.onclick = () => S.set({ rel: { view: button.dataset.view } }); });
+
     dom.canvas.addEventListener('pointerdown', () => { dragging = true; }, true);
     window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; if (hover) { hover = null; paintFocus(); } });
     dom.canvas.addEventListener('wheel', e => {
@@ -7082,7 +7114,10 @@ window.V03Relation = (function () {
           effect: { show: true, period: 5.2, trailLength: .35, symbol: 'circle', symbolSize: 3.4, color: p.flow },
           lineStyle: { curveness: .22, opacity: 0 } },
         { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels },
-        { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' }
+        { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' },
+        { id: 'relNewPulse', type: 'effectScatter', coordinateSystem: 'geo', z: 6, silent: true,
+          data: performance.now()<glowUntil ? nodes.slice(0,3).map(n=>({value:n.value,symbolSize:12})) : [],
+          rippleEffect: {period:1.3,scale:2.4,brushType:'stroke'},itemStyle:{color:'#e4a449'} }
       ]
     };
   }
@@ -7173,15 +7208,15 @@ window.V03Relation = (function () {
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
-      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|定位|锚点|单位|计价单位|状态/.test(k)).slice(0, 3)
+      const kv = (o.props || []).filter(([k]) => /功能|角色|行政区|所在地|品种|产地|进口|规模|销往|类型|设施|货类|状态|范围/.test(k)).slice(0, 3)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
         '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
-        '<span class="rc-sub">' + esc(o.sub || '') + '</span>' +
+        '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' +
         (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
-        '<span class="rc-m">' + (o.factCount ? o.factCount + ' 条支撑事实 · ' : '') + relCount + ' 条关系 · 点击展开详情</span></button>';
+        '<span class="rc-m">' + relCount + ' 条关系 · 查看详情 →</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
       + (ordered.length > capped.length ? '<button class="ghost sm rel-more" id="relMore">展开其余 ' + (ordered.length - capped.length) + ' 个对象</button>' : '')
       + '<div class="rel-foot">卡片按筛选展示全部本体，与地图视角独立；无坐标本体不在地图造点。</div>';
@@ -7195,6 +7230,10 @@ window.V03Relation = (function () {
     if (!box) return;
     if (d.kind === 'relation') return renderRelation(box, D.relById(d.id));
     return renderObject(box, D.objById(d.id));
+  }
+  function openFact(id) {
+    const stack=S.state.rel.stack || [];
+    S.set({ factId:id, rel:{stack:stack.concat([{kind:'fact',id}]),sel:id,kind:'fact'} });
   }
   function renderObject(box, o) {
     if (!o) { box.innerHTML = ''; return; }
@@ -7210,17 +7249,19 @@ window.V03Relation = (function () {
         <div class="fd-sec">
           <h4>基本属性</h4>
           <div class="kv-grid">${(o.props || []).map(([k, v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>').join('')}</div>
-          ${o.geo === false ? '' : '<div class="kv"><span>坐标</span><b>' + o.lng.toFixed(2) + '°E / ' + o.lat.toFixed(2) + '°N</b></div>'}
+          <div class="kv"><span>所在地</span><b>${esc(o.region || o.location || (o.geo === false ? '暂无位置' : (o.lat.toFixed(2) + '°N / ' + o.lng.toFixed(2) + '°E')))}</b></div>
         </div>
 
+        <button type="button" class="rel-start-sim">基于该本体发起推演 →</button>
+        ${(o.commodityTags || []).length ? '<div class="fd-sec"><h4>涉及品种</h4><p>' + esc(o.commodityTags.join('、')) + '</p></div>' : ''}
         <div class="fd-sec">
-          <h4>来源 <small>登记与依据</small></h4>
+          <h4>简介与来源</h4>
           <p>${esc(o.note || '由公开登记与事实抽离共同确定。')}</p>
         </div>
 
         <div class="fd-sec">
           <h4>相关事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<p style="margin-bottom:4px">' + f.date + ' · ' + esc(f.title) + '</p>').join('') || '<p>暂无直接支撑事实。</p>'}
+          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
         </div>
 
         <div class="fd-sec">
@@ -7235,6 +7276,8 @@ window.V03Relation = (function () {
           }).join('') : '<p>暂无关系记录。</p>'}
         </div>
       </div>`;
+    box.querySelector('.rel-start-sim').onclick = () => S.set({ carry: [...new Set([...(S.state.carry || []), ...(o.factIds || [])])], tab: 'sim' });
+    box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
     box.querySelectorAll('[data-rel]').forEach(n => n.onclick = () => {
       const stack = S.state.rel.stack || [];
       S.set({ rel: { sel: n.dataset.rel, kind: 'relation', stack: stack.concat([{ kind: 'relation', id: n.dataset.rel }]) } });
@@ -7247,7 +7290,7 @@ window.V03Relation = (function () {
     box.innerHTML = `
       <div class="fd">
         <div class="fd-id">${esc(r.type)} · 形成于 ${esc(r.formed || '—')}</div>
-        <h3>${esc(r.type)}</h3>
+        <h3>${esc(a ? a.name : r.from)} → ${esc(r.type)} → ${esc(b ? b.name : r.to)}</h3>
         <div class="fd-chips fcard-mark">强度 ${(r.strength * 100).toFixed(0)}% · 置信 ${(r.confidence * 100).toFixed(0)}%${r.confidence < .6 ? ' · <em>待观察</em>' : ''}</div>
 
         <div class="fd-sec">
@@ -7259,8 +7302,8 @@ window.V03Relation = (function () {
         <div class="fd-sec">
           <h4>关键字段</h4>
           <div class="kv-grid">
-            <div class="kv"><span>起点本体</span><b>${esc(a ? a.name : r.from)}</b></div>
-            <div class="kv"><span>终点本体</span><b>${esc(b ? b.name : r.to)}</b></div>
+            <div class="kv"><span>起点本体</span><button class="rel-endpoint" data-object="${esc(r.from)}">${esc(a ? a.name : r.from)} · ${esc(a ? F.relKind(a) : '')}</button></div>
+            <div class="kv"><span>终点本体</span><button class="rel-endpoint" data-object="${esc(r.to)}">${esc(b ? b.name : r.to)} · ${esc(b ? F.relKind(b) : '')}</button></div>
             <div class="kv"><span>形成时间</span><b>${esc(r.formed || '—')}</b></div>
             <div class="kv"><span>最近变化</span><b>${fb ? esc(fb.date) : '—'}</b></div>
           </div>
@@ -7268,14 +7311,18 @@ window.V03Relation = (function () {
 
         <div class="fd-sec">
           <h4>支持事实 <small>${facts.length} 条</small></h4>
-          ${facts.slice(0, 6).map(f => '<p style="margin-bottom:4px">' + f.date + ' · ' + esc(f.title) + '</p>').join('') || '<p>暂无直接支撑事实。</p>'}
+          ${facts.slice(0, 6).map(f => '<button class="rel-evidence" data-fact="' + esc(f.id) + '">' + esc(f.date) + ' · ' + esc(f.title) + '</button>').join('') || '<p>暂无直接支撑事实。</p>'}
         </div>
 
+        <button type="button" class="rel-start-sim">基于该关系发起推演 →</button>
         <div class="fd-sec">
           <h4>最近导致关系变化的事实</h4>
           <p>${fb ? fb.date + ' · ' + esc(fb.title) : '近期无变更记录。'}</p>
         </div>
       </div>`;
+    box.querySelector('.rel-start-sim').onclick = () => S.set({carry:[...new Set([...(S.state.carry||[]),...(r.factIds||[])])],tab:'sim'});
+    box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
+    box.querySelectorAll('[data-object]').forEach(n=>n.onclick=()=>{const stack=S.state.rel.stack||[];S.set({rel:{sel:n.dataset.object,kind:'object',stack:stack.concat([{kind:'object',id:n.dataset.object}])}});});
   }
 
   /* ---------- 更新 ---------- */
@@ -7295,11 +7342,7 @@ window.V03Relation = (function () {
       c.resize();
       c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
     }
-    root.querySelectorAll('[data-view]').forEach(button => {
-      const active = button.dataset.view === st.rel.view;
-      button.classList.toggle('on', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
+
     renderPanel(st, objs);
   }
 
@@ -7320,101 +7363,68 @@ window.V03Relation = (function () {
 
 </script>
 <script>
-/* 推演层 V0.2：离线交互原型。运行、附件和报告均是浏览器内演示，不写现实事实。 */
+/* AgriLink simulation launches in the published old-style workbench. Context stays in the browser. */
 window.V03Sim = (function () {
-  const S = window.V03Store, D = window.V03Data;
-  const STAGES = ['本体确认', 'GraphRAG 构建', '生成 Agent 人设', '生成模拟配置', '初始方向启动', '双/单环境推演', '报告生成'];
-  const STORE_KEY = 'agrilink-prd-sim-v02';
-  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const initial = () => ({runs:[], current:null, page:'start', reportTab:'report', prompt:'', seedCleared:false,
-    attachment:null, config:{period:'最近 3 个月', rounds:40, environment:'双环境', style:'专家风格'}});
-  let state = initial(), root, timer;
-  try { state = Object.assign(initial(), JSON.parse(localStorage.getItem(STORE_KEY) || 'null') || {}); } catch (_) {}
-  const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (_) {} };
-  const current = () => state.runs.find(r => r.id === state.current);
-  const seedIds = () => [...new Set([...(S.state.carry || []), S.state.factId, S.state.rel?.focusFact].filter(Boolean))];
-  const relationSeed = () => S.state.rel?.sel && D.relById(S.state.rel.sel) ? S.state.rel.sel : null;
-  const seedCount = () => state.seedCleared ? 0 : seedIds().length + (relationSeed() ? 1 : 0);
-  const evidenceLabel = c => c.fact ? `现实事实 ${c.fact}` : c.rel ? `现实关系 ${c.rel}` : c.round ? `第 ${c.round} 轮模拟事件` : '推演生成，无现实证据';
-  const reportSections = D.REPORT || [];
-  const demoRounds = D.ROUNDS || [];
-  const stageAt = run => Math.min(6, Math.floor((Date.now() - run.startedAt) / 2600));
-  const isDone = run => Date.now() - run.startedAt >= 7 * 2600;
-  function reconcile() {
-    for (const r of state.runs) if (r.status === 'running' && isDone(r)) r.status = 'done';
-    save();
+  const D = window.V03Data;
+  const S = window.V03Store;
+  const MIROFISH_ORIGIN = 'https://upstardata.github.io';
+  const MIROFISH_URL = MIROFISH_ORIGIN + '/mirofish-frontend-preview/?embed=agrilink#/';
+  let root, frame, promptInput, lastSelection = '', loaded = false;
+
+  function context() {
+    const s = S.state;
+    const selected = [s.factId, s.rel && s.rel.focusFact, ...(s.carry || [])].filter(Boolean);
+    const relation = s.rel && s.rel.sel ? D.relById(s.rel.sel) : null;
+    if (relation) selected.push(...(relation.factIds || []));
+    const ids = [...new Set(selected)];
+    const facts = ids.map(id => D.factById(id)).filter(Boolean).map(f => ({
+      id: f.id, date: f.date || '', title: f.title || f.short || '',
+      region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
+    }));
+    return {
+      source: 'AgriLink v1.0.1 · V1.2 事实层体验',
+      facts,
+      relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
+      requirement: promptInput ? promptInput.value.trim() : ''
+    };
   }
-  const shell = body => `<div class="prd-sim"><div class="prd-top"><strong>推演层 <span>PRD V0.2 原型</span></strong><span>演示运行 · 现实数据只读 · 模拟结果不写回事实与关联层</span><button data-action="new">＋ 新建推演</button></div>${body}</div>`;
-  const history = () => `<aside class="prd-history"><h3>历史推演</h3>${state.runs.length ? state.runs.map(r => `<button data-run="${esc(r.id)}" class="prd-history-item ${r.id===state.current?'active':''}"><b>${esc(r.title)}</b><small>${r.status==='done'?'已完成':'运行中'} · ${new Date(r.startedAt).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</small></button>`).join('') : '<p>暂无推演记录</p>'}</aside>`;
-  function startPage() {
-    const attachment = state.attachment ? `<span class="prd-chip">${esc(state.attachment.name)} · ${esc(state.attachment.status)} <button data-action="remove-attachment">删除</button></span>` : '';
-    const seed = seedIds().length + (relationSeed()?1:0);
-    return shell(`<div class="prd-start">${history()}<main class="prd-compose"><div class="prd-intro"><span>AgriLink Simulation</span><h1>从现实依据出发，推演经营选择</h1><p>输入经营问题，查看系统种子与模拟假设，再发起一次独立推演。</p></div><div class="prd-editor"><div class="prd-seeds">${seed ? `<span class="prd-chip">系统种子 · ${seedIds().length} 条事实${relationSeed()?' / 1 条关系':''}</span><button data-action="seed">${state.seedCleared?'恢复':'清空'}</button>` : '<span>暂无系统种子，可直接输入推演要求</span>'}${attachment}</div><div id="prdPrompt" class="prd-prompt" role="textbox" aria-label="推演要求" contenteditable="true" data-placeholder="例如：评估长沙市场车厘子促销对价格、库存和销量的影响……">${esc(state.prompt)}</div><div class="prd-editor-actions"><label class="prd-file">＋ 添加附件<input id="prdFile" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.md,.markdown" hidden></label><button data-action="config">⚙ 配置项</button><button class="primary" data-action="launch" ${(state.prompt.trim()||seedCount())?'':'disabled'}>发起推演 →</button></div></div><p class="prd-note">此版本是离线演示：Markdown 可在浏览器读取；PDF、Word、Excel 需要后端解析。此离线原型不使用附件参与计算，附件不计入启动条件。</p></main><aside class="prd-recommend"><h3>推荐方向</h3><p>演示建议 · 点击填入输入框</p>${['评估榴莲供应增加后红星市场份额的变化','评估车厘子促销对长沙市场销量和库存的影响','分析辣椒运输受阻时的价格与渠道风险'].map(x=>`<button data-suggest="${esc(x)}">${esc(x)} <span>↗</span></button>`).join('')}</aside></div>${configDialog()}`);
+
+  function defaultRequirement(ctx) {
+    const focus = ctx.facts[0];
+    return focus
+      ? `基于已选事实与关系，推演“${focus.title}”可能产生的供需、价格和流通影响。请区分已知事实、假设与待验证结论，并标出依据。`
+      : '基于导入的农业交易事实与关系，推演供需、价格和流通影响。请区分已知事实、假设与待验证结论，并标出依据。';
   }
-  function configDialog() {
-    if (!state.showConfig) return '';
-    const c=state.config;
-    return `<div class="prd-modal" role="dialog" aria-modal="true" aria-label="推演配置"><div class="prd-modal-box"><h3>推演配置</h3><label>历史数据周期<select id="prdPeriod">${['最近 1 个月','最近 3 个月','最近 6 个月'].map(x=>`<option ${c.period===x?'selected':''}>${x}</option>`).join('')}</select></label><label>推演轮次 · <output id="prdRoundLabel">${c.rounds}</output> 天<input id="prdRounds" type="range" min="10" max="40" value="${c.rounds}"></label><label>环境模式<select id="prdEnvironment">${['双环境','市场交易环境','产业协作环境'].map(x=>`<option ${c.environment===x?'selected':''}>${x}</option>`).join('')}</select></label><p>报告风格：专家风格（Markdown）</p><div class="prd-modal-actions"><button data-action="close-config">取消</button><button class="primary" data-action="save-config">保存</button></div></div></div>`;
+
+  function send() {
+    if (!loaded || !frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage({ type: 'agrilink:simulation-context', version: 1, context: context() }, MIROFISH_ORIGIN);
   }
-  function graph(run, stage) {
-    const n = Math.min(5, stage===0 ? 3 : 5), agents=(D.AGENTS||[]).slice(0,n);
-    const positions=[[90,145],[280,65],[280,225],[470,95],[470,225]];
-    const lines=stage>=1 ? [[0,1],[0,2],[1,3],[2,4],[3,4]] : [];
-    return `<div class="prd-graph"><small>固定榴莲示例图谱 · 用于展示七阶段变化</small><svg viewBox="0 0 570 300" role="img" aria-label="现实关系为蓝色实线，模拟新增关系为橙色虚线">${lines.map(([a,b])=>`<line x1="${positions[a][0]}" y1="${positions[a][1]}" x2="${positions[b][0]}" y2="${positions[b][1]}" stroke="#4e87aa" stroke-width="2"/>`).join('')}${stage>=5?'<line x1="470" y1="225" x2="90" y2="145" stroke="#d9864a" stroke-width="2.5" stroke-dasharray="7 6"/>':''}${agents.map((a,i)=>`<g data-node="${esc(a.id)}" role="button" tabindex="0"><circle cx="${positions[i][0]}" cy="${positions[i][1]}" r="25" fill="${i===0?'#d7e8db':'#d9e9ee'}" stroke="#3e729a" stroke-width="2"/><text x="${positions[i][0]}" y="${positions[i][1]+43}" text-anchor="middle" font-size="12" fill="#243c42">${esc(a.n.replace(' Agent',''))}</text></g>`).join('')}</svg><div class="prd-legend"><span>━ 现实关系</span><span>┄ 模拟新增（仅本次 run）</span></div><p id="prdNodeDetail">点击节点查看主体与支撑来源。</p></div>`;
-  }
-  function runningPage(run) {
-    const stage=stageAt(run);
-    return shell(`<div class="prd-run-head"><div><button data-action="back-start">← 发起页</button><small>${esc(run.id)}</small><h2>${esc(run.title)}</h2><p>运行中 · ${esc(run.config.environment)} · ${run.config.rounds} 轮 · 演示流程</p></div><span class="prd-progress">第 ${stage+1} / 7 阶段</span></div><div class="prd-running"><section class="prd-graph-panel"><h3>推演知识图谱</h3>${graph(run,stage)}</section><aside class="prd-stage-panel"><h3>阶段进程</h3>${STAGES.map((x,i)=>`<div class="prd-stage ${i<stage?'done':i===stage?'active':''}"><span>${i+1}</span><b>${x}</b><small>${i<stage?'已完成':i===stage?'进行中':'等待中'}</small></div>`).join('')}<div class="prd-agent-box"><h4>本次参与主体</h4>${(D.AGENTS||[]).slice(0,5).map(a=>`<p>${esc(a.n)} · ${esc(a.role)}</p>`).join('')}</div></aside></div><div class="prd-terminal"><b>处理日志</b>${STAGES.slice(0,stage+1).map((x,i)=>`<div>[${new Date(run.startedAt+i*2600).toLocaleTimeString('zh-CN')}] ${esc(x)} · ${i===stage?'处理中':'完成'}${i===5?' · 模拟事件写入本次 run':''}</div>`).join('')}</div>`);
-  }
-  function reportBody(run) {
-    return `<article class="prd-report"><h1>马来西亚榴莲供应增量 · 固定演示报告</h1><p class="prd-report-sub">发起问题：${esc(run.title)} · ${esc(run.id)} · 专家风格</p><div class="prd-disclaimer">本页沿用固定的榴莲示例数据，尚未根据发起问题进行计算。现实依据、模型推断、模拟结果与建议分别标注；数值仅用于演示，不构成实际预测。</div>${reportSections.map((sec,si)=>`<section id="report-${si}"><h2>${esc(sec.h)}</h2>${sec.bullets.map((b,bi)=>`<p><span class="prd-type">${esc(b.label)}</span>${esc(b.t)} <button class="prd-cite" data-cite="${si}:${bi}" title="${esc(evidenceLabel(b.cite||{}))}">[${si+1}.${bi+1}]</button></p>`).join('')}</section>`).join('')}<button data-action="export">导出 HTML 报告</button></article>`;
-  }
-  function reportPage(run) {
-    return shell(`<div class="prd-report-head"><button data-action="back-start">← 发起页</button><span>${esc(run.id)} · 已完成</span><button data-action="new">＋ 新建推演</button></div><div class="prd-report-layout"><main class="prd-report-main"><div class="prd-report-tabs"><button data-report="report" class="${state.reportTab==='report'?'active':''}">推演报告</button><button data-report="graph" class="${state.reportTab==='graph'?'active':''}">推演知识图谱</button></div>${state.reportTab==='graph'?graph(run,6):reportBody(run)}</main><aside class="prd-report-side"><h3>参与 Agent</h3><div class="prd-agent-list">${(D.AGENTS||[]).slice(0,5).map(a=>`<button data-agent="${esc(a.id)}">${esc(a.n)} <small>${esc(a.role)}</small></button>`).join('')}</div><h3>深度追问</h3><div class="prd-chat" id="prdChat">${(run.qa||[]).map(m=>`<div class="${m.who==='user'?'user':''}"><b>${esc(m.who)}</b><p>${esc(m.text)}</p>${m.who!=='user'?'<button data-like="'+esc(m.id)+'">'+(m.liked?'已认可':'👍 认可')+'</button>':''}</div>`).join('')}</div><div class="prd-suggest">${(D.QA||[]).slice(0,3).map(q=>`<button data-question="${esc(q.q)}">${esc(q.q)}</button>`).join('')}</div><textarea id="prdQuestion" rows="3" placeholder="围绕本次报告追问…"></textarea><button class="primary" data-action="ask">发送追问</button></aside></div><div class="prd-evidence" id="prdEvidence" hidden></div>`);
-  }
-  function render() {
+
+  function update() {
     if (!root) return;
-    reconcile();const run=current();
-    if (run && state.page!=='start') root.innerHTML=run.status==='done'?reportPage(run):runningPage(run);
-    else root.innerHTML=startPage();
-    bind();
+    const ctx = context();
+    const key = JSON.stringify([ctx.facts.map(f => f.id), ctx.relation && ctx.relation.id]);
+    if (key !== lastSelection) {
+      lastSelection = key;
+      promptInput.value = defaultRequirement(ctx);
+    }
+    if (S.state.tab === 'sim') send();
   }
-  function begin() {
-    const prompt=root.querySelector('#prdPrompt')?.innerText.trim() || state.prompt.trim();
-    if (!prompt && !seedCount()) return;
-    state.prompt=prompt;
-    const id=`run_${new Date().toISOString().slice(0,10).replaceAll('-','')}_${String(state.runs.length+1).padStart(3,'0')}`;
-    const r={id,title:(prompt||'基于系统种子的农业经营推演').slice(0,30),status:'running',startedAt:Date.now(),config:{...state.config},seeds:state.seedCleared?[]:seedIds(),relation:state.seedCleared?null:relationSeed(),qa:[]};
-    state.runs.unshift(r);state.current=id;state.page='run';save();render();
+
+  function mount(el) {
+    root = document.createElement('div');
+    root.className = 'miro-bridge';
+    root.innerHTML = '<textarea aria-label="推演问题" hidden></textarea><iframe class="miro-bridge-frame" title="agrilink 推演流程" loading="eager"></iframe>';
+    el.replaceChildren(root);
+    frame = root.querySelector('iframe');
+    promptInput = root.querySelector('textarea');
+    frame.onload = () => { loaded = true; send(); };
+    frame.src = MIROFISH_URL;
+    update();
   }
-  function bind() {
-    root.querySelector('#prdPrompt')?.addEventListener('input', e=>{state.prompt=e.target.innerText;save();const button=root.querySelector('[data-action="launch"]');if(button)button.disabled=!state.prompt.trim()&&!seedCount();});
-    root.querySelector('#prdPrompt')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();begin();}});
-    root.querySelector('#prdFile')?.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;state.attachment={name:f.name,size:f.size,status:/\.(md|markdown)$/i.test(f.name)?'已读取（演示）':'待后端解析',text:/\.(md|markdown)$/i.test(f.name)?(await f.text()).slice(0,30000):''};save();render();});
-    root.querySelector('#prdRounds')?.addEventListener('input',e=>root.querySelector('#prdRoundLabel').textContent=e.target.value);
-    root.querySelectorAll('[data-action]').forEach(el=>el.onclick=()=>{
-      const a=el.dataset.action;
-      if(a==='launch')begin();
-      if(a==='seed'){state.seedCleared=!state.seedCleared;save();render();}
-      if(a==='remove-attachment'){state.attachment=null;save();render();}
-      if(a==='config'||a==='close-config'){state.showConfig=a==='config';render();}
-      if(a==='save-config'){state.config={period:root.querySelector('#prdPeriod').value,rounds:+root.querySelector('#prdRounds').value,environment:root.querySelector('#prdEnvironment').value,style:'专家风格'};state.showConfig=false;save();render();}
-      if(a==='new'||a==='back-start'){state.page='start';state.current=null;state.prompt='';save();render();}
-      if(a==='ask'){const text=root.querySelector('#prdQuestion').value.trim(),r=current();if(!text||!r)return;const answer=(D.QA||[]).find(q=>q.q===text)?.a||'这是当前演示报告的追问示意。请沿报告引用核对现实事实与模拟事件；更改关键假设需创建新推演。';r.qa.push({who:'user',text,id:Date.now()+'u'},{who:(D.AGENTS||[])[0]?.n||'农业 Agent',text:answer,id:Date.now()+'a',liked:false});save();render();}
-      if(a==='export'){const r=current(),html='<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>'+esc(r.title)+'</title><body>'+root.querySelector('.prd-report').innerHTML+'</body></html>';const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=r.id+'.html';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-    });
-    root.querySelectorAll('[data-run]').forEach(el=>el.onclick=()=>{state.current=el.dataset.run;state.page='run';save();render();});
-    root.querySelectorAll('[data-suggest]').forEach(el=>el.onclick=()=>{state.prompt=el.dataset.suggest;save();render();root.querySelector('#prdPrompt')?.focus();});
-    root.querySelectorAll('[data-report]').forEach(el=>el.onclick=()=>{state.reportTab=el.dataset.report;save();render();});
-    root.querySelectorAll('[data-question]').forEach(el=>el.onclick=()=>{root.querySelector('#prdQuestion').value=el.dataset.question;root.querySelector('#prdQuestion').focus();});
-    root.querySelectorAll('[data-like]').forEach(el=>el.onclick=()=>{const m=current()?.qa.find(x=>x.id===el.dataset.like);if(m){m.liked=!m.liked;save();render();}});
-    root.querySelectorAll('[data-cite]').forEach(el=>el.onclick=()=>{const [i,j]=el.dataset.cite.split(':').map(Number),b=reportSections[i].bullets[j],pane=root.querySelector('#prdEvidence');pane.hidden=false;pane.innerHTML=`<button data-close="evidence">关闭 ×</button><h3>证据回溯</h3><p>${esc(evidenceLabel(b.cite||{}))}</p><p>${esc(b.t)}</p><small>现实事实可返回事实层查阅；模拟事件只属于 ${esc(current().id)}。</small>`;pane.querySelector('[data-close]').onclick=()=>pane.hidden=true;});
-    root.querySelectorAll('[data-agent]').forEach(el=>el.onclick=()=>{const a=(D.AGENTS||[]).find(x=>x.id===el.dataset.agent),pane=root.querySelector('#prdEvidence');pane.hidden=false;pane.innerHTML=`<button data-close="agent">关闭 ×</button><h3>${esc(a.n)}</h3><p>${esc(a.role)} · ${esc(a.behav)}</p><p>约束：${esc(a.cons)}</p><p>现实依据：${esc(a.src)}</p>`;pane.querySelector('[data-close]').onclick=()=>pane.hidden=true;});
-    root.querySelectorAll('[data-node]').forEach(el=>el.onclick=()=>{const a=(D.AGENTS||[]).find(x=>x.id===el.dataset.node),p=root.querySelector('#prdNodeDetail');if(p)p.textContent=`${a.n}：${a.role}。现实依据：${a.src}`;});
-  }
-  function mount(el){root=el;render();timer=setInterval(()=>{if(S.state.tab==='sim'&&current()?.status==='running')render();},900);}
-  function update(){if(S.state.tab==='sim')render();}
-  return {mount,update,debug:()=>({page:state.page,runs:state.runs.length,current:state.current,status:current()?.status})};
+
+  return { mount, update };
 })();
 
 </script>
@@ -7439,6 +7449,7 @@ window.V03Sim = (function () {
     stream:  ['M3 5h18v14H3z', 'M6.5 9.5l2.5 2.5-2.5 2.5', 'M12 14.5h4'],
     cards:   ['M3.5 4.5h7v15h-7z', 'M13 4.5h7.5v8H13z', 'M13 14.5h7.5V19.5H13z'],
     gear:    ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z', 'M12 2.8v2.6', 'M12 18.6v2.6', 'M2.8 12h2.6', 'M18.6 12h2.6', 'M5.5 5.5l1.8 1.8', 'M16.7 16.7l1.8 1.8', 'M18.5 5.5l-1.8 1.8', 'M7.3 16.7l-1.8 1.8'],
+    map:     ['M4 5h16v14H4z', 'M12 5v14', 'M4 12h16'],
     cube3d:  ['M12 2.8 3.8 7.1v9.8L12 21.2l8.2-4.3V7.1L12 2.8Z', 'M3.8 7.1 12 11.4l8.2-4.3', 'M12 11.4v9.8'],
     radar:   ['M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2Z', 'M12 7.8a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4Z'],
     expand:  ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
@@ -7520,6 +7531,9 @@ window.V03Sim = (function () {
     { k: 'zoomIn', i: 'plus', n: '放大', d: '放大地图', kind: 'zoom', dir: 1 },
     { k: 'zoomOut', i: 'minus', n: '缩小', d: '缩小地图', kind: 'zoom', dir: -1 },
     { k: 'mode3d', i: 'cube3d', n: '2D / 3D', d: '切换二维地图与三维地球', kind: 'sw', get: s => s.sk.mode3d, set: v => ({ sk: { mode3d: v } }) },
+    { k: 'view3d', i: 'cube3d', n: '3D', d: '三维地球', kind: 'view', value: 'globe' },
+    { k: 'view2d', i: 'map', n: '2D', d: '二维地图', kind: 'view', value: 'geo' },
+    { k: 'viewGraph', i: 'radar', n: '图谱', d: '图谱视图', kind: 'view', value: 'graph' },
     { k: 'influence', i: 'radar', n: '地理影响圆', d: '显示或隐藏事实的地理影响圆', kind: 'sw', get: s => s.sk.influence, set: v => ({ sk: { influence: v } }) },
     { k: 'crossRegion', i: 'anchor', n: '跨区域关系', d: '显示跨出当前视角的关系线', kind: 'sw', get: s => s.rel.crossRegion, set: v => ({ rel: { crossRegion: v } }) },
     { k: 'fullscreen', i: 'expand', n: '全屏', d: '浏览器全屏显示地图', kind: 'sw', get: s => s.sk.fullscreen, set: v => ({ sk: { fullscreen: v } }) },
@@ -7529,7 +7543,7 @@ window.V03Sim = (function () {
     { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
     { k: 'search', i: 'search', n: '搜索', d: '搜索事实或本体名称', kind: 'input', get: s => s.tab === 'relation' ? s.rel.search : s.q, set: v => S.state.tab === 'relation' ? ({ rel: { search: v } }) : ({ q: v }) }
   ];
-  const skVal = (sk, s) => (sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
+  const skVal = (sk, s) => (sk.kind === 'view' ? (s.rel.view === sk.value ? '当前' : '') : sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
     : sk.kind === 'zoom' ? '' : sk.kind === 'input' ? (sk.get(s) ? '已设' : '空') : (sk.opts.find(o => o[0] === sk.get(s)) || ['', '—'])[1]);
 
   let pop = null;
@@ -7554,13 +7568,29 @@ window.V03Sim = (function () {
         box.appendChild(b);
       }
     } else if (sk.kind === 'input') {
+      box.classList.add('search-pop');
       const inp = el('input', 'sk-input');
       inp.type = 'search'; inp.value = sk.get(S.state) || ''; inp.placeholder = S.state.tab === 'relation' ? '搜索本体名称' : '搜索事实标题';
-      let t = null;
-      inp.oninput = () => { clearTimeout(t); t = setTimeout(() => S.set({ q: inp.value.trim() }), 160); };
-      inp.onkeydown = e => { if (e.key === 'Enter') { closePop(); rerender(); } };
       box.appendChild(inp);
-      setTimeout(() => inp.focus(), 20);
+      const results = el('div', 'search-results');box.appendChild(results);
+      const actions=el('div','search-actions');
+      const confirm=el('button','','搜索');const clear=el('button','','清空 ×');
+      actions.append(clear,confirm);box.appendChild(actions);
+      const isRel = S.state.tab === 'relation';
+      const preview = () => {
+        results.replaceChildren();
+        const q=inp.value.trim().toLowerCase();
+        if(!q) return;
+        const hits=(isRel ? D.OBJECTS : D.FACTS).filter(x=>String(isRel?x.name:x.title).toLowerCase().includes(q)).slice(0,6);
+        results.appendChild(el('div','search-count',hits.length ? '匹配结果（最多 6 条）' : '暂无匹配结果'));
+        hits.forEach(x=>{const b=el('button','search-result',isRel?x.name:x.title);b.onclick=()=>{closePop();S.set(isRel?{rel:{search:x.name,sel:x.id,kind:'object',stack:[{kind:'object',id:x.id}]}}:{q:x.title,factId:x.id});};results.appendChild(b);});
+      };
+      const commit=()=>{const q=inp.value.trim();closePop();S.set(sk.set(q));};
+      clear.onclick=()=>{closePop();S.set(sk.set(''));};
+      confirm.onclick=commit;
+      inp.oninput=preview;
+      inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape')closePop();};
+      preview();setTimeout(() => inp.focus(), 20);
     }
     anchor.parentElement.appendChild(box);
     pop = box;
@@ -7572,18 +7602,19 @@ window.V03Sim = (function () {
     const na = [];
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
+    mount.classList.toggle('rel-mode', st.tab === 'relation');
     SK.forEach((sk, idx) => {
-      if (st.tab === 'relation' && !['zoomIn','zoomOut','fullscreen','crossRegion','search'].includes(sk.k)) return;
-      if (st.tab !== 'relation' && sk.k === 'crossRegion') return;
+      if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','fullscreen','crossRegion','search'].includes(sk.k)) return;
+      if (st.tab !== 'relation' && (sk.k === 'crossRegion' || sk.kind === 'view')) return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
-      const on = sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
+      const on = sk.kind === 'view' ? st.rel.view === sk.value : sk.kind === 'sw' ? !!sk.get(st) : false;   /* zoom 为即时动作键 */
       const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
       b.dataset.k = sk.k;
       b.title = sk.n + '：' + sk.d;
       b.innerHTML = '<span class="sk-i">' + svg(sk.i, mode === 'menu' ? 15 : 16) + '</span>' +
         (mode === 'menu' ? '<span class="sk-n">' + sk.n + '</span><span class="sk-v">' + skVal(sk, st) + '</span>' : '<span class="sk-v">' + skVal(sk, st) + '</span>');
-      b.setAttribute('aria-pressed', String(!!(sk.get && sk.get(st))));
+      b.setAttribute('aria-pressed', String(on));
       if (na.includes(sk.k)) { b.disabled = true; b.title = sk.n + '：关联层为地理关联视图'; }
       if (sk.kind === 'zoom') {
         if (!api || !api.zoomBy) { b.disabled = true; b.title = sk.n + '：当前层不支持缩放'; }
@@ -7591,6 +7622,7 @@ window.V03Sim = (function () {
       }
       b.onclick = () => {
         if (sk.kind === 'zoom') { const a = layerApi(); if (a && a.zoomBy) a.zoomBy(sk.dir); return; }
+        if (sk.kind === 'view') { S.set({rel:{view:sk.value}});return; }
         if (sk.kind === 'sw') {
           if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
           S.set(sk.set(!sk.get(st)));
@@ -7686,7 +7718,7 @@ window.V03Sim = (function () {
     const s1 = el('section', 'mn-sec');
     s1.appendChild(el('div', 'mn-h', '数据概览'));
     const ovRows = ov.rows.filter(r => r[0]);
-    s1.appendChild(el('div', 'mn-ov' + (ovRows.length === 1 ? ' hero' : ''), ovRows.map(([k, v], i) =>
+    s1.appendChild(el('div', 'mn-ov' + (isRel ? ' relation-overview' : ovRows.length === 1 ? ' hero' : ''), ovRows.map(([k, v], i) =>
       '<div class="ov-i"><b data-ov="' + i + '">' + v + '</b><span>' + k + '</span></div>').join('')));
     if (ov.note) s1.appendChild(el('div', 'ov-note', ov.note));
     body.appendChild(s1);
@@ -7755,11 +7787,21 @@ window.V03Sim = (function () {
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
       const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
-      const available=[...new Set(D.RELATIONS.map(r=>r.type))];
       const groups=[['生产供应','#4d966a',['生产','供应','采购']],['经营组织','#cf854a',['运营','入驻','合作']],['空间','#547baa',['位于','发生于']],['物流','#24a6a1',['运输至','储存于']],['政策','#8a6dba',['发布','适用于','监管']],['影响','#ca6975',['影响']]];
       const selected=st.relTypes;
-      groups.forEach(([name,color,types])=>{relFilter.appendChild(el('div','mn-l2',name));types.forEach(t=>{const label=el('label','mn-overlay');label.innerHTML='<input type="checkbox"'+(!Array.isArray(selected)||selected.includes(t)?' checked':'')+'><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+color+';margin:0 5px"></i><span>'+t+(available.includes(t)?'':' · 暂无记录')+'</span>';label.querySelector('input').onchange=e=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:available);e.target.checked?set.add(t):set.delete(t);S.set({relTypes:[...set]});};relFilter.appendChild(label);});});
-      const legacy=F.legacyTypes();if(legacy.length){relFilter.appendChild(el('div','mn-l2','历史数据原始关系'));legacy.forEach(t=>{const label=el('label','mn-overlay');label.innerHTML='<input type="checkbox"'+(!Array.isArray(selected)||selected.includes(t)?' checked':'')+'><span>'+t+'</span>';label.querySelector('input').onchange=e=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:available);e.target.checked?set.add(t):set.delete(t);S.set({relTypes:[...set]});};relFilter.appendChild(label);});}
+      groups.forEach(([name,color,types])=>{
+        relFilter.appendChild(el('div','mn-l2',name));
+        const row=el('div','mn-rel-types');
+        types.forEach(t=>{
+          const on=!Array.isArray(selected)||selected.includes(t);
+          const b=el('button','l3'+(on?' on':''));
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
+          b.setAttribute('aria-pressed',String(on));
+          b.onclick=()=>{const all=F.PRD_REL_TYPES.concat(F.legacyTypes());const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:all);on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
+          row.appendChild(b);
+        });
+        relFilter.appendChild(row);
+      });
       body.appendChild(relFilter);
       const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
       const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
@@ -7820,7 +7862,6 @@ window.V03Sim = (function () {
   }
   const SEQ = D.STREAM_SEQ || [];
   const BATCHES = { fact: seqBatches(SEQ), relation: seqBatches(SEQ.filter(e => REL_STAGES[e.stage])) };
-  const SPEED = 2.6;
   /* B2：单条日志写长写细（阶段 · 来源 · 标题 · 可信度 · 影响 · 坐标 · 关联本体 · 耗时），超过 800 字截断 */
   const STAGE_TAG = { ingest: '接入', extract: '抽取', resolve: '归并', geo: '定位', score: '评分', link: '关联', graph: '图谱', warn: '提醒' };
   const pad2 = n => String(n).padStart(2, '0');
@@ -7856,14 +7897,14 @@ window.V03Sim = (function () {
       const step = () => {
         pushStreamLine(batch.items[k]); k++;
         if (k < n) ST.timer = setTimeout(step, 90 + Math.random() * 80);
-        else ST.timer = setTimeout(scheduleStream, 1000 + Math.random() * 1200);   /* 批间停顿 1–2.2s */
+        else ST.timer = setTimeout(scheduleStream, 420 + Math.random() * 480);   /* 批间停顿 0.4–0.9s */
       };
       step();
       return;
     }
-    if (roll < .58) { pushStreamLine(batch.items[0]); ST.timer = setTimeout(scheduleStream, 1500 + Math.random() * 900); return; }
+    if (roll < .58) { pushStreamLine(batch.items[0]); ST.timer = setTimeout(scheduleStream, 580 + Math.random() * 500); return; }
     pushStreamLine(batch.items[0]);
-    ST.timer = setTimeout(scheduleStream, 260 + Math.random() * 900);
+    ST.timer = setTimeout(scheduleStream, 360 + Math.random() * 400);
   }
   function syncStream() {
     const st = S.state, box = $('streamBox');
@@ -7902,10 +7943,10 @@ window.V03Sim = (function () {
     if (st.tab === 'fact') return S.set({ factId: null, logOpen: false, factObj: null });
     const stack = drawerStack();
     if (!stack.length) return;
-    if (stack.length === 1) return S.set({ rel: { sel: null, kind: null, stack: [] } });
+    if (stack.length === 1) return S.set({ factId: null, rel: { sel: null, kind: null, stack: [] } });
     const next = stack.slice(0, -1);
     const top = next[next.length - 1];
-    S.set({ rel: { stack: next, sel: top.id, kind: top.kind } });
+    S.set({ factId: top.kind === 'fact' ? top.id : null, rel: { stack: next, sel: top.id, kind: top.kind } });
   }
   function syncDrawers() {
     const stack = drawerStack();
@@ -7920,7 +7961,7 @@ window.V03Sim = (function () {
       const wrap = el('div', 'drawer');
       const isTop = i === stack.length - 1;
       const head = el('div', 'drawer-head');
-      const title = d.kind === 'fact' ? '事实详情' : d.kind === 'relation' ? '关联详情' : '本体详情';
+      const title = d.kind === 'fact' ? '事实详情' : d.kind === 'relation' ? '关系详情' : '本体详情';
       head.innerHTML = '<b>' + title + '</b><span class="sp"></span>';
       if ((stack.length > 1 || d.kind === 'fact') && isTop) {
         const back = el('button', 'drawer-back', '← 返回');
