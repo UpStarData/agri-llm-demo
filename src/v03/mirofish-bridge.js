@@ -1,4 +1,4 @@
-/* AgriLink V1.2 experience → simulation preview. The payload stays in the browser. */
+/* AgriLink simulation launches in the published old-style workbench. Context stays in the browser. */
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;

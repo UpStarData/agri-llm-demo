@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/* AgriLink V1.0 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
-   —— 无网络依赖、无外部文件依赖；双击即可运行，离线与线上是同一个文件
+/* AgriLink V1.0.1 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
+   —— 事实、关联层可离线加载；推演工作台依赖线上 iframe
    node build.mjs            正常构建（缺文件即失败）
    node build.mjs --partial  允许缺文件（并行开发自测用） */
 import fs from 'node:fs';
