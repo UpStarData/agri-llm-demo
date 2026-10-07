@@ -1,6 +1,6 @@
 /* ============================================================
    AgriLink 农链 V1.0 · 视觉校准版（V2 指令）
-   视觉基线：参考 HungerMap LIVE 的浅色地图配色，提供更饱满的大屏配色 2
+   视觉基线：参考 WFP HungerMap 的中性底图与信息层级；区域色仅辅助辨认，不编码指标
    布局要点：顶部 24px 轻量工具条 · 左侧菜单 4 段 · 右下快捷键 + 缩放
              右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情）· 窄条终端式流水
    ============================================================ */
@@ -28,15 +28,15 @@
 }
 html[data-theme="color"]{
   color-scheme:light;
-  /* 配色 2：展陈用深海蓝底图、青铜与靛蓝区域、浅蓝灰面板。 */
-  --bg:#b6cbd1;--panel:#eaf0ef;--panel-2:#dbe5e5;--panel-alpha:rgba(234,240,239,.96);--line:rgba(24,62,81,.32);--hair:rgba(24,62,81,.22);
-  --ink:#102f43;--mut:#36586b;--dim:#557484;--hint:#5c7b89;
-  --accent:#a55c31;--accent-soft:rgba(165,92,49,.15);--green:#2e765e;--orange:#ab663a;--purple:#635a8d;--red:#aa4a4e;
+  /* 配色 2：深海蓝展示底图、克制的中性区域、暖白面板；高彩度留给事实点与操作。 */
+  --bg:#dce4e4;--panel:#f3f3ed;--panel-2:#e7ebea;--panel-alpha:rgba(243,243,237,.97);--line:rgba(30,60,73,.28);--hair:rgba(30,60,73,.17);
+  --ink:#172e3b;--mut:#435866;--dim:#5d6e76;--hint:#64747d;
+  --accent:#a96837;--accent-soft:rgba(169,104,55,.14);--green:#32715c;--orange:#a96837;--purple:#626582;--red:#a24748;
   --warn:#97510f;--warn-bg:#f2dbaa;
-  --ocean:#496f85;--land:#58798c;--land-2:#3f657c;--map-line:rgba(20,54,75,.76);--map-label:#123d53;
-  --glass:rgba(228,239,241,.92);--glass-2:rgba(225,237,239,.84);--glass-line:rgba(30,74,96,.25);
-  --shadow:0 12px 32px -18px rgba(15,48,70,.48);--icon:#3c6478;--icon-hover:#a55c31;--icon-on:rgba(165,92,49,.15);
-  --c-nature:#357887;--c-supply:#4b805e;--c-chain:#347d73;--c-market:#a06253;--c-consume:#6d5e94;--c-policy:#4b6da1;--c-macro:#977142;
+  --ocean:#314a59;--land:#80909a;--land-2:#6b838d;--map-line:rgba(23,47,60,.83);--map-label:#e3ebed;
+  --glass:rgba(243,243,237,.94);--glass-2:rgba(238,240,235,.88);--glass-line:rgba(40,70,82,.21);
+  --shadow:0 12px 32px -18px rgba(15,48,70,.48);--icon:#456174;--icon-hover:#a96837;--icon-on:rgba(169,104,55,.14);
+  --c-nature:#30738b;--c-supply:#497b60;--c-chain:#247f7c;--c-market:#ad6943;--c-consume:#6f638b;--c-policy:#3d6996;--c-macro:#9a773e;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
