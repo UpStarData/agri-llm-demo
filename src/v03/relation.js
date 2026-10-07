@@ -14,7 +14,7 @@
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '';
-  const camera = { zoom: 1.06, graphZoom: 1, center: [18, 10], raf: null, level: null };
+  const camera = { zoom: 1.06, graphZoom: 1, center: [105, 35], raf: null, level: null };
   const ZOOM_BOX = [0.9, 3.0];
 
   /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
@@ -25,8 +25,8 @@ window.V03Relation = (function () {
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
   const palette = () => S.state.theme === 'dark' ? {
-    land: '#0b3f47', land2: '#14515a', line: 'rgba(143,178,184,.58)', ink: '#f2f6f7', labelBg: 'rgba(31,34,35,.86)',
-    tipBg: 'rgba(31,34,35,.97)', tipLine: 'rgba(163,185,190,.24)', neutral: 'rgba(163,185,190,.78)'
+    land: '#24465d', land2: '#39637a', line: 'rgba(153,191,208,.48)', ink: '#f0f7fa', labelBg: 'rgba(17,31,45,.88)',
+    tipBg: 'rgba(17,31,45,.97)', tipLine: 'rgba(145,181,201,.24)', neutral: 'rgba(163,190,207,.78)'
   } : {
     land: '#eef0f1', land2: '#dfe6e8', line: 'rgba(94,113,119,.58)', ink: '#263238', labelBg: 'rgba(255,255,255,.82)',
     tipBg: 'rgba(255,255,255,.97)', tipLine: 'rgba(40,61,68,.16)', neutral: 'rgba(126,138,158,.85)'

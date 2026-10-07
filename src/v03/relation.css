@@ -7,10 +7,11 @@
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-main.graph-view{background-color:#fafafa;
   background-image:radial-gradient(#d0d0d0 1.5px,transparent 1.5px);background-size:24px 24px}
-html[data-theme="dark"] .rel-main.graph-view{background-color:#17232a;
+html[data-theme="dark"] .rel-main.graph-view{background-color:#111f2d;
   background-image:radial-gradient(rgba(218,232,235,.2) 1.5px,transparent 1.5px)}
 .rel-canvas{position:absolute;inset:0}
 .rel-main.graph-view .rel-canvas{right:var(--side-w);bottom:var(--stream-h)}
+@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:var(--side-w)}}
 .rel-viewbar{position:absolute;top:14px;left:14px;z-index:24;display:flex;gap:4px;padding:4px;
   border:1px solid var(--line);border-radius:var(--r-md);background:var(--glass);backdrop-filter:var(--blur)}
 .rel-viewbar button{border:0;border-radius:var(--r-sm);background:transparent;color:var(--mut);padding:6px 10px;
