@@ -1,7 +1,7 @@
 {
-  "hash": "406ea1ae596c",
-  "git": "876de95",
-  "builtAt": "2026-10-08T00:02:20.112Z",
+  "hash": "28818db5ca24",
+  "git": "fdd1f6c",
+  "builtAt": "2026-10-08T01:40:34.719Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",

@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
-  "description": "AgriLink 农链 V1.0.4 · 地图快捷控制优化",
+  "description": "AgriLink 农链 V1.0.5 · 推演发起页视觉统一",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
