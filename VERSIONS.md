@@ -4,7 +4,8 @@
 
 | 版本 | 预览地址 | 内容 | 构建指纹 | 源码提交 / tag |
 | --- | --- | --- | --- | --- |
-| **V1.0.3** | https://upstardata.github.io/agri-llm-demo/v1.0.3/ | 关联层本体详情改为从卡片列表左侧滑出，卡片保持可见；其余沿用三份 PRD 核对版 | `12a565bc850a` | `876de95` · `v1.0.3` |
+| **V1.0.4** | https://upstardata.github.io/agri-llm-demo/v1.0.4/ | 两层快捷键统一线性图标；关联层按两排顺序、搜索向左展开并保留词、港口锚点与全屏 | `406ea1ae596c` | `fdd1f6c` · `v1.0.4` |
+| V1.0.3 | https://upstardata.github.io/agri-llm-demo/v1.0.3/ | 关联层本体详情改为从卡片列表左侧滑出，卡片保持可见；其余沿用三份 PRD 核对版 | `12a565bc850a` | `876de95` · `v1.0.3` |
 | **V1.0.2** | https://upstardata.github.io/agri-llm-demo/v1.0.2/ | 三份 PRD 核对：修正文案与关联字段；无坐标本体不上地图；未知地理影响半径不画圆；保留 MiroFish 后续工作台 | `7ec1a095a1de` | `cca70df` · `v1.0.2` |
 | **V1.0.1** | https://upstardata.github.io/agri-llm-demo/v1.0.1/ | 恢复此前 MiroFish 风格的图谱、运行和报告工作台；推演发起页改为 GPT 式对话输入。关联层补齐分类图例、搜索、视图切换、星空和详情发起推演；事实层只展示点与影响圈；推演工作台需联网加载 | `973911f1bfa3` | `5dcf9d9` · `v1.0.1` |
 | **V1.0.0** | https://upstardata.github.io/agri-llm-demo/v1.0.0/ | 三份 PRD 调整：关联层两级本体分类、品种和关系筛选、全本体卡片；推演层发起、七阶段运行、报告与证据回溯原型；事实层延续 V1.2 交互 | `d33ff7d28aa6` | `6036196` · `v1.0.0` |
@@ -33,7 +34,7 @@
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
 | **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
 
-> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V1.0.3**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V1.0.4**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
