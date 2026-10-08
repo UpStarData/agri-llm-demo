@@ -104,6 +104,10 @@ window.V03RelGlobe = (function () {
         ctx.beginPath();ctx.arc(bead.x,bead.y,2.1,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();
       }
     });
+    if (window.V03Store.state.sk.gates) window.V03Data.GATES.filter(g => g.kind === 'port').forEach(g => {
+      const p = project(g.lng, g.lat, cx, cy, R); if (p.z <= 0) return;
+      ctx.fillStyle = '#e1a653'; ctx.font = '12px sans-serif'; ctx.fillText('⚓', p.x - 6, p.y + 4);
+    });
     nodes.forEach(o=>{
       const p=project(o.lng,o.lat,cx,cy,R);if(p.z<=0)return;
       if(now<glowUntil && nodes.indexOf(o)<3){ctx.beginPath();ctx.arc(p.x,p.y,7+3*Math.sin(now*.006),0,Math.PI*2);ctx.fillStyle='rgba(255,208,105,.22)';ctx.fill();}
