@@ -21,6 +21,7 @@
     map:     ['M4 5h16v14H4z', 'M12 5v14', 'M4 12h16'],
     cube3d:  ['M12 2.8 3.8 7.1v9.8L12 21.2l8.2-4.3V7.1L12 2.8Z', 'M3.8 7.1 12 11.4l8.2-4.3', 'M12 11.4v9.8'],
     radar:   ['M12 3.4a8.6 8.6 0 1 1 0 17.2 8.6 8.6 0 0 1 0-17.2Z', 'M12 7.8a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4Z'],
+    network: ['M5 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z', 'M19 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z', 'M12 17a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z', 'M6.8 7l4.2 10', 'M17.2 7 13 17', 'M7 6h10'],
     expand:  ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
     video:   ['M3 6.5h12.5v11H3z', 'M15.5 11l5.5-3.2v8.4L15.5 13'],
     sprout:  ['M12 20.5V10', 'M12 10c0-4-3.4-6.2-8-6.2 0 4.2 3.2 6.2 8 6.2Z', 'M12 13.6c0-3.2 3.6-5.2 8-5.2 0 3.2-3.2 5.2-8 5.2Z'],
@@ -102,13 +103,13 @@
     { k: 'mode3d', i: 'cube3d', n: '2D / 3D', d: '切换二维地图与三维地球', kind: 'sw', get: s => s.sk.mode3d, set: v => ({ sk: { mode3d: v } }) },
     { k: 'view3d', i: 'cube3d', n: '3D', d: '三维地球', kind: 'view', value: 'globe' },
     { k: 'view2d', i: 'map', n: '2D', d: '二维地图', kind: 'view', value: 'geo' },
-    { k: 'viewGraph', i: 'radar', n: '图谱', d: '图谱视图', kind: 'view', value: 'graph' },
+    { k: 'viewGraph', i: 'network', n: '图谱', d: '图谱视图', kind: 'view', value: 'graph' },
     { k: 'influence', i: 'radar', n: '地理影响圆', d: '显示或隐藏事实的地理影响圆', kind: 'sw', get: s => s.sk.influence, set: v => ({ sk: { influence: v } }) },
     { k: 'crossRegion', i: 'anchor', n: '跨区域关系', d: '显示跨出当前视角的关系线', kind: 'sw', get: s => s.rel.crossRegion, set: v => ({ rel: { crossRegion: v } }) },
     { k: 'fullscreen', i: 'expand', n: '全屏', d: '浏览器全屏显示地图', kind: 'sw', get: s => s.sk.fullscreen, set: v => ({ sk: { fullscreen: v } }) },
     { k: 'live', i: 'video', n: '视频', d: '显示或隐藏视频事实卡', kind: 'sw', get: s => s.sk.live, set: v => ({ sk: { live: v } }) },
     { k: 'regions', i: 'sprout', n: '主要产区', d: '标注主要农产品产区', kind: 'sw', get: s => s.sk.regions, set: v => ({ sk: { regions: v } }) },
-    { k: 'gates', i: 'anchor', n: '港口', d: '标注主要贸易港口', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
+    { k: 'gates', i: 'anchor', n: '港口锚点', d: '显示或隐藏港口锚点', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
     { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
     { k: 'search', i: 'search', n: '搜索', d: '搜索事实或本体名称', kind: 'input', get: s => s.tab === 'relation' ? s.rel.search : s.q, set: v => S.state.tab === 'relation' ? ({ rel: { search: v } }) : ({ q: v }) }
   ];
@@ -161,7 +162,7 @@
       inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape')closePop();};
       preview();setTimeout(() => inp.focus(), 20);
     }
-    anchor.parentElement.appendChild(box);
+    (anchor.closest('#mapSk') || anchor.parentElement).appendChild(box);
     pop = box;
     setTimeout(() => document.addEventListener('mousedown', onDocDown, true), 0);
   }
@@ -169,11 +170,15 @@
   function renderShortcutBar(mount, opts) {
     const st = S.state, mode = (opts || {}).mode || 'map';
     const na = [];
+    closePop();
     mount.innerHTML = '';
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
-    SK.forEach((sk, idx) => {
-      if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','fullscreen','crossRegion','search'].includes(sk.k)) return;
+    const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
+      : ['zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];
+    (mode === 'map' ? order.map(k => SK.find(x => x.k === k)) : SK).forEach((sk, idx) => {
+      if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen'].includes(sk.k)) return;
+      if (mode === 'map' && st.tab !== 'relation' && !['zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
       if (st.tab !== 'relation' && (sk.k === 'crossRegion' || sk.kind === 'view')) return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
@@ -199,6 +204,14 @@
       };
       mount.appendChild(b);
     });
+    if (mode === 'map' && (st.tab === 'relation' ? st.rel.search : st.q)) {
+      const term = st.tab === 'relation' ? st.rel.search : st.q;
+      const chip = el('div', 'sk-search-term');
+      chip.appendChild(el('span', '', term));
+      const clear = el('button', '', '×'); clear.type = 'button'; clear.title = '清空搜索'; clear.setAttribute('aria-label', '清空搜索');
+      clear.onclick = () => S.set(st.tab === 'relation' ? { rel: { search: '' } } : { q: '' });
+      chip.appendChild(clear); mount.appendChild(chip);
+    }
   }
 
   /* ---------- F6：缩放（快捷键组正上方；到边界禁用） ---------- */

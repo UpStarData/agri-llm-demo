@@ -263,6 +263,8 @@ window.V03Relation = (function () {
           lineStyle: { curveness: .22, opacity: 0 } },
         { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels },
         { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer' },
+        { id: 'relPorts', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 6,
+          data: st.sk.gates ? D.GATES.filter(g => g.kind === 'port').flatMap(g => window.V03Fact.worldCopies(g.lng, g.lat).map(value => ({ value, name: g.name, symbolSize: 11, label: { show: true, formatter: '⚓', position: 'inside', fontSize: 10 }, itemStyle: { color: '#e1a653' } }))) : [] },
         { id: 'relNewPulse', type: 'effectScatter', coordinateSystem: 'geo', z: 6, silent: true,
           data: performance.now()<glowUntil ? nodes.slice(0,3).map(n=>({value:n.value,symbolSize:12})) : [],
           rippleEffect: {period:1.3,scale:2.4,brushType:'stroke'},itemStyle:{color:'#e4a449'} }
@@ -497,7 +499,7 @@ window.V03Relation = (function () {
     const st = S.state;
     window.V03RelGlobe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.theme, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.carry, st.panels.cards, st.sk.gates, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
