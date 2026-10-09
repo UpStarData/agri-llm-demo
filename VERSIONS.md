@@ -4,7 +4,8 @@
 
 | 版本 | 预览地址 | 内容 | 构建指纹 | 源码提交 / tag |
 | --- | --- | --- | --- | --- |
-| **V1.0.11** | https://upstardata.github.io/agri-llm-demo/v1.0.11/ | 共同规则对齐：3D 点任一区域 → 2D 全球、2D 全球点任一区域 → 2D 中国、2D 中国点任一区域 → 2D 湖南，两层一致（点与关系不切换视角） | `9a05eacf669c` | `8102b24` · `v1.0.11` |
+| **V1.0.12** | https://upstardata.github.io/agri-llm-demo/v1.0.12/ | 缩放逐格推进；三维地球日期变更线切分（去掉 V 形楔子）；事实层三维点改成关联层本体同款；五种叠加图层 emoji；事实层省区缩小回全国、全国放大进湖南 | `6a245f4678bf` | `f92fd47` · `v1.0.12` |
+| V1.0.11 | https://upstardata.github.io/agri-llm-demo/v1.0.11/ | 共同规则对齐：3D 点任一区域 → 2D 全球、2D 全球点任一区域 → 2D 中国、2D 中国点任一区域 → 2D 湖南，两层一致（点与关系不切换视角） | `9a05eacf669c` | `8102b24` · `v1.0.11` |
 | V1.0.10 | https://upstardata.github.io/agri-llm-demo/v1.0.10/ | 三维地球合并为共用模块；两层统一四视角（3D 全球 / 2D 全球 / 2D 中国 / 2D 省区）与点区域逐级进入、缩放阈值双向切换；删除配色 1 / 3 与色板选择器 | `05a602131cce` | `6a22e06` · `v1.0.10` |
 | V1.0.9 | https://upstardata.github.io/agri-llm-demo/v1.0.9/ | 新增配色 3（Atlas / iipmaps 抽色：深蓝顶栏、亮蓝强调、灰蓝水域、近白陆地），三维地球同步；配色按钮改为色板选择器；配色 1、2 不变 | `ab47f4db0122` | `9c8a7c0` · `v1.0.9` |
 | V1.0.8 | https://upstardata.github.io/agri-llm-demo/v1.0.8/ | 配色 2 改为 Mapbox Standard / 苹果地图风格（蓝水、绿陆、珊瑚边界），三维地球同一套；触控板双指缩放与按住连缩的缩放按钮；关联层底部状态条 + 双击下钻；⌘/Win + 方向键开关四周面板；新数据光晕改为缓慢亮起再淡出 | `da55c0e9f6f8` | `3ab191b` · `v1.0.8` |
@@ -41,7 +42,7 @@
 | V0.4 | https://upstardata.github.io/agri-llm-demo/v0.4/ | 暗色重设计版（**已否决**，仅留档） | `013d9c717e3d` | `57e6582` · `v0.4.0` |
 | **V0.0**（起点） | https://upstardata.github.io/agri-llm-demo/v0.0/ | 原版基线（三层 Demo 起始版）—— 迭代起点，与仓库根地址同一份文件 | `7710f0006c28` | `72e78d1` · `v0.0.0` |
 
-> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V1.0.11**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
+> 版本号规则：**V0.0 是原版基线**，之后每次发版在最新版本上加一个号（当前 **V1.0.12**），旧版本地址长期保留。仓库根地址 `https://upstardata.github.io/agri-llm-demo/` 显示的就是 V0.0。
 
 版本目录页：**https://upstardata.github.io/agri-llm-demo/versions/**
 
