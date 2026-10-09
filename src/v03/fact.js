@@ -539,13 +539,12 @@ window.V03Fact = (function () {
     if (sid === 'facts' && p.data && p.data.id) return openFact(p.data.id);
     const name = p.name || '';
     if (!name) return;
-    if (st.geo.level === 'L1') { if (name === 'China' || name === '中国') S.set({ geo: { level: 'L2', focus: null } }); return; }
-    const short = String(name).replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '');
+    /* 共同规则：2D 全球点任一区域 → 中国；中国点任一区域 → 湖南（与关联层同一套） */
+    if (st.geo.level === 'L1') { S.set({ geo: { level: 'L2', focus: null } }); return; }
     if (st.geo.level === 'L2') {
-      const c = PROV[short];
-      if (!c) return;
-      S.set({ geo: { level: 'L3', focus: short }, factId: null });
-      camera.center = [c[0], c[1]]; flyTo([c[0], c[1]], c[2], 800);
+      const c = PROV[DEFAULT_FOCUS];
+      S.set({ geo: { level: 'L3', focus: DEFAULT_FOCUS }, factId: null });
+      if (c) { camera.center = [c[0], c[1]]; flyTo([c[0], c[1]], c[2], 800); }
     }
   }
 

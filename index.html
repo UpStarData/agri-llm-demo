@@ -826,7 +826,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.10</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.11</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -890,7 +890,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"05a602131cce","git":"9c8a7c0","builtAt":"2026-10-09T12:03:55.182Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"9a05eacf669c","git":"6a22e06","builtAt":"2026-10-09T12:15:17.157Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -6711,13 +6711,12 @@ window.V03Fact = (function () {
     if (sid === 'facts' && p.data && p.data.id) return openFact(p.data.id);
     const name = p.name || '';
     if (!name) return;
-    if (st.geo.level === 'L1') { if (name === 'China' || name === '中国') S.set({ geo: { level: 'L2', focus: null } }); return; }
-    const short = String(name).replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '');
+    /* 共同规则：2D 全球点任一区域 → 中国；中国点任一区域 → 湖南（与关联层同一套） */
+    if (st.geo.level === 'L1') { S.set({ geo: { level: 'L2', focus: null } }); return; }
     if (st.geo.level === 'L2') {
-      const c = PROV[short];
-      if (!c) return;
-      S.set({ geo: { level: 'L3', focus: short }, factId: null });
-      camera.center = [c[0], c[1]]; flyTo([c[0], c[1]], c[2], 800);
+      const c = PROV[DEFAULT_FOCUS];
+      S.set({ geo: { level: 'L3', focus: DEFAULT_FOCUS }, factId: null });
+      if (c) { camera.center = [c[0], c[1]]; flyTo([c[0], c[1]], c[2], 800); }
     }
   }
 
@@ -7306,11 +7305,9 @@ window.V03Relation = (function () {
       if (px == null || !chart) return;
       const ll = chart.convertFromPixel({ geoIndex: 0 }, [px, py]);
       if (!Array.isArray(ll) || ll.length !== 2) return;
-      if (relLevel() === 'L1') {
-        if (ll[0] >= 73 && ll[0] <= 136 && ll[1] >= 17.5 && ll[1] <= 54.5) enterLevel('L2', null);
-        return;
-      }
-      if (relLevel() === 'L2') { const pv = nearProvince(ll); if (pv) enterLevel('L3', pv); }
+      /* 共同规则：2D 全球点任一区域 → 2D 中国 */
+      if (relLevel() === 'L1') return enterLevel('L2', null);
+      if (relLevel() === 'L2') enterLevel('L3', '湖南');   /* 共同规则：中国视角点任一区域 → 湖南 */
     });
     chart.on('mouseover', p => {
       if (dragging) return;
@@ -7331,7 +7328,7 @@ window.V03Relation = (function () {
       const ll = chart.convertFromPixel({ geoIndex: 0 }, [e.clientX - r.left, e.clientY - r.top]);
       const at = Array.isArray(ll) && ll.length === 2 ? ll : camera.center;
       if (relLevel() === 'L1') return enterLevel('L2', null);
-      if (relLevel() === 'L2') { const pv = nearProvince(at); if (pv) return enterLevel('L3', pv); }
+      if (relLevel() === 'L2') return enterLevel('L3', '湖南');
       flyTo(at, Math.min(levelCfg().box[1], camera.zoom * 1.4), 420);
     });
     /* Esc：返回上一层（省区 → 全国 → 全球） */
@@ -8011,7 +8008,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.0.10',
+      source: 'AgriLink v1.0.11',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
