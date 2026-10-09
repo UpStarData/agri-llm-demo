@@ -209,11 +209,9 @@ window.V03Relation = (function () {
       if (px == null || !chart) return;
       const ll = chart.convertFromPixel({ geoIndex: 0 }, [px, py]);
       if (!Array.isArray(ll) || ll.length !== 2) return;
-      if (relLevel() === 'L1') {
-        if (ll[0] >= 73 && ll[0] <= 136 && ll[1] >= 17.5 && ll[1] <= 54.5) enterLevel('L2', null);
-        return;
-      }
-      if (relLevel() === 'L2') { const pv = nearProvince(ll); if (pv) enterLevel('L3', pv); }
+      /* 共同规则：2D 全球点任一区域 → 2D 中国 */
+      if (relLevel() === 'L1') return enterLevel('L2', null);
+      if (relLevel() === 'L2') enterLevel('L3', '湖南');   /* 共同规则：中国视角点任一区域 → 湖南 */
     });
     chart.on('mouseover', p => {
       if (dragging) return;
@@ -234,7 +232,7 @@ window.V03Relation = (function () {
       const ll = chart.convertFromPixel({ geoIndex: 0 }, [e.clientX - r.left, e.clientY - r.top]);
       const at = Array.isArray(ll) && ll.length === 2 ? ll : camera.center;
       if (relLevel() === 'L1') return enterLevel('L2', null);
-      if (relLevel() === 'L2') { const pv = nearProvince(at); if (pv) return enterLevel('L3', pv); }
+      if (relLevel() === 'L2') return enterLevel('L3', '湖南');
       flyTo(at, Math.min(levelCfg().box[1], camera.zoom * 1.4), 420);
     });
     /* Esc：返回上一层（省区 → 全国 → 全球） */
