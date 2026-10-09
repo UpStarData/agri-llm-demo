@@ -16,3 +16,13 @@ html = html.replace('/*CHINA*/', () => rd('data/china.geo.json'));
 fs.mkdirSync(path.join(root, 'maplab'), { recursive: true });
 fs.writeFileSync(path.join(root, 'maplab/index.html'), html);
 console.log('maplab/index.html', (Buffer.byteLength(html) / 1024).toFixed(0) + ' KB');
+
+/* 实验 B：同一件事用 MapLibre GL JS（真三维地球 + 连续缩放）做一遍，对比手感 */
+let gl = rd('src/maplab-gl/index.html');
+gl = gl.replace('/*MAPLIBRE_CSS*/', () => rd('vendor/maplibre-gl.css'));
+gl = gl.replace('/*MAPLIBRE_JS*/', () => rd('vendor/maplibre-gl.js'));
+gl = gl.replace('/*WORLD*/', () => rd('data/world110.geo.json'));
+gl = gl.replace('/*CHINA*/', () => rd('data/china.geo.json'));
+fs.mkdirSync(path.join(root, 'maplab-gl'), { recursive: true });
+fs.writeFileSync(path.join(root, 'maplab-gl/index.html'), gl);
+console.log('maplab-gl/index.html', (Buffer.byteLength(gl) / 1024).toFixed(0) + ' KB');

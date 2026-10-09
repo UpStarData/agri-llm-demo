@@ -106,6 +106,8 @@
   const PROV = (window.__CHINA_GEO.features || []).reduce((m, f) => { m[f.properties.name] = f; return m; }, {});
 
   const state = { view: 'globe', focus: null, center: [105, 35], zoom: 1.26, rotating: true, points: true };
+  /* 相机：target 由手势/按钮改，current 每帧向 target 缓动 → 缩放连续、无跳变 */
+  const cam = { z: 1.26, tz: 1.26, cx: 105, cy: 35, tcx: 105, tcy: 35, r: .34, tr: .34, busy: false, raf: 0 };
   let chart = null, globe = null;
 
   /* ---------- 二维地图 ---------- */
@@ -151,13 +153,14 @@
 
   function chartOption() {
     const lv = LEVEL[state.view === 'globe' ? 'world' : state.view];
+    state.zoom = cam.z; state.center = [cam.cx, cam.cy];
     const pts = pointsOf(state.view === 'globe' ? 'world' : state.view);
     return {
       backgroundColor: 'transparent',
       animation: false, animationDurationUpdate: 0,
       geo: {
         map: lv.map, roam: true, zoom: state.zoom, center: state.center.slice(),
-        zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false,
+        zoomOnMouseWheel: false, moveOnMouseMove: true, moveOnMouseWheel: false,
         scaleLimit: { min: lv.min, max: lv.max },
         boundingCoords: state.view === 'world' ? lv.bounds : undefined,
         itemStyle: { areaColor: '#cfe9bd', borderColor: 'rgba(224,128,118,.6)', borderWidth: .7 },
@@ -194,27 +197,24 @@
     });
     chart.on('georoam', () => {
       const geo = (chart.getOption().geo || [])[0];
-      if (geo) { state.center = geo.center.slice(); state.zoom = geo.zoom; }
-      clearTimeout(chart._t);
-      chart._t = setTimeout(afterZoom, 130);
+      if (geo) { cam.cx = cam.tcx = geo.center[0]; cam.cy = cam.tcy = geo.center[1]; }
     });
     const box = document.getElementById('chart');
     box.addEventListener('wheel', e => {
-      if (!e.ctrlKey) return;                 /* 普通滚轮交给 ECharts 漫游 */
       e.preventDefault(); e.stopImmediatePropagation();
-      zoomFactor(Math.exp(-e.deltaY * .01), e.clientX, e.clientY);
+      zoomFactor(Math.exp(-e.deltaY * (e.ctrlKey ? .0022 : WHEEL_K)));   /* 触控板捏合更缓 */
     }, { capture: true, passive: false });
     let gBase = 0;
     box.addEventListener('gesturestart', e => { e.preventDefault(); gBase = e.scale || 1; }, { passive: false });
     box.addEventListener('gesturechange', e => {
       e.preventDefault();
-      const sc = e.scale || 1, f = gBase ? sc / gBase : 1;
+      const sc = e.scale || 1, f = gBase ? Math.pow(sc / gBase, .8) : 1;   /* 0.8 次方：手势平缓 */
       gBase = sc;
       zoomFactor(f);
     }, { passive: false });
     box.addEventListener('dblclick', e => {
       const p = chart.convertFromPixel({ geoIndex: 0 }, [e.clientX - box.getBoundingClientRect().left, e.clientY - box.getBoundingClientRect().top]);
-      zoomFactor(1.6);
+      cam.tz = clamp(cam.tz * 1.5, lv.min * .92, lv.max * 1.18);
       if (state.view === 'china' && p) { /* 双击省区：直接进省 */ }
     });
     return chart;
@@ -227,7 +227,10 @@
     const lv = LEVEL[next === 'globe' ? 'world' : next];
     const c = focus && PROV[focus] ? provinceCenter(focus) : null;
     state.center = c ? [c[0], c[1]] : lv.center.slice();
-    state.zoom = c ? lv.fit : lv.fit;
+    state.zoom = c ? (c[2] || lv.fit) : lv.fit;
+    cam.tcx = state.center[0]; cam.tcy = state.center[1];
+    cam.tz = state.zoom; cam.z = state.zoom;
+    if (next === 'globe') { cam.tr = .34; cam.r = .34; }
     document.getElementById('stage').classList.toggle('globe-on', next === 'globe');
     document.getElementById('btn3d').classList.toggle('on', next === 'globe');
     render();
@@ -265,26 +268,60 @@
   const nextView = () => VIEWS[Math.min(3, VIEWS.indexOf(state.view) + 1)];
   const prevView = () => VIEWS[Math.max(0, VIEWS.indexOf(state.view) - 1)];
 
-  /* ---------- 缩放：一个连续刻度，到边界才切视角 ---------- */
+  /* ---------- 缩放：目标值连续推进，current 缓动跟随；越过上下限才切视角 ---------- */
+  const ZOOM_STEP = 1.09;          /* 按钮/键盘每格 */
+  const WHEEL_K = .0016;           /* 滚轮灵敏度（越小越缓） */
   function zoomFactor(factor) {
-    if (state.view === 'globe') return globeZoom(factor);
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    if (state.view === 'globe') { cam.tr = clamp(cam.tr * factor, .22, .52); return; }
     const lv = LEVEL[state.view];
-    if (factor < 1 && state.zoom <= lv.min + .002) return setView(prevView(), null);
-    const next = clamp(state.zoom * factor, lv.min, lv.max);
-    if (Math.abs(next - state.zoom) < 1e-4) return;
-    state.zoom = next;
-    afterZoom();
+    /* 允许目标值略微越过上下限，用来触发切层；真正的缩放由缓动完成 */
+    cam.tz = clamp(cam.tz * factor, lv.min * .92, lv.max * 1.18);
   }
-  function stepZoom(dir) { zoomFactor(dir > 0 ? 1.16 : 1 / 1.16); }
-  function afterZoom() {
+  const stepZoom = dir => zoomFactor(dir > 0 ? ZOOM_STEP : 1 / ZOOM_STEP);
+
+  function anim() {
+    cam.raf = requestAnimationFrame(anim);
+    const ease = .16;
+    cam.z += (cam.tz - cam.z) * ease;
+    cam.cx += (cam.tcx - cam.cx) * ease;
+    cam.cy += (cam.tcy - cam.cy) * ease;
+    const dr = cam.tr - cam.r;
+    if (Math.abs(dr) > 1e-4) { cam.r += dr * ease; if (state.view === 'globe') globeSetR(cam.r); }
+    if (state.view === 'globe') {
+      if (cam.tr >= .515 && cam.r >= .50) return switchOnZoom(1);   /* 地球放到最大 → 全球 2D */
+      return;
+    }
     const lv = LEVEL[state.view];
-    if (state.view === 'world' && state.zoom >= lv.inAt) return setView('china', null);
-    if (state.view === 'china' && state.zoom >= lv.inAt) return setView('hunan', HUNAM);
-    if (state.view === 'china' && state.zoom <= lv.outAt) return setView('world', null);
-    if (state.view === 'hunan' && state.zoom <= lv.outAt) return setView('china', null);
-    if (state.view === 'world' && state.zoom <= lv.min) { /* 到最小仍未缩：交给 zoomFactor 的边界判断 */ }
-    chart.setOption({ geo: { zoom: state.zoom, center: state.center.slice() } }, { lazyUpdate: true });
-    paintChrome();
+    if (Math.abs(cam.tz - cam.z) > 1e-4 && chart) {
+      chart.setOption({ geo: { zoom: cam.z, center: [cam.cx, cam.cy] } }, { lazyUpdate: true });
+      paintScale();
+    }
+    if (cam.tz > lv.max * 1.03 && cam.z > lv.max * .99) return switchOnZoom(1);
+    if (cam.tz < lv.min * .97 && cam.z < lv.min * 1.01) return switchOnZoom(-1);
+  }
+  /* 切视角：短暂淡出 → 换图 → 从接近的比例继续，缩放动势不断 */
+  function switchOnZoom(dir) {
+    const next = dir > 0 ? nextView() : prevView();
+    if (next === state.view) return;
+    const keepGoing = dir > 0;
+    const box = document.getElementById('chart');
+    box.style.transition = 'opacity .16s ease';
+    box.style.opacity = '0';
+    state.view = next;
+    state.focus = next === 'hunan' ? HUNAM : null;
+    const lv = LEVEL[next === 'globe' ? 'world' : next];
+    const c = state.focus && PROV[state.focus] ? provinceCenter(state.focus) : null;
+    cam.tcx = c ? c[0] : lv.center[0];
+    cam.tcy = c ? c[1] : lv.center[1];
+    cam.tz = keepGoing ? lv.fit * 1.16 : lv.fit * .92;
+    cam.z = keepGoing ? lv.fit * .98 : lv.fit * 1.05;
+    if (next === 'globe') { cam.tr = .30; cam.r = .40; }
+    setTimeout(() => {
+      render();
+      box.style.opacity = '1';
+      toast('已切到 ' + LABEL[next]);
+    }, 170);
   }
 
   /* ---------- 三维地球 ---------- */
@@ -440,7 +477,7 @@
       if (!onLand) return toast('这里是海洋，点陆地才会进入二维全球视角');
       setView('world', null);
     });
-    canvas.addEventListener('wheel', e => { e.preventDefault(); globeZoom(e.deltaY < 0 ? 1.08 : 1 / 1.08); }, { passive: false });
+    canvas.addEventListener('wheel', e => { e.preventDefault(); zoomFactor(Math.exp(-e.deltaY * .0016)); }, { passive: false });
     window.addEventListener('resize', () => { if (state.view === 'globe') resize(); });
     function probe(x, y) {
       const w = canvas.clientWidth, h = canvas.clientHeight, R = Math.min(w, h) * globeR();
@@ -450,19 +487,13 @@
     }
     return { start, probe, debug: () => ({ rot, tilt, R0 }) };
   }
-  function globeZoom(f) {
-    const R = globe._r || .34;
-    const next = clamp(globeR() * f, .26, .46);
-    globeSetR(next);
-    if (f > 1 && next >= .46 - .001) setView('world', null);
-  }
   const globeR = () => globe._r || .34;
   const globeSetR = v => { globe._r = v; };
 
   /* ---------- 交互：按钮 / 键盘 ---------- */
   function bindUI() {
     const hold = dir => {
-      let rep = 0; const delay = setTimeout(() => { rep = setInterval(() => stepZoom(dir), 140); }, 380);
+      let rep = 0; const delay = setTimeout(() => { rep = setInterval(() => stepZoom(dir), 220); }, 420);
       stepZoom(dir);
       const stop = () => { clearTimeout(delay); clearInterval(rep); window.removeEventListener('pointerup', stop); };
       window.addEventListener('pointerup', stop);
@@ -491,11 +522,13 @@
     const items = [['globe', '全球 3D'], ['world', '全球 2D'], ['china', '中国'], ['hunan', state.focus && state.focus !== '湖南' ? state.focus : '湖南']];
     crumbs.innerHTML = items.slice(0, at + 1).map(([v, n], i) => '<button data-v="' + v + '"' + (i === at ? ' class="on"' : '') + '>' + n + '</button>').join('<i>›</i>');
     crumbs.querySelectorAll('button').forEach(b => { b.onclick = () => setView(b.dataset.v, b.dataset.v === 'hunan' ? '湖南' : null); });
-    const lv = LEVEL[state.view === 'globe' ? 'world' : state.view];
+    paintScale();
+    paintHint();
+  }
+  function paintScale() {
     document.getElementById('scale').textContent = state.view === 'globe'
       ? '地球半径 ' + (globeR() * 100).toFixed(0) + '%'
-      : '比例 ' + state.zoom.toFixed(2) + '×';
-    paintHint();
+      : '比例 ' + cam.z.toFixed(2) + '×';
   }
   function paintHint() {
     const el = document.getElementById('hint');
@@ -532,6 +565,7 @@
 
   globe = createGlobe();
   globe._r = .34;
+  requestAnimationFrame(anim);
   bindUI();
   render();
   window.__MAPLAB_READY = true;
