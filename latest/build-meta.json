@@ -1,7 +1,7 @@
 {
-  "hash": "ab47f4db0122",
-  "git": "c3790eb",
-  "builtAt": "2026-10-09T11:35:17.521Z",
+  "hash": "05a602131cce",
+  "git": "9c8a7c0",
+  "builtAt": "2026-10-09T12:03:55.197Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -17,8 +17,8 @@
     "src/v03/dict-f3.js",
     "src/v03/store.js",
     "src/v03/filter.js",
+    "src/v03/globe.js",
     "src/v03/fact.js",
-    "src/v03/rel-globe.js",
     "src/v03/relation.js",
     "src/v03/mirofish-bridge.js",
     "src/v03/app.js",
@@ -49,5 +49,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 7254458
+  "bytes": 7234258
 }
