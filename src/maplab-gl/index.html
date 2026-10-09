@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgriLink 地图实验 B · MapLibre 引擎</title>
+<style>/*MAPLIBRE_CSS*/</style>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{font:14px/1.5 "PingFang SC","Noto Sans SC",system-ui,sans-serif;color:#1c2a3a;overflow:hidden;background:#0b1526}
+  #map{position:fixed;inset:0}
+  .topbar{position:absolute;left:0;right:0;top:0;height:46px;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:rgba(255,255,255,.96);border-bottom:1px solid rgba(30,58,92,.16);backdrop-filter:blur(14px);z-index:30}
+  .brand{display:flex;align-items:center;gap:7px;font-weight:700}
+  .crumbs{display:flex;align-items:center;gap:4px;margin-left:6px}
+  .crumbs button{border:0;background:transparent;color:#7b8b9c;font:inherit;font-size:13px;padding:4px 7px;border-radius:6px;cursor:pointer}
+  .crumbs button:hover{background:#eef4fc;color:#2f6fd0}
+  .crumbs button.on{color:#1c2a3a;font-weight:700;background:#eef4fc}
+  .crumbs i{color:#b9c6d4;font-style:normal}
+  .scale{margin-left:auto;color:#7b8b9c;font-size:12px;font-variant-numeric:tabular-nums}
+  .hint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;padding:5px 14px;border-radius:999px;
+    background:rgba(255,255,255,.96);border:1px solid rgba(30,58,92,.16);color:#7b8b9c;font-size:12px;white-space:nowrap}
+  .maplibregl-ctrl-group{border-radius:9px!important;box-shadow:0 6px 18px -12px rgba(16,42,74,.5)!important}
+  .maplibregl-popup-content{border-radius:8px;padding:8px 10px;font-size:12px}
+  .maplibregl-popup-content b{display:block}
+  .maplibregl-popup-content span{color:#7b8b9c}
+  @media(max-width:600px){.brand b{display:none}.hint{font-size:11px;padding:4px 10px;max-width:92vw;overflow:hidden;text-overflow:ellipsis}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<header class="topbar">
+  <div class="brand"><span aria-hidden="true">🌾</span><b>地图实验 B · MapLibre GL</b></div>
+  <nav class="crumbs" id="crumbs" aria-label="视角"></nav>
+  <div class="scale" id="scale"></div>
+</header>
+<div class="hint" id="hint">拖动旋转（地球）/ 平移 · 滚轮或双指缩放（引擎自带惯性）· 点国家进中国 · 点省份进省区 · 点海洋不响应</div>
+
+<script>/*MAPLIBRE_JS*/</script>
+<script>window.__WORLD110 = /*WORLD*/;</script>
+<script>window.__CHINA_GEO = /*CHINA*/;</script>
+<script>
+/* 用另一套地图引擎（MapLibre GL JS，真三维地球投影 + 连续缩放）做同一件事，
+   只用来对比"点击 / 缩放"的手感：世界 → 中国 → 省区。数据全部内联，不请求瓦片。 */
+(function () {
+  const WORLD = { type: 'FeatureCollection', features: (window.__WORLD110 || []).map(o => {
+    const depth = x => { let d = 0; while (Array.isArray(x) && x.length) { d++; x = x[0]; } return d; };
+    const d = depth(o.c);
+    return { type: 'Feature', properties: { name: o.n }, geometry: { type: d >= 4 ? 'MultiPolygon' : 'Polygon', coordinates: d >= 4 ? o.c : (d === 3 ? o.c : [o.c]) } };
+  }) };
+  const CHINA = window.__CHINA_GEO;
+  /* 海洋用一整块世界矩形垫在陆地下面：地球上看是蓝色海面，球外仍是深空 */
+  const OCEAN = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-179.9, 85], [179.9, 85], [179.9, -85], [-179.9, -85], [-179.9, 85]]] }, properties: {} };
+  const POINTS = { type: 'FeatureCollection', features: [
+    ['北京新发地农产品批发市场', 116.4, 39.9], ['长沙红星农副产品大市场', 112.98, 28.2],
+    ['上海江桥批发市场', 121.47, 31.23], ['广州江南果菜市场', 113.26, 23.13],
+    ['荷兰鹿特丹果蔬集散', 4.48, 51.92], ['美国加州中央谷地', -119.4, 36.7]
+  ].map(([name, lng, lat]) => ({ type: 'Feature', properties: { name }, geometry: { type: 'Point', coordinates: [lng, lat] } })) };
+  const BOUNDS = {
+    china: [[73, 17.5], [136, 54.5]],
+    hunan: [[108.7, 24.5], [114.5, 30.2]]
+  };
+
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      projection: { type: 'globe' },
+      sources: {
+        ocean: { type: 'geojson', data: OCEAN },
+        world: { type: 'geojson', data: WORLD },
+        china: { type: 'geojson', data: CHINA },
+        pts: { type: 'geojson', data: POINTS }
+      },
+      layers: [
+        { id: 'space', type: 'background', paint: { 'background-color': '#0b1526' } },
+        { id: 'water', type: 'fill', source: 'ocean', paint: { 'fill-color': '#5fbdf2' } },
+        { id: 'country', type: 'fill', source: 'world', paint: { 'fill-color': '#cfe9bd', 'fill-opacity': .95 } },
+        { id: 'country-line', type: 'line', source: 'world', paint: { 'line-color': 'rgba(224,128,118,.75)', 'line-width': .7 } },
+        { id: 'province', type: 'fill', source: 'china', paint: { 'fill-color': '#b6dfa4', 'fill-opacity': .93 } },
+        { id: 'province-line', type: 'line', source: 'china', paint: { 'line-color': 'rgba(224,128,118,.8)', 'line-width': .6 } },
+        { id: 'pts-halo', type: 'circle', source: 'pts', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 5, 8, 12], 'circle-color': 'rgba(47,111,208,.3)' } },
+        { id: 'pts', type: 'circle', source: 'pts', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 2.4, 8, 5], 'circle-color': '#fff', 'circle-stroke-color': '#2f6fd0', 'circle-stroke-width': 1.6 } }
+      ]
+    },
+    center: [105, 30], zoom: 1.2, minZoom: .6, maxZoom: 12,
+    attributionControl: false, dragRotate: true, pitchWithRotate: true
+  });
+  /* v4 的地球投影要在建图后显式设置（写在 style 里不生效） */
+  try { map.setProjection({ type: 'globe' }); } catch (e) { console.warn('projection', e); }
+  map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 90, unit: 'metric' }), 'bottom-left');
+
+  /* 面包屑 / 读数 */
+  const crumbs = document.getElementById('crumbs');
+  const state = { view: 'world', focus: null };
+  function paint() {
+    const items = [['world', '全球'], ['china', '中国'], ['hunan', state.focus || '湖南']];
+    const at = state.view === 'world' ? 0 : state.view === 'china' ? 1 : 2;
+    crumbs.innerHTML = items.slice(0, at + 1).map(([v, n], i) => '<button data-v="' + v + '"' + (i === at ? ' class="on"' : '') + '>' + n + '</button>').join('<i>›</i>');
+    crumbs.querySelectorAll('button').forEach(b => { b.onclick = () => go(b.dataset.v, b.dataset.v === 'hunan' ? '湖南' : null); });
+    document.getElementById('scale').textContent = 'zoom ' + map.getZoom().toFixed(2) + ' · ' + (state.focus || (state.view === 'world' ? '全球' : '中国'));
+  }
+  function go(view, focus) {
+    state.view = view; state.focus = focus || (view === 'hunan' ? '湖南' : null);
+    if (view === 'world') map.flyTo({ center: [105, 30], zoom: 1.2, duration: 1400, essential: true });
+    else map.fitBounds(BOUNDS[view === 'hunan' && state.focus && BOUNDS.hunan ? 'hunan' : 'china'], { padding: 40, duration: 1600, essential: true });
+    paint();
+  }
+  map.on('zoomend', () => {
+    const z = map.getZoom();
+    state.view = z < 2.4 ? 'world' : z < 4.6 ? 'china' : 'hunan';
+    if (state.view !== 'hunan') state.focus = state.view === 'china' ? null : state.focus;
+    if (state.view === 'hunan' && !state.focus) state.focus = '湖南';
+    paint();
+  });
+
+  /* 点击：只认行政区域（国家 / 省份）；海洋与点不切视角 */
+  map.on('click', 'country', e => {
+    if (state.view === 'world') return go('china', null);
+  });
+  map.on('click', 'province', e => {
+    if (state.view !== 'china') return;
+    const f = e.features && e.features[0];
+    if (!f) return;
+    const name = f.properties.name;
+    if (name === '湖南') return go('hunan', '湖南');
+    /* 其他省份同样按行政区域命中，直接飞到该省 */
+    const b = boundsOf(f.geometry.coordinates);
+    state.view = 'hunan'; state.focus = name;
+    map.fitBounds(b, { padding: 50, duration: 1600, essential: true });
+    paint();
+  });
+  map.on('click', 'pts', e => {
+    const f = e.features && e.features[0];
+    if (!f) return;
+    new maplibregl.Popup({ closeButton: false, offset: 12 })
+      .setLngLat(f.geometry.coordinates)
+      .setHTML('<b>' + f.properties.name + '</b><span>演示点 · 点击不切视角</span>')
+      .addTo(map);
+  });
+  ['country', 'province', 'pts'].forEach(id => {
+    map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
+  });
+  map.on('move', paint);
+  map.on('error', e => console.error('maplibre', e && e.error));
+
+  function boundsOf(coords) {
+    let a = [999, 999], b = [-999, -999];
+    const walk = c => { if (typeof c[0] === 'number') { a = [Math.min(a[0], c[0]), Math.min(a[1], c[1])]; b = [Math.max(b[0], c[0]), Math.max(b[1], c[1])]; } else c.forEach(walk); };
+    walk(coords);
+    if (state.focus === '湖南') return BOUNDS.hunan;
+    return [a, b];
+  }
+  map.once('idle', () => { window.__MAPGL_READY = true; });
+  setTimeout(() => { window.__MAPGL_READY = true; }, 4000);
+  map.on('style.load', () => { try { map.setProjection({ type: 'globe' }); } catch (e) {} paint(); });
+  window.__mapgl = { map, state, go, view: () => state.view };
+})();
+</script>
+</body>
+</html>
