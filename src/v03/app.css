@@ -32,19 +32,20 @@
 }
 html[data-theme="color"]{
   color-scheme:light;
-  /* 配色 2：Mapbox Outdoors 式地理色彩；青蓝水域、叶绿陆地、象牙色面板和钴蓝控件。 */
-  --bg:#eaf1e9;--panel:#fffdf8;--panel-2:#f2f5ed;--panel-alpha:rgba(255,253,248,.98);--line:rgba(61,96,84,.23);--hair:rgba(61,96,84,.14);
-  --ink:#243c42;--mut:#506c6a;--dim:#68827f;--hint:#778d88;
-  --accent:#355fd0;--accent-soft:#e5ecff;--green:#378c69;--orange:#b77d43;--purple:#756bc3;--red:#b74d53;
-  --warn:#97510f;--warn-bg:#f2dbaa;
-  --ocean:#78c4df;--land:#e9ecd9;--land-2:#bcd7ac;--map-line:rgba(74,105,98,.67);--map-label:#355c63;
-  /* 三维地球：青绿深空 + 海水渐变 + 青蓝大气层（与配色 2 同一套青绿） */
-  --globe-space-1:#0a2227;--globe-space-2:#041114;--globe-nebula:#2f9c8f;
-  --globe-sea-1:#6fb3ab;--globe-sea-2:#2c6a72;--globe-sea-3:#0e333d;
-  --globe-atmo:150,235,216;--globe-atmo-a:.6;--globe-star:#e8fff8;
-  --glass:rgba(255,253,248,.96);--glass-2:rgba(255,253,248,.9);--glass-line:rgba(66,103,93,.2);
-  --shadow:0 12px 32px -20px rgba(28,71,81,.38);--icon:#416a75;--icon-hover:#355fd0;--icon-on:rgba(53,95,208,.12);
-  --c-nature:#327fb1;--c-supply:#458c61;--c-chain:#318f8b;--c-market:#ac714f;--c-consume:#7a70aa;--c-policy:#4c72be;--c-macro:#96804f;
+  /* 配色 2：Mapbox Standard / 苹果地图的日间配色（用户给的参考图取色）
+     板材中性白、水域亮蓝 #5fbdf2、陆地浅绿 #cfe9bd、行政边界珊瑚色；三维地球同一套。 */
+  --bg:#eef2f6;--panel:#ffffff;--panel-2:#f4f7fa;--panel-alpha:rgba(255,255,255,.98);--line:rgba(30,58,92,.18);--hair:rgba(30,58,92,.10);
+  --ink:#1c2a3a;--mut:#4c5f74;--dim:#6f8194;--hint:#8698a8;
+  --accent:#2f6fd0;--accent-soft:#e8f1fd;--green:#3f9d6a;--orange:#c9852f;--purple:#7a68c8;--red:#c8545c;
+  --warn:#9a5a12;--warn-bg:#f6e3c0;
+  --ocean:#5fbdf2;--land:#cfe9bd;--land-2:#b6dfa4;--map-line:rgba(224,128,118,.55);--map-label:#2b3d52;
+  /* 三维地球：近黑深空 + 亮蓝海面 + 浅绿陆块 + 蓝白大气层 */
+  --globe-space-1:#0a1c33;--globe-space-2:#040c18;--globe-nebula:#2f6fd0;
+  --globe-sea-1:#6fb6ee;--globe-sea-2:#3a86c8;--globe-sea-3:#0f3c66;
+  --globe-atmo:150,205,255;--globe-atmo-a:.6;--globe-star:#eaf4ff;
+  --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(30,58,92,.16);
+  --shadow:0 12px 32px -20px rgba(16,42,74,.35);--icon:#4a6b8e;--icon-hover:#2f6fd0;--icon-on:rgba(47,111,208,.12);
+  --c-nature:#2f8fd0;--c-supply:#3f9d6a;--c-chain:#2f9aa0;--c-market:#b5764a;--c-consume:#7a68c8;--c-policy:#3d6fd0;--c-macro:#a08a4a;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}

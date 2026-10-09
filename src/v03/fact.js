@@ -132,6 +132,7 @@ window.V03Fact = (function () {
       globeZoomBy(e.deltaY < 0 ? 1 : -1);
     }, { passive: false });
     dom.globe.addEventListener('dblclick', () => globeZoomBy(1));
+    bindPinch(dom.mapBox);
     /* 二维地图缩到最小还在缩：切回三维地球（ECharts 自身会卡住最小 zoom，需要在这里拦） */
     dom.map.addEventListener('wheel', e => {
       if (S.state.sk.mode3d || S.state.geo.level !== 'L1' || e.deltaY <= 0) return;
@@ -246,6 +247,48 @@ window.V03Fact = (function () {
     if (chart) chart.setOption({ geo: { zoom: camera.zoom, center: camera.center.slice() } }, { lazyUpdate: true });
     S.set({ sk: { zoom: Math.round(camera.zoom * 100) } });
   }
+  /* 触控板双指缩放：Chrome / Edge 发 ctrl+wheel，Safari 发 gesturechange（普通滚轮仍交给 ECharts 漫游） */
+  function bindPinch(el) {
+    let base = 0;
+    el.addEventListener('wheel', e => {
+      if (!e.ctrlKey) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      zoomByFactor(Math.exp(-e.deltaY * .012));
+    }, { capture: true, passive: false });
+    el.addEventListener('gesturestart', e => { e.preventDefault(); base = e.scale || 1; }, { passive: false });
+    el.addEventListener('gesturechange', e => {
+      e.preventDefault();
+      const sc = e.scale || 1;
+      const f = base ? sc / base : 1;
+      base = sc;
+      zoomByFactor(f);
+    }, { passive: false });
+  }
+  /* 按倍率缩放（触控板双指用）；三维视图下作用于地球，二维视图下作用于地图 */
+  function zoomByFactor(factor) {
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    if (S.state.sk.mode3d) {
+      const before = globe.zoom;
+      globe.zoom = Math.max(GLOBE_ZOOM[0], Math.min(GLOBE_ZOOM[1], globe.zoom * factor));
+      if (factor > 1 && before >= GLOBE_ZOOM[1] - .003) {
+        S.set({ sk: { mode3d: false } });
+        if (window.V03Shell) window.V03Shell.toast('三维地球已放到最大 · 切换到二维地图');
+      }
+      return;
+    }
+    const box = LEVEL[S.state.geo.level].zoomBox;
+    /* 全球视角在最小比例尺继续缩小：与滚轮 / 按钮一致，切回三维地球 */
+    if (factor < 1 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
+      S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
+      return;
+    }
+    const next = Math.min(box[1], Math.max(box[0], camera.zoom * factor));
+    if (Math.abs(next - camera.zoom) < 1e-4) return;
+    camera.zoom = next;
+    afterZoom();
+  }
+
   function zoomBy(dir) {
     if (S.state.sk.mode3d) return globeZoomBy(dir);
     const box = LEVEL[S.state.geo.level].zoomBox;
@@ -294,9 +337,10 @@ window.V03Fact = (function () {
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
   const palette = () => S.state.theme === 'color' ? {
-    land: '#e9ecd9', land2: '#bcd7ac', line: 'rgba(74,105,98,.67)', ink: '#243c42',
-    regions: ['#d7e5c7', '#eee6d2', '#d5e8df', '#e7dec8', '#dce9be', '#e3eacb', '#cfe0ca'],
-    tipBg: 'rgba(255,253,248,.98)', tipLine: 'rgba(61,96,84,.25)', mass: 'rgba(37,103,83,.26)', dot: '#315fb8'
+    /* 配色 2：与 Mapbox Standard 参考图同源的绿色陆地 / 珊瑚边界 / 蓝色点 */
+    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
+    regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
+    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
   } : {
     land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
     regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
@@ -381,7 +425,7 @@ window.V03Fact = (function () {
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: st.sk.influence ? halos : [], silent: true, z: 2, symbol: 'circle' },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' },
       flashSeries()
-    ];
+    ].filter(Boolean);
     if (st.sk.regions) markerSeries('regions', regionsAtLevel(), '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
     if (st.sk.gates) {
       markerSeries('gatesP', gatesAtLevel('port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -445,35 +489,49 @@ window.V03Fact = (function () {
     } : null].filter(Boolean);
   }
 
-  /* B3/M7：新事实接入 → 同一 geo 坐标系内闪一次；禁止另建 DOM/Canvas 覆盖层。 */
+  /* B3/M7：新事实接入 → 同一 geo 坐标系内慢慢亮起再淡出一次（参考早期版本的新数据效果，不做循环闪烁） */
+  const PULSE_MS = 2800;
+  const pulseCurve = t => (t < .34 ? 1 - Math.pow(1 - t / .34, 3) : Math.max(0, 1 - (t - .34) / .66));
   function flashSeries() {
+    const now = performance.now();
+    freshFlashes = freshFlashes.filter(x => now - x.t0 < x.dur);
+    if (!freshFlashes.length) return null;
     return {
-      id: 'freshFlash', type: 'effectScatter', coordinateSystem: 'geo', silent: true, z: 8,
-      data: freshFlashes.map(x => ({
-        id: x.id, factId: x.factId, value: x.value.slice(), symbolSize: x.bright ? 9 : 6,
-        itemStyle: { color: x.bright ? '#ffe08a' : '#d8e8ea', opacity: x.bright ? .95 : .72 }
-      })),
-      showEffectOn: 'render', rippleEffect: { period: .75, scale: 5.6, brushType: 'fill', number: 2 },
-      animation: false
+      id: 'freshFlash', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 8, animation: false,
+      data: freshFlashes.map(x => {
+        const t = Math.min(1, (now - x.t0) / x.dur);
+        const a = pulseCurve(t);
+        const size = 7 + 20 * (1 - Math.pow(1 - Math.min(1, t / .34), 3));
+        return {
+          id: x.id, factId: x.factId, value: x.value.slice(), symbolSize: size,
+          itemStyle: { color: x.color, opacity: a * .5, borderColor: x.color, borderWidth: 1, shadowColor: x.color, shadowBlur: 20 * a }
+        };
+      })
     };
   }
+  let flashTimer = 0;
   function syncFlashSeries() {
-    if (!chart || S.state.sk.mode3d) return;
-    chart.setOption({ series: [flashSeries()] }, { lazyUpdate: false, silent: true });
+    clearInterval(flashTimer); flashTimer = 0;
+    if (!chart || S.state.sk.mode3d || !freshFlashes.length) return;
+    const push = () => {
+      if (!chart || S.state.sk.mode3d) { clearInterval(flashTimer); flashTimer = 0; return; }
+      const series = flashSeries();
+      chart.setOption({ series: [series || { id: 'freshFlash', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 8, data: [] }] }, { lazyUpdate: true, silent: true });
+      if (!series) { clearInterval(flashTimer); flashTimer = 0; }
+    };
+    push();
+    flashTimer = setInterval(push, 60);
   }
+  const flashIds = () => freshFlashes.map(x => x.factId);
   function flashStar(f, level) {
     if (!f || f.lng == null || S.state.tab !== 'fact' || S.state.sk.mode3d) return;
     if (window.V03Mass && !V03Mass.insideMap(S.state.geo.level, f.lng, f.lat)) return;
     if (!chart) return;
     const id = 'fresh-' + (++flashSeq);
-    mapPoints(f.lng, f.lat).forEach(value => freshFlashes.push({ id, factId: f.id, value, bright: level === 'bright' || f.impact === 'high' }));
+    const color = (catOf(f) || {}).c || '#e4a449';
+    mapPoints(f.lng, f.lat).forEach(value => freshFlashes.push({ id, factId: f.id, value, t0: performance.now(), dur: PULSE_MS, color }));
     syncFlashSeries();
-    setTimeout(() => {
-      freshFlashes = freshFlashes.filter(x => x.id !== id);
-      syncFlashSeries();
-    }, 1200);
   }
-  const flashIds = () => freshFlashes.map(x => x.factId);
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -921,12 +979,17 @@ window.V03Fact = (function () {
     });
     ctx.globalAlpha = 1;
     /* 大气层外圈：地球被包住的感觉 */
-    const atm = ctx.createRadialGradient(cx, cy, R, cx, cy, R * 1.3);
-    atm.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.5 * gv.atmA) + ')');
-    atm.addColorStop(.55, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
+    const atm = ctx.createRadialGradient(cx, cy, R * 1.004, cx, cy, R * 1.04);
+    atm.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.55 * gv.atmA) + ')');
+    atm.addColorStop(.5, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
     atm.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.04, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
     ctx.fillStyle = atm; ctx.fill('evenodd');
+    const haze = ctx.createRadialGradient(cx, cy, R, cx, cy, R * 1.18);
+    haze.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
+    haze.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.18, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
+    ctx.fillStyle = haze; ctx.fill('evenodd');
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
     g.addColorStop(0, gv.sea1); g.addColorStop(.58, gv.sea2); g.addColorStop(1, gv.sea3);
     ctx.save();
@@ -949,7 +1012,7 @@ window.V03Fact = (function () {
     }
     // 事实层只显示事实点和有依据的地理影响圆；关联流线仅在关联层绘制。
     const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
-    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.58, hexA(gv.space2, .16)); term.addColorStop(1, hexA(gv.space2, .58));
+    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.62, hexA(gv.space2, .06)); term.addColorStop(1, hexA(gv.space2, .34));
     ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
     ctx.restore();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
@@ -1105,6 +1168,6 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude, worldCopies,
-    mapRegionColor: name => regionFill(name, palette(), 'L1') };
+  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude, worldCopies,
+    mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
