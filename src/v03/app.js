@@ -194,8 +194,13 @@
         if (!api || !api.zoomBy) { b.disabled = true; b.title = sk.n + '：当前层不支持缩放'; }
         else if (zs && ((sk.dir > 0 && !zs.canIn) || (sk.dir < 0 && !zs.canOut))) { b.disabled = true; b.title = sk.n + '：已到边界'; }
       }
+      if (sk.kind === 'zoom') {
+        /* 按下就缩一格，按住连续缩（松开/失焦即停）；不再依赖 click，避免重绘把点击吃掉 */
+        b.onpointerdown = e => { e.preventDefault(); startZoomHold(sk.dir); };
+        b.oncontextmenu = e => e.preventDefault();
+      }
       b.onclick = () => {
-        if (sk.kind === 'zoom') { const a = layerApi(); if (a && a.zoomBy) a.zoomBy(sk.dir); return; }
+        if (sk.kind === 'zoom') return;
         if (sk.kind === 'view') { S.set({rel:{view:sk.value}});return; }
         if (sk.kind === 'sw') {
           if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
@@ -218,6 +223,39 @@
   function layerApi() {
     const key = S.state.tab === 'relation' ? 'V03Relation' : S.state.tab === 'fact' ? 'V03Fact' : null;
     return key ? window[key] : null;
+  }
+  /* F6：按住 ＋ / － 连续缩放（快捷键组在缩放后会重绘，所以状态放在闭包外，由 window 收尾） */
+  let zoomHold = null;
+  function startZoomHold(dir) {
+    stopZoomHold();
+    const first = layerApi();
+    if (!first || !first.zoomBy) return;
+    first.zoomBy(dir);
+    const hold = { repeat: 0, delay: setTimeout(() => {
+      hold.repeat = setInterval(() => { const a = layerApi(); if (a && a.zoomBy) a.zoomBy(dir); }, 140);
+    }, 360) };
+    zoomHold = hold;
+  }
+  function stopZoomHold() {
+    if (!zoomHold) return;
+    clearTimeout(zoomHold.delay); clearInterval(zoomHold.repeat);
+    zoomHold = null;
+  }
+  window.addEventListener('pointerup', stopZoomHold);
+  window.addEventListener('pointercancel', stopZoomHold);
+  window.addEventListener('blur', stopZoomHold);
+
+  /* F7：⌘／Win + 方向键开关四周面板（Esc 保留给图层层级返回） */
+  function bindPanelKeys() {
+    document.addEventListener('keydown', e => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
+      const st = S.state;
+      if (e.key === 'ArrowUp') { e.preventDefault(); return toggleFullscreen(!st.sk.fullscreen); }
+      if (st.tab === 'sim') return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); S.set({ menu: !st.menu }); S.emit('toast', st.menu ? '已收起左侧菜单' : '已展开左侧菜单'); return; }
+      if (e.key === 'ArrowRight') { e.preventDefault(); S.set({ panels: { cards: !st.panels.cards } }); S.emit('toast', st.panels.cards ? '已收起右侧面板' : '已展开右侧面板'); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); S.set({ panels: { stream: !st.panels.stream } }); S.emit('toast', st.panels.stream ? '已收起底部流水' : '已展开底部流水'); }
+    });
   }
   function renderZoom() { /* 缩放键已并入左下角快捷键组（两排） */ }
 
@@ -658,6 +696,7 @@
     regMaps();
     document.documentElement.dataset.theme = S.state.theme;
     bindOnce();
+    bindPanelKeys();
     mountLayers();
     S.on((st, changed) => {
       document.documentElement.dataset.theme = st.theme;

@@ -165,7 +165,7 @@ window.V03RelGlobe = (function () {
       const o = geoIndex.get(id);
       if (!o) return;
       if (!nodes.some(n => n.id === id)) { nodes.push(o); nodeDelay.push(0); }
-      flashes.push({ lng: o.lng, lat: o.lat, t0: now + i * 140, dur: 1700 });
+      flashes.push({ lng: o.lng, lat: o.lat, t0: now + i * 160, dur: 2800, color: (window.V03Data.domain && (window.V03Data.domain(o.domain) || {}).c) || '#ffd98a' });
     });
     (routeIds || []).forEach(id => {
       const route = routes.find(x => x.id === id);
@@ -194,14 +194,14 @@ window.V03RelGlobe = (function () {
     drawFlashes(cx, cy, R, now);
     /* 明暗交界：光源在左上，右下压暗，球体不再是一张平贴的图 */
     const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
-    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.58, hexA(p.space2, .16)); term.addColorStop(1, hexA(p.space2, .58));
+    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.62, hexA(p.space2, .06)); term.addColorStop(1, hexA(p.space2, .34));
     ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
     ctx.restore();
 
     /* 边缘光 + 大气内环 */
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(' + p.atmo + ',' + (.85 * p.atmA) + ')'; ctx.lineWidth = 1.6;
-    ctx.shadowColor = 'rgba(' + p.atmo + ',' + p.atmA + ')'; ctx.shadowBlur = 14; ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.shadowColor = 'rgba(' + p.atmo + ',' + p.atmA + ')'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
     drawAtmosphere(cx, cy, R, p, 2);
   }
 
@@ -214,7 +214,7 @@ window.V03RelGlobe = (function () {
       const drift = reduced ? 0 : now * .000012;
       const x = ((n.x + drift * n.dx + 1) % 1) * w, y = ((n.y + drift * n.dy + 1) % 1) * h, r = n.r * Math.max(w, h);
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, hexA(i === 1 ? p.accent : p.nebula, .1));
+      g.addColorStop(0, hexA(i === 1 ? p.accent : p.nebula, .07));
       g.addColorStop(1, hexA(p.nebula, 0));
       ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
     });
@@ -230,12 +230,13 @@ window.V03RelGlobe = (function () {
 
   /* 大气层：内圈勾勒球体，外圈把地球「包住」 */
   function drawAtmosphere(cx, cy, R, p, ring) {
-    const inner = ring === 1 ? R : R * 1.005, outer = ring === 1 ? R * 1.30 : R * 1.16;
+    /* 参考苹果地图 / Mapbox：内圈是一道很窄的亮边，外圈只是很淡的一层雾 */
+    const inner = ring === 1 ? R * 1.004 : R, outer = ring === 1 ? R * 1.04 : R * 1.18;
     const g = ctx.createRadialGradient(cx, cy, inner, cx, cy, outer);
-    const a = (ring === 1 ? .5 : .26) * p.atmA;
+    const a = (ring === 1 ? .55 : .16) * p.atmA;
     const rgb = p.atmo + ',';
     g.addColorStop(0, 'rgba(' + rgb + (a) + ')');
-    g.addColorStop(.55, 'rgba(' + rgb + (a * .32) + ')');
+    g.addColorStop(.5, 'rgba(' + rgb + (a * .3) + ')');
     g.addColorStop(1, 'rgba(' + rgb + '0)');
     ctx.beginPath(); ctx.arc(cx, cy, outer, 0, Math.PI * 2); ctx.arc(cx, cy, inner, 0, Math.PI * 2, true);
     ctx.fillStyle = g; ctx.fill('evenodd');
@@ -366,10 +367,9 @@ window.V03RelGlobe = (function () {
       haloG.addColorStop(1, hexA(p.accent, 0));
       ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.6, 0, Math.PI * 2); ctx.fillStyle = haloG; ctx.fill();
       if (introOn && lit < 1) {
-        /* 刚点亮：一圈扩散环 */
-        const ring = 3 + ease(lit) * 16;
-        ctx.beginPath(); ctx.arc(pt.x, pt.y, ring, 0, Math.PI * 2);
-        ctx.strokeStyle = hexA('#ffffff', .5 * (1 - lit)); ctx.lineWidth = 1.2; ctx.stroke();
+        /* 刚点亮：柔和的光斑渐显，不做扩散环 */
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 3 + ease(lit) * 7, 0, Math.PI * 2);
+        ctx.fillStyle = hexA('#ffffff', .3 * (1 - lit)); ctx.fill();
       }
       ctx.beginPath(); ctx.arc(pt.x, pt.y, 2 + pop * 1.6, 0, Math.PI * 2);
       ctx.fillStyle = '#ffffff'; ctx.fill();
@@ -378,27 +378,22 @@ window.V03RelGlobe = (function () {
     });
   }
 
-  /* 新本体：四角星芒 + 扩散环，和事实层的亮星一致 */
+  /* 新本体：一次性的柔和光晕，缓慢亮起再淡出（不做循环闪烁，也不画扩散环） */
   function drawFlashes(cx, cy, R, now) {
     flashes = flashes.filter(f => now - f.t0 < f.dur);
     flashes.forEach(f => {
       const t = clamp((now - f.t0) / f.dur, 0, 1);
       if (t <= 0) return;
       const pt = project(f.lng, f.lat, cx, cy, R); if (pt.z <= 0) return;
-      const fade = 1 - t;
-      const ring = 6 + ease(t) * 52;
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, ring, 0, Math.PI * 2);
-      ctx.strokeStyle = hexA('#ffd98a', .75 * fade); ctx.lineWidth = 1.8 * fade + .4; ctx.stroke();
-      const size = 6 + 10 * (1 - t) + 4 * Math.sin(t * Math.PI);
-      ctx.save(); ctx.translate(pt.x, pt.y); ctx.rotate(now * .0006);
-      ctx.beginPath();
-      ctx.moveTo(0, -size); ctx.quadraticCurveTo(size * .16, -size * .16, size, 0);
-      ctx.quadraticCurveTo(size * .16, size * .16, 0, size);
-      ctx.quadraticCurveTo(-size * .16, size * .16, -size, 0);
-      ctx.quadraticCurveTo(-size * .16, -size * .16, 0, -size);
-      ctx.closePath();
-      ctx.fillStyle = hexA('#ffe6a8', .9 * fade + .1); ctx.shadowColor = '#ffd98a'; ctx.shadowBlur = 18 * fade; ctx.fill(); ctx.shadowBlur = 0;
-      ctx.restore();
+      const a = t < .34 ? ease(t / .34) : Math.max(0, 1 - (t - .34) / .66);
+      const rr = 9 + 22 * ease(Math.min(1, t / .34));
+      const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
+      g.addColorStop(0, hexA(f.color || '#ffd98a', .5 * a));
+      g.addColorStop(.55, hexA(f.color || '#ffd98a', .22 * a));
+      g.addColorStop(1, hexA(f.color || '#ffd98a', 0));
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.2 + 1.6 * a, 0, Math.PI * 2);
+      ctx.fillStyle = hexA('#ffffff', .85 * a); ctx.fill();
     });
   }
 
@@ -420,15 +415,18 @@ window.V03RelGlobe = (function () {
     if (!raf) raf = requestAnimationFrame(loop);
   }
 
-  function zoomBy(dir) {
+  function zoomBy(dir) { return zoomByFactor(dir > 0 ? 1.12 : .89); }
+  /* 按倍率缩放（触控板双指 / 按钮共用）；放到最大再放大就切二维地图 */
+  function zoomByFactor(factor) {
+    if (!Number.isFinite(factor) || factor <= 0) return '';
     const before = radiusScale;
-    radiusScale = clamp(radiusScale * (dir > 0 ? 1.12 : .89), .27, .47);
+    radiusScale = clamp(radiusScale * factor, .27, .47);
     pauseUntil = performance.now() + 1800;
-    if (dir > 0 && before >= .4699) { onZoomEdge('in'); return 'in'; }
-    if (dir < 0 && before <= .2701) return 'out';
+    if (factor > 1 && before >= .4699) { onZoomEdge('in'); return 'in'; }
+    if (factor < 1 && before <= .2701) return 'out';
     return '';
   }
   const zoomState = () => ({ canIn: radiusScale < .4699, canOut: radiusScale > .2701, zoom: radiusScale / .38 });
   const debug = () => ({ visible, raf, rotation, radiusScale, nodes: nodes.length, routes: routes.length, hits: hits.length, flashes: flashes.length, intro: introOn ? Math.round(performance.now() - introT0) : -1 });
-  return { mount, update, setVisible, zoomBy, zoomState, flash, replay, debug };
+  return { mount, update, setVisible, zoomBy, zoomByFactor, zoomState, flash, replay, debug };
 })();
