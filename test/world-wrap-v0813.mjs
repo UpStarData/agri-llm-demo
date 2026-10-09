@@ -27,7 +27,7 @@ try {
       palette: document.documentElement.dataset.theme,
       tabLabel: document.querySelector('#btnTheme .theme-name')?.textContent };
   }, view);
-  for (const theme of ['light', 'color']) {
+  for (const theme of ['color']) {   /* 本轮只保留一套配色 */
     await page.evaluate(theme => V03Store.set({ theme }), theme);
     await page.waitForFunction(theme => document.documentElement.dataset.theme === theme, theme);
     for (const view of ['fact', 'relation']) {
@@ -40,11 +40,11 @@ try {
           data.northAmerica[0] <= data.china[0] || data.southAmerica[0] <= data.china[0] ||
           data.nodes % 3 !== 0 || data.westCount !== data.nodes / 3 ||
           !data.usaColor || !data.canadaColor || data.usaColor === data.canadaColor ||
-          data.palette !== theme || data.tabLabel !== (theme === 'light' ? '配色 1' : '配色 2'))
+          data.palette !== theme)
         throw new Error(`${view}/${theme}: ${JSON.stringify(data)}`);
     }
   }
-  await page.evaluate(() => V03Store.set({ tab: 'fact', geo: { level: 'L1' }, theme: 'light' }));
+  await page.evaluate(() => V03Store.set({ tab: 'fact', geo: { level: 'L1' } }));
   const map = page.locator('#factMap');
   const rect = await map.boundingBox();
   await page.mouse.move(rect.x + rect.width * .76, rect.y + rect.height * .5);

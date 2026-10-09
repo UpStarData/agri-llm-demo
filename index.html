@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="color">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -58,35 +58,6 @@ html[data-theme="color"]{
   --c-nature:#2f8fd0;--c-supply:#3f9d6a;--c-chain:#2f9aa0;--c-market:#b5764a;--c-consume:#7a68c8;--c-policy:#3d6fd0;--c-macro:#a08a4a;
 }
 
-html[data-theme="atlas"]{
-  color-scheme:light;
-  /* 配色 3：Atlas / iipmaps 抽色（深蓝顶栏 + 亮蓝强调 + 灰蓝水域 / 近白陆地）
-     色值取自参考站：外壳 #1f2937、强调蓝 #1f8cff / #0b5cff、水域 #cfdee8、陆地 #fbfcfd。 */
-  --bg:#eef1f5;--panel:#ffffff;--panel-2:#f5f7fa;--panel-alpha:rgba(255,255,255,.98);--line:rgba(40,58,80,.16);--hair:rgba(40,58,80,.09);
-  --ink:#1e2b3a;--mut:#4d6076;--dim:#6f8399;--hint:#8798ab;
-  --accent:#1f6bff;--accent-soft:#e8f0ff;--green:#4fae4a;--orange:#d9762a;--purple:#6b5ce0;--red:#cf4b52;
-  --warn:#8a5210;--warn-bg:#f7e6c6;
-  --ocean:#cfdee8;--land:#fbfcfd;--land-2:#e6eef5;--map-line:rgba(150,168,184,.8);--map-label:#3a4b5e;
-  --globe-space-1:#08121f;--globe-space-2:#03070e;--globe-nebula:#1f6bff;
-  --globe-sea-1:#7fb6e2;--globe-sea-2:#3b7fb8;--globe-sea-3:#123350;
-  --globe-atmo:130,180,255;--globe-atmo-a:.58;--globe-star:#e6efff;
-  --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(40,58,80,.14);
-  --shadow:0 12px 32px -20px rgba(20,38,60,.32);--icon:#4f6d8c;--icon-hover:#1f6bff;--icon-on:rgba(31,107,255,.12);
-  --c-nature:#1f8cff;--c-supply:#4fae4a;--c-chain:#00a99d;--c-market:#e59a1f;--c-consume:#7b61ff;--c-policy:#2f6bd0;--c-macro:#b08040;
-  /* 参考站的深色外壳：只用在顶栏与底部终端，内容区保持浅色 */
-  --shell:#152131;--shell-ink:#e9f0f8;--shell-mut:#9db0c4;
-}
-/* 配色 3 的深色顶栏（Atlas 式的深蓝 + 亮蓝） */
-html[data-theme="atlas"] .topbar{background:var(--shell);border-bottom-color:rgba(255,255,255,.08)}
-html[data-theme="atlas"] .topbar .brand{color:var(--shell-ink)}
-html[data-theme="atlas"] .topbar .brand small{color:var(--shell-mut)}
-html[data-theme="atlas"] .topbar .tabs button{color:var(--shell-mut)}
-html[data-theme="atlas"] .topbar .tabs button:hover{color:var(--shell-ink)}
-html[data-theme="atlas"] .topbar .tabs button.on{color:#fff}
-html[data-theme="atlas"] .topbar .tb-ic{color:var(--shell-mut)}
-html[data-theme="atlas"] .topbar .tb-ic:hover{color:#fff;background:rgba(255,255,255,.1)}
-html[data-theme="atlas"] .stream{background:#101c29;color:#dbe6f2;border-top-color:#24374b}
-html[data-theme="atlas"] .st-bar{border-bottom-color:#24374b}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* 二维地图与三维地球互切时淡入，避免硬切 */
 @keyframes viewFade{from{opacity:0;transform:scale(1.012)}to{opacity:1;transform:none}}
@@ -513,20 +484,6 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .sk-search-term span{overflow:hidden;text-overflow:ellipsis;flex:1}.sk-search-term button{font-size:19px;color:var(--mut);line-height:1;cursor:pointer}
 .mapsk:has(.search-pop) .sk-search-term{display:none}
 @media(max-width:650px){.mapsk .sk-pop.search-pop{right:0;bottom:calc(100% + 9px);width:min(360px,calc(100vw - 20px))}.sk-search-term{right:0;bottom:calc(100% + 9px);max-width:calc(100vw - 20px)}}
-
-/* ---------- 配色选择器（参考 iipmaps Palette Editor 的色块设计） ---------- */
-.pal-pop{position:fixed;z-index:80;width:268px;padding:8px;border:1px solid var(--glass-line);border-radius:var(--r-lg);
-  background:var(--glass);backdrop-filter:var(--blur);box-shadow:0 18px 44px -20px rgba(15,23,42,.55)}
-.pal-pop h4{font-size:.6875rem;font-weight:var(--f-semi);color:var(--mut);margin:2px 4px 8px;letter-spacing:.04em}
-.pal-tile{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;width:100%;padding:7px;margin-bottom:5px;
-  border:1px solid var(--hair);border-radius:var(--r-md);background:var(--panel);cursor:pointer;text-align:left;color:var(--ink)}
-.pal-tile:hover{border-color:var(--accent);background:var(--accent-soft)}
-.pal-tile.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.pal-tile b{display:block;font-size:.75rem;font-weight:var(--f-semi)}
-.pal-tile i{display:block;font-style:normal;font-size:.625rem;color:var(--dim);margin-top:2px}
-.pal-tile em{grid-column:2;font-style:normal;font-size:.5625rem;color:var(--accent);font-weight:var(--f-semi)}
-.pal-swatch{width:64px;height:38px;border-radius:5px;border:1px solid var(--hair);overflow:hidden;display:block}
-.pal-swatch span{display:block;height:100%}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -537,8 +494,6 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-main.graph-view{background-color:#f7fafb;
   background-image:radial-gradient(#cad6dc 1.5px,transparent 1.5px);background-size:24px 24px}
-html[data-theme="atlas"] .rel-main.graph-view{background-color:#f4f7fa;
-  background-image:radial-gradient(rgba(70,110,150,.22) 1.5px,transparent 1.5px)}
 html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
   background-image:radial-gradient(rgba(82,123,110,.24) 1.5px,transparent 1.5px)}
 .rel-canvas{position:absolute;inset:0}
@@ -871,12 +826,11 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.9</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.10</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
       <button class="tb-ic" id="btnCards" aria-label="右侧面板显隐"></button>
-      <button class="tb-ic" id="btnTheme" aria-label="切换到配色 2"></button>
       <button class="tb-ic" id="btnSettings" aria-label="设置"></button>
     </div>
   </header>
@@ -936,7 +890,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"ab47f4db0122","git":"c3790eb","builtAt":"2026-10-09T11:35:17.506Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"05a602131cce","git":"9c8a7c0","builtAt":"2026-10-09T12:03:55.182Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5758,6 +5712,465 @@ window.V03Filter = (function () {
 </script>
 <script>
 /* ============================================================
+   三维地球（事实层 / 关联层共用同一套渲染）
+   - 深空底 + 三层星野（视差 + 闪烁）+ 大气层边缘光 + 明暗交界 + 区域配色陆块
+   - 事实层：事实点（分类色 + 表情）+ 地理影响圆 + 叠加图层标记；拾取返回 fact / mark
+   - 关联层：本体节点 + 关系线（入场逐条画出、之后持续流动）+ 新本体淡入光晕；拾取返回 object
+   - 滚轮 / 双指放到最大：对外抛 onZoomEdge('in')，由 mapkit 切换到二维全球视角
+   ============================================================ */
+window.V03Globe = (function () {
+  /* 每个图层各持一个实例（两层同时挂载，画布与状态不能共用） */
+  function create() {
+  let canvas, ctx, visible = false, raf = 0, last = 0, rotation = 105, tilt = .22, radiusScale = .38;
+  let mode = 'relation';
+  let points = [], marks = [], nodes = [], routes = [], hits = [], geoIndex = new Map();
+  let onPick = () => {}, onZoomEdge = () => {}, colorOf = () => '#4d966a';
+  let pointer = null, pauseUntil = 0, reduced = false;
+
+  /* ---------- 星野（固定种子） ---------- */
+  let seed = 7301; const random = () => ((seed = seed * 16807 % 2147483647) - 1) / 2147483646;
+  const STAR_LAYERS = [
+    { count: 190, min: .3, max: .9, alpha: .34, depth: .35 },
+    { count: 120, min: .55, max: 1.3, alpha: .62, depth: .7 },
+    { count: 46, min: 1, max: 1.9, alpha: .95, depth: 1.15 }
+  ].map(layer => ({
+    ...layer,
+    stars: Array.from({ length: layer.count }, () => ({
+      x: random(), y: random(), r: layer.min + random() * (layer.max - layer.min),
+      a: layer.alpha * (.55 + random() * .45), s: .12 + random() * .9
+    }))
+  }));
+  const NEBULA = Array.from({ length: 3 }, () => ({
+    x: .18 + random() * .64, y: .12 + random() * .72, r: .28 + random() * .34,
+    dx: (random() - .5) * .5, dy: (random() - .5) * .5
+  }));
+
+  const rad = Math.PI / 180, TAU = Math.PI * 2;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  /* 世界面数据在首次绘制时再取（本文件先于 fact.js 加载） */
+  let polygons = null;
+  function worldPolygons() {
+    if (!polygons) {
+      polygons = window.V03Fact.worldGeoJSON(false).features.flatMap(f =>
+        (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
+          .map(rings => ({ name: f.properties.name, ring: rings[0] })));
+    }
+    return polygons;
+  }
+
+  function palette() {
+    const css = getComputedStyle(document.documentElement);
+    const v = n => css.getPropertyValue(n).trim();
+    return {
+      space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
+      nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
+      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
+      atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62,
+      line: v('--map-line') || 'rgba(79,108,123,.67)', accent: v('--accent') || '#236bad'
+    };
+  }
+  const hexA = (hex, a) => {
+    const h = String(hex).replace('#', '');
+    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const num = parseInt(n, 16);
+    return 'rgba(' + ((num >> 16) & 255) + ',' + ((num >> 8) & 255) + ',' + (num & 255) + ',' + a + ')';
+  };
+
+  /* ---------- 入场动效 ---------- */
+  let introT0 = 0, introOn = false;
+  const NODE_SPAN = 1500, LINE_BASE = 1400, LINE_SPAN = 1500, LINE_DUR = 620, LIT_DUR = 460;
+  let nodeDelay = [], routeDelay = [], flashes = [];
+
+  function mount(el, opts) {
+    canvas = el; ctx = canvas.getContext('2d');
+    onPick = (opts && opts.pick) || (() => {});
+    onZoomEdge = (opts && opts.zoomEdge) || (() => {});
+    reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    canvas.addEventListener('pointerdown', e => { pointer = { x: e.clientX, y: e.clientY, moved: false }; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove', e => {
+      if (!pointer) return;
+      const dx = e.clientX - pointer.x, dy = e.clientY - pointer.y;
+      pointer.moved ||= Math.abs(dx) + Math.abs(dy) > 3;
+      rotation = (rotation - dx * .38 + 360) % 360;
+      tilt = clamp(tilt + dy * .003, -.55, .55);
+      pointer.x = e.clientX; pointer.y = e.clientY; pauseUntil = performance.now() + 2200;
+    });
+    canvas.addEventListener('pointerup', e => {
+      if (!pointer) return;
+      const wasMove = pointer.moved;
+      pointer = null;
+      if (wasMove) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const hit = hits.find(h => Math.hypot(h.x - x, h.y - y) < 10);
+      if (hit) return onPick(hit.kind, hit.id);
+      /* 没有点到点：任意区域（含海洋）都进入二维全球视角 */
+      onZoomEdge('surface');
+    });
+    canvas.addEventListener('wheel', e => { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+    window.addEventListener('resize', resize);
+  }
+
+  function resize() {
+    if (!canvas) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const width = Math.max(1, canvas.clientWidth), height = Math.max(1, canvas.clientHeight);
+    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
+      canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function project(lng, lat, cx, cy, R, altitude = 1) {
+    const lambda = (lng - rotation) * rad, phi = lat * rad;
+    const x = Math.cos(phi) * Math.sin(lambda), y = Math.sin(phi), z = Math.cos(phi) * Math.cos(lambda);
+    return {
+      x: cx + R * altitude * x, y: cy - R * altitude * (y * Math.cos(tilt) - z * Math.sin(tilt)),
+      z: y * Math.sin(tilt) + z * Math.cos(tilt)
+    };
+  }
+  function arc(a, b) {
+    const xyz = p => [Math.cos(p.lat * rad) * Math.cos(p.lng * rad), Math.cos(p.lat * rad) * Math.sin(p.lng * rad), Math.sin(p.lat * rad)];
+    const u = xyz(a), v = xyz(b), angle = Math.acos(clamp(u.reduce((s, x, i) => s + x * v[i], 0), -1, 1));
+    const sine = Math.sin(angle);
+    return Array.from({ length: 33 }, (_, i) => {
+      const t = i / 32, m = sine > .0001 ? Math.sin((1 - t) * angle) / sine : 1 - t, n = sine > .0001 ? Math.sin(t * angle) / sine : t;
+      const p = u.map((x, j) => x * m + v[j] * n);
+      return {
+        lng: Math.atan2(p[1], p[0]) / rad, lat: Math.atan2(p[2], Math.hypot(p[0], p[1])) / rad,
+        altitude: 1 + .16 * Math.sin(Math.PI * t)
+      };
+    });
+  }
+
+  /* ---------- 数据 ----------
+     fact：{ points:[{id,lng,lat,color,glyph,halo}], marks:[{id,lng,lat,color,glyph}] }
+     relation：{ nodes, relations, colorOf, keep } */
+  function update(data) {
+    const d = data || {};
+    mode = d.mode || mode;
+    colorOf = d.colorOf || colorOf;
+    if (mode === 'fact') {
+      points = (d.points || []).filter(p => Number.isFinite(p.lng) && Number.isFinite(p.lat));
+      marks = (d.marks || []).filter(m => Number.isFinite(m.lng) && Number.isFinite(m.lat));
+      nodes = []; routes = [];
+    } else {
+      const objects = d.objects || [], relations = d.relations || [];
+      geoIndex = new Map(objects.filter(o => o.geo !== false && Number.isFinite(o.lng) && Number.isFinite(o.lat)).map(o => [o.id, o]));
+      const degree = new Map();
+      relations.forEach(r => { degree.set(r.from, (degree.get(r.from) || 0) + 1); degree.set(r.to, (degree.get(r.to) || 0) + 1); });
+      const ranked = [...geoIndex.values()].sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
+      const keep = new Set(d.keep || []);
+      nodes = ranked.filter(o => keep.has(o.id) || ranked.indexOf(o) < 150).slice(0, 170);
+      const limit = d.limit || 44;
+      routes = relations.map(r => ({ r, a: geoIndex.get(r.from), b: geoIndex.get(r.to) })).filter(x => x.a && x.b &&
+        Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat) > 10)
+        .map(x => ({
+          id: x.r.id, points: arc(x.a, x.b), color: colorOf(x.r.type), keep: keep.has(x.r.id),
+          score: Math.min(120, Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat)) + (x.r.confidence || 0) * 24
+        }))
+        .sort((a, b) => Number(b.keep) - Number(a.keep) || b.score - a.score)
+        .slice(0, limit)
+        .map((route, i) => ({ ...route, phase: (i * .37) % 1, speed: .17 + (i % 5) * .035, drawFrom: 0 }));
+      nodes = nodes.slice().sort((a, b) => Number(keep.has(b.id)) - Number(keep.has(a.id)));
+      points = []; marks = [];
+    }
+    nodeDelay = nodes.map((o, i) => (i / Math.max(1, nodes.length - 1)) * NODE_SPAN);
+    routeDelay = routes.map((route, i) => LINE_BASE + (i / Math.max(1, routes.length - 1)) * LINE_SPAN);
+    resize();
+  }
+
+  function beginIntro() { introOn = true; introT0 = performance.now(); flashes = []; }
+
+  /* 新数据：一次性的柔和光晕（缓慢亮起再淡出，不循环闪烁） */
+  function flash(ids, routeIds) {
+    const now = performance.now();
+    const list = Array.isArray(ids) ? ids : [ids];
+    list.forEach((id, i) => {
+      const o = geoIndex.get(id);
+      if (!o) return;
+      if (!nodes.some(n => n.id === id)) { nodes.push(o); nodeDelay.push(0); }
+      flashes.push({ lng: o.lng, lat: o.lat, t0: now + i * 160, dur: 2800, color: (window.V03Data.domain && (window.V03Data.domain(o.domain) || {}).c) || '#ffd98a' });
+    });
+    (routeIds || []).forEach(id => {
+      const route = routes.find(x => x.id === id);
+      if (route) route.drawFrom = now + 180;
+    });
+  }
+  function replay() { beginIntro(); }
+
+  function draw(now) {
+    const w = canvas.clientWidth, h = canvas.clientHeight, cx = w * .5, cy = h * .5;
+    const R = Math.min(w, h) * radiusScale, p = palette();
+    ctx.clearRect(0, 0, w, h);
+    drawSpace(w, h, now, p);
+    drawAtmosphere(cx, cy, R, p, 2);
+
+    const sea = ctx.createRadialGradient(cx - R * .34, cy - R * .42, R * .06, cx, cy, R * 1.12);
+    sea.addColorStop(0, p.sea1); sea.addColorStop(.55, p.sea2); sea.addColorStop(1, p.sea3);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fillStyle = sea; ctx.fill();
+    ctx.save(); ctx.clip();
+    hits = [];
+    drawLand(cx, cy, R, p);
+    drawGraticule(cx, cy, R, p);
+    if (mode === 'relation') {
+      drawRoutes(cx, cy, R, now, p);
+      drawNodes(cx, cy, R, now, p);
+    } else {
+      drawFacts(cx, cy, R, now, p);
+    }
+    drawFlashes(cx, cy, R, now);
+    const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
+    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.62, hexA(p.space2, .06)); term.addColorStop(1, hexA(p.space2, .34));
+    ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+    ctx.restore();
+
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU);
+    ctx.strokeStyle = 'rgba(' + p.atmo + ',' + (.85 * p.atmA) + ')'; ctx.lineWidth = 1.6;
+    ctx.shadowColor = 'rgba(' + p.atmo + ',' + p.atmA + ')'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
+    drawAtmosphere(cx, cy, R, p, 1);
+  }
+
+  function drawSpace(w, h, now, p) {
+    const sky = ctx.createLinearGradient(0, 0, w * .6, h);
+    sky.addColorStop(0, p.space1); sky.addColorStop(1, p.space2);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
+    NEBULA.forEach((n, i) => {
+      const drift = reduced ? 0 : now * .000012;
+      const x = ((n.x + drift * n.dx + 1) % 1) * w, y = ((n.y + drift * n.dy + 1) % 1) * h, r = n.r * Math.max(w, h);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, hexA(i === 1 ? p.accent : p.nebula, .07));
+      g.addColorStop(1, hexA(p.nebula, 0));
+      ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+    });
+    STAR_LAYERS.forEach(layer => layer.stars.forEach(st => {
+      const x = ((st.x + (reduced ? 0 : now * .000004 * layer.depth * st.s) + 1) % 1) * w;
+      const twinkle = reduced ? 1 : .62 + .38 * Math.sin(now * .0011 * st.s + st.x * 26);
+      ctx.globalAlpha = st.a * twinkle;
+      ctx.fillStyle = p.star;
+      ctx.beginPath(); ctx.arc(x, st.y * h, st.r * layer.depth, 0, TAU); ctx.fill();
+    }));
+    ctx.globalAlpha = 1;
+  }
+
+  function drawAtmosphere(cx, cy, R, p, ring) {
+    const inner = ring === 1 ? R * 1.004 : R, outer = ring === 1 ? R * 1.04 : R * 1.18;
+    const g = ctx.createRadialGradient(cx, cy, inner, cx, cy, outer);
+    const a = (ring === 1 ? .55 : .16) * p.atmA;
+    const rgb = p.atmo + ',';
+    g.addColorStop(0, 'rgba(' + rgb + a + ')');
+    g.addColorStop(.5, 'rgba(' + rgb + (a * .3) + ')');
+    g.addColorStop(1, 'rgba(' + rgb + '0)');
+    ctx.beginPath(); ctx.arc(cx, cy, outer, 0, TAU); ctx.arc(cx, cy, inner, 0, TAU, true);
+    ctx.fillStyle = g; ctx.fill('evenodd');
+  }
+
+  let fillCache = new Map(), fillTheme = '';
+  function landFill(name, p) {
+    if (fillTheme !== p.sea2) { fillCache = new Map(); fillTheme = p.sea2; }
+    if (!fillCache.has(name)) fillCache.set(name, window.V03Fact.mapRegionColor(name, 'L1'));
+    return fillCache.get(name);
+  }
+  function drawLand(cx, cy, R, p) {
+    ctx.lineJoin = 'round';
+    for (const feature of worldPolygons()) {
+      let run = [];
+      const flush = () => {
+        if (run.length < 3) { run = []; return; }
+        ctx.beginPath(); run.forEach((pt, i) => i ? ctx.lineTo(pt.x, pt.y) : ctx.moveTo(pt.x, pt.y)); ctx.closePath();
+        ctx.fillStyle = landFill(feature.name, p);
+        ctx.globalAlpha = .95; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.strokeStyle = p.line; ctx.lineWidth = .6; ctx.stroke();
+        run = [];
+      };
+      for (const [lng, lat] of feature.ring) { const pt = project(lng, lat, cx, cy, R); if (pt.z > 0) run.push(pt); else flush(); }
+      flush();
+    }
+  }
+
+  function drawGraticule(cx, cy, R, p) {
+    ctx.strokeStyle = hexA('#ffffff', .1); ctx.lineWidth = .6;
+    for (let lat = -60; lat <= 60; lat += 30) {
+      ctx.beginPath(); let started = false;
+      for (let lng = -180; lng <= 180; lng += 4) {
+        const pt = project(lng, lat, cx, cy, R);
+        if (pt.z <= 0) { started = false; continue; }
+        if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.stroke();
+    }
+    for (let lng = -180; lng < 180; lng += 30) {
+      ctx.beginPath(); let started = false;
+      for (let lat = -88; lat <= 88; lat += 4) {
+        const pt = project(lng, lat, cx, cy, R);
+        if (pt.z <= 0) { started = false; continue; }
+        if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  /* 关系线：入场逐条画出，之后持续有彗尾粒子 */
+  function drawRoutes(cx, cy, R, now, p) {
+    routes.forEach((route, i) => {
+      const delay = routeDelay[i] || 0;
+      const from = Math.max(introOn ? introT0 + delay : 0, route.drawFrom);
+      const drawn = clamp((now - from) / LINE_DUR, 0, 1);
+      if (drawn <= 0) return;
+      const pts = route.points.map(pt => {
+        const proj = project(pt.lng, pt.lat, cx, cy, R, pt.altitude);
+        return { x: proj.x, y: proj.y, z: proj.z };
+      });
+      const total = pts.length;
+      const upto = Math.max(2, Math.round(ease(drawn) * (total - 1)));
+      ctx.beginPath();
+      for (let j = 0; j <= upto; j++) {
+        const pt = pts[j];
+        if (pt.z <= 0) continue;
+        if (j === 0 || pts[j - 1].z <= 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.strokeStyle = hexA(route.color, .52); ctx.lineWidth = 1.35; ctx.stroke();
+      if (drawn < 1) {
+        const head = pts[upto];
+        if (head && head.z > 0) {
+          ctx.beginPath(); ctx.arc(head.x, head.y, 3.4, 0, TAU);
+          ctx.fillStyle = hexA(route.color, .95); ctx.shadowColor = route.color; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
+        }
+        return;
+      }
+      const phase = ((now - from) * .001 * route.speed + route.phase) % 1;
+      const head = 1 + phase * (total - 3);
+      const tail = 9;
+      for (let k = 0; k < tail; k++) {
+        const idx = head - k;
+        const j0 = Math.floor(idx), j1 = Math.min(total - 1, j0 + 1), t = idx - j0;
+        if (j0 < 0 || pts[j0].z <= 0 || pts[j1].z <= 0) continue;
+        const x = pts[j0].x + (pts[j1].x - pts[j0].x) * t, y = pts[j0].y + (pts[j1].y - pts[j0].y) * t;
+        const fade = 1 - k / tail;
+        ctx.beginPath(); ctx.arc(x, y, 1.3 + fade * 2.4, 0, TAU);
+        ctx.fillStyle = k === 0 ? '#ffffff' : hexA(route.color, .16 + fade * .74);
+        ctx.fill();
+      }
+    });
+  }
+
+  function drawNodes(cx, cy, R, now, p) {
+    nodes.forEach((o, i) => {
+      const delay = nodeDelay[i] || 0;
+      const lit = clamp((now - (introT0 + delay)) / LIT_DUR, 0, 1);
+      if (introOn && lit <= 0) return;
+      const pt = project(o.lng, o.lat, cx, cy, R); if (pt.z <= 0) return;
+      const pop = introOn ? ease(lit) : 1;
+      const halo = 3.6 + pop * 4.2;
+      const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.6);
+      haloG.addColorStop(0, hexA(p.accent, .26 * pop));
+      haloG.addColorStop(1, hexA(p.accent, 0));
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.6, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
+      if (introOn && lit < 1) {
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 3 + ease(lit) * 7, 0, TAU);
+        ctx.fillStyle = hexA('#ffffff', .3 * (1 - lit)); ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2 + pop * 1.6, 0, TAU);
+      ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.strokeStyle = p.accent; ctx.lineWidth = 1.3; ctx.stroke();
+      hits.push({ x: pt.x, y: pt.y, kind: 'object', id: o.id });
+    });
+  }
+
+  /* 事实层：影响圆 + 事实点（分类色 + 表情）+ 叠加图层标记 */
+  function drawFacts(cx, cy, R, now, p) {
+    points.forEach(f => {
+      const pt = project(f.lng, f.lat, cx, cy, R);
+      if (pt.z <= 0) return;
+      if (f.halo > 0) {
+        const rr = R * f.halo;
+        const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
+        g.addColorStop(0, hexA(f.color, f.haloAlpha || .14));
+        g.addColorStop(1, hexA(f.color, 0));
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 3.4, 0, TAU);
+      ctx.fillStyle = hexA(f.color, .28); ctx.fill();
+      ctx.strokeStyle = f.color; ctx.lineWidth = .9; ctx.stroke();
+      if (f.glyph) {
+        ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#ffffff'; ctx.fillText(f.glyph, pt.x, pt.y + 3);
+      }
+      hits.push({ x: pt.x, y: pt.y, kind: 'fact', id: f.id });
+    });
+    marks.forEach(m => {
+      const pt = project(m.lng, m.lat, cx, cy, R);
+      if (pt.z <= 0) return;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 3, 0, TAU);
+      ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.strokeStyle = m.color; ctx.lineWidth = 1; ctx.stroke();
+      hits.push({ x: pt.x, y: pt.y, kind: 'mark', id: m.id });
+    });
+  }
+
+  function drawFlashes(cx, cy, R, now) {
+    flashes = flashes.filter(f => now - f.t0 < f.dur);
+    flashes.forEach(f => {
+      const t = clamp((now - f.t0) / f.dur, 0, 1);
+      if (t <= 0) return;
+      const pt = project(f.lng, f.lat, cx, cy, R); if (pt.z <= 0) return;
+      const a = t < .34 ? ease(t / .34) : Math.max(0, 1 - (t - .34) / .66);
+      const rr = 9 + 22 * ease(Math.min(1, t / .34));
+      const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
+      g.addColorStop(0, hexA(f.color || '#ffd98a', .5 * a));
+      g.addColorStop(.55, hexA(f.color || '#ffd98a', .22 * a));
+      g.addColorStop(1, hexA(f.color || '#ffd98a', 0));
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.2 + 1.6 * a, 0, TAU);
+      ctx.fillStyle = hexA('#ffffff', .85 * a); ctx.fill();
+    });
+  }
+
+  function loop(now) {
+    if (!visible) { raf = 0; return; }
+    raf = requestAnimationFrame(loop);
+    if (now - last < 33) return;
+    last = now;
+    if (!pointer && now > pauseUntil) rotation = (rotation + .11) % 360;
+    resize(); draw(now);
+  }
+
+  function setVisible(next) {
+    const was = visible;
+    visible = next;
+    if (!was) canvas.classList.remove('view-fade');
+    if (!next) { if (raf) cancelAnimationFrame(raf); raf = 0; return; }
+    resize();
+    if (!was) { beginIntro(); canvas.classList.add('view-fade'); void canvas.offsetWidth; }
+    if (!raf) raf = requestAnimationFrame(loop);
+  }
+
+  function zoomBy(dir) { return zoomByFactor(dir > 0 ? 1.12 : .89); }
+  function zoomByFactor(factor) {
+    if (!Number.isFinite(factor) || factor <= 0) return '';
+    const before = radiusScale;
+    radiusScale = clamp(radiusScale * factor, .27, .47);
+    pauseUntil = performance.now() + 1800;
+    if (factor > 1 && before >= .4699) { onZoomEdge('in'); return 'in'; }
+    if (factor < 1 && before <= .2701) return 'out';
+    return '';
+  }
+  const zoomState = () => ({ canIn: radiusScale < .4699, canOut: radiusScale > .2701, zoom: radiusScale / .38 });
+  const debug = () => ({
+    visible, raf, rotation, radiusScale, mode,
+    nodes: nodes.length, routes: routes.length, points: points.length, marks: marks.length,
+    hits: hits.length, flashes: flashes.length, intro: introOn ? Math.round(performance.now() - introT0) : -1
+  });
+  return { mount, update, setVisible, zoomBy, zoomByFactor, zoomState, flash, replay, debug };
+  }
+  return { create };
+})();
+
+</script>
+<script>
+/* ============================================================
    事实层 · 视觉校准版（V2 指令）
    F1 地图是第一视觉主体，铺满可用视口
    F4 只画事实点 + 影响范围；不画事实之间线路；一级分类决定颜色，三级类型决定 Emoji
@@ -5770,6 +6183,7 @@ window.V03Filter = (function () {
 window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '';
+  const globe = window.V03Globe.create();   /* 与关联层共用同一套三维渲染，各自持有一个实例 */
   let freshFlashes = [], flashSeq = 0;
   let mapAnimationPaused = false;
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null, roamTimer: null };
@@ -5877,21 +6291,18 @@ window.V03Fact = (function () {
       side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
     dom.searchStatus.onclick = () => S.set({ q: '' });
-    window.addEventListener('resize', () => { if (chart) chart.resize(); resizeGlobe(); });
-    dom.globe.addEventListener('click', e => {
-      const r = dom.globe.getBoundingClientRect();
-      const hit = globeHit(e.clientX - r.left, e.clientY - r.top);
-      if (!hit) return;
-      if (hit.type === 'fact') return openFact(hit.id);
-      showOverlay(hit.id);
+    window.addEventListener('resize', () => { if (chart) chart.resize(); });
+    globe.mount(dom.globe, {
+      pick: (kind, id) => (kind === 'fact' ? openFact(id) : showOverlay(id)),
+      /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
+      zoomEdge: edge => {
+        if (S.state.sk.mode3d && S.state.tab === 'fact') {
+          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('三维地球已放到最大 · 切换到二维全球'); }
+          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('进入 2D 全球视角'); }
+        }
+        if (edge === 'in' || edge === 'surface') { S.set({ sk: { mode3d: false } }); }
+      }
     });
-    /* 三维地球缩放：放到最大自动切二维地图（与关联层同一套边界行为） */
-    dom.globe.addEventListener('wheel', e => {
-      e.preventDefault();
-      globeZoomBy(e.deltaY < 0 ? 1 : -1);
-    }, { passive: false });
-    dom.globe.addEventListener('dblclick', () => globeZoomBy(1));
-    bindPinch(dom.mapBox);
     /* 二维地图缩到最小还在缩：切回三维地球（ECharts 自身会卡住最小 zoom，需要在这里拦） */
     dom.map.addEventListener('wheel', e => {
       if (S.state.sk.mode3d || S.state.geo.level !== 'L1' || e.deltaY <= 0) return;
@@ -5902,18 +6313,6 @@ window.V03Fact = (function () {
       if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
     }, { capture: true, passive: false });
     S.onEvent('stream:line', p => flashStar(p && p.fact, p && p.level));
-  }
-
-  function globeZoomBy(dir) {
-    const before = globe.zoom;
-    globe.zoom = Math.max(GLOBE_ZOOM[0], Math.min(GLOBE_ZOOM[1], globe.zoom * (dir > 0 ? 1.12 : .89)));
-    if (dir > 0 && before >= GLOBE_ZOOM[1] - .003) {
-      S.set({ sk: { mode3d: false } });
-      if (window.V03Shell) window.V03Shell.toast('三维地球已放到最大 · 切换到二维地图');
-      return 'in';
-    }
-    if (dir < 0 && before <= GLOBE_ZOOM[0] + .003) return 'out';
-    return '';
   }
 
   /* ---------- 地图（浅色农业风） ---------- */
@@ -6023,18 +6422,10 @@ window.V03Fact = (function () {
       zoomByFactor(f);
     }, { passive: false });
   }
-  /* 按倍率缩放（触控板双指用）；三维视图下作用于地球，二维视图下作用于地图 */
+  /* 按倍率缩放（触控板双指用）；三维视图下作用于共用地球，二维视图下作用于地图 */
   function zoomByFactor(factor) {
     if (!Number.isFinite(factor) || factor <= 0) return;
-    if (S.state.sk.mode3d) {
-      const before = globe.zoom;
-      globe.zoom = Math.max(GLOBE_ZOOM[0], Math.min(GLOBE_ZOOM[1], globe.zoom * factor));
-      if (factor > 1 && before >= GLOBE_ZOOM[1] - .003) {
-        S.set({ sk: { mode3d: false } });
-        if (window.V03Shell) window.V03Shell.toast('三维地球已放到最大 · 切换到二维地图');
-      }
-      return;
-    }
+    if (S.state.sk.mode3d) return globe.zoomByFactor(factor);
     const box = LEVEL[S.state.geo.level].zoomBox;
     /* 全球视角在最小比例尺继续缩小：与滚轮 / 按钮一致，切回三维地球 */
     if (factor < 1 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
@@ -6049,7 +6440,7 @@ window.V03Fact = (function () {
   }
 
   function zoomBy(dir) {
-    if (S.state.sk.mode3d) return globeZoomBy(dir);
+    if (S.state.sk.mode3d) return globe.zoomBy(dir);
     const box = LEVEL[S.state.geo.level].zoomBox;
     /* 全球视角缩到最小再缩：切回三维地球 */
     if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
@@ -6063,7 +6454,7 @@ window.V03Fact = (function () {
     afterZoom();
   }
   const zoomState = () => {
-    if (S.state.sk.mode3d) return { canIn: globe.zoom < GLOBE_ZOOM[1] - 1e-3, canOut: globe.zoom > GLOBE_ZOOM[0] + 1e-3, zoom: globe.zoom };
+    if (S.state.sk.mode3d) return globe.zoomState();
     const box = LEVEL[S.state.geo.level].zoomBox;
     /* 全球视角缩到底会切到三维地球，「缩小」始终可用 */
     return { canIn: camera.zoom < box[1] - 1e-3, canOut: true, zoom: camera.zoom };
@@ -6095,27 +6486,13 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
-  const PALETTES = {
-    /* 配色 1：Felt 式清爽浅蓝 */
-    light: {
-      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
-      regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
-    },
-    /* 配色 2：Mapbox Standard / 苹果地图的绿陆蓝水 */
-    color: {
-      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
-      regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
-      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
-    },
-    /* 配色 3：Atlas / iipmaps 抽色——灰蓝水域、近白陆地、亮蓝强调 */
-    atlas: {
-      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a',
-      regions: ['#f7f9fb', '#d9e4ef', '#e8eff6', '#c9d9e8', '#eef3f8', '#dfe7f0', '#f2f6fa', '#d2e0ec'],
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', mass: 'rgba(31,107,255,.2)', dot: '#1f6bff'
-    }
+  /* 地图配色（唯一一套，取自 Mapbox Standard / 苹果地图参考）：绿陆 / 蓝水 / 珊瑚边界 */
+  const MAP_PALETTE = {
+    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
+    regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
+    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
   };
-  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
+  const palette = () => MAP_PALETTE;
   /* 共享至少两个边界顶点才算相邻；贪心图着色保证接壤区域异色。 */
   function regionColors(features) {
     const byVertex = new Map(), neighbors = new Map();
@@ -6603,250 +6980,31 @@ window.V03Fact = (function () {
   }
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
-  /* ---------- 3D 地球：自转和关系流线（同一 Canvas，避免独立层错位） ---------- */
-  const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [], active: false, starOffset: 0, stars: [], zoom: 1 };
-  const GLOBE_ZOOM = [.72, 1.85];   /* 三维地球缩放区间；放到最大切二维，二维缩到最小切三维 */
-  let starSeed = 9137;
-  const starRnd = () => ((starSeed = (starSeed * 16807) % 2147483647) - 1) / 2147483646;
-  for (let i = 0; i < 260; i++) globe.stars.push({ x: starRnd(), y: starRnd(), r: .35 + starRnd() * 1.35, a: .24 + starRnd() * .62, speed: .15 + starRnd() * .85 });
-  function resizeGlobe() {
-    const c = dom.globe; if (!c) return;
-    const r = dom.mapBox.getBoundingClientRect();
-    /* The globe redraws continuously; a 1.5x backing store costs 2.25x pixels per frame. */
-    const width = Math.max(320, Math.round(r.width));
-    const height = Math.max(240, Math.round(r.height));
-    if (c.width !== width) c.width = width;
-    if (c.height !== height) c.height = height;
-  }
-  function globeR() { return Math.min(dom.globe.width, dom.globe.height) * (S.state.geo.level === 'L3' ? .46 : S.state.geo.level === 'L2' ? .40 : .36) * globe.zoom; }
-  function gProject(lng, lat, cx, cy, R) {
-    const lam = (lng - globe.rot) * Math.PI / 180, phi = lat * Math.PI / 180;
-    const cp = Math.cos(phi), x = cp * Math.sin(lam), y = Math.sin(phi), z = cp * Math.cos(lam);
-    const y2 = y * Math.cos(globe.tilt) - z * Math.sin(globe.tilt);
-    const z2 = y * Math.sin(globe.tilt) + z * Math.cos(globe.tilt);
-    return { x: cx + x * R, y: cy - y2 * R, z: z2, lng, lat };
-  }
-  function lerpEdge(a, b, cx, cy, R) {
-    const t = a.z / (a.z - b.z || 1e-6);
-    const p = gProject(a.lng + (b.lng - a.lng) * t, a.lat + (b.lat - a.lat) * t, cx, cy, R);
-    p.z = 0; return p;
-  }
-  function clipRing(ring, cx, cy, R) {
-    const out = []; let cur = null, prev = null;
-    ring.forEach(([lng, lat]) => {
-      const p = gProject(lng, lat, cx, cy, R);
-      if (p.z > 0) {
-        if (!cur) { cur = []; if (prev && prev.z <= 0) cur.push(lerpEdge(prev, p, cx, cy, R)); }
-        cur.push(p);
-      } else if (cur) { cur.push(lerpEdge(prev || p, p, cx, cy, R)); out.push(cur); cur = null; }
-      prev = p;
-    });
-    if (cur) { if (prev && prev.z > 0) cur.push(cur[0]); out.push(cur); }
-    return out;
-  }
-  const landFeatures = (() => {
-    const geo = worldGeoJSON();
-    return geo.features.flatMap(f => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
-      .map(rings => ({ name: f.properties.name, ring: rings[0] })));
-  })();
-  const routeColors = ['#61d6e8', '#f1c778', '#a7dc88', '#ef9e83', '#aab8f3'];
-  const routeColor = type => routeColors[/供应|流入|流出|贸易/.test(type) ? 0 :
-    /运输|通道|设施/.test(type) ? 1 : /生产|产区|基地/.test(type) ? 2 :
-    /影响|政策|价格/.test(type) ? 3 : 4];
-  const toUnit = (lng, lat) => {
-    const a = lng * Math.PI / 180, b = lat * Math.PI / 180;
-    return [Math.cos(b) * Math.cos(a), Math.cos(b) * Math.sin(a), Math.sin(b)];
-  };
-  function routePoints(a, b) {
-    const u = toUnit(a.lng, a.lat), v = toUnit(b.lng, b.lat);
-    const angle = Math.acos(Math.max(-1, Math.min(1, u.reduce((s, n, i) => s + n * v[i], 0))));
-    const denominator = Math.sin(angle);
-    return Array.from({ length: 33 }, (_, i) => {
-      const t = i / 32;
-      const ka = denominator > .0001 ? Math.sin((1 - t) * angle) / denominator : 1 - t;
-      const kb = denominator > .0001 ? Math.sin(t * angle) / denominator : t;
-      const xyz = u.map((n, j) => n * ka + v[j] * kb);
-      return { lng: Math.atan2(xyz[1], xyz[0]) * 180 / Math.PI,
-        lat: Math.atan2(xyz[2], Math.hypot(xyz[0], xyz[1])) * 180 / Math.PI,
-        altitude: 1 + .11 * Math.sin(Math.PI * t) };
-    });
-  }
-  const routeCandidates = D.RELATIONS.map(r => {
-    const a = D.objById(r.from), b = D.objById(r.to);
-    if (!a || !b || a.geo === false || b.geo === false || !Number.isFinite(a.lng) || !Number.isFinite(a.lat) || !Number.isFinite(b.lng) || !Number.isFinite(b.lat)) return null;
-    const distance = Math.hypot(a.lng - b.lng, a.lat - b.lat);
-    if (distance < 2 || (r.confidence || 0) < .6) return null;
-    return { id: r.id, color: routeColor(r.type), width: 1 + Math.min(1.4, (r.strength || .5) * 1.3),
-      score: Math.min(distance, 110) + (r.confidence || 0) * 25, points: routePoints(a, b) };
-  }).filter(Boolean).sort((a, b) => b.score - a.score);
-  const routeCounts = new Map();
-  const globeRoutes = routeCandidates.filter(route => {
-    const count = routeCounts.get(route.color) || 0;
-    if (count >= 4) return false;
-    routeCounts.set(route.color, count + 1);
-    return true;
-  }).slice(0, 16);
-  function drawGlobeRoutes(ctx, cx, cy, R) {
-    globeRoutes.forEach((route, index) => {
-      const projected = route.points.map(p => {
-        const v = gProject(p.lng, p.lat, cx, cy, R);
-        return { x: cx + (v.x - cx) * p.altitude, y: cy + (v.y - cy) * p.altitude, z: v.z };
-      });
-      ctx.beginPath();
-      projected.forEach((p, i) => {
-        if (p.z <= 0) return;
-        if (!i || projected[i - 1].z <= 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.strokeStyle = route.color; ctx.globalAlpha = .28; ctx.lineWidth = route.width; ctx.stroke();
-      const head = Math.floor(((globe.starOffset * .0075 * (1 + index % 3 * .18) + index * .19) % 1) * 32);
-      const bead = projected[head];
-      if (bead && bead.z > 0) {
-        ctx.beginPath();
-        for (let j = Math.max(0, head - 5); j <= head; j++) {
-          const p = projected[j];
-          if (p.z <= 0) continue;
-          if (j === Math.max(0, head - 5) || projected[j - 1].z <= 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
-        }
-        ctx.globalAlpha = .82; ctx.lineWidth = route.width + .6; ctx.shadowColor = route.color; ctx.shadowBlur = 5; ctx.stroke();
-        ctx.beginPath(); ctx.arc(bead.x, bead.y, 1.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-      ctx.globalAlpha = 1;
-    });
-  }
-  const globeTokens = () => {
-    const css = getComputedStyle(document.documentElement);
-    const v = n => css.getPropertyValue(n).trim();
-    return {
-      space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
-      nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
-      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
-      atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62
-    };
-  };
-  function drawGlobe() {
-    const c = dom.globe, ctx = c.getContext('2d');
-    const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
-    const st = S.state;
-    ctx.clearRect(0, 0, W, H);
-    const strong = st.theme !== 'light';
-    const gv = globeTokens();
-    /* 深空底 + 星野：不管事实层还是关联层，地球都要被星空包住（有动效） */
-    const sky = ctx.createLinearGradient(0, 0, W * .6, H);
-    sky.addColorStop(0, gv.space1); sky.addColorStop(1, gv.space2);
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    const neb = ctx.createRadialGradient(W * .24, H * .22, 0, W * .24, H * .22, Math.max(W, H) * .5);
-    neb.addColorStop(0, hexA(gv.nebula, .12)); neb.addColorStop(1, hexA(gv.nebula, 0));
-    ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
-    globe.stars.forEach(s2 => {
-      const x = ((s2.x + (globe.starOffset * .000012 * s2.speed) + 1) % 1) * W;
-      const tw = .6 + .4 * Math.sin(globe.starOffset * .09 * s2.speed + s2.x * 26);
-      ctx.globalAlpha = s2.a * tw;
-      ctx.fillStyle = gv.star;
-      ctx.beginPath(); ctx.arc(x, s2.y * H, s2.r, 0, Math.PI * 2); ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-    /* 大气层外圈：地球被包住的感觉 */
-    const atm = ctx.createRadialGradient(cx, cy, R * 1.004, cx, cy, R * 1.04);
-    atm.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.55 * gv.atmA) + ')');
-    atm.addColorStop(.5, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
-    atm.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.04, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
-    ctx.fillStyle = atm; ctx.fill('evenodd');
-    const haze = ctx.createRadialGradient(cx, cy, R, cx, cy, R * 1.18);
-    haze.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
-    haze.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.18, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
-    ctx.fillStyle = haze; ctx.fill('evenodd');
-    const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    g.addColorStop(0, gv.sea1); g.addColorStop(.58, gv.sea2); g.addColorStop(1, gv.sea3);
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
-    ctx.fillStyle = g; ctx.fill(); ctx.clip();
-    const p = palette();
-    landFeatures.forEach(feature => clipRing(feature.ring, cx, cy, R).forEach(run => {
-      if (run.length < 2) return;
-      ctx.beginPath();
-      run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-      ctx.closePath();
-      ctx.fillStyle = regionFill(feature.name, p); ctx.fill();
-      ctx.strokeStyle = p.line; ctx.lineWidth = .8; ctx.stroke();
+  /* 三维地球：与关联层共用同一套渲染（V03Globe），本层只提供事实点与叠加标记 */
+  function globePayload() {
+    const st = S.state, all = F.factsAtLevel(st);
+    const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
+    const points = facts.map(f => ({
+      id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, glyph: emojiOf(f),
+      halo: (st.sk.influence && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
+      haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
-    ctx.strokeStyle = strong ? 'rgba(205,230,225,.2)' : 'rgba(55,79,95,.2)';
-    for (let lat = -60; lat <= 60; lat += 30) {
-      const pts = [];
-      for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
-      clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
-    }
-    // 事实层只显示事实点和有依据的地理影响圆；关联流线仅在关联层绘制。
-    const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
-    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.62, hexA(gv.space2, .06)); term.addColorStop(1, hexA(gv.space2, .34));
-    ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
-    ctx.restore();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(' + gv.atmo + ',' + (.85 * gv.atmA) + ')'; ctx.lineWidth = 1.5;
-    ctx.shadowColor = 'rgba(' + gv.atmo + ',' + gv.atmA + ')'; ctx.shadowBlur = 12; ctx.stroke(); ctx.shadowBlur = 0;
-    const hits = [];
-    const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
-      const p = gProject(f.lng, f.lat, cx, cy, R);
-      if (p.z <= 0) return;
-      const rr = radiusPx(f) * .9;
-      const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
-      const col = catOf(f).c;
-      grd.addColorStop(0, hexA(col, IMPACT_ALPHA[f.impact] || .12));
-      grd.addColorStop(1, hexA(col, 0));
-      ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, Math.PI * 2); ctx.fillStyle = grd; ctx.fill();
-    });
-    facts.forEach(f => {
-      const p = gProject(f.lng, f.lat, cx, cy, R);
-      if (p.z <= 0) return;
-      ctx.beginPath(); ctx.arc(p.x, p.y, 3.4, 0, Math.PI * 2);
-      ctx.fillStyle = hexA(catOf(f).c, .28); ctx.fill();
-      ctx.strokeStyle = catOf(f).c; ctx.lineWidth = .9; ctx.stroke();
-      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
-      ctx.fillText(emojiOf(f), p.x, p.y + 3);
-      hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
-    });
-    const marks = (st.sk.regions ? regionsAtLevel() : [])
+    const overlay = (st.sk.regions ? regionsAtLevel() : [])
       .concat(st.sk.gates ? gatesAtLevel('port') : [], st.sk.airports ? gatesAtLevel('airport') : [],
         st.sk.markets ? v12Overlay('market') : [], st.sk.risks ? v12Overlay('risk') : []);
-    marks.forEach(m => {
-      const p = gProject(m.lng, m.lat, cx, cy, R);
-      if (p.z <= 0) return;
-      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = strong ? '#e4f1ed' : '#fff'; ctx.fill();
-      ctx.strokeStyle = m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1';
-      ctx.lineWidth = 1; ctx.stroke();
-      hits.push({ x: p.x, y: p.y, type: 'mark', id: m.id });
-    });
-    globe.hits = hits;
-  }
-  function globeHit(x, y) {
-    const sx = dom.globe.width / dom.globe.clientWidth, sy = dom.globe.height / dom.globe.clientHeight;
-    const p = { x: x * sx, y: y * sy };
-    let best = null, bd = 14 * sx;
-    (globe.hits || []).forEach(h => { const d = Math.hypot(h.x - p.x, h.y - p.y); if (d < bd) { bd = d; best = h; } });
-    if (!best) return null;
-    return { type: best.type === 'fact' ? 'fact' : 'mark', id: best.id };
-  }
-  function loopGlobe(now) {
-    globe.raf = requestAnimationFrame(loopGlobe);
-    if (now - globe.last < 16) return;
-    globe.last = now;
-    globe.rot = (globe.rot + .09) % 360;
-    globe.starOffset = (globe.starOffset + .42) % 100000;
-    drawGlobe();
+    const marks = overlay.map(m => ({
+      id: m.id, lng: m.lng, lat: m.lat,
+      color: m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1'
+    }));
+    return { mode: 'fact', points, marks };
   }
   function syncMode() {
-    const show3d = S.state.sk.mode3d;
-    const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
-    const on3d = show3d && visible;
+    const st = S.state;
+    const show3d = st.sk.mode3d;
+    const visible = st.tab === 'fact' && document.visibilityState !== 'hidden';
     const target = show3d ? dom.globe : dom.map;
-    if (globe.shown !== target) {
-      globe.shown = target;
+    if (globeShown !== target) {
+      globeShown = target;
       target.classList.remove('view-fade');
       void target.offsetWidth;
       target.classList.add('view-fade');
@@ -6859,17 +7017,12 @@ window.V03Fact = (function () {
       if (shouldPauseMap) animation.stop(); else animation.start();
       mapAnimationPaused = shouldPauseMap;
     }
-    if (on3d && !globe.active) {
-      globe.active = true; resizeGlobe(); globe.rot = 105;
-      if (!globe.raf) globe.raf = requestAnimationFrame(loopGlobe);
-    } else if (!on3d && globe.active) {
-      globe.active = false;
-      if (globe.raf) { cancelAnimationFrame(globe.raf); globe.raf = 0; }
-    }
+    globe.setVisible(show3d && visible);
+    if (show3d && visible) globe.update(globePayload());
   }
+  let globeShown = null;
   function setVisible() { if (dom.globe) syncMode(); }
 
-  /* ---------- 主更新 ---------- */
   function update() {
     if (!root) return;
     const st = S.state;
@@ -6924,11 +7077,9 @@ window.V03Fact = (function () {
       flashes: freshFlashes.length,
       roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
       dictReady: !!F.dictReady,
-      globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length,
-      globeActive: globe.active, globeZoom: gloveZoomSafe(), mapAnimationPaused
+      globe: globe.debug(), mapAnimationPaused
     };
   };
-  const gloveZoomSafe = () => Number((globe.zoom || 1).toFixed(3));
   const pick = {
     fact: id => onMapClick({ seriesId: 'facts', data: { id } }),
     region: id => onMapClick({ seriesId: 'regions', data: { id } }),
@@ -6940,441 +7091,6 @@ window.V03Fact = (function () {
   };
   return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude, worldCopies,
     mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
-})();
-
-</script>
-<script>
-/* ============================================================
-   关联层三维地球（正交投影，离线自绘）
-   - 深空底 + 三层星野（视差 + 闪烁）+ 大气层光圈 + 明暗交界
-   - 陆块沿用二维地图的区域配色，保证 2D / 3D 同源
-   - 关系线：入场时按顺序点亮本体、再逐条把线画出来；画完后持续流动（彗尾粒子）
-   - 新本体接入：星芒闪 + 扩散环，随后新线从头画到尾并加入持续流动
-   - 滚轮放到最大对外抛 onZoomEdge('in')，由关联层切到二维地图
-   ============================================================ */
-window.V03RelGlobe = (function () {
-  let canvas, ctx, visible = false, raf = 0, last = 0, rotation = 105, tilt = .22, radiusScale = .38;
-  let nodes = [], routes = [], hits = [], geoIndex = new Map();
-  let onSelect = () => {}, onZoomEdge = () => {}, colorOf = () => '#4d966a';
-  let pointer = null, pauseUntil = 0, reduced = false;
-
-  /* ---------- 星野（固定种子，保证每次进入一致） ---------- */
-  let seed = 7301; const random = () => ((seed = seed * 16807 % 2147483647) - 1) / 2147483646;
-  const STAR_LAYERS = [
-    { count: 190, min: .3, max: .9, alpha: .34, depth: .35 },   /* 远景：暗、慢 */
-    { count: 120, min: .55, max: 1.3, alpha: .62, depth: .7 },  /* 中景 */
-    { count: 46, min: 1, max: 1.9, alpha: .95, depth: 1.15 }    /* 近景：亮、快 */
-  ].map(layer => ({
-    ...layer,
-    stars: Array.from({ length: layer.count }, () => ({
-      x: random(), y: random(), r: layer.min + random() * (layer.max - layer.min),
-      a: layer.alpha * (.55 + random() * .45), s: .12 + random() * .9
-    }))
-  }));
-  const NEBULA = Array.from({ length: 3 }, (_, i) => ({
-    x: .18 + random() * .64, y: .12 + random() * .72, r: .28 + random() * .34,
-    dx: (random() - .5) * .5, dy: (random() - .5) * .5
-  }));
-
-  const rad = Math.PI / 180;
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-  const polygons = window.V03Fact.worldGeoJSON(false).features.flatMap(f =>
-    (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
-      .map(rings => ({ name: f.properties.name, ring: rings[0] })));
-
-  function palette() {
-    const css = getComputedStyle(document.documentElement);
-    const v = n => css.getPropertyValue(n).trim();
-    return {
-      space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
-      nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
-      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
-      atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62,
-      line: v('--map-line') || 'rgba(79,108,123,.67)', accent: v('--accent') || '#236bad'
-    };
-  }
-  const hexA = (hex, a) => {
-    const h = String(hex).replace('#', '');
-    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-    const num = parseInt(n, 16);
-    return 'rgba(' + ((num >> 16) & 255) + ',' + ((num >> 8) & 255) + ',' + (num & 255) + ',' + a + ')';
-  };
-
-  /* ---------- 入场动效状态 ---------- */
-  let introT0 = 0, introOn = false;
-  const NODE_SPAN = 1500, LINE_BASE = 1400, LINE_SPAN = 1500, LINE_DUR = 620, LIT_DUR = 460;
-  let nodeDelay = [], routeDelay = [];
-  let flashes = [];
-
-  function mount(el, opts) {
-    canvas = el; ctx = canvas.getContext('2d');
-    onSelect = (opts && opts.select) || (() => {});
-    onZoomEdge = (opts && opts.zoomEdge) || (() => {});
-    reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    canvas.addEventListener('pointerdown', e => { pointer = { x: e.clientX, y: e.clientY, moved: false }; canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', e => {
-      if (!pointer) return;
-      const dx = e.clientX - pointer.x, dy = e.clientY - pointer.y;
-      pointer.moved ||= Math.abs(dx) + Math.abs(dy) > 3;
-      rotation = (rotation - dx * .38 + 360) % 360;
-      tilt = clamp(tilt + dy * .003, -.55, .55);
-      pointer.x = e.clientX; pointer.y = e.clientY; pauseUntil = performance.now() + 2200;
-    });
-    canvas.addEventListener('pointerup', e => {
-      if (!pointer) return;
-      if (!pointer.moved) {
-        const rect = canvas.getBoundingClientRect();
-        const hit = hits.find(h => Math.hypot(h.x - (e.clientX - rect.left), h.y - (e.clientY - rect.top)) < 10);
-        if (hit) onSelect(hit.id);
-      }
-      pointer = null;
-    });
-    canvas.addEventListener('wheel', e => {
-      e.preventDefault();
-      zoomBy(e.deltaY < 0 ? 1 : -1);
-    }, { passive: false });
-    window.addEventListener('resize', resize);
-  }
-
-  function resize() {
-    if (!canvas) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const width = Math.max(1, canvas.clientWidth), height = Math.max(1, canvas.clientHeight);
-    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
-      canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
-    }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-
-  /* ---------- 投影 ---------- */
-  function project(lng, lat, cx, cy, R, altitude = 1) {
-    const lambda = (lng - rotation) * rad, phi = lat * rad;
-    const x = Math.cos(phi) * Math.sin(lambda), y = Math.sin(phi), z = Math.cos(phi) * Math.cos(lambda);
-    return {
-      x: cx + R * altitude * x, y: cy - R * altitude * (y * Math.cos(tilt) - z * Math.sin(tilt)),
-      z: y * Math.sin(tilt) + z * Math.cos(tilt)
-    };
-  }
-  /* 大圆航线：返回带高度的采样点 */
-  function arc(a, b) {
-    const xyz = p => [Math.cos(p.lat * rad) * Math.cos(p.lng * rad), Math.cos(p.lat * rad) * Math.sin(p.lng * rad), Math.sin(p.lat * rad)];
-    const u = xyz(a), v = xyz(b), angle = Math.acos(clamp(u.reduce((s, x, i) => s + x * v[i], 0), -1, 1));
-    const sine = Math.sin(angle);
-    return Array.from({ length: 33 }, (_, i) => {
-      const t = i / 32, m = sine > .0001 ? Math.sin((1 - t) * angle) / sine : 1 - t, n = sine > .0001 ? Math.sin(t * angle) / sine : t;
-      const p = u.map((x, j) => x * m + v[j] * n);
-      return {
-        lng: Math.atan2(p[1], p[0]) / rad, lat: Math.atan2(p[2], Math.hypot(p[0], p[1])) / rad,
-        altitude: 1 + .16 * Math.sin(Math.PI * t)
-      };
-    });
-  }
-
-  function update(objects, relations, opts) {
-    const options = opts || {};
-    colorOf = options.colorOf || colorOf;
-    geoIndex = new Map(objects.filter(o => o.geo !== false && Number.isFinite(o.lng) && Number.isFinite(o.lat)).map(o => [o.id, o]));
-    const degree = new Map();
-    relations.forEach(r => { degree.set(r.from, (degree.get(r.from) || 0) + 1); degree.set(r.to, (degree.get(r.to) || 0) + 1); });
-    const ranked = [...geoIndex.values()].sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
-    const keep = new Set(options.keep || []);
-    nodes = ranked.filter(o => keep.has(o.id) || ranked.indexOf(o) < 150).slice(0, 170);
-    const limit = options.limit || 44;
-    routes = relations.map(r => ({ r, a: geoIndex.get(r.from), b: geoIndex.get(r.to) })).filter(x => x.a && x.b &&
-      Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat) > 10)
-      .map(x => ({
-        id: x.r.id, points: arc(x.a, x.b), color: colorOf(x.r.type), keep: keep.has(x.r.id),
-        score: Math.min(120, Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat)) + (x.r.confidence || 0) * 24
-      }))
-      .sort((a, b) => Number(b.keep) - Number(a.keep) || b.score - a.score)
-      .slice(0, limit)
-      .map((route, i) => ({ ...route, phase: (i * .37) % 1, speed: .17 + (i % 5) * .035, drawFrom: 0 }));
-    /* 用户正在看的对象先点亮，其余按连接数依次点亮 */
-    nodes = nodes.slice().sort((a, b) => Number(keep.has(b.id)) - Number(keep.has(a.id)));
-    nodeDelay = nodes.map((o, i) => (i / Math.max(1, nodes.length - 1)) * NODE_SPAN);
-    routeDelay = routes.map((route, i) => LINE_BASE + (i / Math.max(1, routes.length - 1)) * LINE_SPAN);
-    resize();
-  }
-
-  function beginIntro() {
-    introOn = true; introT0 = performance.now(); flashes = [];
-  }
-  const revealed = now => !introOn || now - introT0 > LINE_BASE + LINE_SPAN + LINE_DUR;
-
-  /* ---------- 新本体接入：星芒闪 + 扩散环；它的线从头画一遍 ---------- */
-  function flash(ids, routeIds) {
-    const now = performance.now();
-    const list = Array.isArray(ids) ? ids : [ids];
-    list.forEach((id, i) => {
-      const o = geoIndex.get(id);
-      if (!o) return;
-      if (!nodes.some(n => n.id === id)) { nodes.push(o); nodeDelay.push(0); }
-      flashes.push({ lng: o.lng, lat: o.lat, t0: now + i * 160, dur: 2800, color: (window.V03Data.domain && (window.V03Data.domain(o.domain) || {}).c) || '#ffd98a' });
-    });
-    (routeIds || []).forEach(id => {
-      const route = routes.find(x => x.id === id);
-      if (route) route.drawFrom = now + 180;
-    });
-  }
-  function replay() { beginIntro(); }
-
-  function draw(now) {
-    const w = canvas.clientWidth, h = canvas.clientHeight, cx = w * .5, cy = h * .5;
-    const R = Math.min(w, h) * radiusScale, p = palette();
-    ctx.clearRect(0, 0, w, h);
-    drawSpace(w, h, now, p);
-    drawAtmosphere(cx, cy, R, p, 1);
-
-    /* --- 地球本体 --- */
-    const sea = ctx.createRadialGradient(cx - R * .34, cy - R * .42, R * .06, cx, cy, R * 1.12);
-    sea.addColorStop(0, p.sea1); sea.addColorStop(.55, p.sea2); sea.addColorStop(1, p.sea3);
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fillStyle = sea; ctx.fill();
-    ctx.save(); ctx.clip();
-    drawLand(cx, cy, R, p);
-    drawGraticule(cx, cy, R, now, p);
-    drawRoutes(cx, cy, R, now, p);
-    drawGates(cx, cy, R);
-    drawNodes(cx, cy, R, now, p);
-    drawFlashes(cx, cy, R, now);
-    /* 明暗交界：光源在左上，右下压暗，球体不再是一张平贴的图 */
-    const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
-    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.62, hexA(p.space2, .06)); term.addColorStop(1, hexA(p.space2, .34));
-    ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
-    ctx.restore();
-
-    /* 边缘光 + 大气内环 */
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(' + p.atmo + ',' + (.85 * p.atmA) + ')'; ctx.lineWidth = 1.6;
-    ctx.shadowColor = 'rgba(' + p.atmo + ',' + p.atmA + ')'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
-    drawAtmosphere(cx, cy, R, p, 2);
-  }
-
-  function drawSpace(w, h, now, p) {
-    const sky = ctx.createLinearGradient(0, 0, w * .6, h);
-    sky.addColorStop(0, p.space1); sky.addColorStop(1, p.space2);
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
-    /* 星云：两团随旋转缓慢漂移的冷色雾 */
-    NEBULA.forEach((n, i) => {
-      const drift = reduced ? 0 : now * .000012;
-      const x = ((n.x + drift * n.dx + 1) % 1) * w, y = ((n.y + drift * n.dy + 1) % 1) * h, r = n.r * Math.max(w, h);
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, hexA(i === 1 ? p.accent : p.nebula, .07));
-      g.addColorStop(1, hexA(p.nebula, 0));
-      ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
-    });
-    STAR_LAYERS.forEach(layer => layer.stars.forEach(st => {
-      const x = ((st.x + (reduced ? 0 : now * .000004 * layer.depth * st.s) + 1) % 1) * w;
-      const twinkle = reduced ? 1 : .62 + .38 * Math.sin(now * .0011 * st.s + st.x * 26);
-      ctx.globalAlpha = st.a * twinkle;
-      ctx.fillStyle = p.star;
-      ctx.beginPath(); ctx.arc(x, st.y * h, st.r * layer.depth, 0, Math.PI * 2); ctx.fill();
-    }));
-    ctx.globalAlpha = 1;
-  }
-
-  /* 大气层：内圈勾勒球体，外圈把地球「包住」 */
-  function drawAtmosphere(cx, cy, R, p, ring) {
-    /* 参考苹果地图 / Mapbox：内圈是一道很窄的亮边，外圈只是很淡的一层雾 */
-    const inner = ring === 1 ? R * 1.004 : R, outer = ring === 1 ? R * 1.04 : R * 1.18;
-    const g = ctx.createRadialGradient(cx, cy, inner, cx, cy, outer);
-    const a = (ring === 1 ? .55 : .16) * p.atmA;
-    const rgb = p.atmo + ',';
-    g.addColorStop(0, 'rgba(' + rgb + (a) + ')');
-    g.addColorStop(.5, 'rgba(' + rgb + (a * .3) + ')');
-    g.addColorStop(1, 'rgba(' + rgb + '0)');
-    ctx.beginPath(); ctx.arc(cx, cy, outer, 0, Math.PI * 2); ctx.arc(cx, cy, inner, 0, Math.PI * 2, true);
-    ctx.fillStyle = g; ctx.fill('evenodd');
-  }
-
-  let fillCache = new Map(), fillTheme = '';
-  function landFill(name, p) {
-    if (fillTheme !== p.sea2) { fillCache = new Map(); fillTheme = p.sea2; }
-    if (!fillCache.has(name)) fillCache.set(name, window.V03Fact.mapRegionColor(name));
-    return fillCache.get(name);
-  }
-  function drawLand(cx, cy, R, p) {
-    ctx.lineJoin = 'round';
-    for (const feature of polygons) {
-      let run = [];
-      const flush = () => {
-        if (run.length < 3) { run = []; return; }
-        ctx.beginPath(); run.forEach((pt, i) => i ? ctx.lineTo(pt.x, pt.y) : ctx.moveTo(pt.x, pt.y)); ctx.closePath();
-        ctx.fillStyle = landFill(feature.name, p);
-        ctx.globalAlpha = .95; ctx.fill(); ctx.globalAlpha = 1;
-        ctx.strokeStyle = 'rgba(9,26,38,.5)'; ctx.lineWidth = .6; ctx.stroke();
-        /* 海岸线高光：只画朝光的一侧，陆地与海面之间有一道亮边 */
-        ctx.strokeStyle = hexA('#ffffff', .22); ctx.lineWidth = .5; ctx.stroke();
-        run = [];
-      };
-      for (const [lng, lat] of feature.ring) { const pt = project(lng, lat, cx, cy, R); if (pt.z > 0) run.push(pt); else flush(); }
-      flush();
-    }
-  }
-
-  function drawGraticule(cx, cy, R, now, p) {
-    ctx.strokeStyle = hexA('#ffffff', .10); ctx.lineWidth = .6;
-    for (let lat = -60; lat <= 60; lat += 30) {
-      ctx.beginPath(); let started = false;
-      for (let lng = -180; lng <= 180; lng += 4) {
-        const pt = project(lng, lat, cx, cy, R);
-        if (pt.z <= 0) { started = false; continue; }
-        if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.stroke();
-    }
-    for (let lng = -180; lng < 180; lng += 30) {
-      ctx.beginPath(); let started = false;
-      for (let lat = -88; lat <= 88; lat += 4) {
-        const pt = project(lng, lat, cx, cy, R);
-        if (pt.z <= 0) { started = false; continue; }
-        if (!started) { ctx.moveTo(pt.x, pt.y); started = true; } else ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.stroke();
-    }
-  }
-
-  /* 关系线：入场时逐条画出来，画完后持续有彗尾粒子在跑 */
-  function drawRoutes(cx, cy, R, now, p) {
-    routes.forEach((route, i) => {
-      const delay = routeDelay[i] || 0;
-      const from = Math.max(introOn ? introT0 + delay : 0, route.drawFrom);
-      const drawn = clamp((now - from) / LINE_DUR, 0, 1);
-      if (drawn <= 0) return;
-      const pts = route.points.map(pt => {
-        const proj = project(pt.lng, pt.lat, cx, cy, R, pt.altitude);
-        return { x: cx + (proj.x - cx) * (1 + (pt.altitude - 1)), y: cy + (proj.y - cy) * (1 + (pt.altitude - 1)), z: proj.z };
-      });
-      const total = pts.length;
-      const upto = Math.max(2, Math.round(ease(drawn) * (total - 1)));
-      /* 底线 */
-      ctx.beginPath();
-      for (let j = 0; j <= upto; j++) {
-        const pt = pts[j];
-        if (pt.z <= 0) continue;
-        if (j === 0 || pts[j - 1].z <= 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.strokeStyle = hexA(route.color, .52); ctx.lineWidth = 1.35; ctx.stroke();
-      if (drawn < 1) {
-        /* 正在连线：头部亮点，像从本体出发把一个一个本体接上 */
-        const head = pts[upto];
-        if (head && head.z > 0) {
-          ctx.beginPath(); ctx.arc(head.x, head.y, 3.4, 0, Math.PI * 2);
-          ctx.fillStyle = hexA(route.color, .95); ctx.shadowColor = route.color; ctx.shadowBlur = 16; ctx.fill(); ctx.shadowBlur = 0;
-        }
-        return;
-      }
-      /* 持续流动：彗尾粒子 */
-      const phase = ((now - from) * .001 * route.speed + route.phase) % 1;
-      const head = 1 + phase * (total - 3);
-      const tail = 9;
-      for (let k = 0; k < tail; k++) {
-        const idx = head - k;
-        const j0 = Math.floor(idx), j1 = Math.min(total - 1, j0 + 1), t = idx - j0;
-        if (j0 < 0 || pts[j0].z <= 0 || pts[j1].z <= 0) continue;
-        const x = pts[j0].x + (pts[j1].x - pts[j0].x) * t, y = pts[j0].y + (pts[j1].y - pts[j0].y) * t;
-        const fade = 1 - k / tail;
-        ctx.beginPath(); ctx.arc(x, y, 1.3 + fade * 2.4, 0, Math.PI * 2);
-        ctx.fillStyle = k === 0 ? '#ffffff' : hexA(route.color, .16 + fade * .74);
-        ctx.fill();
-      }
-      const hx = pts[Math.floor(head)];
-      if (hx && hx.z > 0) {
-        ctx.beginPath();
-        for (let k = Math.max(0, Math.floor(head) - 6); k <= Math.floor(head); k++) {
-          const pt = pts[k]; if (pt.z <= 0) continue;
-          if (k === Math.max(0, Math.floor(head) - 6)) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
-        }
-        ctx.strokeStyle = hexA(route.color, .8); ctx.lineWidth = 3; ctx.shadowColor = route.color; ctx.shadowBlur = 12; ctx.stroke(); ctx.shadowBlur = 0;
-      }
-    });
-  }
-
-  function drawGates(cx, cy, R) {
-    if (!window.V03Store.state.sk.gates) return;
-    window.V03Data.GATES.filter(g => g.kind === 'port').forEach(g => {
-      const pt = project(g.lng, g.lat, cx, cy, R); if (pt.z <= 0) return;
-      ctx.font = '12px sans-serif'; ctx.fillStyle = '#e1a653'; ctx.fillText('⚓', pt.x - 6, pt.y + 4);
-    });
-  }
-
-  function drawNodes(cx, cy, R, now, p) {
-    hits = [];
-    nodes.forEach((o, i) => {
-      const delay = nodeDelay[i] || 0;
-      const lit = clamp((now - (introT0 + delay)) / LIT_DUR, 0, 1);
-      if (introOn && lit <= 0) return;
-      const pt = project(o.lng, o.lat, cx, cy, R); if (pt.z <= 0) return;
-      const pop = introOn ? ease(lit) : 1;
-      const halo = 3.6 + pop * 4.2;
-      const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.6);
-      haloG.addColorStop(0, hexA(p.accent, .26 * pop));
-      haloG.addColorStop(1, hexA(p.accent, 0));
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.6, 0, Math.PI * 2); ctx.fillStyle = haloG; ctx.fill();
-      if (introOn && lit < 1) {
-        /* 刚点亮：柔和的光斑渐显，不做扩散环 */
-        ctx.beginPath(); ctx.arc(pt.x, pt.y, 3 + ease(lit) * 7, 0, Math.PI * 2);
-        ctx.fillStyle = hexA('#ffffff', .3 * (1 - lit)); ctx.fill();
-      }
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2 + pop * 1.6, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff'; ctx.fill();
-      ctx.strokeStyle = p.accent; ctx.lineWidth = 1.3; ctx.stroke();
-      hits.push({ x: pt.x, y: pt.y, id: o.id });
-    });
-  }
-
-  /* 新本体：一次性的柔和光晕，缓慢亮起再淡出（不做循环闪烁，也不画扩散环） */
-  function drawFlashes(cx, cy, R, now) {
-    flashes = flashes.filter(f => now - f.t0 < f.dur);
-    flashes.forEach(f => {
-      const t = clamp((now - f.t0) / f.dur, 0, 1);
-      if (t <= 0) return;
-      const pt = project(f.lng, f.lat, cx, cy, R); if (pt.z <= 0) return;
-      const a = t < .34 ? ease(t / .34) : Math.max(0, 1 - (t - .34) / .66);
-      const rr = 9 + 22 * ease(Math.min(1, t / .34));
-      const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
-      g.addColorStop(0, hexA(f.color || '#ffd98a', .5 * a));
-      g.addColorStop(.55, hexA(f.color || '#ffd98a', .22 * a));
-      g.addColorStop(1, hexA(f.color || '#ffd98a', 0));
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.2 + 1.6 * a, 0, Math.PI * 2);
-      ctx.fillStyle = hexA('#ffffff', .85 * a); ctx.fill();
-    });
-  }
-
-  function loop(now) {
-    if (!visible) { raf = 0; return; }
-    raf = requestAnimationFrame(loop);
-    if (now - last < 33) return;
-    last = now;
-    if (!pointer && now > pauseUntil) rotation = (rotation + .11) % 360;
-    resize(); draw(now);
-  }
-
-  function setVisible(next) {
-    const was = visible;
-    visible = next;
-    if (!next) { if (raf) cancelAnimationFrame(raf); raf = 0; return; }
-    resize();
-    if (!was) beginIntro();
-    if (!raf) raf = requestAnimationFrame(loop);
-  }
-
-  function zoomBy(dir) { return zoomByFactor(dir > 0 ? 1.12 : .89); }
-  /* 按倍率缩放（触控板双指 / 按钮共用）；放到最大再放大就切二维地图 */
-  function zoomByFactor(factor) {
-    if (!Number.isFinite(factor) || factor <= 0) return '';
-    const before = radiusScale;
-    radiusScale = clamp(radiusScale * factor, .27, .47);
-    pauseUntil = performance.now() + 1800;
-    if (factor > 1 && before >= .4699) { onZoomEdge('in'); return 'in'; }
-    if (factor < 1 && before <= .2701) return 'out';
-    return '';
-  }
-  const zoomState = () => ({ canIn: radiusScale < .4699, canOut: radiusScale > .2701, zoom: radiusScale / .38 });
-  const debug = () => ({ visible, raf, rotation, radiusScale, nodes: nodes.length, routes: routes.length, hits: hits.length, flashes: flashes.length, intro: introOn ? Math.round(performance.now() - introT0) : -1 });
-  return { mount, update, setVisible, zoomBy, zoomByFactor, zoomState, flash, replay, debug };
 })();
 
 </script>
@@ -7395,6 +7111,7 @@ window.V03RelGlobe = (function () {
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '', shownView = '';
+  const globe = window.V03Globe.create();   /* 与事实层共用同一套三维渲染 */
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, roamTimer: null, level: null };
   /* 与事实层一致的三级视角：L1 全球 → L2 中国 → L3 省区。
      3D 放大到极致切二维，二维缩到最小回 3D；点地图与事实层一样逐级下钻。 */
@@ -7448,22 +7165,12 @@ window.V03Relation = (function () {
     '影响':'#cf5f6a','价格传导':'#cf5f6a'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
-  const PALETTES = {
-    /* 配色 1 / 2 / 3：与事实层同一套（见 fact.js PALETTES），保证两层地图同一主题 */
-    light: {
-      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
-    },
-    color: {
-      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
-      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
-    },
-    atlas: {
-      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a', labelBg: 'rgba(255,255,255,.94)',
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', neutral: 'rgba(66,88,112,.78)', flow: '#1f6bff'
-    }
+  /* 地图配色（与事实层同一套） */
+  const MAP_PALETTE = {
+    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
+    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
   };
-  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
+  const palette = () => MAP_PALETTE;
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -7484,12 +7191,13 @@ window.V03Relation = (function () {
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), globe: root.querySelector('#relGlobe'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody'), tip: root.querySelector('#relTip'), hint: root.querySelector('#relHint') };
-    window.V03RelGlobe.mount(dom.globe, {
-      select: openObject,
+    globe.mount(dom.globe, {
+      pick: (kind, id) => { if (kind === 'object') openObject(id); },
+      /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
-        if (edge !== 'in' || S.state.rel.view !== 'globe') return;
-        S.set({ rel: { view: 'geo', level: relLevel() || 'L1' } });
-        toast('三维地球已放到最大 · 切换到二维地图');
+        if (S.state.rel.view !== 'globe') return;
+        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('三维地球已放到最大 · 切换到二维全球'); }
+        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('进入 2D 全球视角'); }
       }
     });
 
@@ -7505,7 +7213,7 @@ window.V03Relation = (function () {
     }, { capture: true, passive: false });
     window.addEventListener('resize', () => {
       if (chart && dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0) chart.resize();
-      window.V03RelGlobe.setVisible(S.state.tab === 'relation' && S.state.rel.view === 'globe');
+      globe.setVisible(S.state.tab === 'relation' && S.state.rel.view === 'globe');
     });
     /* 每新增一条事实：先亮星，再把它的关系线接上（与底部同一路流水事件） */
     S.onEvent('stream:line', p => {
@@ -7540,7 +7248,7 @@ window.V03Relation = (function () {
   function toGlobe() {
     S.set({ rel: { view: 'globe' } });
     toast('二维缩到最小 · 回到三维地球');
-    window.V03RelGlobe.replay();
+    globe.replay();
   }
 
   /* 下钻 / 返回：L1 全球 → L2 中国 → L3 省区 */
@@ -7720,7 +7428,7 @@ window.V03Relation = (function () {
   /* 按倍率缩放（双指 / 触摸板用），与按钮的步进缩放在同一套边界规则里 */
   function zoomByFactor(factor) {
     if (!Number.isFinite(factor) || factor <= 0) return;
-    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomByFactor(factor);
+    if (S.state.rel.view === 'globe') return globe.zoomByFactor(factor);
     if (S.state.rel.view === 'graph') {
       const next = Math.min(GRAPH_BOX[1], Math.max(GRAPH_BOX[0], camera.graphZoom * factor));
       if (Math.abs(next - camera.graphZoom) < 1e-4) return;
@@ -7738,7 +7446,7 @@ window.V03Relation = (function () {
   }
 
   function zoomBy(dir) {
-    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomBy(dir);
+    if (S.state.rel.view === 'globe') return globe.zoomBy(dir);
     if (S.state.rel.view === 'graph') {
       const next = Math.min(GRAPH_BOX[1], Math.max(GRAPH_BOX[0], camera.graphZoom * (dir > 0 ? 1.28 : 1 / 1.28)));
       if (Math.abs(next - camera.graphZoom) < 1e-3) return;
@@ -7756,7 +7464,7 @@ window.V03Relation = (function () {
     afterZoom();
   }
   const zoomState = () => {
-    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomState();
+    if (S.state.rel.view === 'globe') return globe.zoomState();
     if (S.state.rel.view === 'graph') {
       const zoom = camera.graphZoom;
       return { canIn: zoom < GRAPH_BOX[1] - 1e-3, canOut: zoom > GRAPH_BOX[0] + 1e-3, zoom };
@@ -8064,7 +7772,7 @@ window.V03Relation = (function () {
       fresh.push({ id: 'rel-fresh-' + (++freshSeq), lng: o.lng, lat: o.lat, t0: now + i * 160, dur: PULSE_MS, color: domOf(o).c || '#e4a449' });
     });
     if (!fresh.length) return;
-    if (S.state.rel.view === 'globe') window.V03RelGlobe.flash(objects.map(o => o && o.id).filter(Boolean), relations.map(r => r && r.id));
+    if (S.state.rel.view === 'globe') globe.flash(objects.map(o => o && o.id).filter(Boolean), relations.map(r => r && r.id));
     syncFresh();
     /* 新线晚一点再接上，看得出「先亮起、后连线」 */
     setTimeout(() => { if (S.state.rel.view === 'geo') paintFocus(); }, 1100);
@@ -8226,7 +7934,7 @@ window.V03Relation = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    window.V03RelGlobe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
+    globe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
       st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
@@ -8252,7 +7960,7 @@ window.V03Relation = (function () {
     }
     if (st.rel.view === 'globe') {
       const keep = new Set([focusId(), ...(st.carry || []).flatMap(id => (D.factById(id) || {}).objects || [])].filter(Boolean));
-      window.V03RelGlobe.update(objs, rels, { colorOf: typeColor, keep: [...keep] });
+      globe.update({ mode: 'relation', objects: objs, relations: rels, colorOf: typeColor, keep: [...keep] });
     } else {
       const c = ensureChart(); if (!c) return;
       /* 进图时把相机对准当前层级（切层时由 enterLevel 设定） */
@@ -8275,10 +7983,10 @@ window.V03Relation = (function () {
       drawerCards: document.querySelectorAll('#relBody .rel-card').length,
       relationRows: document.querySelectorAll('#drawerStack .rel-row').length,
       domains: D.DOMAINS.length, zoom: camera.zoom, level: relLevel(), focus: focusId(), intro: intro.on ? Math.round(intro.t * 100) : -1,
-      globe: window.V03RelGlobe.debug()
+      globe: globe.debug()
     };
   };
-  const setVisible = active => window.V03RelGlobe.setVisible(active && S.state.rel.view === 'globe');
+  const setVisible = active => globe.setVisible(active && S.state.rel.view === 'globe');
   return { mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
 })();
 
@@ -8303,7 +8011,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.0.9',
+      source: 'AgriLink v1.0.10',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -8430,42 +8138,6 @@ window.V03Sim = (function () {
     });
   }
 
-  /* ---------- G3：配色方案（三套主题，取自 Felt / Mapbox / Atlas·iipmaps 抽色） ---------- */
-  const THEMES = [
-    { id: 'light', name: '配色 1', desc: '清爽浅蓝 · Felt', swatch: ['#e4ebef', '#f0eee6', '#236bad'] },
-    { id: 'color', name: '配色 2', desc: '绿陆蓝水 · Mapbox', swatch: ['#5fbdf2', '#cfe9bd', '#e08a80'] },
-    { id: 'atlas', name: '配色 3', desc: '灰蓝数据 · Atlas', swatch: ['#cfdee8', '#fbfcfd', '#1f8cff'] }
-  ];
-  const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
-  let themePop = null;
-  function closeThemePop() {
-    if (!themePop) return;
-    themePop.remove(); themePop = null;
-    document.removeEventListener('mousedown', onThemeDown, true);
-  }
-  function onThemeDown(e) {
-    if (themePop && !themePop.contains(e.target) && !themePop._anchor.contains(e.target)) closeThemePop();
-  }
-  /* 色块 + 名称 + 当前标记：按 iipmaps 的 Palette Editor 那种色板样式做 */
-  function openThemePop() {
-    const anchor = $('btnTheme');
-    if (themePop) { closeThemePop(); return; }
-    const box = el('div', 'pal-pop');
-    box._anchor = anchor;
-    box.innerHTML = '<h4>配色方案</h4>' + THEMES.map(t =>
-      '<button type="button" class="pal-tile' + (S.state.theme === t.id ? ' on' : '') + '" data-th="' + t.id + '">' +
-      '<span class="pal-swatch" style="background:linear-gradient(135deg,' + t.swatch[0] + ' 0%,' + t.swatch[1] + ' 45%,' + t.swatch[2] + ' 100%)"></span>' +
-      '<span><b>' + t.name + '</b><i>' + t.desc + '</i></span>' +
-      (S.state.theme === t.id ? '<em>当前使用</em>' : '') + '</button>').join('');
-    box.querySelectorAll('[data-th]').forEach(b => { b.onclick = () => { S.set({ theme: b.dataset.th }); closeThemePop(); }; });
-    document.body.appendChild(box);
-    const r = anchor.getBoundingClientRect();
-    box.style.top = Math.round(r.bottom + 6) + 'px';
-    box.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - 276, r.right - 268))) + 'px';
-    themePop = box;
-    setTimeout(() => document.addEventListener('mousedown', onThemeDown, true), 0);
-  }
-
   function renderTopIcons() {
     const st = S.state;
     const set = (btn, on) => { btn.classList.toggle('on', !!on); btn.setAttribute('aria-pressed', String(!!on)); };
@@ -8475,10 +8147,6 @@ window.V03Sim = (function () {
     $('menuBtn').disabled = st.tab === 'sim';
     $('btnStream').disabled = st.tab === 'sim';
     $('btnCards').disabled = st.tab === 'sim';
-    const cur = themeOf(st.theme);
-    $('btnTheme').innerHTML = svg('sun', 16) + '<span class="theme-name">' + cur.name + '</span>';
-    $('btnTheme').setAttribute('aria-label', '配色方案：当前 ' + cur.name + '，点击选择');
-    $('btnTheme').title = '配色方案：当前 ' + cur.name + '（' + cur.desc + '）';
     $('btnSettings').title = '设置';
   }
 
@@ -9066,13 +8734,11 @@ window.V03Sim = (function () {
     $('menuBtn').innerHTML = svg('menu', 16);
     $('btnStream').innerHTML = svg('stream', 16);
     $('btnCards').innerHTML = svg('cards', 16);
-    $('btnTheme').innerHTML = svg('sun', 16);
     $('btnSettings').innerHTML = svg('gear', 16);
     $('menuBtn').onclick = () => S.set({ menu: !S.state.menu });
     $('menuClose').onclick = () => S.set({ menu: false });
     $('btnStream').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { stream: !S.state.panels.stream } }); };
     $('btnCards').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { cards: !S.state.panels.cards } }); };
-    $('btnTheme').onclick = () => openThemePop();
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
@@ -9083,12 +8749,12 @@ window.V03Sim = (function () {
   /* ---------- 启动 ---------- */
   function boot() {
     regMaps();
-    document.documentElement.dataset.theme = S.state.theme;
+    document.documentElement.dataset.theme = 'color';
     bindOnce();
     bindPanelKeys();
     mountLayers();
     S.on((st, changed) => {
-      document.documentElement.dataset.theme = st.theme;
+      document.documentElement.dataset.theme = 'color';   /* 本轮只保留一套地图配色，主题色后续接入 */
       markDirty();
       renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); syncStream(); renderSettings(); syncDrawers();
       refreshLayers(false);

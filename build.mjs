@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* AgriLink V1.0.9 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
+/* AgriLink V1.0.10 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
    —— 事实、关联层可离线加载；推演工作台依赖线上 iframe
    node build.mjs            正常构建（缺文件即失败）
    node build.mjs --partial  允许缺文件（并行开发自测用） */
@@ -50,8 +50,8 @@ const JS = [
   'src/v03/dict-f3.js',     // V2 指令 F3 事实三级分类字典（7/26/125）
   'src/v03/store.js',       // 唯一状态源
   'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
+  'src/v03/globe.js',       // 三维地球（事实层 / 关联层共用同一套渲染）
   'src/v03/fact.js',        // 事实层
-  'src/v03/rel-globe.js',   // 关联层正交地球与真实关系流线
   'src/v03/relation.js',    // 关联层
   'src/v03/mirofish-bridge.js', // 旧版工作台 iframe 桥接；发起页在工作台内按 PRD 调整
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗

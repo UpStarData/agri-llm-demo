@@ -78,42 +78,6 @@
     });
   }
 
-  /* ---------- G3：配色方案（三套主题，取自 Felt / Mapbox / Atlas·iipmaps 抽色） ---------- */
-  const THEMES = [
-    { id: 'light', name: '配色 1', desc: '清爽浅蓝 · Felt', swatch: ['#e4ebef', '#f0eee6', '#236bad'] },
-    { id: 'color', name: '配色 2', desc: '绿陆蓝水 · Mapbox', swatch: ['#5fbdf2', '#cfe9bd', '#e08a80'] },
-    { id: 'atlas', name: '配色 3', desc: '灰蓝数据 · Atlas', swatch: ['#cfdee8', '#fbfcfd', '#1f8cff'] }
-  ];
-  const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
-  let themePop = null;
-  function closeThemePop() {
-    if (!themePop) return;
-    themePop.remove(); themePop = null;
-    document.removeEventListener('mousedown', onThemeDown, true);
-  }
-  function onThemeDown(e) {
-    if (themePop && !themePop.contains(e.target) && !themePop._anchor.contains(e.target)) closeThemePop();
-  }
-  /* 色块 + 名称 + 当前标记：按 iipmaps 的 Palette Editor 那种色板样式做 */
-  function openThemePop() {
-    const anchor = $('btnTheme');
-    if (themePop) { closeThemePop(); return; }
-    const box = el('div', 'pal-pop');
-    box._anchor = anchor;
-    box.innerHTML = '<h4>配色方案</h4>' + THEMES.map(t =>
-      '<button type="button" class="pal-tile' + (S.state.theme === t.id ? ' on' : '') + '" data-th="' + t.id + '">' +
-      '<span class="pal-swatch" style="background:linear-gradient(135deg,' + t.swatch[0] + ' 0%,' + t.swatch[1] + ' 45%,' + t.swatch[2] + ' 100%)"></span>' +
-      '<span><b>' + t.name + '</b><i>' + t.desc + '</i></span>' +
-      (S.state.theme === t.id ? '<em>当前使用</em>' : '') + '</button>').join('');
-    box.querySelectorAll('[data-th]').forEach(b => { b.onclick = () => { S.set({ theme: b.dataset.th }); closeThemePop(); }; });
-    document.body.appendChild(box);
-    const r = anchor.getBoundingClientRect();
-    box.style.top = Math.round(r.bottom + 6) + 'px';
-    box.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - 276, r.right - 268))) + 'px';
-    themePop = box;
-    setTimeout(() => document.addEventListener('mousedown', onThemeDown, true), 0);
-  }
-
   function renderTopIcons() {
     const st = S.state;
     const set = (btn, on) => { btn.classList.toggle('on', !!on); btn.setAttribute('aria-pressed', String(!!on)); };
@@ -123,10 +87,6 @@
     $('menuBtn').disabled = st.tab === 'sim';
     $('btnStream').disabled = st.tab === 'sim';
     $('btnCards').disabled = st.tab === 'sim';
-    const cur = themeOf(st.theme);
-    $('btnTheme').innerHTML = svg('sun', 16) + '<span class="theme-name">' + cur.name + '</span>';
-    $('btnTheme').setAttribute('aria-label', '配色方案：当前 ' + cur.name + '，点击选择');
-    $('btnTheme').title = '配色方案：当前 ' + cur.name + '（' + cur.desc + '）';
     $('btnSettings').title = '设置';
   }
 
@@ -714,13 +674,11 @@
     $('menuBtn').innerHTML = svg('menu', 16);
     $('btnStream').innerHTML = svg('stream', 16);
     $('btnCards').innerHTML = svg('cards', 16);
-    $('btnTheme').innerHTML = svg('sun', 16);
     $('btnSettings').innerHTML = svg('gear', 16);
     $('menuBtn').onclick = () => S.set({ menu: !S.state.menu });
     $('menuClose').onclick = () => S.set({ menu: false });
     $('btnStream').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { stream: !S.state.panels.stream } }); };
     $('btnCards').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { cards: !S.state.panels.cards } }); };
-    $('btnTheme').onclick = () => openThemePop();
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
@@ -731,12 +689,12 @@
   /* ---------- 启动 ---------- */
   function boot() {
     regMaps();
-    document.documentElement.dataset.theme = S.state.theme;
+    document.documentElement.dataset.theme = 'color';
     bindOnce();
     bindPanelKeys();
     mountLayers();
     S.on((st, changed) => {
-      document.documentElement.dataset.theme = st.theme;
+      document.documentElement.dataset.theme = 'color';   /* 本轮只保留一套地图配色，主题色后续接入 */
       markDirty();
       renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); syncStream(); renderSettings(); syncDrawers();
       refreshLayers(false);

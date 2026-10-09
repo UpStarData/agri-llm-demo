@@ -14,6 +14,7 @@
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '', shownView = '';
+  const globe = window.V03Globe.create();   /* 与事实层共用同一套三维渲染 */
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, roamTimer: null, level: null };
   /* 与事实层一致的三级视角：L1 全球 → L2 中国 → L3 省区。
      3D 放大到极致切二维，二维缩到最小回 3D；点地图与事实层一样逐级下钻。 */
@@ -67,22 +68,12 @@ window.V03Relation = (function () {
     '影响':'#cf5f6a','价格传导':'#cf5f6a'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
-  const PALETTES = {
-    /* 配色 1 / 2 / 3：与事实层同一套（见 fact.js PALETTES），保证两层地图同一主题 */
-    light: {
-      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
-    },
-    color: {
-      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
-      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
-    },
-    atlas: {
-      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a', labelBg: 'rgba(255,255,255,.94)',
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', neutral: 'rgba(66,88,112,.78)', flow: '#1f6bff'
-    }
+  /* 地图配色（与事实层同一套） */
+  const MAP_PALETTE = {
+    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
+    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
   };
-  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
+  const palette = () => MAP_PALETTE;
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -103,12 +94,13 @@ window.V03Relation = (function () {
   function mount(el) {
     root = el; root.innerHTML = TPL;
     dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), globe: root.querySelector('#relGlobe'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody'), tip: root.querySelector('#relTip'), hint: root.querySelector('#relHint') };
-    window.V03RelGlobe.mount(dom.globe, {
-      select: openObject,
+    globe.mount(dom.globe, {
+      pick: (kind, id) => { if (kind === 'object') openObject(id); },
+      /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
-        if (edge !== 'in' || S.state.rel.view !== 'globe') return;
-        S.set({ rel: { view: 'geo', level: relLevel() || 'L1' } });
-        toast('三维地球已放到最大 · 切换到二维地图');
+        if (S.state.rel.view !== 'globe') return;
+        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('三维地球已放到最大 · 切换到二维全球'); }
+        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('进入 2D 全球视角'); }
       }
     });
 
@@ -124,7 +116,7 @@ window.V03Relation = (function () {
     }, { capture: true, passive: false });
     window.addEventListener('resize', () => {
       if (chart && dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0) chart.resize();
-      window.V03RelGlobe.setVisible(S.state.tab === 'relation' && S.state.rel.view === 'globe');
+      globe.setVisible(S.state.tab === 'relation' && S.state.rel.view === 'globe');
     });
     /* 每新增一条事实：先亮星，再把它的关系线接上（与底部同一路流水事件） */
     S.onEvent('stream:line', p => {
@@ -159,7 +151,7 @@ window.V03Relation = (function () {
   function toGlobe() {
     S.set({ rel: { view: 'globe' } });
     toast('二维缩到最小 · 回到三维地球');
-    window.V03RelGlobe.replay();
+    globe.replay();
   }
 
   /* 下钻 / 返回：L1 全球 → L2 中国 → L3 省区 */
@@ -339,7 +331,7 @@ window.V03Relation = (function () {
   /* 按倍率缩放（双指 / 触摸板用），与按钮的步进缩放在同一套边界规则里 */
   function zoomByFactor(factor) {
     if (!Number.isFinite(factor) || factor <= 0) return;
-    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomByFactor(factor);
+    if (S.state.rel.view === 'globe') return globe.zoomByFactor(factor);
     if (S.state.rel.view === 'graph') {
       const next = Math.min(GRAPH_BOX[1], Math.max(GRAPH_BOX[0], camera.graphZoom * factor));
       if (Math.abs(next - camera.graphZoom) < 1e-4) return;
@@ -357,7 +349,7 @@ window.V03Relation = (function () {
   }
 
   function zoomBy(dir) {
-    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomBy(dir);
+    if (S.state.rel.view === 'globe') return globe.zoomBy(dir);
     if (S.state.rel.view === 'graph') {
       const next = Math.min(GRAPH_BOX[1], Math.max(GRAPH_BOX[0], camera.graphZoom * (dir > 0 ? 1.28 : 1 / 1.28)));
       if (Math.abs(next - camera.graphZoom) < 1e-3) return;
@@ -375,7 +367,7 @@ window.V03Relation = (function () {
     afterZoom();
   }
   const zoomState = () => {
-    if (S.state.rel.view === 'globe') return window.V03RelGlobe.zoomState();
+    if (S.state.rel.view === 'globe') return globe.zoomState();
     if (S.state.rel.view === 'graph') {
       const zoom = camera.graphZoom;
       return { canIn: zoom < GRAPH_BOX[1] - 1e-3, canOut: zoom > GRAPH_BOX[0] + 1e-3, zoom };
@@ -683,7 +675,7 @@ window.V03Relation = (function () {
       fresh.push({ id: 'rel-fresh-' + (++freshSeq), lng: o.lng, lat: o.lat, t0: now + i * 160, dur: PULSE_MS, color: domOf(o).c || '#e4a449' });
     });
     if (!fresh.length) return;
-    if (S.state.rel.view === 'globe') window.V03RelGlobe.flash(objects.map(o => o && o.id).filter(Boolean), relations.map(r => r && r.id));
+    if (S.state.rel.view === 'globe') globe.flash(objects.map(o => o && o.id).filter(Boolean), relations.map(r => r && r.id));
     syncFresh();
     /* 新线晚一点再接上，看得出「先亮起、后连线」 */
     setTimeout(() => { if (S.state.rel.view === 'geo') paintFocus(); }, 1100);
@@ -845,7 +837,7 @@ window.V03Relation = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    window.V03RelGlobe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
+    globe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
       st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
@@ -871,7 +863,7 @@ window.V03Relation = (function () {
     }
     if (st.rel.view === 'globe') {
       const keep = new Set([focusId(), ...(st.carry || []).flatMap(id => (D.factById(id) || {}).objects || [])].filter(Boolean));
-      window.V03RelGlobe.update(objs, rels, { colorOf: typeColor, keep: [...keep] });
+      globe.update({ mode: 'relation', objects: objs, relations: rels, colorOf: typeColor, keep: [...keep] });
     } else {
       const c = ensureChart(); if (!c) return;
       /* 进图时把相机对准当前层级（切层时由 enterLevel 设定） */
@@ -894,9 +886,9 @@ window.V03Relation = (function () {
       drawerCards: document.querySelectorAll('#relBody .rel-card').length,
       relationRows: document.querySelectorAll('#drawerStack .rel-row').length,
       domains: D.DOMAINS.length, zoom: camera.zoom, level: relLevel(), focus: focusId(), intro: intro.on ? Math.round(intro.t * 100) : -1,
-      globe: window.V03RelGlobe.debug()
+      globe: globe.debug()
     };
   };
-  const setVisible = active => window.V03RelGlobe.setVisible(active && S.state.rel.view === 'globe');
+  const setVisible = active => globe.setVisible(active && S.state.rel.view === 'globe');
   return { mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
 })();
