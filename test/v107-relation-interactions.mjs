@@ -27,7 +27,7 @@ try {
     mode3d: V03Store.state.sk.mode3d, geoLevel: V03Store.state.geo.level,
     hint: document.querySelector('.rel-hint') ? document.querySelector('.rel-hint').textContent : '',
     zoom: V03Relation.debug().zoom, factZoom: V03Fact.debug().zoom,
-    globe: V03Relation.debug().globe.radiusScale, factGlobe: V03Fact.debug().globeZoom
+    globe: V03Relation.debug().globe.radiusScale, factGlobe: V03Fact.debug().globe.radiusScale
   }));
   /* 触控板双指缩放：Chrome 用 ctrl+wheel 表达 */
   const pinch = async (sel, n = 3, dy = -20) => {
@@ -153,26 +153,6 @@ try {
   await page.keyboard.press('Escape').catch(() => {});
   await page.evaluate(() => { V03Store.set({ menu: false, panels: { cards: true, stream: true } }); if (document.fullscreenElement) document.exitFullscreen(); });
   await page.waitForTimeout(400);
-
-  /* ---------- 配色方案选择器：三套主题 + 切换后 DOM 令牌同步 ---------- */
-  await page.locator('#btnTheme').click();
-  await page.waitForTimeout(300);
-  assert(await page.locator('.pal-tile').count() === 3, '配色选择器列出三套方案');
-  await page.locator('.pal-tile[data-th="atlas"]').click();
-  await page.waitForTimeout(700);
-  const themed = await page.evaluate(() => ({
-    theme: V03Store.state.theme, attr: document.documentElement.dataset.theme,
-    ocean: getComputedStyle(document.documentElement).getPropertyValue('--ocean').trim(),
-    topbar: getComputedStyle(document.querySelector('.topbar')).backgroundColor,
-    label: document.querySelector('#btnTheme .theme-name').textContent
-  }));
-  assert(themed.theme === 'atlas' && themed.attr === 'atlas', '切到配色 3 后状态与 DOM 属性同步');
-  assert(themed.ocean === '#cfdee8', '配色 3 的水域色生效（' + themed.ocean + '）');
-  assert(themed.topbar === 'rgb(21, 33, 49)', '配色 3 的深色顶栏生效（' + themed.topbar + '）');
-  assert(/配色 3/.test(themed.label), '顶栏按钮显示当前方案名');
-  await page.locator('#btnTheme').click(); await page.waitForTimeout(250);
-  await page.locator('.pal-tile[data-th="color"]').click(); await page.waitForTimeout(600);
-  assert((await page.evaluate(() => V03Store.state.theme)) === 'color', '可切回配色 2');
 
   /* ---------- 入场：先点亮本体，再逐条连线，最后持续流动 ---------- */
   await page.evaluate(() => V03Store.set({ tab: 'relation', rel: { view: 'globe', level: 'L1', focus: null } }));

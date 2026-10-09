@@ -11,6 +11,7 @@
 window.V03Fact = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
   let root, chart, dom = {}, sig = '', mapSig = '', cardSig = '';
+  const globe = window.V03Globe.create();   /* 与关联层共用同一套三维渲染，各自持有一个实例 */
   let freshFlashes = [], flashSeq = 0;
   let mapAnimationPaused = false;
   const camera = { level: null, center: [104.5, 34.5], zoom: 1.18, raf: null, roamTimer: null };
@@ -118,21 +119,18 @@ window.V03Fact = (function () {
       side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
     dom.searchStatus.onclick = () => S.set({ q: '' });
-    window.addEventListener('resize', () => { if (chart) chart.resize(); resizeGlobe(); });
-    dom.globe.addEventListener('click', e => {
-      const r = dom.globe.getBoundingClientRect();
-      const hit = globeHit(e.clientX - r.left, e.clientY - r.top);
-      if (!hit) return;
-      if (hit.type === 'fact') return openFact(hit.id);
-      showOverlay(hit.id);
+    window.addEventListener('resize', () => { if (chart) chart.resize(); });
+    globe.mount(dom.globe, {
+      pick: (kind, id) => (kind === 'fact' ? openFact(id) : showOverlay(id)),
+      /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
+      zoomEdge: edge => {
+        if (S.state.sk.mode3d && S.state.tab === 'fact') {
+          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('三维地球已放到最大 · 切换到二维全球'); }
+          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('进入 2D 全球视角'); }
+        }
+        if (edge === 'in' || edge === 'surface') { S.set({ sk: { mode3d: false } }); }
+      }
     });
-    /* 三维地球缩放：放到最大自动切二维地图（与关联层同一套边界行为） */
-    dom.globe.addEventListener('wheel', e => {
-      e.preventDefault();
-      globeZoomBy(e.deltaY < 0 ? 1 : -1);
-    }, { passive: false });
-    dom.globe.addEventListener('dblclick', () => globeZoomBy(1));
-    bindPinch(dom.mapBox);
     /* 二维地图缩到最小还在缩：切回三维地球（ECharts 自身会卡住最小 zoom，需要在这里拦） */
     dom.map.addEventListener('wheel', e => {
       if (S.state.sk.mode3d || S.state.geo.level !== 'L1' || e.deltaY <= 0) return;
@@ -143,18 +141,6 @@ window.V03Fact = (function () {
       if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
     }, { capture: true, passive: false });
     S.onEvent('stream:line', p => flashStar(p && p.fact, p && p.level));
-  }
-
-  function globeZoomBy(dir) {
-    const before = globe.zoom;
-    globe.zoom = Math.max(GLOBE_ZOOM[0], Math.min(GLOBE_ZOOM[1], globe.zoom * (dir > 0 ? 1.12 : .89)));
-    if (dir > 0 && before >= GLOBE_ZOOM[1] - .003) {
-      S.set({ sk: { mode3d: false } });
-      if (window.V03Shell) window.V03Shell.toast('三维地球已放到最大 · 切换到二维地图');
-      return 'in';
-    }
-    if (dir < 0 && before <= GLOBE_ZOOM[0] + .003) return 'out';
-    return '';
   }
 
   /* ---------- 地图（浅色农业风） ---------- */
@@ -264,18 +250,10 @@ window.V03Fact = (function () {
       zoomByFactor(f);
     }, { passive: false });
   }
-  /* 按倍率缩放（触控板双指用）；三维视图下作用于地球，二维视图下作用于地图 */
+  /* 按倍率缩放（触控板双指用）；三维视图下作用于共用地球，二维视图下作用于地图 */
   function zoomByFactor(factor) {
     if (!Number.isFinite(factor) || factor <= 0) return;
-    if (S.state.sk.mode3d) {
-      const before = globe.zoom;
-      globe.zoom = Math.max(GLOBE_ZOOM[0], Math.min(GLOBE_ZOOM[1], globe.zoom * factor));
-      if (factor > 1 && before >= GLOBE_ZOOM[1] - .003) {
-        S.set({ sk: { mode3d: false } });
-        if (window.V03Shell) window.V03Shell.toast('三维地球已放到最大 · 切换到二维地图');
-      }
-      return;
-    }
+    if (S.state.sk.mode3d) return globe.zoomByFactor(factor);
     const box = LEVEL[S.state.geo.level].zoomBox;
     /* 全球视角在最小比例尺继续缩小：与滚轮 / 按钮一致，切回三维地球 */
     if (factor < 1 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
@@ -290,7 +268,7 @@ window.V03Fact = (function () {
   }
 
   function zoomBy(dir) {
-    if (S.state.sk.mode3d) return globeZoomBy(dir);
+    if (S.state.sk.mode3d) return globe.zoomBy(dir);
     const box = LEVEL[S.state.geo.level].zoomBox;
     /* 全球视角缩到最小再缩：切回三维地球 */
     if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
@@ -304,7 +282,7 @@ window.V03Fact = (function () {
     afterZoom();
   }
   const zoomState = () => {
-    if (S.state.sk.mode3d) return { canIn: globe.zoom < GLOBE_ZOOM[1] - 1e-3, canOut: globe.zoom > GLOBE_ZOOM[0] + 1e-3, zoom: globe.zoom };
+    if (S.state.sk.mode3d) return globe.zoomState();
     const box = LEVEL[S.state.geo.level].zoomBox;
     /* 全球视角缩到底会切到三维地球，「缩小」始终可用 */
     return { canIn: camera.zoom < box[1] - 1e-3, canOut: true, zoom: camera.zoom };
@@ -336,27 +314,13 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
-  const PALETTES = {
-    /* 配色 1：Felt 式清爽浅蓝 */
-    light: {
-      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
-      regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
-    },
-    /* 配色 2：Mapbox Standard / 苹果地图的绿陆蓝水 */
-    color: {
-      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
-      regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
-      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
-    },
-    /* 配色 3：Atlas / iipmaps 抽色——灰蓝水域、近白陆地、亮蓝强调 */
-    atlas: {
-      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a',
-      regions: ['#f7f9fb', '#d9e4ef', '#e8eff6', '#c9d9e8', '#eef3f8', '#dfe7f0', '#f2f6fa', '#d2e0ec'],
-      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', mass: 'rgba(31,107,255,.2)', dot: '#1f6bff'
-    }
+  /* 地图配色（唯一一套，取自 Mapbox Standard / 苹果地图参考）：绿陆 / 蓝水 / 珊瑚边界 */
+  const MAP_PALETTE = {
+    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
+    regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
+    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
   };
-  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
+  const palette = () => MAP_PALETTE;
   /* 共享至少两个边界顶点才算相邻；贪心图着色保证接壤区域异色。 */
   function regionColors(features) {
     const byVertex = new Map(), neighbors = new Map();
@@ -844,250 +808,31 @@ window.V03Fact = (function () {
   }
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
-  /* ---------- 3D 地球：自转和关系流线（同一 Canvas，避免独立层错位） ---------- */
-  const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [], active: false, starOffset: 0, stars: [], zoom: 1 };
-  const GLOBE_ZOOM = [.72, 1.85];   /* 三维地球缩放区间；放到最大切二维，二维缩到最小切三维 */
-  let starSeed = 9137;
-  const starRnd = () => ((starSeed = (starSeed * 16807) % 2147483647) - 1) / 2147483646;
-  for (let i = 0; i < 260; i++) globe.stars.push({ x: starRnd(), y: starRnd(), r: .35 + starRnd() * 1.35, a: .24 + starRnd() * .62, speed: .15 + starRnd() * .85 });
-  function resizeGlobe() {
-    const c = dom.globe; if (!c) return;
-    const r = dom.mapBox.getBoundingClientRect();
-    /* The globe redraws continuously; a 1.5x backing store costs 2.25x pixels per frame. */
-    const width = Math.max(320, Math.round(r.width));
-    const height = Math.max(240, Math.round(r.height));
-    if (c.width !== width) c.width = width;
-    if (c.height !== height) c.height = height;
-  }
-  function globeR() { return Math.min(dom.globe.width, dom.globe.height) * (S.state.geo.level === 'L3' ? .46 : S.state.geo.level === 'L2' ? .40 : .36) * globe.zoom; }
-  function gProject(lng, lat, cx, cy, R) {
-    const lam = (lng - globe.rot) * Math.PI / 180, phi = lat * Math.PI / 180;
-    const cp = Math.cos(phi), x = cp * Math.sin(lam), y = Math.sin(phi), z = cp * Math.cos(lam);
-    const y2 = y * Math.cos(globe.tilt) - z * Math.sin(globe.tilt);
-    const z2 = y * Math.sin(globe.tilt) + z * Math.cos(globe.tilt);
-    return { x: cx + x * R, y: cy - y2 * R, z: z2, lng, lat };
-  }
-  function lerpEdge(a, b, cx, cy, R) {
-    const t = a.z / (a.z - b.z || 1e-6);
-    const p = gProject(a.lng + (b.lng - a.lng) * t, a.lat + (b.lat - a.lat) * t, cx, cy, R);
-    p.z = 0; return p;
-  }
-  function clipRing(ring, cx, cy, R) {
-    const out = []; let cur = null, prev = null;
-    ring.forEach(([lng, lat]) => {
-      const p = gProject(lng, lat, cx, cy, R);
-      if (p.z > 0) {
-        if (!cur) { cur = []; if (prev && prev.z <= 0) cur.push(lerpEdge(prev, p, cx, cy, R)); }
-        cur.push(p);
-      } else if (cur) { cur.push(lerpEdge(prev || p, p, cx, cy, R)); out.push(cur); cur = null; }
-      prev = p;
-    });
-    if (cur) { if (prev && prev.z > 0) cur.push(cur[0]); out.push(cur); }
-    return out;
-  }
-  const landFeatures = (() => {
-    const geo = worldGeoJSON();
-    return geo.features.flatMap(f => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
-      .map(rings => ({ name: f.properties.name, ring: rings[0] })));
-  })();
-  const routeColors = ['#61d6e8', '#f1c778', '#a7dc88', '#ef9e83', '#aab8f3'];
-  const routeColor = type => routeColors[/供应|流入|流出|贸易/.test(type) ? 0 :
-    /运输|通道|设施/.test(type) ? 1 : /生产|产区|基地/.test(type) ? 2 :
-    /影响|政策|价格/.test(type) ? 3 : 4];
-  const toUnit = (lng, lat) => {
-    const a = lng * Math.PI / 180, b = lat * Math.PI / 180;
-    return [Math.cos(b) * Math.cos(a), Math.cos(b) * Math.sin(a), Math.sin(b)];
-  };
-  function routePoints(a, b) {
-    const u = toUnit(a.lng, a.lat), v = toUnit(b.lng, b.lat);
-    const angle = Math.acos(Math.max(-1, Math.min(1, u.reduce((s, n, i) => s + n * v[i], 0))));
-    const denominator = Math.sin(angle);
-    return Array.from({ length: 33 }, (_, i) => {
-      const t = i / 32;
-      const ka = denominator > .0001 ? Math.sin((1 - t) * angle) / denominator : 1 - t;
-      const kb = denominator > .0001 ? Math.sin(t * angle) / denominator : t;
-      const xyz = u.map((n, j) => n * ka + v[j] * kb);
-      return { lng: Math.atan2(xyz[1], xyz[0]) * 180 / Math.PI,
-        lat: Math.atan2(xyz[2], Math.hypot(xyz[0], xyz[1])) * 180 / Math.PI,
-        altitude: 1 + .11 * Math.sin(Math.PI * t) };
-    });
-  }
-  const routeCandidates = D.RELATIONS.map(r => {
-    const a = D.objById(r.from), b = D.objById(r.to);
-    if (!a || !b || a.geo === false || b.geo === false || !Number.isFinite(a.lng) || !Number.isFinite(a.lat) || !Number.isFinite(b.lng) || !Number.isFinite(b.lat)) return null;
-    const distance = Math.hypot(a.lng - b.lng, a.lat - b.lat);
-    if (distance < 2 || (r.confidence || 0) < .6) return null;
-    return { id: r.id, color: routeColor(r.type), width: 1 + Math.min(1.4, (r.strength || .5) * 1.3),
-      score: Math.min(distance, 110) + (r.confidence || 0) * 25, points: routePoints(a, b) };
-  }).filter(Boolean).sort((a, b) => b.score - a.score);
-  const routeCounts = new Map();
-  const globeRoutes = routeCandidates.filter(route => {
-    const count = routeCounts.get(route.color) || 0;
-    if (count >= 4) return false;
-    routeCounts.set(route.color, count + 1);
-    return true;
-  }).slice(0, 16);
-  function drawGlobeRoutes(ctx, cx, cy, R) {
-    globeRoutes.forEach((route, index) => {
-      const projected = route.points.map(p => {
-        const v = gProject(p.lng, p.lat, cx, cy, R);
-        return { x: cx + (v.x - cx) * p.altitude, y: cy + (v.y - cy) * p.altitude, z: v.z };
-      });
-      ctx.beginPath();
-      projected.forEach((p, i) => {
-        if (p.z <= 0) return;
-        if (!i || projected[i - 1].z <= 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.strokeStyle = route.color; ctx.globalAlpha = .28; ctx.lineWidth = route.width; ctx.stroke();
-      const head = Math.floor(((globe.starOffset * .0075 * (1 + index % 3 * .18) + index * .19) % 1) * 32);
-      const bead = projected[head];
-      if (bead && bead.z > 0) {
-        ctx.beginPath();
-        for (let j = Math.max(0, head - 5); j <= head; j++) {
-          const p = projected[j];
-          if (p.z <= 0) continue;
-          if (j === Math.max(0, head - 5) || projected[j - 1].z <= 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
-        }
-        ctx.globalAlpha = .82; ctx.lineWidth = route.width + .6; ctx.shadowColor = route.color; ctx.shadowBlur = 5; ctx.stroke();
-        ctx.beginPath(); ctx.arc(bead.x, bead.y, 1.8, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-      ctx.globalAlpha = 1;
-    });
-  }
-  const globeTokens = () => {
-    const css = getComputedStyle(document.documentElement);
-    const v = n => css.getPropertyValue(n).trim();
-    return {
-      space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
-      nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
-      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
-      atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62
-    };
-  };
-  function drawGlobe() {
-    const c = dom.globe, ctx = c.getContext('2d');
-    const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
-    const st = S.state;
-    ctx.clearRect(0, 0, W, H);
-    const strong = st.theme !== 'light';
-    const gv = globeTokens();
-    /* 深空底 + 星野：不管事实层还是关联层，地球都要被星空包住（有动效） */
-    const sky = ctx.createLinearGradient(0, 0, W * .6, H);
-    sky.addColorStop(0, gv.space1); sky.addColorStop(1, gv.space2);
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    const neb = ctx.createRadialGradient(W * .24, H * .22, 0, W * .24, H * .22, Math.max(W, H) * .5);
-    neb.addColorStop(0, hexA(gv.nebula, .12)); neb.addColorStop(1, hexA(gv.nebula, 0));
-    ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
-    globe.stars.forEach(s2 => {
-      const x = ((s2.x + (globe.starOffset * .000012 * s2.speed) + 1) % 1) * W;
-      const tw = .6 + .4 * Math.sin(globe.starOffset * .09 * s2.speed + s2.x * 26);
-      ctx.globalAlpha = s2.a * tw;
-      ctx.fillStyle = gv.star;
-      ctx.beginPath(); ctx.arc(x, s2.y * H, s2.r, 0, Math.PI * 2); ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-    /* 大气层外圈：地球被包住的感觉 */
-    const atm = ctx.createRadialGradient(cx, cy, R * 1.004, cx, cy, R * 1.04);
-    atm.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.55 * gv.atmA) + ')');
-    atm.addColorStop(.5, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
-    atm.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.04, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
-    ctx.fillStyle = atm; ctx.fill('evenodd');
-    const haze = ctx.createRadialGradient(cx, cy, R, cx, cy, R * 1.18);
-    haze.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
-    haze.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
-    ctx.beginPath(); ctx.arc(cx, cy, R * 1.18, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
-    ctx.fillStyle = haze; ctx.fill('evenodd');
-    const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    g.addColorStop(0, gv.sea1); g.addColorStop(.58, gv.sea2); g.addColorStop(1, gv.sea3);
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
-    ctx.fillStyle = g; ctx.fill(); ctx.clip();
-    const p = palette();
-    landFeatures.forEach(feature => clipRing(feature.ring, cx, cy, R).forEach(run => {
-      if (run.length < 2) return;
-      ctx.beginPath();
-      run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-      ctx.closePath();
-      ctx.fillStyle = regionFill(feature.name, p); ctx.fill();
-      ctx.strokeStyle = p.line; ctx.lineWidth = .8; ctx.stroke();
+  /* 三维地球：与关联层共用同一套渲染（V03Globe），本层只提供事实点与叠加标记 */
+  function globePayload() {
+    const st = S.state, all = F.factsAtLevel(st);
+    const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
+    const points = facts.map(f => ({
+      id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, glyph: emojiOf(f),
+      halo: (st.sk.influence && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
+      haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
-    ctx.strokeStyle = strong ? 'rgba(205,230,225,.2)' : 'rgba(55,79,95,.2)';
-    for (let lat = -60; lat <= 60; lat += 30) {
-      const pts = [];
-      for (let lng = -180; lng <= 180; lng += 4) pts.push([lng, lat]);
-      clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
-    }
-    // 事实层只显示事实点和有依据的地理影响圆；关联流线仅在关联层绘制。
-    const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
-    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.62, hexA(gv.space2, .06)); term.addColorStop(1, hexA(gv.space2, .34));
-    ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
-    ctx.restore();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(' + gv.atmo + ',' + (.85 * gv.atmA) + ')'; ctx.lineWidth = 1.5;
-    ctx.shadowColor = 'rgba(' + gv.atmo + ',' + gv.atmA + ')'; ctx.shadowBlur = 12; ctx.stroke(); ctx.shadowBlur = 0;
-    const hits = [];
-    const facts = F.mappable(F.factsAtLevel(st));
-    if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
-      const p = gProject(f.lng, f.lat, cx, cy, R);
-      if (p.z <= 0) return;
-      const rr = radiusPx(f) * .9;
-      const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
-      const col = catOf(f).c;
-      grd.addColorStop(0, hexA(col, IMPACT_ALPHA[f.impact] || .12));
-      grd.addColorStop(1, hexA(col, 0));
-      ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, Math.PI * 2); ctx.fillStyle = grd; ctx.fill();
-    });
-    facts.forEach(f => {
-      const p = gProject(f.lng, f.lat, cx, cy, R);
-      if (p.z <= 0) return;
-      ctx.beginPath(); ctx.arc(p.x, p.y, 3.4, 0, Math.PI * 2);
-      ctx.fillStyle = hexA(catOf(f).c, .28); ctx.fill();
-      ctx.strokeStyle = catOf(f).c; ctx.lineWidth = .9; ctx.stroke();
-      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
-      ctx.fillText(emojiOf(f), p.x, p.y + 3);
-      hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
-    });
-    const marks = (st.sk.regions ? regionsAtLevel() : [])
+    const overlay = (st.sk.regions ? regionsAtLevel() : [])
       .concat(st.sk.gates ? gatesAtLevel('port') : [], st.sk.airports ? gatesAtLevel('airport') : [],
         st.sk.markets ? v12Overlay('market') : [], st.sk.risks ? v12Overlay('risk') : []);
-    marks.forEach(m => {
-      const p = gProject(m.lng, m.lat, cx, cy, R);
-      if (p.z <= 0) return;
-      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = strong ? '#e4f1ed' : '#fff'; ctx.fill();
-      ctx.strokeStyle = m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1';
-      ctx.lineWidth = 1; ctx.stroke();
-      hits.push({ x: p.x, y: p.y, type: 'mark', id: m.id });
-    });
-    globe.hits = hits;
-  }
-  function globeHit(x, y) {
-    const sx = dom.globe.width / dom.globe.clientWidth, sy = dom.globe.height / dom.globe.clientHeight;
-    const p = { x: x * sx, y: y * sy };
-    let best = null, bd = 14 * sx;
-    (globe.hits || []).forEach(h => { const d = Math.hypot(h.x - p.x, h.y - p.y); if (d < bd) { bd = d; best = h; } });
-    if (!best) return null;
-    return { type: best.type === 'fact' ? 'fact' : 'mark', id: best.id };
-  }
-  function loopGlobe(now) {
-    globe.raf = requestAnimationFrame(loopGlobe);
-    if (now - globe.last < 16) return;
-    globe.last = now;
-    globe.rot = (globe.rot + .09) % 360;
-    globe.starOffset = (globe.starOffset + .42) % 100000;
-    drawGlobe();
+    const marks = overlay.map(m => ({
+      id: m.id, lng: m.lng, lat: m.lat,
+      color: m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1'
+    }));
+    return { mode: 'fact', points, marks };
   }
   function syncMode() {
-    const show3d = S.state.sk.mode3d;
-    const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
-    const on3d = show3d && visible;
+    const st = S.state;
+    const show3d = st.sk.mode3d;
+    const visible = st.tab === 'fact' && document.visibilityState !== 'hidden';
     const target = show3d ? dom.globe : dom.map;
-    if (globe.shown !== target) {
-      globe.shown = target;
+    if (globeShown !== target) {
+      globeShown = target;
       target.classList.remove('view-fade');
       void target.offsetWidth;
       target.classList.add('view-fade');
@@ -1100,17 +845,12 @@ window.V03Fact = (function () {
       if (shouldPauseMap) animation.stop(); else animation.start();
       mapAnimationPaused = shouldPauseMap;
     }
-    if (on3d && !globe.active) {
-      globe.active = true; resizeGlobe(); globe.rot = 105;
-      if (!globe.raf) globe.raf = requestAnimationFrame(loopGlobe);
-    } else if (!on3d && globe.active) {
-      globe.active = false;
-      if (globe.raf) { cancelAnimationFrame(globe.raf); globe.raf = 0; }
-    }
+    globe.setVisible(show3d && visible);
+    if (show3d && visible) globe.update(globePayload());
   }
+  let globeShown = null;
   function setVisible() { if (dom.globe) syncMode(); }
 
-  /* ---------- 主更新 ---------- */
   function update() {
     if (!root) return;
     const st = S.state;
@@ -1165,11 +905,9 @@ window.V03Fact = (function () {
       flashes: freshFlashes.length,
       roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
       dictReady: !!F.dictReady,
-      globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length,
-      globeActive: globe.active, globeZoom: gloveZoomSafe(), mapAnimationPaused
+      globe: globe.debug(), mapAnimationPaused
     };
   };
-  const gloveZoomSafe = () => Number((globe.zoom || 1).toFixed(3));
   const pick = {
     fact: id => onMapClick({ seriesId: 'facts', data: { id } }),
     region: id => onMapClick({ seriesId: 'regions', data: { id } }),
