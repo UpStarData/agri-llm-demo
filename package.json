@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
-  "description": "AgriLink 农链 V1.0.8 · 配色 2 改为 Mapbox 风格、双指缩放与四周面板快捷键",
+  "description": "AgriLink 农链 V1.0.9 · 新增配色 3（Atlas/iipmaps 抽色）与配色选择器",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",

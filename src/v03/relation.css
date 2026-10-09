@@ -7,6 +7,8 @@
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-main.graph-view{background-color:#f7fafb;
   background-image:radial-gradient(#cad6dc 1.5px,transparent 1.5px);background-size:24px 24px}
+html[data-theme="atlas"] .rel-main.graph-view{background-color:#f4f7fa;
+  background-image:radial-gradient(rgba(70,110,150,.22) 1.5px,transparent 1.5px)}
 html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
   background-image:radial-gradient(rgba(82,123,110,.24) 1.5px,transparent 1.5px)}
 .rel-canvas{position:absolute;inset:0}
