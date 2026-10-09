@@ -11,6 +11,10 @@
   --accent:#236bad;--accent-soft:#e6f2fb;--green:#368b6f;--orange:#ae7650;--purple:#74658f;--red:#b65c5d;
   --warn:#b45309;--warn-bg:#fef3c7;
   --ocean:#b8cee0;--land:#f1efe8;--land-2:#dce8df;--map-line:rgba(79,108,123,.67);--map-label:#344f60;
+  /* 三维地球：深空底色 + 海面渐变 + 大气层光圈（与配色 1 同一套冷蓝） */
+  --globe-space-1:#0b1f30;--globe-space-2:#050f19;--globe-nebula:#236bad;
+  --globe-sea-1:#7fb4c8;--globe-sea-2:#336c8b;--globe-sea-3:#102f47;
+  --globe-atmo:150,214,255;--globe-atmo-a:.62;--globe-star:#e6f4ff;
   /* 面板与阴影（浅色，不用暗色玻璃） */
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.89);--glass-line:rgba(70,105,125,.18);
   --blur:blur(28px) saturate(185%);--shadow:0 10px 28px -20px rgba(15,23,42,.5);
@@ -34,12 +38,19 @@ html[data-theme="color"]{
   --accent:#355fd0;--accent-soft:#e5ecff;--green:#378c69;--orange:#b77d43;--purple:#756bc3;--red:#b74d53;
   --warn:#97510f;--warn-bg:#f2dbaa;
   --ocean:#78c4df;--land:#e9ecd9;--land-2:#bcd7ac;--map-line:rgba(74,105,98,.67);--map-label:#355c63;
+  /* 三维地球：青绿深空 + 海水渐变 + 青蓝大气层（与配色 2 同一套青绿） */
+  --globe-space-1:#0a2227;--globe-space-2:#041114;--globe-nebula:#2f9c8f;
+  --globe-sea-1:#6fb3ab;--globe-sea-2:#2c6a72;--globe-sea-3:#0e333d;
+  --globe-atmo:150,235,216;--globe-atmo-a:.6;--globe-star:#e8fff8;
   --glass:rgba(255,253,248,.96);--glass-2:rgba(255,253,248,.9);--glass-line:rgba(66,103,93,.2);
   --shadow:0 12px 32px -20px rgba(28,71,81,.38);--icon:#416a75;--icon-hover:#355fd0;--icon-on:rgba(53,95,208,.12);
   --c-nature:#327fb1;--c-supply:#458c61;--c-chain:#318f8b;--c-market:#ac714f;--c-consume:#7a70aa;--c-policy:#4c72be;--c-macro:#96804f;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* 二维地图与三维地球互切时淡入，避免硬切 */
+@keyframes viewFade{from{opacity:0;transform:scale(1.012)}to{opacity:1;transform:none}}
+.view-fade{animation:viewFade .5s cubic-bezier(.22,.61,.36,1)}
 html{-webkit-font-smoothing:antialiased;font-size:16px}
 body{background:var(--bg);color:var(--ink);overflow:hidden;
   font-family:'IBM Plex Sans SC','PingFang SC',-apple-system,'Helvetica Neue',sans-serif;font-weight:var(--f-reg)}
