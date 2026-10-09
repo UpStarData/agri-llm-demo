@@ -315,7 +315,7 @@ window.V03Relation = (function () {
     el.addEventListener('wheel', e => {
       if (!e.ctrlKey) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      zoomByFactor(Math.exp(-e.deltaY * .012));
+      zoomByFactor(Math.exp(-e.deltaY * .006));
     }, { capture: true, passive: false });
     el.addEventListener('gesturestart', e => { e.preventDefault(); base = e.scale || 1; }, { passive: false });
     el.addEventListener('gesturechange', e => {
@@ -349,7 +349,7 @@ window.V03Relation = (function () {
   function zoomBy(dir) {
     if (S.state.rel.view === 'globe') return globe.zoomBy(dir);
     if (S.state.rel.view === 'graph') {
-      const next = Math.min(GRAPH_BOX[1], Math.max(GRAPH_BOX[0], camera.graphZoom * (dir > 0 ? 1.28 : 1 / 1.28)));
+      const next = Math.min(GRAPH_BOX[1], Math.max(GRAPH_BOX[0], camera.graphZoom * (dir > 0 ? 1.14 : 1 / 1.14)));
       if (Math.abs(next - camera.graphZoom) < 1e-3) return;
       camera.graphZoom = next;
       if (chart) chart.setOption({ series: [{ id: 'relGraph', zoom: next }] }, { lazyUpdate: true });
@@ -358,7 +358,7 @@ window.V03Relation = (function () {
     const box = levelCfg().box;
     /* 全球视角缩到最小：切回三维地球 */
     if (dir < 0 && relLevel() === 'L1' && camera.zoom <= box[0] + .004) return toGlobe();
-    const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.28 : 1 / 1.28)));
+    const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.14 : 1 / 1.14)));
     if (Math.abs(next - camera.zoom) < 1e-3) return;
     camera.zoom = next;
     toast('缩放 ' + next.toFixed(2) + '×');

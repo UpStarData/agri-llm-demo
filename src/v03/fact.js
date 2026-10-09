@@ -23,7 +23,7 @@ window.V03Fact = (function () {
   const LEVEL = {
     L1: { map: 'worldChina', center: [105, 35], zoom: 1.26, fit: 1.26, bounds: [[-25, 72], [335, -56]], zoomBox: [1.26, 2.4], inAt: 2.2, divisor: 9 },
     L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
-    L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], divisor: 7 }
+    L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], outAt: 3.2, divisor: 7 }
   };
   const PROV = D.PROV_CENTER || {};
   const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
@@ -228,8 +228,10 @@ window.V03Fact = (function () {
     if (st.geo.level === 'L1' && camera.zoom >= lv.inAt) return enterLevel('L2', null);
     if (st.geo.level === 'L2') {
       if (camera.zoom <= (lv.outAt || 0)) return enterLevel('L1', null);
-      if (camera.zoom >= lv.inAt) { const pv = nearProvince(camera.center); if (pv) return enterLevel('L3', pv); }
+      /* 放到上限就进湖南（与点击规则一致；原来只有视野中心靠近某省才进，所以常常进不去） */
+      if (camera.zoom >= lv.inAt) return enterLevel('L3', DEFAULT_FOCUS);   /* 与点击规则一致：进湖南 */
     }
+    if (st.geo.level === 'L3' && camera.zoom <= (lv.outAt || 0)) return enterLevel('L2', null);
     if (chart) chart.setOption({ geo: { zoom: camera.zoom, center: camera.center.slice() } }, { lazyUpdate: true });
     S.set({ sk: { zoom: Math.round(camera.zoom * 100) } });
   }
@@ -239,7 +241,7 @@ window.V03Fact = (function () {
     el.addEventListener('wheel', e => {
       if (!e.ctrlKey) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      zoomByFactor(Math.exp(-e.deltaY * .012));
+      zoomByFactor(Math.exp(-e.deltaY * .006));
     }, { capture: true, passive: false });
     el.addEventListener('gesturestart', e => { e.preventDefault(); base = e.scale || 1; }, { passive: false });
     el.addEventListener('gesturechange', e => {
@@ -270,13 +272,15 @@ window.V03Fact = (function () {
   function zoomBy(dir) {
     if (S.state.sk.mode3d) return globe.zoomBy(dir);
     const box = LEVEL[S.state.geo.level].zoomBox;
+    /* 省区视角缩到最小：回全国（原来卡在省区出不去） */
+    if (dir < 0 && S.state.geo.level === 'L3' && camera.zoom <= box[0] + .004) return enterLevel('L2', null);
     /* 全球视角缩到最小再缩：切回三维地球 */
     if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
       if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
-    const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.28 : 1 / 1.28)));
+    const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.14 : 1 / 1.14)));
     if (Math.abs(next - camera.zoom) < 1e-3) return;
     camera.zoom = next;
     afterZoom();
@@ -406,7 +410,7 @@ window.V03Fact = (function () {
       markerSeries('gatesP', gatesAtLevel('port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
     }
     if (st.sk.airports) markerSeries('gatesA', gatesAtLevel('airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-    if (st.sk.markets) markerSeries('markets', v12Overlay('market'), '#a16207', '🏪', 13, true).forEach(x => series.push(x));
+    if (st.sk.markets) markerSeries('markets', v12Overlay('market'), '#a16207', '🛒', 13, true).forEach(x => series.push(x));
     if (st.sk.risks && st.geo.level === 'L1') markerSeries('risks', v12Overlay('risk'), '#b91c1c', '⚠️', 13, false).forEach(x => series.push(x));
     return {
       backgroundColor: 'transparent',
@@ -812,7 +816,7 @@ window.V03Fact = (function () {
     const st = S.state, all = F.factsAtLevel(st);
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const points = facts.map(f => ({
-      id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, glyph: emojiOf(f),
+      id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, big: f.impact === 'high',
       halo: (st.sk.influence && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
       haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
@@ -821,7 +825,8 @@ window.V03Fact = (function () {
         st.sk.markets ? v12Overlay('market') : [], st.sk.risks ? v12Overlay('risk') : []);
     const marks = overlay.map(m => ({
       id: m.id, lng: m.lng, lat: m.lat,
-      color: m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'node' ? '#7e22ce' : '#0369a1'
+      color: m.kind === 'region' ? '#65a30d' : m.kind === 'airport' ? '#0f766e' : m.kind === 'market' ? '#a16207' : m.kind === 'risk' ? '#b91c1c' : '#0369a1',
+      glyph: m.kind === 'region' ? '🌾' : m.kind === 'airport' ? '✈️' : m.kind === 'market' ? '🛒' : m.kind === 'risk' ? '⚠️' : '⚓'
     }));
     return { mode: 'fact', points, marks };
   }
