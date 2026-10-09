@@ -107,7 +107,7 @@
 
   const state = { view: 'globe', focus: null, center: [105, 35], zoom: 1.26, rotating: true, points: true };
   /* 相机：target 由手势/按钮改，current 每帧向 target 缓动 → 缩放连续、无跳变 */
-  const cam = { z: 1.26, tz: 1.26, cx: 105, cy: 35, tcx: 105, tcy: 35, r: .34, tr: .34, busy: false, raf: 0 };
+  const cam = { z: 1.26, tz: 1.26, cx: 105, cy: 35, tcx: 105, tcy: 35, r: .34, tr: .34, slowR: false, busy: false, raf: 0 };
   let chart = null, globe = null;
 
   /* ---------- 二维地图 ---------- */
@@ -308,7 +308,11 @@
     cam.cx += (cam.tcx - cam.cx) * ease;
     cam.cy += (cam.tcy - cam.cy) * ease;
     const dr = cam.tr - cam.r;
-    if (Math.abs(dr) > 1e-4) { cam.r += dr * ease; if (state.view === 'globe') globeSetR(cam.r); }
+    if (Math.abs(dr) > 1e-4) {
+      /* 从二维切回三维时用慢档缓动（.05），其余情况 .16，避免地球「一下缩到最小」 */
+      cam.r += dr * (cam.slowR ? .045 : ease);
+      if (state.view === 'globe') globeSetR(cam.r);
+    } else if (cam.slowR && Math.abs(dr) <= 1e-4) cam.slowR = false;
     if (state.view === 'globe') {
       if (cam.tr >= .52 && cam.r >= .495) return switchOnZoom(1);   /* 地球放到最大 → 全球 2D */
       return;
@@ -321,28 +325,40 @@
     if (cam.tz > lv.max * 1.03 && cam.z > lv.max * .99) return switchOnZoom(1);
     if (cam.tz < lv.min * .97 && cam.z < lv.min * 1.01) return switchOnZoom(-1);
   }
-  /* 切视角：短暂淡出 → 换图 → 从接近的比例继续，缩放动势不断 */
+  /* 切视角：交叉淡入淡出（旧视图 0.34s 淡出，新视图 0.36s 淡入）；缩放的动势继续，不硬切 */
   function switchOnZoom(dir) {
     const next = dir > 0 ? nextView() : prevView();
     if (next === state.view) return;
     const keepGoing = dir > 0;
-    const box = document.getElementById('chart');
-    box.style.transition = 'opacity .16s ease';
-    box.style.opacity = '0';
-    state.view = next;
-    state.focus = next === 'hunan' ? HUNAM : null;
-    const lv = LEVEL[next === 'globe' ? 'world' : next];
-    const c = state.focus && PROV[state.focus] ? provinceCenter(state.focus) : null;
-    cam.tcx = c ? c[0] : lv.center[0];
-    cam.tcy = c ? c[1] : lv.center[1];
-    cam.tz = keepGoing ? lv.fit * 1.16 : lv.fit * .92;
-    cam.z = keepGoing ? lv.fit * .98 : lv.fit * 1.05;
-    if (next === 'globe') { cam.tr = .30; cam.r = .40; }
+    const toGlobe = next === 'globe';
+    const outEl = toGlobe ? document.getElementById('chart') : document.getElementById('globe');
+    outEl.style.transition = 'opacity .34s ease';
+    outEl.style.opacity = '0';
     setTimeout(() => {
+      state.view = next;
+      state.focus = next === 'hunan' ? HUNAM : null;
+      const lv = LEVEL[next === 'globe' ? 'world' : next];
+      const c = state.focus && PROV[state.focus] ? provinceCenter(state.focus) : null;
+      if (toGlobe) {
+        /* 回三维地球：从「放到最大」的半径开始，慢慢收到静息大小 */
+        cam.r = .50; cam.tr = .34; cam.slowR = true;
+      } else {
+        cam.tcx = c ? c[0] : lv.center[0];
+        cam.tcy = c ? c[1] : lv.center[1];
+        cam.tz = keepGoing ? lv.fit * 1.16 : lv.fit * .92;
+        cam.z = keepGoing ? lv.fit * .98 : lv.fit * 1.05;
+      }
+      outEl.style.opacity = '1';          /* 复位，供下次使用（真正的显示/隐藏由 view 类控制） */
       render();
-      box.style.opacity = '1';
+      const inEl = toGlobe ? document.getElementById('globe') : document.getElementById('chart');
+      inEl.style.transition = 'none';
+      inEl.style.opacity = '0';
+      requestAnimationFrame(() => {
+        inEl.style.transition = 'opacity .36s ease';
+        inEl.style.opacity = '1';
+      });
       toast('已切到 ' + LABEL[next]);
-    }, 170);
+    }, 340);
   }
 
   /* ---------- 三维地球 ---------- */
