@@ -68,7 +68,7 @@ agri-llm-demo/
 
 1. 在源码分支构建：`node build.mjs && node test/v03.mjs`（全绿）；
 2. 新建目录 `vX.Y/`，放入 `index.html` 与 `build-meta.json`；
-3. 更新本文件与 `versions/index.html`（新增一行，填入源码 tag 提交的北京时间）；将目录和新版本浏览器标题标为“最新 Vx.y”，旧版本标题标为“旧 Vx.y”；
+3. 更新本文件与 `versions/index.html`（新增一行；<b>更新时间直接取该源码提交的时间</b>：`git show -s --date=format-local:'%Y-%m-%d %H:%M' --format=%cd <sha>`，不要手写）；将目录和新版本浏览器标题标为“最新 Vx.y”，旧版本标题标为“旧 Vx.y”；
 4. 在源码提交上打 tag（`vX.Y.0`）并推送；
 5. 实测 `https://upstardata.github.io/agri-llm-demo/vX.Y/` 的指纹与功能后再对外给地址。
 
