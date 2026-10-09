@@ -126,7 +126,34 @@ window.V03Fact = (function () {
       if (hit.type === 'fact') return openFact(hit.id);
       showOverlay(hit.id);
     });
+    /* 三维地球缩放：放到最大自动切二维地图（与关联层同一套边界行为） */
+    dom.globe.addEventListener('wheel', e => {
+      e.preventDefault();
+      globeZoomBy(e.deltaY < 0 ? 1 : -1);
+    }, { passive: false });
+    dom.globe.addEventListener('dblclick', () => globeZoomBy(1));
+    /* 二维地图缩到最小还在缩：切回三维地球（ECharts 自身会卡住最小 zoom，需要在这里拦） */
+    dom.map.addEventListener('wheel', e => {
+      if (S.state.sk.mode3d || S.state.geo.level !== 'L1' || e.deltaY <= 0) return;
+      const box = LEVEL[S.state.geo.level].zoomBox;
+      if (camera.zoom > box[0] + .004) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
+    }, { capture: true, passive: false });
     S.onEvent('stream:line', p => flashStar(p && p.fact, p && p.level));
+  }
+
+  function globeZoomBy(dir) {
+    const before = globe.zoom;
+    globe.zoom = Math.max(GLOBE_ZOOM[0], Math.min(GLOBE_ZOOM[1], globe.zoom * (dir > 0 ? 1.12 : .89)));
+    if (dir > 0 && before >= GLOBE_ZOOM[1] - .003) {
+      S.set({ sk: { mode3d: false } });
+      if (window.V03Shell) window.V03Shell.toast('三维地球已放到最大 · 切换到二维地图');
+      return 'in';
+    }
+    if (dir < 0 && before <= GLOBE_ZOOM[0] + .003) return 'out';
+    return '';
   }
 
   /* ---------- 地图（浅色农业风） ---------- */
@@ -202,6 +229,13 @@ window.V03Fact = (function () {
     const st = S.state, lv = LEVEL[st.geo.level], box = lv.zoomBox;
     /* 三份相同的世界互相接续；停手后按 360° 回到中央副本，视觉位置不跳变。 */
     if (st.geo.level === 'L1' && Math.abs(camera.center[0] - 105) > 180) camera.center = wrappedCenter(camera.center);
+    /* 全球视角缩到最小还在缩：切回三维地球 */
+    if (st.geo.level === 'L1' && camera.zoom < box[0] - .02) {
+      camera.zoom = box[0];
+      S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
+      return;
+    }
     if (camera.zoom < box[0]) camera.zoom = box[0];
     if (camera.zoom > box[1]) camera.zoom = box[1];
     if (st.geo.level === 'L1' && camera.zoom >= lv.inAt) return enterLevel('L2', null);
@@ -213,15 +247,24 @@ window.V03Fact = (function () {
     S.set({ sk: { zoom: Math.round(camera.zoom * 100) } });
   }
   function zoomBy(dir) {
+    if (S.state.sk.mode3d) return globeZoomBy(dir);
     const box = LEVEL[S.state.geo.level].zoomBox;
+    /* 全球视角缩到最小再缩：切回三维地球 */
+    if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
+      S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
+      return;
+    }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.28 : 1 / 1.28)));
     if (Math.abs(next - camera.zoom) < 1e-3) return;
     camera.zoom = next;
     afterZoom();
   }
   const zoomState = () => {
+    if (S.state.sk.mode3d) return { canIn: globe.zoom < GLOBE_ZOOM[1] - 1e-3, canOut: globe.zoom > GLOBE_ZOOM[0] + 1e-3, zoom: globe.zoom };
     const box = LEVEL[S.state.geo.level].zoomBox;
-    return { canIn: camera.zoom < box[1] - 1e-3, canOut: camera.zoom > box[0] + 1e-3, zoom: camera.zoom };
+    /* 全球视角缩到底会切到三维地球，「缩小」始终可用 */
+    return { canIn: camera.zoom < box[1] - 1e-3, canOut: true, zoom: camera.zoom };
   };
 
   const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
@@ -733,7 +776,8 @@ window.V03Fact = (function () {
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
   /* ---------- 3D 地球：自转和关系流线（同一 Canvas，避免独立层错位） ---------- */
-  const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [], active: false, starOffset: 0, stars: [] };
+  const globe = { rot: 105, tilt: .34, raf: 0, last: 0, hits: [], active: false, starOffset: 0, stars: [], zoom: 1 };
+  const GLOBE_ZOOM = [.72, 1.85];   /* 三维地球缩放区间；放到最大切二维，二维缩到最小切三维 */
   let starSeed = 9137;
   const starRnd = () => ((starSeed = (starSeed * 16807) % 2147483647) - 1) / 2147483646;
   for (let i = 0; i < 260; i++) globe.stars.push({ x: starRnd(), y: starRnd(), r: .35 + starRnd() * 1.35, a: .24 + starRnd() * .62, speed: .15 + starRnd() * .85 });
@@ -746,7 +790,7 @@ window.V03Fact = (function () {
     if (c.width !== width) c.width = width;
     if (c.height !== height) c.height = height;
   }
-  function globeR() { return Math.min(dom.globe.width, dom.globe.height) * (S.state.geo.level === 'L3' ? .46 : S.state.geo.level === 'L2' ? .40 : .36); }
+  function globeR() { return Math.min(dom.globe.width, dom.globe.height) * (S.state.geo.level === 'L3' ? .46 : S.state.geo.level === 'L2' ? .40 : .36) * globe.zoom; }
   function gProject(lng, lat, cx, cy, R) {
     const lam = (lng - globe.rot) * Math.PI / 180, phi = lat * Math.PI / 180;
     const cp = Math.cos(phi), x = cp * Math.sin(lam), y = Math.sin(phi), z = cp * Math.cos(lam);
@@ -844,18 +888,47 @@ window.V03Fact = (function () {
       ctx.globalAlpha = 1;
     });
   }
+  const globeTokens = () => {
+    const css = getComputedStyle(document.documentElement);
+    const v = n => css.getPropertyValue(n).trim();
+    return {
+      space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
+      nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
+      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
+      atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62
+    };
+  };
   function drawGlobe() {
     const c = dom.globe, ctx = c.getContext('2d');
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
     const st = S.state;
     ctx.clearRect(0, 0, W, H);
     const strong = st.theme === 'color';
-    const sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, strong ? '#315770' : '#c7d7dc'); sky.addColorStop(1, strong ? '#557f91' : '#e1e7e4');
+    const gv = globeTokens();
+    /* 深空底 + 星野：不管事实层还是关联层，地球都要被星空包住（有动效） */
+    const sky = ctx.createLinearGradient(0, 0, W * .6, H);
+    sky.addColorStop(0, gv.space1); sky.addColorStop(1, gv.space2);
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    const neb = ctx.createRadialGradient(W * .24, H * .22, 0, W * .24, H * .22, Math.max(W, H) * .5);
+    neb.addColorStop(0, hexA(gv.nebula, .12)); neb.addColorStop(1, hexA(gv.nebula, 0));
+    ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
+    globe.stars.forEach(s2 => {
+      const x = ((s2.x + (globe.starOffset * .000012 * s2.speed) + 1) % 1) * W;
+      const tw = .6 + .4 * Math.sin(globe.starOffset * .09 * s2.speed + s2.x * 26);
+      ctx.globalAlpha = s2.a * tw;
+      ctx.fillStyle = gv.star;
+      ctx.beginPath(); ctx.arc(x, s2.y * H, s2.r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    /* 大气层外圈：地球被包住的感觉 */
+    const atm = ctx.createRadialGradient(cx, cy, R, cx, cy, R * 1.3);
+    atm.addColorStop(0, 'rgba(' + gv.atmo + ',' + (.5 * gv.atmA) + ')');
+    atm.addColorStop(.55, 'rgba(' + gv.atmo + ',' + (.16 * gv.atmA) + ')');
+    atm.addColorStop(1, 'rgba(' + gv.atmo + ',0)');
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, Math.PI * 2); ctx.arc(cx, cy, R, 0, Math.PI * 2, true);
+    ctx.fillStyle = atm; ctx.fill('evenodd');
     const g = ctx.createRadialGradient(cx - R * .3, cy - R * .35, R * .1, cx, cy, R * 1.05);
-    if (strong) { g.addColorStop(0, '#90b8c2'); g.addColorStop(.58, '#5b879b'); g.addColorStop(1, '#284f68'); }
-    else { g.addColorStop(0, '#e7e9e2'); g.addColorStop(.7, '#b1c4c9'); g.addColorStop(1, '#819ea9'); }
+    g.addColorStop(0, gv.sea1); g.addColorStop(.58, gv.sea2); g.addColorStop(1, gv.sea3);
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath();
     ctx.fillStyle = g; ctx.fill(); ctx.clip();
@@ -875,8 +948,13 @@ window.V03Fact = (function () {
       clipRing(pts, cx, cy, R).forEach(run => { if (run.length < 2) return; ctx.beginPath(); run.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); });
     }
     // 事实层只显示事实点和有依据的地理影响圆；关联流线仅在关联层绘制。
+    const term = ctx.createLinearGradient(cx + R * .72, cy - R * .72, cx - R * .72, cy + R * .72);
+    term.addColorStop(0, 'rgba(0,0,0,0)'); term.addColorStop(.58, hexA(gv.space2, .16)); term.addColorStop(1, hexA(gv.space2, .58));
+    ctx.fillStyle = term; ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
     ctx.restore();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = strong ? 'rgba(220,235,230,.7)' : 'rgba(55,79,95,.5)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(' + gv.atmo + ',' + (.85 * gv.atmA) + ')'; ctx.lineWidth = 1.5;
+    ctx.shadowColor = 'rgba(' + gv.atmo + ',' + gv.atmA + ')'; ctx.shadowBlur = 12; ctx.stroke(); ctx.shadowBlur = 0;
     const hits = [];
     const facts = F.mappable(F.factsAtLevel(st));
     if (st.sk.influence) facts.filter(f => radiusPx(f) >= 8).forEach(f => {
@@ -895,7 +973,7 @@ window.V03Fact = (function () {
       ctx.beginPath(); ctx.arc(p.x, p.y, 3.4, 0, Math.PI * 2);
       ctx.fillStyle = hexA(catOf(f).c, .28); ctx.fill();
       ctx.strokeStyle = catOf(f).c; ctx.lineWidth = .9; ctx.stroke();
-      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = strong ? '#f5e7b8' : '#263d4c';
+      ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff';
       ctx.fillText(emojiOf(f), p.x, p.y + 3);
       hits.push({ x: p.x, y: p.y, type: 'fact', id: f.id });
     });
@@ -933,6 +1011,13 @@ window.V03Fact = (function () {
     const show3d = S.state.sk.mode3d;
     const visible = S.state.tab === 'fact' && document.visibilityState !== 'hidden';
     const on3d = show3d && visible;
+    const target = show3d ? dom.globe : dom.map;
+    if (globe.shown !== target) {
+      globe.shown = target;
+      target.classList.remove('view-fade');
+      void target.offsetWidth;
+      target.classList.add('view-fade');
+    }
     dom.globe.style.display = show3d ? 'block' : 'none';
     dom.map.style.display = show3d ? 'none' : 'block';
     const animation = chart && chart.getZr().animation;
@@ -1007,9 +1092,10 @@ window.V03Fact = (function () {
       roam: !!(chart && chart.getOption() && chart.getOption().geo && chart.getOption().geo[0] && chart.getOption().geo[0].roam),
       dictReady: !!F.dictReady,
       globeRotation: Number(globe.rot.toFixed(3)), starOffset: Number(globe.starOffset.toFixed(3)), starCount: globe.stars.length,
-      globeActive: globe.active, mapAnimationPaused
+      globeActive: globe.active, globeZoom: gloveZoomSafe(), mapAnimationPaused
     };
   };
+  const gloveZoomSafe = () => Number((globe.zoom || 1).toFixed(3));
   const pick = {
     fact: id => onMapClick({ seriesId: 'facts', data: { id } }),
     region: id => onMapClick({ seriesId: 'regions', data: { id } }),

@@ -462,7 +462,14 @@
     body.appendChild(row);
     while (body.children.length > 90) body.removeChild(body.firstChild);
     body.scrollTop = body.scrollHeight;
-    // 演示日志只展示预置记录，绝不把回放当成新事实写入。
+    /* B3/M7 + A4：带星标的记录同时向地图发一次「新本体接入」。
+       事实层亮星；关联层先亮星、再把新线接上。日志只是回放，不写入新事实。 */
+    if (e.star && e.star.factId) {
+      const known = D.factById(e.star.factId);
+      const point = e.star.geoPoint || [];
+      const fact = known || { id: e.star.factId, lng: point[0], lat: point[1], objects: [], impact: e.star.level === 'bright' ? 'high' : 'low' };
+      S.emit('stream:line', { fact, level: e.star.level || 'dim' });
+    }
   }
   function scheduleStream() {
     clearTimeout(ST.timer);
@@ -496,12 +503,15 @@
     document.documentElement.style.setProperty('--side-w',
       (st.tab === 'fact' || st.tab === 'relation') && st.panels.cards ? (largeScreen ? '620px' : '420px') : '0px');
     const seq = BATCHES[st.tab === 'relation' ? 'relation' : 'fact'];
+    if (!on) { clearTimeout(ST.timer); ST.timer = null; ST.started = false; return; }
     if (ST.lastTab !== st.tab || !ST.started) {
       ST.lastTab = st.tab; ST.i = 0; ST.started = true; $('streamBody').innerHTML = '';
       const first = seq[0];
       if (first) { first.items.forEach(pushStreamLine); ST.i = 1; }
     }
-    clearTimeout(ST.timer); ST.timer = null;
+    /* 流水持续滚动：面板开着就一路往下走，任何一次状态变化都不再打断它。
+       每条带星标的记录同时触发地图上的新本体亮星与连线（事实层 / 关联层各自处理）。 */
+    if (!ST.timer) scheduleStream();
   }
 
   /* ---------- F10 / A5：右侧嵌套抽屉 ---------- */

@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "private": true,
-  "description": "AgriLink 农链 V1.0.6 · 推演发起页历史卡片适配与热门推演封面",
+  "description": "AgriLink 农链 V1.0.7 · 关联层三维地球、层级下钻与关系线动效",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
