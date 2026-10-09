@@ -37,12 +37,28 @@ window.V03Globe = (function () {
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
   /* 世界面数据在首次绘制时再取（本文件先于 fact.js 加载） */
+  /* 跨 ±180 的环线在经度跳变处切开，避免投影后出现 V 形楔子（截图里中国上方那道） */
+  function splitSeam(ring) {
+    const out = [[]];
+    for (let i = 0; i < ring.length; i++) {
+      const cur = ring[i], prev = ring[i - 1];
+      if (i > 0 && Math.abs(cur[0] - prev[0]) > 180) {
+        const west = prev[0] > 0 ? 180 : -180, east = -west;
+        const t = (west - prev[0]) / (cur[0] + (cur[0] > 0 ? -360 : 360) - prev[0]);
+        const lat = prev[1] + ((cur[1] - prev[1]) * (isFinite(t) ? t : .5));
+        out[out.length - 1].push([west, lat]);
+        out.push([[east, lat]]);
+      }
+      out[out.length - 1].push(cur);
+    }
+    return out.filter(r => r.length >= 3);
+  }
   let polygons = null;
   function worldPolygons() {
     if (!polygons) {
       polygons = window.V03Fact.worldGeoJSON(false).features.flatMap(f =>
         (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
-          .map(rings => ({ name: f.properties.name, ring: rings[0] })));
+          .flatMap(rings => splitSeam(rings[0]).map(ring => ({ name: f.properties.name, ring }))));
     }
     return polygons;
   }
@@ -366,7 +382,7 @@ window.V03Globe = (function () {
     });
   }
 
-  /* 事实层：影响圆 + 事实点（分类色 + 表情）+ 叠加图层标记 */
+  /* 事实层：影响圆 + 事实点（与关联层本体同一套观感）+ 叠加图层标记（五种，带 emoji） */
   function drawFacts(cx, cy, R, now, p) {
     points.forEach(f => {
       const pt = project(f.lng, f.lat, cx, cy, R);
@@ -378,21 +394,26 @@ window.V03Globe = (function () {
         g.addColorStop(1, hexA(f.color, 0));
         ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
       }
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, 3.4, 0, TAU);
-      ctx.fillStyle = hexA(f.color, .28); ctx.fill();
-      ctx.strokeStyle = f.color; ctx.lineWidth = .9; ctx.stroke();
-      if (f.glyph) {
-        ctx.font = '9px "IBM Plex Sans SC",sans-serif'; ctx.textAlign = 'center';
-        ctx.fillStyle = '#ffffff'; ctx.fillText(f.glyph, pt.x, pt.y + 3);
-      }
+      const halo = f.big ? 8 : 6;
+      const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.4);
+      haloG.addColorStop(0, hexA(f.color, f.big ? .3 : .22));
+      haloG.addColorStop(1, hexA(f.color, 0));
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.4, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, f.big ? 3 : 2.4, 0, TAU);
+      ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.strokeStyle = f.color; ctx.lineWidth = 1.2; ctx.stroke();
       hits.push({ x: pt.x, y: pt.y, kind: 'fact', id: f.id });
     });
     marks.forEach(m => {
       const pt = project(m.lng, m.lat, cx, cy, R);
       if (pt.z <= 0) return;
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, 3, 0, TAU);
-      ctx.fillStyle = '#ffffff'; ctx.fill();
-      ctx.strokeStyle = m.color; ctx.lineWidth = 1; ctx.stroke();
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 6.5, 0, TAU);
+      ctx.fillStyle = hexA('#ffffff', .82); ctx.fill();
+      ctx.strokeStyle = m.color; ctx.lineWidth = 1.2; ctx.stroke();
+      if (m.glyph) {
+        ctx.font = '9px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+        ctx.textAlign = 'center'; ctx.fillText(m.glyph, pt.x, pt.y + 3.2);
+      }
       hits.push({ x: pt.x, y: pt.y, kind: 'mark', id: m.id });
     });
   }
@@ -434,7 +455,7 @@ window.V03Globe = (function () {
     if (!raf) raf = requestAnimationFrame(loop);
   }
 
-  function zoomBy(dir) { return zoomByFactor(dir > 0 ? 1.12 : .89); }
+  function zoomBy(dir) { return zoomByFactor(dir > 0 ? 1.06 : .943); }
   function zoomByFactor(factor) {
     if (!Number.isFinite(factor) || factor <= 0) return '';
     const before = radiusScale;
