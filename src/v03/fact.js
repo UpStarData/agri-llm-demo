@@ -336,16 +336,27 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
-  const palette = () => S.state.theme === 'color' ? {
-    /* 配色 2：与 Mapbox Standard 参考图同源的绿色陆地 / 珊瑚边界 / 蓝色点 */
-    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
-    regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
-    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
-  } : {
-    land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
-    regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
-    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
+  const PALETTES = {
+    /* 配色 1：Felt 式清爽浅蓝 */
+    light: {
+      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
+      regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
+    },
+    /* 配色 2：Mapbox Standard / 苹果地图的绿陆蓝水 */
+    color: {
+      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
+      regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
+      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
+    },
+    /* 配色 3：Atlas / iipmaps 抽色——灰蓝水域、近白陆地、亮蓝强调 */
+    atlas: {
+      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a',
+      regions: ['#f7f9fb', '#d9e4ef', '#e8eff6', '#c9d9e8', '#eef3f8', '#dfe7f0', '#f2f6fa', '#d2e0ec'],
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', mass: 'rgba(31,107,255,.2)', dot: '#1f6bff'
+    }
   };
+  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
   /* 共享至少两个边界顶点才算相邻；贪心图着色保证接壤区域异色。 */
   function regionColors(features) {
     const byVertex = new Map(), neighbors = new Map();
@@ -961,7 +972,7 @@ window.V03Fact = (function () {
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
     const st = S.state;
     ctx.clearRect(0, 0, W, H);
-    const strong = st.theme === 'color';
+    const strong = st.theme !== 'light';
     const gv = globeTokens();
     /* 深空底 + 星野：不管事实层还是关联层，地球都要被星空包住（有动效） */
     const sky = ctx.createLinearGradient(0, 0, W * .6, H);

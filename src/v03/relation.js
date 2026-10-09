@@ -67,13 +67,22 @@ window.V03Relation = (function () {
     '影响':'#cf5f6a','价格传导':'#cf5f6a'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
-  const palette = () => S.state.theme === 'color' ? {
-    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
-    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
-  } : {
-    land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
-    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
+  const PALETTES = {
+    /* 配色 1 / 2 / 3：与事实层同一套（见 fact.js PALETTES），保证两层地图同一主题 */
+    light: {
+      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
+    },
+    color: {
+      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
+      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
+    },
+    atlas: {
+      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a', labelBg: 'rgba(255,255,255,.94)',
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', neutral: 'rgba(66,88,112,.78)', flow: '#1f6bff'
+    }
   };
+  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 

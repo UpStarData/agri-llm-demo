@@ -48,6 +48,35 @@ html[data-theme="color"]{
   --c-nature:#2f8fd0;--c-supply:#3f9d6a;--c-chain:#2f9aa0;--c-market:#b5764a;--c-consume:#7a68c8;--c-policy:#3d6fd0;--c-macro:#a08a4a;
 }
 
+html[data-theme="atlas"]{
+  color-scheme:light;
+  /* 配色 3：Atlas / iipmaps 抽色（深蓝顶栏 + 亮蓝强调 + 灰蓝水域 / 近白陆地）
+     色值取自参考站：外壳 #1f2937、强调蓝 #1f8cff / #0b5cff、水域 #cfdee8、陆地 #fbfcfd。 */
+  --bg:#eef1f5;--panel:#ffffff;--panel-2:#f5f7fa;--panel-alpha:rgba(255,255,255,.98);--line:rgba(40,58,80,.16);--hair:rgba(40,58,80,.09);
+  --ink:#1e2b3a;--mut:#4d6076;--dim:#6f8399;--hint:#8798ab;
+  --accent:#1f6bff;--accent-soft:#e8f0ff;--green:#4fae4a;--orange:#d9762a;--purple:#6b5ce0;--red:#cf4b52;
+  --warn:#8a5210;--warn-bg:#f7e6c6;
+  --ocean:#cfdee8;--land:#fbfcfd;--land-2:#e6eef5;--map-line:rgba(150,168,184,.8);--map-label:#3a4b5e;
+  --globe-space-1:#08121f;--globe-space-2:#03070e;--globe-nebula:#1f6bff;
+  --globe-sea-1:#7fb6e2;--globe-sea-2:#3b7fb8;--globe-sea-3:#123350;
+  --globe-atmo:130,180,255;--globe-atmo-a:.58;--globe-star:#e6efff;
+  --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(40,58,80,.14);
+  --shadow:0 12px 32px -20px rgba(20,38,60,.32);--icon:#4f6d8c;--icon-hover:#1f6bff;--icon-on:rgba(31,107,255,.12);
+  --c-nature:#1f8cff;--c-supply:#4fae4a;--c-chain:#00a99d;--c-market:#e59a1f;--c-consume:#7b61ff;--c-policy:#2f6bd0;--c-macro:#b08040;
+  /* 参考站的深色外壳：只用在顶栏与底部终端，内容区保持浅色 */
+  --shell:#152131;--shell-ink:#e9f0f8;--shell-mut:#9db0c4;
+}
+/* 配色 3 的深色顶栏（Atlas 式的深蓝 + 亮蓝） */
+html[data-theme="atlas"] .topbar{background:var(--shell);border-bottom-color:rgba(255,255,255,.08)}
+html[data-theme="atlas"] .topbar .brand{color:var(--shell-ink)}
+html[data-theme="atlas"] .topbar .brand small{color:var(--shell-mut)}
+html[data-theme="atlas"] .topbar .tabs button{color:var(--shell-mut)}
+html[data-theme="atlas"] .topbar .tabs button:hover{color:var(--shell-ink)}
+html[data-theme="atlas"] .topbar .tabs button.on{color:#fff}
+html[data-theme="atlas"] .topbar .tb-ic{color:var(--shell-mut)}
+html[data-theme="atlas"] .topbar .tb-ic:hover{color:#fff;background:rgba(255,255,255,.1)}
+html[data-theme="atlas"] .stream{background:#101c29;color:#dbe6f2;border-top-color:#24374b}
+html[data-theme="atlas"] .st-bar{border-bottom-color:#24374b}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* 二维地图与三维地球互切时淡入，避免硬切 */
 @keyframes viewFade{from{opacity:0;transform:scale(1.012)}to{opacity:1;transform:none}}
@@ -474,3 +503,17 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .sk-search-term span{overflow:hidden;text-overflow:ellipsis;flex:1}.sk-search-term button{font-size:19px;color:var(--mut);line-height:1;cursor:pointer}
 .mapsk:has(.search-pop) .sk-search-term{display:none}
 @media(max-width:650px){.mapsk .sk-pop.search-pop{right:0;bottom:calc(100% + 9px);width:min(360px,calc(100vw - 20px))}.sk-search-term{right:0;bottom:calc(100% + 9px);max-width:calc(100vw - 20px)}}
+
+/* ---------- 配色选择器（参考 iipmaps Palette Editor 的色块设计） ---------- */
+.pal-pop{position:fixed;z-index:80;width:268px;padding:8px;border:1px solid var(--glass-line);border-radius:var(--r-lg);
+  background:var(--glass);backdrop-filter:var(--blur);box-shadow:0 18px 44px -20px rgba(15,23,42,.55)}
+.pal-pop h4{font-size:.6875rem;font-weight:var(--f-semi);color:var(--mut);margin:2px 4px 8px;letter-spacing:.04em}
+.pal-tile{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;width:100%;padding:7px;margin-bottom:5px;
+  border:1px solid var(--hair);border-radius:var(--r-md);background:var(--panel);cursor:pointer;text-align:left;color:var(--ink)}
+.pal-tile:hover{border-color:var(--accent);background:var(--accent-soft)}
+.pal-tile.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pal-tile b{display:block;font-size:.75rem;font-weight:var(--f-semi)}
+.pal-tile i{display:block;font-style:normal;font-size:.625rem;color:var(--dim);margin-top:2px}
+.pal-tile em{grid-column:2;font-style:normal;font-size:.5625rem;color:var(--accent);font-weight:var(--f-semi)}
+.pal-swatch{width:64px;height:38px;border-radius:5px;border:1px solid var(--hair);overflow:hidden;display:block}
+.pal-swatch span{display:block;height:100%}

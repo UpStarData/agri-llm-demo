@@ -58,6 +58,35 @@ html[data-theme="color"]{
   --c-nature:#2f8fd0;--c-supply:#3f9d6a;--c-chain:#2f9aa0;--c-market:#b5764a;--c-consume:#7a68c8;--c-policy:#3d6fd0;--c-macro:#a08a4a;
 }
 
+html[data-theme="atlas"]{
+  color-scheme:light;
+  /* 配色 3：Atlas / iipmaps 抽色（深蓝顶栏 + 亮蓝强调 + 灰蓝水域 / 近白陆地）
+     色值取自参考站：外壳 #1f2937、强调蓝 #1f8cff / #0b5cff、水域 #cfdee8、陆地 #fbfcfd。 */
+  --bg:#eef1f5;--panel:#ffffff;--panel-2:#f5f7fa;--panel-alpha:rgba(255,255,255,.98);--line:rgba(40,58,80,.16);--hair:rgba(40,58,80,.09);
+  --ink:#1e2b3a;--mut:#4d6076;--dim:#6f8399;--hint:#8798ab;
+  --accent:#1f6bff;--accent-soft:#e8f0ff;--green:#4fae4a;--orange:#d9762a;--purple:#6b5ce0;--red:#cf4b52;
+  --warn:#8a5210;--warn-bg:#f7e6c6;
+  --ocean:#cfdee8;--land:#fbfcfd;--land-2:#e6eef5;--map-line:rgba(150,168,184,.8);--map-label:#3a4b5e;
+  --globe-space-1:#08121f;--globe-space-2:#03070e;--globe-nebula:#1f6bff;
+  --globe-sea-1:#7fb6e2;--globe-sea-2:#3b7fb8;--globe-sea-3:#123350;
+  --globe-atmo:130,180,255;--globe-atmo-a:.58;--globe-star:#e6efff;
+  --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(40,58,80,.14);
+  --shadow:0 12px 32px -20px rgba(20,38,60,.32);--icon:#4f6d8c;--icon-hover:#1f6bff;--icon-on:rgba(31,107,255,.12);
+  --c-nature:#1f8cff;--c-supply:#4fae4a;--c-chain:#00a99d;--c-market:#e59a1f;--c-consume:#7b61ff;--c-policy:#2f6bd0;--c-macro:#b08040;
+  /* 参考站的深色外壳：只用在顶栏与底部终端，内容区保持浅色 */
+  --shell:#152131;--shell-ink:#e9f0f8;--shell-mut:#9db0c4;
+}
+/* 配色 3 的深色顶栏（Atlas 式的深蓝 + 亮蓝） */
+html[data-theme="atlas"] .topbar{background:var(--shell);border-bottom-color:rgba(255,255,255,.08)}
+html[data-theme="atlas"] .topbar .brand{color:var(--shell-ink)}
+html[data-theme="atlas"] .topbar .brand small{color:var(--shell-mut)}
+html[data-theme="atlas"] .topbar .tabs button{color:var(--shell-mut)}
+html[data-theme="atlas"] .topbar .tabs button:hover{color:var(--shell-ink)}
+html[data-theme="atlas"] .topbar .tabs button.on{color:#fff}
+html[data-theme="atlas"] .topbar .tb-ic{color:var(--shell-mut)}
+html[data-theme="atlas"] .topbar .tb-ic:hover{color:#fff;background:rgba(255,255,255,.1)}
+html[data-theme="atlas"] .stream{background:#101c29;color:#dbe6f2;border-top-color:#24374b}
+html[data-theme="atlas"] .st-bar{border-bottom-color:#24374b}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 /* 二维地图与三维地球互切时淡入，避免硬切 */
 @keyframes viewFade{from{opacity:0;transform:scale(1.012)}to{opacity:1;transform:none}}
@@ -484,6 +513,20 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .sk-search-term span{overflow:hidden;text-overflow:ellipsis;flex:1}.sk-search-term button{font-size:19px;color:var(--mut);line-height:1;cursor:pointer}
 .mapsk:has(.search-pop) .sk-search-term{display:none}
 @media(max-width:650px){.mapsk .sk-pop.search-pop{right:0;bottom:calc(100% + 9px);width:min(360px,calc(100vw - 20px))}.sk-search-term{right:0;bottom:calc(100% + 9px);max-width:calc(100vw - 20px)}}
+
+/* ---------- 配色选择器（参考 iipmaps Palette Editor 的色块设计） ---------- */
+.pal-pop{position:fixed;z-index:80;width:268px;padding:8px;border:1px solid var(--glass-line);border-radius:var(--r-lg);
+  background:var(--glass);backdrop-filter:var(--blur);box-shadow:0 18px 44px -20px rgba(15,23,42,.55)}
+.pal-pop h4{font-size:.6875rem;font-weight:var(--f-semi);color:var(--mut);margin:2px 4px 8px;letter-spacing:.04em}
+.pal-tile{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;width:100%;padding:7px;margin-bottom:5px;
+  border:1px solid var(--hair);border-radius:var(--r-md);background:var(--panel);cursor:pointer;text-align:left;color:var(--ink)}
+.pal-tile:hover{border-color:var(--accent);background:var(--accent-soft)}
+.pal-tile.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.pal-tile b{display:block;font-size:.75rem;font-weight:var(--f-semi)}
+.pal-tile i{display:block;font-style:normal;font-size:.625rem;color:var(--dim);margin-top:2px}
+.pal-tile em{grid-column:2;font-style:normal;font-size:.5625rem;color:var(--accent);font-weight:var(--f-semi)}
+.pal-swatch{width:64px;height:38px;border-radius:5px;border:1px solid var(--hair);overflow:hidden;display:block}
+.pal-swatch span{display:block;height:100%}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -494,6 +537,8 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .rel-main{position:absolute;inset:0;background:var(--ocean)}
 .rel-main.graph-view{background-color:#f7fafb;
   background-image:radial-gradient(#cad6dc 1.5px,transparent 1.5px);background-size:24px 24px}
+html[data-theme="atlas"] .rel-main.graph-view{background-color:#f4f7fa;
+  background-image:radial-gradient(rgba(70,110,150,.22) 1.5px,transparent 1.5px)}
 html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
   background-image:radial-gradient(rgba(82,123,110,.24) 1.5px,transparent 1.5px)}
 .rel-canvas{position:absolute;inset:0}
@@ -826,7 +871,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.8</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.9</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -891,7 +936,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"da55c0e9f6f8","git":"628bfe2","builtAt":"2026-10-09T11:16:15.431Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"ab47f4db0122","git":"c3790eb","builtAt":"2026-10-09T11:35:17.506Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -6050,16 +6095,27 @@ window.V03Fact = (function () {
     dom.overlayInfo.querySelector('button').onclick = () => { dom.overlayInfo.hidden = true; };
   }
   /* 两套地图分别使用成体系的区域色、边界色、点色；色块只表示地理分区。 */
-  const palette = () => S.state.theme === 'color' ? {
-    /* 配色 2：与 Mapbox Standard 参考图同源的绿色陆地 / 珊瑚边界 / 蓝色点 */
-    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
-    regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
-    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
-  } : {
-    land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
-    regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
-    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
+  const PALETTES = {
+    /* 配色 1：Felt 式清爽浅蓝 */
+    light: {
+      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b',
+      regions: ['#f0eee6', '#e2e9dd', '#e4ebef', '#ebe7dd', '#dce9e3', '#e8e8ed', '#ebe5d9'],
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', mass: 'rgba(46,100,139,.25)', dot: '#236bad'
+    },
+    /* 配色 2：Mapbox Standard / 苹果地图的绿陆蓝水 */
+    color: {
+      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f',
+      regions: ['#cfe9bd', '#e2efc6', '#b6dfa4', '#eae7c4', '#c9e6cd', '#d7e4b2', '#bcdcc9', '#e8f0d8'],
+      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', mass: 'rgba(47,111,208,.22)', dot: '#2f6fd0'
+    },
+    /* 配色 3：Atlas / iipmaps 抽色——灰蓝水域、近白陆地、亮蓝强调 */
+    atlas: {
+      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a',
+      regions: ['#f7f9fb', '#d9e4ef', '#e8eff6', '#c9d9e8', '#eef3f8', '#dfe7f0', '#f2f6fa', '#d2e0ec'],
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', mass: 'rgba(31,107,255,.2)', dot: '#1f6bff'
+    }
   };
+  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
   /* 共享至少两个边界顶点才算相邻；贪心图着色保证接壤区域异色。 */
   function regionColors(features) {
     const byVertex = new Map(), neighbors = new Map();
@@ -6675,7 +6731,7 @@ window.V03Fact = (function () {
     const W = c.width, H = c.height, cx = W / 2, cy = H / 2, R = globeR();
     const st = S.state;
     ctx.clearRect(0, 0, W, H);
-    const strong = st.theme === 'color';
+    const strong = st.theme !== 'light';
     const gv = globeTokens();
     /* 深空底 + 星野：不管事实层还是关联层，地球都要被星空包住（有动效） */
     const sky = ctx.createLinearGradient(0, 0, W * .6, H);
@@ -7392,13 +7448,22 @@ window.V03Relation = (function () {
     '影响':'#cf5f6a','价格传导':'#cf5f6a'
   };
   const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
-  const palette = () => S.state.theme === 'color' ? {
-    land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
-    tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
-  } : {
-    land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
-    tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
+  const PALETTES = {
+    /* 配色 1 / 2 / 3：与事实层同一套（见 fact.js PALETTES），保证两层地图同一主题 */
+    light: {
+      land: '#f1efe8', land2: '#dce8df', line: 'rgba(79,108,123,.67)', ink: '#20384b', labelBg: 'rgba(255,255,255,.91)',
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(58,88,112,.24)', neutral: 'rgba(54,87,112,.78)', flow: '#236bad'
+    },
+    color: {
+      land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
+      tipBg: 'rgba(255,255,255,.98)', tipLine: 'rgba(30,58,92,.22)', neutral: 'rgba(58,84,112,.78)', flow: '#2f6fd0'
+    },
+    atlas: {
+      land: '#fbfcfd', land2: '#e6eef5', line: 'rgba(150,168,184,.8)', ink: '#1e2b3a', labelBg: 'rgba(255,255,255,.94)',
+      tipBg: 'rgba(255,255,255,.99)', tipLine: 'rgba(40,58,80,.2)', neutral: 'rgba(66,88,112,.78)', flow: '#1f6bff'
+    }
   };
+  const palette = () => PALETTES[S.state.theme] || PALETTES.light;
   const domOf = o => D.domain(o.domain);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -8238,7 +8303,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.0.8',
+      source: 'AgriLink v1.0.9',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -8365,6 +8430,42 @@ window.V03Sim = (function () {
     });
   }
 
+  /* ---------- G3：配色方案（三套主题，取自 Felt / Mapbox / Atlas·iipmaps 抽色） ---------- */
+  const THEMES = [
+    { id: 'light', name: '配色 1', desc: '清爽浅蓝 · Felt', swatch: ['#e4ebef', '#f0eee6', '#236bad'] },
+    { id: 'color', name: '配色 2', desc: '绿陆蓝水 · Mapbox', swatch: ['#5fbdf2', '#cfe9bd', '#e08a80'] },
+    { id: 'atlas', name: '配色 3', desc: '灰蓝数据 · Atlas', swatch: ['#cfdee8', '#fbfcfd', '#1f8cff'] }
+  ];
+  const themeOf = id => THEMES.find(t => t.id === id) || THEMES[0];
+  let themePop = null;
+  function closeThemePop() {
+    if (!themePop) return;
+    themePop.remove(); themePop = null;
+    document.removeEventListener('mousedown', onThemeDown, true);
+  }
+  function onThemeDown(e) {
+    if (themePop && !themePop.contains(e.target) && !themePop._anchor.contains(e.target)) closeThemePop();
+  }
+  /* 色块 + 名称 + 当前标记：按 iipmaps 的 Palette Editor 那种色板样式做 */
+  function openThemePop() {
+    const anchor = $('btnTheme');
+    if (themePop) { closeThemePop(); return; }
+    const box = el('div', 'pal-pop');
+    box._anchor = anchor;
+    box.innerHTML = '<h4>配色方案</h4>' + THEMES.map(t =>
+      '<button type="button" class="pal-tile' + (S.state.theme === t.id ? ' on' : '') + '" data-th="' + t.id + '">' +
+      '<span class="pal-swatch" style="background:linear-gradient(135deg,' + t.swatch[0] + ' 0%,' + t.swatch[1] + ' 45%,' + t.swatch[2] + ' 100%)"></span>' +
+      '<span><b>' + t.name + '</b><i>' + t.desc + '</i></span>' +
+      (S.state.theme === t.id ? '<em>当前使用</em>' : '') + '</button>').join('');
+    box.querySelectorAll('[data-th]').forEach(b => { b.onclick = () => { S.set({ theme: b.dataset.th }); closeThemePop(); }; });
+    document.body.appendChild(box);
+    const r = anchor.getBoundingClientRect();
+    box.style.top = Math.round(r.bottom + 6) + 'px';
+    box.style.left = Math.round(Math.max(8, Math.min(window.innerWidth - 276, r.right - 268))) + 'px';
+    themePop = box;
+    setTimeout(() => document.addEventListener('mousedown', onThemeDown, true), 0);
+  }
+
   function renderTopIcons() {
     const st = S.state;
     const set = (btn, on) => { btn.classList.toggle('on', !!on); btn.setAttribute('aria-pressed', String(!!on)); };
@@ -8374,9 +8475,10 @@ window.V03Sim = (function () {
     $('menuBtn').disabled = st.tab === 'sim';
     $('btnStream').disabled = st.tab === 'sim';
     $('btnCards').disabled = st.tab === 'sim';
-    $('btnTheme').innerHTML = svg('sun', 16) + '<span class="theme-name">' + (st.theme === 'color' ? '配色 2' : '配色 1') + '</span>';
-    $('btnTheme').setAttribute('aria-label', st.theme === 'color' ? '切换到配色 1' : '切换到配色 2');
-    $('btnTheme').title = st.theme === 'color' ? '当前配色 2，切换到配色 1' : '当前配色 1，切换到配色 2';
+    const cur = themeOf(st.theme);
+    $('btnTheme').innerHTML = svg('sun', 16) + '<span class="theme-name">' + cur.name + '</span>';
+    $('btnTheme').setAttribute('aria-label', '配色方案：当前 ' + cur.name + '，点击选择');
+    $('btnTheme').title = '配色方案：当前 ' + cur.name + '（' + cur.desc + '）';
     $('btnSettings').title = '设置';
   }
 
@@ -8970,7 +9072,7 @@ window.V03Sim = (function () {
     $('menuClose').onclick = () => S.set({ menu: false });
     $('btnStream').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { stream: !S.state.panels.stream } }); };
     $('btnCards').onclick = () => { if (S.state.tab !== 'sim') S.set({ panels: { cards: !S.state.panels.cards } }); };
-    $('btnTheme').onclick = () => S.set({ theme: S.state.theme === 'color' ? 'light' : 'color' });
+    $('btnTheme').onclick = () => openThemePop();
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();

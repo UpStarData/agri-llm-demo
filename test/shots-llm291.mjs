@@ -19,8 +19,7 @@ try {
   await page.waitForFunction(() => window.__AGRI_READY === true);
   const shot = async (name, ms) => { await page.waitForTimeout(ms || 2600); await page.screenshot({ path: path.join(out, prefix + '-' + name + '.png') }); };
 
-  for (const theme of ['color', 'light']) {
-    const tag = theme === 'color' ? 'pal2' : 'pal1';
+  for (const [theme, tag] of [['color', 'pal2'], ['light', 'pal1'], ['atlas', 'pal3']]) {
     await page.evaluate(t => V03Store.set({ theme: t, tab: 'fact', sk: { mode3d: true }, geo: { level: 'L1', focus: null } }), theme);
     await shot(tag + '-fact-3d');
     await page.evaluate(() => V03Store.set({ sk: { mode3d: false } }));
