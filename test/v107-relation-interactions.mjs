@@ -84,6 +84,24 @@ try {
   /* ---------- 缩放按钮：单击一格 + 按住连续 ---------- */
   await page.evaluate(() => V03Store.set({ tab: 'relation', rel: { view: 'geo', level: 'L1', focus: null } }));
   await page.waitForTimeout(3600);
+  /* Safari 的触控板缩放是 gesturechange 事件（Chromium 里手工派发以覆盖这条分支） */
+  const gBeforeState = await state();
+  const gBefore = gBeforeState.zoom;
+  await page.evaluate(() => {
+    const el = document.getElementById('relCanvas');
+    const fire = (type, scale) => {
+      const ev = new Event(type, { bubbles: true, cancelable: true });
+      ev.scale = scale; ev.rotation = 0; ev.clientX = 500; ev.clientY = 420;
+      el.dispatchEvent(ev);
+    };
+    fire('gesturestart', 1);
+    fire('gesturechange', 1.45);
+    fire('gestureend', 1.45);
+  });
+  await page.waitForTimeout(400);
+  const gAfterState = await state();
+  assert(gAfterState.zoom > gBefore || gAfterState.level !== gBeforeState.level,
+    'Safari 手势事件（gesturechange）同样能缩放（' + gBefore.toFixed(3) + ' → ' + gAfterState.zoom.toFixed(3) + ' · ' + gBeforeState.level + '→' + gAfterState.level + '）');
   const zbox = await page.locator('#mapSk .sk[data-k="zoomIn"]').boundingBox();
   const s0 = await state();
   const z0 = s0.zoom;
