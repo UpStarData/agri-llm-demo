@@ -21,10 +21,45 @@ window.V03Fact = (function () {
      L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
      L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'worldChina', center: [105, 35], zoom: 1.26, fit: 1.26, bounds: [[-25, 72], [335, -56]], zoomBox: [1.26, 2.4], inAt: 2.2, divisor: 9 },
-    L2: { map: 'china', center: [104.5, 36], zoom: 1.0, fit: 0.86, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
-    L3: { map: 'china', center: null, zoom: 4.2, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], outAt: 3.2, divisor: 7 }
+    L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, fit: 1.36, bounds: [[-25, 72], [335, -56]], zoomBox: [1.26, 2.4], inAt: 2.2, divisor: 9 },
+    L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, fit: 1.59, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
+    L3: { map: 'china', center: [111.73, 27.54], zoom: 9.08, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], outAt: 3.2, divisor: 7 }
   };
+
+  /* ---------- 实验页确认过的手感：阻尼缩放 + 缓动 + 跨层中心接续 ---------- */
+  const FEEL = { step: 1.09, gain: .0003, pinchGain: .00075, maxStep: .022, cap: .62, idle: 280 };
+  const PROV_VIEW = { '湖南': [111.73, 27.54, 9.08] };
+  let camTarget = null, camRaf = 0, camGesture = { at: 0, spent: 0 };
+
+  function camLevel() { return LEVEL[S.state.geo.level]; }
+  function camAdd(logDelta) {
+    const now = performance.now();
+    if (now - camGesture.at > FEEL.idle) camGesture.spent = 0;
+    camGesture.at = now;
+    const box = camLevel().zoomBox;
+    const want = Math.max(-FEEL.maxStep, Math.min(FEEL.maxStep, logDelta));
+    const room = Math.max(0, FEEL.cap - camGesture.spent);
+    const d = Math.max(-room, Math.min(room, want));
+    if (Math.abs(d) < 1e-6) return;
+    camGesture.spent += Math.abs(d);
+    camTarget = Math.max(box[0] * .92, Math.min(box[1] * 1.18, (camTarget == null ? camera.zoom : camTarget) * Math.exp(d)));
+    startCamLoop();
+  }
+  function startCamLoop() { if (!camRaf) camRaf = requestAnimationFrame(camLoop); }
+  function camLoop() {
+    camRaf = requestAnimationFrame(camLoop);
+    if (camTarget == null) { cancelAnimationFrame(camRaf); camRaf = 0; return; }
+    const box = camLevel().zoomBox;
+    camera.zoom += (camTarget - camera.zoom) * .16;
+    if (Math.abs(camTarget - camera.zoom) < Math.max(.002, camera.zoom * .002)) {
+      camera.zoom = Math.max(box[0], Math.min(box[1], camTarget === null ? camera.zoom : camTarget));
+      camTarget = null;
+      afterZoom();                       /* 停手后再做一次层级判定与状态提交 */
+      return;
+    }
+    if (!S.state.sk.mode3d && chart) chart.setOption({ geo: { zoom: camera.zoom, center: camera.center.slice() } }, { lazyUpdate: true });
+  }
+
   const PROV = D.PROV_CENTER || {};
   const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
   const DEFAULT_FOCUS = '湖南';
@@ -119,6 +154,18 @@ window.V03Fact = (function () {
       side: root.querySelector('#factSide'), sideBody: root.querySelector('#sideBody'), searchStatus: root.querySelector('#factSearchStatus'), overlayInfo: root.querySelector('#factOverlayInfo'), chooser: root.querySelector('#factChooser')
     };
     dom.searchStatus.onclick = () => S.set({ q: '' });
+    /* 普通滚轮 / 触控板捏合都走阻尼（实验页那套参数），ECharts 自己的滚轮缩放已关 */
+    dom.map.addEventListener('wheel', e => {
+      if (S.state.sk.mode3d) return;
+      const box = LEVEL[S.state.geo.level].zoomBox;
+      /* 边界：全球缩到底回 3D；省区缩到底回中国 */
+      if (e.deltaY > 0 && camera.zoom <= box[0] + .004) {
+        if (S.state.geo.level === 'L1') { S.set({ sk: { mode3d: true } }); return; }
+        if (S.state.geo.level === 'L3') { enterLevel('L2', null); return; }
+      }
+      e.preventDefault(); e.stopImmediatePropagation();
+      camAdd(-e.deltaY * (e.ctrlKey ? FEEL.pinchGain : FEEL.gain));
+    }, { capture: true, passive: false });
     window.addEventListener('resize', () => { if (chart) chart.resize(); });
     globe.mount(dom.globe, {
       pick: (kind, id) => (kind === 'fact' ? openFact(id) : showOverlay(id)),
@@ -191,7 +238,8 @@ window.V03Fact = (function () {
     S.set({ geo: { level, focus: focus || null }, factId: null });
     camera.level = level + '|' + (focus || '');
     camera.center = c ? [c[0], c[1]] : (t.center ? t.center.slice() : camera.center);
-    camera.zoom = c ? c[2] : t.zoom;
+    if (t.zoomBox && camera.zoom) { /* 跨层沿用当前中心，不跳到默认中心 */ }
+    camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
     sig = '';
   }
 
@@ -419,7 +467,7 @@ window.V03Fact = (function () {
       animationDurationUpdate: 0,
       geo: {
         map: lv.map, roam: true, zoom: camera.zoom, center: camera.center.slice(),
-        zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false,
+        zoomOnMouseWheel: false, moveOnMouseMove: true, moveOnMouseWheel: false,
         scaleLimit: { min: lv.zoomBox[0], max: lv.zoomBox[1] },
         boundingCoords: lv.bounds || undefined,
         itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
