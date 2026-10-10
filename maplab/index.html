@@ -393,14 +393,11 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     } else {
       cam.tcx = c ? c[0] : lv.center[0];
       cam.tcy = c ? c[1] : lv.center[1];
-      /* 进入新层时比例贴近上一层：放大进入时略偏上限，缩小进入时略偏下限→再缓动到适配值 */
-      const span = lv.max / lv.min;
-      const rel = clamp((startZ / lv.fit) / span, .08, .92);
-      cam.z = lv.min + (lv.max - lv.min) * (keepGoing ? rel + .12 : Math.max(.06, rel - .12));
-      cam.tz = startZ * (keepGoing ? 1.06 : .94);
-      cam.tz = clamp(cam.tz, lv.min * .92, lv.max * 1.18);
-      /* 二维之间不切地球，靠地图自身淡入淡出即可 */
-      if (state.view === 'world' && !keepGoing) cam.z = lv.min * 1.02;
+      /* 进入新层时比例挨着上一层方向：放大进入偏上限、缩小进入偏下限，但都留出余量，
+         这样既有连续性，也不会因为贴住边界而在下一手势里连跳两级 */
+      const rel = clamp((startZ / lv.fit) / (lv.max / lv.min), .15, .8);
+      cam.z = lv.min + (lv.max - lv.min) * (keepGoing ? rel + .15 : rel);
+      cam.tz = clamp(startZ * (keepGoing ? 1.08 : .93), lv.min * 1.02, lv.max * 1.1);
     }
     render();                       /* 先把目标视图画出来，避免中间出现空帧 */
     if (toGlobe) document.getElementById('stage').classList.add('globe-on');
