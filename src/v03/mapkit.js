@@ -86,7 +86,7 @@ window.V03MapKit = (function () {
         if (!c) return;
         const box = el();
         if (box && box.clientWidth > 0 && box.clientHeight > 0) c.resize();
-        c.setOption(option(), { notMerge: true });
+        c.setOption(cfg.option ? cfg.option() : option(), { notMerge: true });
         if (cfg.reveal) beginIntro();
         paintStatus();
       },
