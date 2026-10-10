@@ -48,7 +48,7 @@ window.V03MapKit = (function () {
       /* ---------- 缩放 ---------- */
       zoomFactor(factor, immediate) {
         if (!Number.isFinite(factor) || factor <= 0) return;
-        if (view === 'globe') { window.V03Globe.zoomBy(factor); return; }
+        if (view === 'globe') { (cfg.globe || window.V03Globe).zoomBy(factor); return; }
         if (immediate) { cam.tz = clamp(cam.tz * factor, lv().min * .92, lv().max * 1.18); return; }
         const now = performance.now();
         if (now - gesture.at > GESTURE_IDLE) gesture.spent = 0;
@@ -61,11 +61,11 @@ window.V03MapKit = (function () {
         cam.tz = clamp(cam.tz * Math.exp(d), lv().min * .92, lv().max * 1.18);
       },
       zoomBy(dir) {
-        if (view === 'globe') return window.V03Globe.zoomBy(dir);
+        if (view === 'globe') return (cfg.globe || window.V03Globe).zoomBy(dir);
         api.zoomFactor(dir > 0 ? ZOOM_STEP : 1 / ZOOM_STEP, true);
       },
       zoomState() {
-        if (view === 'globe') return window.V03Globe.zoomState();
+        if (view === 'globe') return (cfg.globe || window.V03Globe).zoomState();
         return { canIn: cam.z < lv().max - 1e-3, canOut: true, zoom: cam.z };
       },
 
@@ -79,9 +79,9 @@ window.V03MapKit = (function () {
             cam.z = cam.tz = (c && c[2]) ? c[2] : l.fit; }
         }
         const active = api.active();
-        if (window.V03Globe) window.V03Globe.setVisible(active && view === 'globe');
+        if (cfg.globe || window.V03Globe) (cfg.globe || window.V03Globe).setVisible(active && view === 'globe');
         if (!active) return;
-        if (view === 'globe') { cfg.globeData && window.V03Globe.update(cfg.globeData()); return; }
+        if (view === 'globe') { cfg.globeData && (cfg.globe || window.V03Globe).update(cfg.globeData()); return; }
         const c = ensureChart();
         if (!c) return;
         const box = el();
@@ -98,7 +98,7 @@ window.V03MapKit = (function () {
         cam.z = cam.tz = zoom;
         if (chart) chart.setOption({ geo: { center: cam.center(), zoom: cam.z } }, { lazyUpdate: true });
       },
-      debug: () => ({ view, focus, zoom: cam.z, canIn: api.zoomState().canIn, span: realSpan(), globe: window.V03Globe.debug() })
+      debug: () => ({ view, focus, zoom: cam.z, canIn: api.zoomState().canIn, span: realSpan(), globe: (cfg.globe || window.V03Globe).debug() })
     };
     cam.center = () => [cam.cx, cam.cy];
 
@@ -216,7 +216,7 @@ window.V03MapKit = (function () {
       const i = VIEWS.indexOf(view), next = VIEWS[clamp(i + dir, 0, 3)];
       if (next === view) return;
       const toGlobe = next === 'globe';
-      if (toGlobe) { window.V03Globe.zoomBy(cam.z / LEVELS.world.fit >= .5 ? 1 : .9); api.setView('globe', null); toast('已切到 3D 全球'); return; }
+      if (toGlobe) { (cfg.globe || window.V03Globe).zoomBy(cam.z / LEVELS.world.fit >= .5 ? 1 : .9); api.setView('globe', null); toast('已切到 3D 全球'); return; }
       view = next; focus = next === 'province' ? (focus || '湖南') : null;
       const l = LEVELS[next];
       /* 同一张底图（中国 ↔ 省区）沿用当前屏幕中心；跨底图（全球 ↔ 中国）做经度归一化 */
