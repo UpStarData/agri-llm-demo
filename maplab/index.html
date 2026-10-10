@@ -151,17 +151,19 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   const VIEWS = ['globe', 'world', 'china', 'hunan'];
   const LABEL = { globe: '全球 3D', world: '全球 2D', china: '中国', hunan: '湖南' };
   const LEVEL = {
-    world: { map: 'worldChina', center: [105, 35], fit: 1.26, bounds: [[-25, 72], [335, -56]], min: 1.1, max: 2.6, inAt: 2.15 },
-    china: { map: 'china', center: [104.1, 35.6], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
-    hunan: { map: 'china', center: [111.9, 27.4], fit: 5.2, min: 3.4, max: 16, outAt: 3.5 }
+    world: { map: 'worldChina', center: [107.98, 26.65], fit: 1.36, bounds: [[-25, 72], [335, -56]], min: 1.1, max: 2.6, inAt: 2.15 },
+    china: { map: 'china', center: [106.91, 37.05], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
+    hunan: { map: 'china', center: [111.6, 27.56], fit: 9.66, min: 3.4, max: 16, outAt: 3.5 }
   };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const HUNAM = '湖南';
   const PROV = (window.__CHINA_GEO.features || []).reduce((m, f) => { m[f.properties.name] = f; return m; }, {});
 
   const state = { view: 'globe', focus: null, center: [105, 35], zoom: 1.26, rotating: true, points: true };
+  const GLOBE_DEFAULT = { r: .457, rot: 103.4, tilt: .371 };
+  const AUTO_ROTATE = false;   /* 3D 地球是否缓慢自转 */   /* 用户指定的 3D 默认视角 */
   /* 相机：target 由手势/按钮改，current 每帧向 target 缓动 → 缩放连续、无跳变 */
-  const cam = { z: 1.26, tz: 1.26, cx: 105, cy: 35, tcx: 105, tcy: 35, r: .34, tr: .34, slowR: false, busy: false, raf: 0 };
+  const cam = { z: 1.36, tz: 1.36, cx: 107.98, cy: 26.65, tcx: 107.98, tcy: 26.65, r: .457, tr: .457, slowR: false, busy: false, raf: 0 };
   /* 连续缩放时用 CSS 缩放给即时反馈：地图/点位整体一起缩，不重新投影几何；
      手指停下 150ms 再把累积比例提交给 ECharts 渲染一次 —— 这是"连续缩放不卡"的关键。 */
   let moveIdle = 0, frameCount = 0, frameCost = 0, lastPaint = 0;
@@ -260,7 +262,15 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     });
     chart.on('georoam', () => {
       const geo = (chart.getOption().geo || [])[0];
-      if (geo) { cam.cx = cam.tcx = geo.center[0]; cam.cy = cam.tcy = geo.center[1]; }
+      if (geo && geo.center) {
+        cam.cx = cam.tcx = geo.center[0]; cam.cy = cam.tcy = geo.center[1];
+        /* 世界层三份接续：左右拖到边界就整体挪 360°，让平移连续不断 */
+        if (state.view === 'world') {
+          const dx = cam.cx > 285 ? -360 : cam.cx < -75 ? 360 : 0;
+          if (dx) { cam.cx += dx; cam.tcx += dx; chart.setOption({ geo: { center: [cam.cx, cam.cy] } }, { lazyUpdate: true }); }
+        }
+        paintScale();
+      }
     });
     const box = document.getElementById('chart');
     box.addEventListener('wheel', e => {
@@ -288,12 +298,13 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     const from = VIEWS.indexOf(state.view), to = VIEWS.indexOf(next);
     state.view = next; state.focus = focus || null;
     const lv = LEVEL[next === 'globe' ? 'world' : next];
-    const c = focus && PROV[focus] ? provinceCenter(focus) : null;
+    const useLevelHunan = next === 'hunan' && (!focus || focus === HUNAM);
+    const c = (!useLevelHunan && focus && PROV[focus]) ? provinceCenter(focus) : null;
     state.center = c ? [c[0], c[1]] : lv.center.slice();
-    state.zoom = c ? (c[2] || lv.fit) : lv.fit;
+    state.zoom = useLevelHunan ? lv.fit : (c ? (c[2] || lv.fit) : lv.fit);
     cam.tcx = state.center[0]; cam.tcy = state.center[1];
     cam.tz = state.zoom; cam.z = state.zoom;
-    if (next === 'globe') { cam.tr = .34; cam.r = .34; }
+    if (next === 'globe') { cam.tr = GLOBE_DEFAULT.r; cam.r = GLOBE_DEFAULT.r; }
     document.getElementById('stage').classList.toggle('globe-on', next === 'globe');
     document.getElementById('btn3d').classList.toggle('on', next === 'globe');
     render();
@@ -434,7 +445,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   function createGlobe() {
     const canvas = document.getElementById('globe');
     const ctx = canvas.getContext('2d');
-    let rot = 105, tilt = .22, R0 = 0.34, drag = null, pause = 0, last = 0, raf = 0, stars = [];
+    let rot = GLOBE_DEFAULT.rot, tilt = GLOBE_DEFAULT.tilt, R0 = GLOBE_DEFAULT.r, drag = null, pause = 0, last = 0, raf = 0, stars = [];
     let seed = 991;
     const rnd = () => ((seed = seed * 16807 % 2147483647) - 1) / 2147483646;
     for (let i = 0; i < 300; i++) stars.push({ x: rnd(), y: rnd(), r: .3 + rnd() * 1.3, a: .2 + rnd() * .6, s: .1 + rnd() * .9 });
@@ -550,7 +561,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
       if (state.view !== 'globe') { cancelAnimationFrame(raf); raf = 0; return; }
       if (now - last < 33) return;
       last = now;
-      if (!drag && now > pause) rot = (rot + .09) % 360;
+      /* 自转先关掉：这样用户指定的默认旋转角会保持不动（要自转改这里） */
+      if (AUTO_ROTATE && !drag && now > pause) rot = (rot + .09) % 360;
       resize();
       canvas._hits = [];
       draw(now);
@@ -637,6 +649,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     const lv = LEVEL[v];
     return {
       视角: LABEL[v], 比例: +cam.z.toFixed(2), 中心: [+cam.cx.toFixed(2), +cam.cy.toFixed(2)],
+      可视跨度: [+(360 / cam.z).toFixed(1), +(128 / cam.z).toFixed(1)],
       该层适配: lv.fit, 该层范围: [lv.min, lv.max],
       放大到: lv.inAt || null, 缩小到: lv.outAt || null
     };
@@ -652,7 +665,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     el.innerHTML = '<b>' + pr.视角 + '</b>\n'
       + (state.view === 'globe'
         ? '半径 ' + pr.地球半径 + '（范围 ' + pr.半径范围.join('–') + '）\n旋转 ' + pr.旋转 + '° · 倾角 ' + pr.倾角
-        : '比例 ' + pr.比例 + '×\n中心 ' + pr.中心[0] + '°, ' + pr.中心[1] + '°\n本层适配 ' + pr.该层适配 + '× · 范围 ' + pr.该层范围[0] + '–' + pr.该层范围[1]
+        : '比例 ' + pr.比例 + '×\n中心 ' + pr.中心[0] + '°, ' + pr.中心[1] + '°  （可视跨度 ' + pr.可视跨度[0] + '° × ' + pr.可视跨度[1] + '°）\n本层适配 ' + pr.该层适配 + '× · 范围 ' + pr.该层范围[0] + '–' + pr.该层范围[1]
           + '\n进下一级 ' + (pr.放大到 ? pr.放大到 + '×' : '—') + ' · 退上一级 ' + (pr.缩小到 ? pr.缩小到 + '×' : '—'));
   }
   function paintHint() {
@@ -689,7 +702,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   }
 
   globe = createGlobe();
-  globe._r = .34;
+  globe._r = GLOBE_DEFAULT.r;
   globe._dbg = () => ({ rot: globe.probe(0, 0).rot, tilt: globe.probe(0, 0).tilt });
   document.getElementById('copycfg').onclick = () => {
     const txt = JSON.stringify(cameraParams());
