@@ -152,8 +152,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   const LABEL = { globe: '全球 3D', world: '全球 2D', china: '中国', hunan: '湖南' };
   const LEVEL = {
     world: { map: 'worldChina', center: [107.98, 26.65], fit: 1.36, bounds: [[-25, 72], [335, -56]], min: 1.1, max: 2.6, inAt: 2.15 },
-    china: { map: 'china', center: [106.91, 37.05], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
-    hunan: { map: 'china', center: [111.6, 27.56], fit: 9.66, min: 3.4, max: 16, outAt: 3.5 }
+    china: { map: 'china', center: [109.18, 36.1], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
+    hunan: { map: 'china', center: [111.84, 27.34], fit: 8.93, min: 3.4, max: 16, outAt: 3.5 }
   };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const HUNAM = '湖南';
@@ -196,11 +196,14 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
       features: raw.map(o => {
         const d = depth(o.c);
         const polys = d >= 4 ? o.c : [d === 3 ? o.c : [o.c]];
-        const coordinates = polys.flatMap(poly => {
+        const base = polys.flatMap(poly => {
           const outer = poly[0];
           if (outer.some(p => p[0] < SEAM) && outer.some(p => p[0] >= SEAM)) return [];
           return [poly.map(ring => ring.map(([lng, lat]) => [shift(lng), lat]))];
         });
+        /* 三份接续：左右各再画一整份，拖动到边界时内容接得上（美国会从左边出来） */
+        const coordinates = [-360, 0, 360].flatMap(dx =>
+          base.map(poly => poly.map(ring => ring.map(([lng, lat]) => [lng + dx, lat]))));
         return { type: 'Feature', properties: { name: o.n }, geometry: { type: 'MultiPolygon', coordinates } };
       })
     };
