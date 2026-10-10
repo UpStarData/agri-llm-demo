@@ -13,13 +13,14 @@
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{height:100%}
-  body{background:#eef2f6;color:var(--ink);font:14px/1.5 "PingFang SC","Noto Sans SC",system-ui,sans-serif;overflow:hidden}
-  #stage{position:fixed;inset:0}
-  #chart{position:absolute;inset:0}
-  #globe{position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none;cursor:grab}
+  body{background:#5fbdf2;color:var(--ink);font:14px/1.5 "PingFang SC","Noto Sans SC",system-ui,sans-serif;overflow:hidden}
+  #stage{position:fixed;inset:0;background:#5fbdf2}
+  /* 两层同时存在：地图在下、地球在上，切换时用顶层不透明度做交叉溶解（全程都有画面） */
+  #chart{position:absolute;inset:0;z-index:1;background:#5fbdf2}
+  #globe{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:none;cursor:grab;
+    opacity:0;pointer-events:none;transition:opacity .3s ease}
   #globe:active{cursor:grabbing}
-  .globe-on #chart{visibility:hidden}
-  .globe-on #globe{display:block}
+  .globe-on #globe{opacity:1;pointer-events:auto}
 
   /* 顶部：视角面包屑 + 层级说明 */
   .topbar{position:absolute;left:0;right:0;top:0;height:46px;display:flex;align-items:center;gap:14px;padding:0 16px;
@@ -161,11 +162,15 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     const cache = new Map();
     return name => { if (!cache.has(name)) cache.set(name, pal[cache.size % pal.length]); return cache.get(name); };
   })();
+  const regionCache = new Map();
   function mapRegions(level) {
+    if (regionCache.has(level)) return regionCache.get(level);
     const names = level === 'world' ? window.__WORLD110.map(x => x.n)
       : (window.__CHINA_GEO.features || []).map(f => f.properties.name);
-    return names.flatMap(name => (level === 'world' ? [-1, 0, 1].map(c => (c ? name + '@' + c : name)) : [name])
+    const out = names.flatMap(name => (level === 'world' ? [-1, 0, 1].map(c => (c ? name + '@' + c : name)) : [name])
       .map(n => ({ name: n, itemStyle: { areaColor: regionColor(name) } })));
+    regionCache.set(level, out);
+    return out;
   }
   /* 世界底图：把跨日期变更线的国家切开（否则平面图上也会粘连） */
   function worldGeoJSON() {
@@ -370,40 +375,37 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     if (cam.tz > lv.max * 1.03 && cam.z > lv.max * .99) return switchOnZoom(1);
     if (cam.tz < lv.min * .97 && cam.z < lv.min * 1.01) return switchOnZoom(-1);
   }
-  /* 切视角：交叉淡入淡出（旧视图 0.34s 淡出，新视图 0.36s 淡入）；缩放的动势继续，不硬切 */
+  /* 切视角：先把目标视图渲染出来，再靠顶层不透明度交叉溶解；
+     进入的缩放值贴着上一层（而不是跳到该层适配值），所以缩小/放大都不会有比例跳变，也不会出现空白帧 */
   function switchOnZoom(dir) {
     const next = dir > 0 ? nextView() : prevView();
     if (next === state.view) return;
-    const keepGoing = dir > 0;
-    const toGlobe = next === 'globe';
-    const outEl = toGlobe ? document.getElementById('chart') : document.getElementById('globe');
-    outEl.style.transition = 'opacity .34s ease';
-    outEl.style.opacity = '0';
-    setTimeout(() => {
-      state.view = next;
-      state.focus = next === 'hunan' ? HUNAM : null;
-      const lv = LEVEL[next === 'globe' ? 'world' : next];
-      const c = state.focus && PROV[state.focus] ? provinceCenter(state.focus) : null;
-      if (toGlobe) {
-        /* 回三维地球：从「放到最大」的半径开始，慢慢收到静息大小 */
-        cam.r = .50; cam.tr = .34; cam.slowR = true;
-      } else {
-        cam.tcx = c ? c[0] : lv.center[0];
-        cam.tcy = c ? c[1] : lv.center[1];
-        cam.tz = keepGoing ? lv.fit * 1.16 : lv.fit * .92;
-        cam.z = keepGoing ? lv.fit * .98 : lv.fit * 1.05;
-      }
-      outEl.style.opacity = '1';          /* 复位，供下次使用（真正的显示/隐藏由 view 类控制） */
-      render();
-      const inEl = toGlobe ? document.getElementById('globe') : document.getElementById('chart');
-      inEl.style.transition = 'none';
-      inEl.style.opacity = '0';
-      requestAnimationFrame(() => {
-        inEl.style.transition = 'opacity .36s ease';
-        inEl.style.opacity = '1';
-      });
-      toast('已切到 ' + LABEL[next]);
-    }, 340);
+    const keepGoing = dir > 0, toGlobe = next === 'globe';
+    const startZ = cam.z, startR = cam.r;
+    state.view = next;
+    state.focus = next === 'hunan' ? HUNAM : null;
+    const lv = LEVEL[toGlobe ? 'world' : next];
+    const c = state.focus && PROV[state.focus] ? provinceCenter(state.focus) : null;
+    if (toGlobe) {
+      /* 回三维：地球从上一层的观感半径接着收，慢档缓动 */
+      cam.r = clamp(startZ / lv.fit * .30, .42, .52);
+      cam.tr = .34; cam.slowR = true;
+    } else {
+      cam.tcx = c ? c[0] : lv.center[0];
+      cam.tcy = c ? c[1] : lv.center[1];
+      /* 进入新层时比例贴近上一层：放大进入时略偏上限，缩小进入时略偏下限→再缓动到适配值 */
+      const span = lv.max / lv.min;
+      const rel = clamp((startZ / lv.fit) / span, .08, .92);
+      cam.z = lv.min + (lv.max - lv.min) * (keepGoing ? rel + .12 : Math.max(.06, rel - .12));
+      cam.tz = startZ * (keepGoing ? 1.06 : .94);
+      cam.tz = clamp(cam.tz, lv.min * .92, lv.max * 1.18);
+      /* 二维之间不切地球，靠地图自身淡入淡出即可 */
+      if (state.view === 'world' && !keepGoing) cam.z = lv.min * 1.02;
+    }
+    render();                       /* 先把目标视图画出来，避免中间出现空帧 */
+    if (toGlobe) document.getElementById('stage').classList.add('globe-on');
+    else document.getElementById('stage').classList.remove('globe-on');
+    toast('已切到 ' + LABEL[next]);
   }
 
   /* ---------- 三维地球 ---------- */
