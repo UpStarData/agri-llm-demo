@@ -107,8 +107,8 @@
   const LABEL = { globe: '全球 3D', world: '全球 2D', china: '中国', hunan: '湖南' };
   const LEVEL = {
     world: { map: 'worldChina', center: [107.98, 26.65], fit: 1.36, bounds: [[-25, 72], [335, -56]], min: 1.1, max: 2.6, inAt: 2.15 },
-    china: { map: 'china', center: [109.18, 36.1], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
-    hunan: { map: 'china', center: [111.84, 27.34], fit: 8.93, min: 3.4, max: 16, outAt: 3.5 }
+    china: { map: 'china', center: [108.22, 36.51], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
+    hunan: { map: 'china', center: [111.25, 27.64], fit: 9.08, min: 3.4, max: 16, outAt: 3.5 }
   };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const HUNAM = '湖南';
@@ -276,7 +276,7 @@
     toastTimer = setTimeout(paintHint, 1400);
   }
   function provinceCenter(name) {
-    const f = PROV[name]; if (!f) return null;
+    const f = PROV[name] || PROV[shortProv(name)]; if (!f) return null;
     let minLng = 999, maxLng = -999, minLat = 999, maxLat = -999;
     const walk = c => { if (typeof c[0] === 'number') { minLng = Math.min(minLng, c[0]); maxLng = Math.max(maxLng, c[0]); minLat = Math.min(minLat, c[1]); maxLat = Math.max(maxLat, c[1]); } else c.forEach(walk); };
     walk(f.geometry.coordinates);
@@ -284,13 +284,16 @@
     const span = Math.max(maxLng - minLng, (maxLat - minLat) * 1.6);
     return [lng, lat, clamp(360 / Math.max(2, span) * .42, 3.4, 12)];
   }
+  /* 省名归一化：地图返回的是"湖南省/广西壮族自治区"这类全称 */
+  const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '');
   function drillFrom(name) {
     if (state.view === 'globe') return setView('world', null);
     if (state.view === 'world') return setView('china', null);
     if (state.view === 'china') {
+      const short = shortProv(name);
       /* 统一走 setView：状态与相机目标一起改，否则每帧缓动会把旧视角写回来（点进去又被弹回） */
-      if (name === HUNAM) return setView('hunan', HUNAM);
-      if (provinceCenter(name)) return setView('hunan', name);
+      if (short === HUNAM) return setView('hunan', HUNAM);          /* 湖南用该层默认视角 */
+      if (provinceCenter(short) || provinceCenter(name)) return setView('hunan', short);
     }
   }
   const nextView = () => VIEWS[Math.min(3, VIEWS.indexOf(state.view) + 1)];
