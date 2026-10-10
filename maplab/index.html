@@ -305,7 +305,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     const c = (!useLevelHunan && focus && PROV[focus]) ? provinceCenter(focus) : null;
     state.center = c ? [c[0], c[1]] : lv.center.slice();
     state.zoom = useLevelHunan ? lv.fit : (c ? (c[2] || lv.fit) : lv.fit);
-    cam.tcx = state.center[0]; cam.tcy = state.center[1];
+    cam.cx = cam.tcx = state.center[0]; cam.cy = cam.tcy = state.center[1];
     cam.tz = state.zoom; cam.z = state.zoom;
     if (next === 'globe') { cam.tr = GLOBE_DEFAULT.r; cam.r = GLOBE_DEFAULT.r; }
     document.getElementById('stage').classList.toggle('globe-on', next === 'globe');
