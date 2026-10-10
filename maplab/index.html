@@ -156,7 +156,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   const cam = { z: 1.26, tz: 1.26, cx: 105, cy: 35, tcx: 105, tcy: 35, r: .34, tr: .34, slowR: false, busy: false, raf: 0 };
   /* 连续缩放时用 CSS 缩放给即时反馈：地图/点位整体一起缩，不重新投影几何；
      手指停下 150ms 再把累积比例提交给 ECharts 渲染一次 —— 这是"连续缩放不卡"的关键。 */
-  let cssBase = null, cssIdle = 0, commitCount = 0;
+  let moveIdle = 0, frameCount = 0, frameCost = 0, lastPaint = 0;
   let chart = null, globe = null;
 
   /* ---------- 二维地图 ---------- */
@@ -236,7 +236,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   function ensureChart() {
     if (chart) return chart;
     mapReady();
-    chart = echarts.init(document.getElementById('chart'));
+    /* 高 DPR / 4K 屏上整块画布每帧都要重绘，把画布分辨率封顶能直接砍掉大部分重绘成本 */
+    chart = echarts.init(document.getElementById('chart'), null, { devicePixelRatio: Math.min(1.25, window.devicePixelRatio || 1) });
     chart.on('click', params => {
       if (params.seriesId === 'pts' && params.data) return showTip(params.data.name, params.data.kind, params.event && params.event.event);
       /* 区域点击：ECharts 只在真正命中多边形时给区域名，点海洋没有任何事件 */
@@ -372,21 +373,21 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     }
     const lv = LEVEL[state.view];
     const moving = Math.abs(cam.tz - cam.z) > 1e-4;
-    const box = document.getElementById('chart');
     if (moving && chart) {
-      if (cssBase == null) cssBase = cam.z;                    /* 手势起点的已渲染比例 */
-      const f = clamp(cam.z / cssBase, .3, 3.5);
-      box.style.transformOrigin = '50% 50%';
-      box.style.transform = f === 1 ? 'none' : 'scale(' + f.toFixed(4) + ')';
-      cssIdle = performance.now();
+      const now = performance.now();
+      if (now - lastPaint >= 26) {                      /* 约 38fps，避免每帧都整块重绘 */
+        lastPaint = now; frameCount++;
+        const t0 = performance.now();
+        chart.setOption({ geo: { zoom: cam.z, center: [cam.cx, cam.cy] } }, { lazyUpdate: true });
+        frameCost = frameCost * .9 + (performance.now() - t0) * .1;
+      }
       paintScale();
-    } else if (cssBase != null && performance.now() - cssIdle > 150) {
-      /* 停手：一次性提交真实比例（只渲染一帧），并把 CSS 变换归位 */
-      cssBase = null;
-      box.style.transform = 'none';
-      chart.setOption({ geo: { zoom: cam.z, center: [cam.cx, cam.cy] } }, { lazyUpdate: true });
-      commitCount++;
-      paintScale();
+      moveIdle = now;
+    } else if (moveIdle && performance.now() - moveIdle > 120) {
+      /* 手势结束：目标直接对齐当前值，不再继续滑动 */
+      moveIdle = 0;
+      cam.tz = cam.z; cam.tcx = cam.cx; cam.tcy = cam.cy;
+      chart.setOption({ geo: { zoom: cam.z, center: [cam.cx, cam.cy] } }, { lazyUpdate: true });   /* 停手补最后一帧 */
     }
     if (cam.tz > lv.max * 1.03 && cam.z > lv.max * .99) return switchOnZoom(1);
     if (cam.tz < lv.min * .97 && cam.z < lv.min * 1.01) return switchOnZoom(-1);
@@ -415,8 +416,6 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
       cam.z = lv.min + (lv.max - lv.min) * (keepGoing ? rel + .15 : rel);
       cam.tz = clamp(startZ * (keepGoing ? 1.08 : .93), lv.min * 1.02, lv.max * 1.1);
     }
-    cssBase = null;
-    document.getElementById('chart').style.transform = 'none';
     render();                       /* 先把目标视图画出来，避免中间出现空帧 */
     if (toGlobe) document.getElementById('stage').classList.add('globe-on');
     else document.getElementById('stage').classList.remove('globe-on');
@@ -668,7 +667,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   render();
   window.__MAPLAB_READY = true;
   window.__maplab = {
-    view: () => state.view, state, cam, setView, stepZoom, zoomFactor, globe, commits: () => commitCount
+    view: () => state.view, state, cam, setView, stepZoom, zoomFactor, globe, perf: () => ({ frames: frameCount, ms: +frameCost.toFixed(2) })
   };
 })();
 </script>
