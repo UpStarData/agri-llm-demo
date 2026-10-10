@@ -151,10 +151,11 @@
     };
   }
   /* 演示数据点：证明「点不切视角」 */
+  /* 演示点都放在省区偏侧的位置：省界正中间要留给"点区域进入下一级" */
   const POINTS = {
-    world: [[116.4, 39.9, '北京新发地农产品批发市场', '市场'], [-0.13, 51.5, '伦敦蔬果批发市场', '市场'], [-74, 40.7, '纽约 Hunts Point 市场', '市场'], [2.35, 48.85, '巴黎 Rungis 市场', '市场']],
-    china: [[116.4, 39.9, '北京新发地农产品批发市场', '市场'], [112.98, 28.2, '长沙红星农副产品大市场', '市场'], [121.47, 31.23, '上海江桥批发市场', '市场'], [113.26, 23.13, '广州江南果菜市场', '市场']],
-    hunan: [[112.98, 28.2, '长沙红星农副产品大市场', '市场'], [112.98, 28.19, '长沙海吉星农产品市场', '市场'], [111.6, 26.4, '永州蔬菜产区', '产区'], [110.6, 27.3, '怀化水果集散中心', '市场']]
+    world: [[116.9, 40.4, '北京新发地农产品批发市场', '市场'], [-0.13, 51.5, '伦敦蔬果批发市场', '市场'], [-74, 40.7, '纽约 Hunts Point 市场', '市场'], [2.35, 48.85, '巴黎 Rungis 市场', '市场']],
+    china: [[117.2, 40.6, '北京新发地农产品批发市场', '市场'], [113.9, 29.1, '长沙红星农副产品大市场', '市场'], [121.9, 31.9, '上海江桥批发市场', '市场'], [113.9, 22.6, '广州江南果菜市场', '市场']],
+    hunan: [[113.6, 28.9, '长沙红星农副产品大市场', '市场'], [113.6, 28.5, '长沙海吉星农产品市场', '市场'], [112.1, 25.9, '永州蔬菜产区', '产区'], [110.1, 27.8, '怀化水果集散中心', '市场']]
   };
   const pointsOf = v => (state.points ? (POINTS[v] || []) : []);
   const copies = (lng, lat) => state.view === 'world' ? [[lng, lat], [lng + 360, lat], [lng - 360, lat]].filter(p => p[0] > -25 && p[0] < 335) : [[lng, lat]];
@@ -179,7 +180,7 @@
       series: [{
         id: 'pts', type: 'scatter', coordinateSystem: 'geo', z: 6, cursor: 'pointer',
         data: pts.flatMap(([lng, lat, name, kind]) => copies(lng, lat).map(value => ({ value, name, kind }))),
-        symbolSize: 9,
+        symbolSize: 8,
         itemStyle: { color: '#fff', borderColor: '#2f6fd0', borderWidth: 2, shadowColor: 'rgba(47,111,208,.55)', shadowBlur: 10 }
       }]
     };
@@ -265,13 +266,9 @@
     if (state.view === 'globe') return setView('world', null);
     if (state.view === 'world') return setView('china', null);
     if (state.view === 'china') {
+      /* 统一走 setView：状态与相机目标一起改，否则每帧缓动会把旧视角写回来（点进去又被弹回） */
       if (name === HUNAM) return setView('hunan', HUNAM);
-      const c = provinceCenter(name);
-      if (!c) return;
-      state.view = 'hunan'; state.focus = name; state.center = [c[0], c[1]]; state.zoom = c[2];
-      document.getElementById('stage').classList.remove('globe-on');
-      render();
-      return toast('已切到 ' + name);
+      if (provinceCenter(name)) return setView('hunan', name);
     }
   }
   const nextView = () => VIEWS[Math.min(3, VIEWS.indexOf(state.view) + 1)];
