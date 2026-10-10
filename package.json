@@ -1,6 +1,6 @@
 {
   "name": "agri-llm-demo",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "private": true,
   "description": "AgriLink 农链 V1.0.9 · 新增配色 3（Atlas/iipmaps 抽色）与配色选择器",
   "type": "module",

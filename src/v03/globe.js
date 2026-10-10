@@ -451,7 +451,7 @@ window.V03Globe = (function () {
     if (!was) canvas.classList.remove('view-fade');
     if (!next) { if (raf) cancelAnimationFrame(raf); raf = 0; return; }
     resize();
-    if (!was) { beginIntro(); canvas.classList.add('view-fade'); void canvas.offsetWidth; }
+    if (!was) { beginIntro(); radiusScale = .38; canvas.classList.add('view-fade'); void canvas.offsetWidth; }   /* 每次回到三维都从舒适半径开始，留出放大余量 */
     if (!raf) raf = requestAnimationFrame(loop);
   }
 

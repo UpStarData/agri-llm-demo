@@ -19,10 +19,42 @@ window.V03Relation = (function () {
   /* 与事实层一致的三级视角：L1 全球 → L2 中国 → L3 省区。
      3D 放大到极致切二维，二维缩到最小回 3D；点地图与事实层一样逐级下钻。 */
   const REL_LEVEL = {
-    L1: { map: 'worldChina', center: [105, 35], zoom: 1.26, bounds: [[-25, 72], [335, -56]], box: [1.26, 2.4], inAt: 2.2 },
-    L2: { map: 'china', center: [104.5, 36], zoom: 1.0, box: [0.86, 3.2], inAt: 2.7, outAt: 0.9 },
-    L3: { map: 'china', center: null, zoom: 4.2, box: [3.0, 14.3] }
+    L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, bounds: [[-25, 72], [335, -56]], box: [1.26, 2.4], inAt: 2.2 },
+    L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, box: [0.86, 3.2], inAt: 2.7, outAt: 0.9 },
+    L3: { map: 'china', center: [111.73, 27.54], zoom: 9.08, box: [3.4, 16] }
   };
+
+  /* ---------- 实验页确认过的手感：阻尼缩放 + 缓动（与事实层同一套参数） ---------- */
+  const FEEL = { step: 1.09, gain: .0003, pinchGain: .00075, maxStep: .022, cap: .62, idle: 280 };
+  const PROV_VIEW = { '湖南': [111.73, 27.54, 9.08] };
+  let camTarget = null, camRaf = 0, camGesture = { at: 0, spent: 0 };
+  function camBox() { return levelCfg().box; }
+  function camAdd(logDelta, immediate) {
+    const now = performance.now();
+    if (now - camGesture.at > FEEL.idle) camGesture.spent = 0;
+    camGesture.at = now;
+    const box = camBox();
+    /* 按钮是"按一下走一格"，不是手势：不受单次上限与手势总量上限约束 */
+    const want = immediate ? logDelta : Math.max(-FEEL.maxStep, Math.min(FEEL.maxStep, logDelta));
+    const room = immediate ? 1e9 : Math.max(0, FEEL.cap - camGesture.spent);
+    const d = Math.max(-room, Math.min(room, want));
+    if (Math.abs(d) < 1e-6) return;
+    camGesture.spent += Math.abs(d);
+    camTarget = Math.max(box[0] * .92, Math.min(box[1] * 1.18, (camTarget == null ? camera.zoom : camTarget) * Math.exp(d)));
+    if (!camRaf) camRaf = requestAnimationFrame(camLoop);
+  }
+  function camLoop() {
+    camRaf = requestAnimationFrame(camLoop);
+    if (camTarget == null) { cancelAnimationFrame(camRaf); camRaf = 0; return; }
+    const box = camBox();
+    camera.zoom += (camTarget - camera.zoom) * .16;
+    if (Math.abs(camTarget - camera.zoom) < Math.max(.002, camera.zoom * .002)) {
+      camera.zoom = Math.max(box[0], Math.min(box[1], camTarget)); camTarget = null;
+      afterZoom();
+      return;
+    }
+    if (S.state.rel.view === 'geo' && chart) chart.setOption({ geo: { zoom: camera.zoom, center: camera.center.slice() } }, { lazyUpdate: true });
+  }
   const GRAPH_BOX = [1.26, 3.0];
   const relLevel = () => S.state.rel.level || 'L1';
   const relFocus = () => S.state.rel.focus || null;
@@ -104,6 +136,13 @@ window.V03Relation = (function () {
       }
     });
 
+    dom.canvas.addEventListener('wheel', e => {
+      if (S.state.rel.view !== 'geo') return;
+      if (relLevel() === 'L1' && e.deltaY > 0 && camera.zoom <= levelCfg().box[0] + .004) { toGlobe(); return; }
+      if (relLevel() === 'L3' && e.deltaY > 0 && camera.zoom <= levelCfg().box[0] + .004) { enterLevel('L2', null); return; }
+      e.preventDefault(); e.stopImmediatePropagation();
+      camAdd(-e.deltaY * (e.ctrlKey ? FEEL.pinchGain : FEEL.gain));
+    }, { capture: true, passive: false });
     bindPinch(dom.canvas);
     dom.canvas.addEventListener('pointerdown', () => { dragging = true; }, true);
     window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; if (hover) { hover = null; paintFocus(); } });
@@ -168,8 +207,8 @@ window.V03Relation = (function () {
     const lv = relLevel(), t = REL_LEVEL[lv];
     const c = relFocus() ? (D.PROV_CENTER || {})[relFocus()] : null;
     camera.level = lv;
-    camera.center = c ? [c[0], c[1]] : (t.center ? t.center.slice() : camera.center);
-    camera.zoom = c ? c[2] : t.zoom;
+    camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
+    camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
   }
 
   function mapReady() {
@@ -315,7 +354,8 @@ window.V03Relation = (function () {
     el.addEventListener('wheel', e => {
       if (!e.ctrlKey) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      zoomByFactor(Math.exp(-e.deltaY * .006));
+      if (S.state.rel.view === 'globe') globe.zoomByFactor(Math.exp(-e.deltaY * .006));
+      else camAdd(-e.deltaY * FEEL.pinchGain);
     }, { capture: true, passive: false });
     el.addEventListener('gesturestart', e => { e.preventDefault(); base = e.scale || 1; }, { passive: false });
     el.addEventListener('gesturechange', e => {
@@ -323,7 +363,8 @@ window.V03Relation = (function () {
       const sc = e.scale || 1;
       const f = base ? sc / base : 1;
       base = sc;
-      zoomByFactor(f);
+      if (S.state.rel.view === 'globe') globe.zoomByFactor(f);
+      else camAdd(Math.log(f) * .5);
     }, { passive: false });
   }
   /* 按倍率缩放（双指 / 触摸板用），与按钮的步进缩放在同一套边界规则里 */
@@ -358,11 +399,8 @@ window.V03Relation = (function () {
     const box = levelCfg().box;
     /* 全球视角缩到最小：切回三维地球 */
     if (dir < 0 && relLevel() === 'L1' && camera.zoom <= box[0] + .004) return toGlobe();
-    const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.14 : 1 / 1.14)));
-    if (Math.abs(next - camera.zoom) < 1e-3) return;
-    camera.zoom = next;
-    toast('缩放 ' + next.toFixed(2) + '×');
-    afterZoom();
+    camAdd(dir > 0 ? Math.log(FEEL.step) : -Math.log(FEEL.step), true);
+    toast('缩放 ' + (camTarget || camera.zoom).toFixed(2) + '×');
   }
   const zoomState = () => {
     if (S.state.rel.view === 'globe') return globe.zoomState();
