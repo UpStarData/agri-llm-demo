@@ -152,8 +152,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   const LABEL = { globe: '全球 3D', world: '全球 2D', china: '中国', hunan: '湖南' };
   const LEVEL = {
     world: { map: 'worldChina', center: [107.98, 26.65], fit: 1.36, bounds: [[-25, 72], [335, -56]], min: 1.1, max: 2.6, inAt: 2.15 },
-    china: { map: 'china', center: [108.22, 36.51], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
-    hunan: { map: 'china', center: [111.25, 27.64], fit: 9.08, min: 3.4, max: 16, outAt: 3.5 }
+    china: { map: 'china', center: [108.05, 36.15], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
+    hunan: { map: 'china', center: [111.73, 27.54], fit: 9.08, min: 3.4, max: 16, outAt: 3.5 }
   };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const HUNAM = '湖南';
@@ -649,13 +649,31 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     paintHint();
   }
   let readoutAt = 0;
+  function realSpan() {
+    const c = chart;
+    if (!c) return null;
+    const box = document.getElementById('chart').getBoundingClientRect();
+    const a = c.convertFromPixel({ geoIndex: 0 }, [0, 0]);
+    const b = c.convertFromPixel({ geoIndex: 0 }, [box.width, box.height]);
+    if (!a || !b) return null;
+    return [Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])].map(n => +n.toFixed(1));
+  }
+  /* 屏幕正中那一点的真实经纬度：ECharts 的 center 参数在缩放后并不等于屏幕中心，
+     所以另外给一个"实测中心"，用户按它报参数就不会有歧义 */
+  function screenCenter() {
+    const c = chart;
+    if (!c) return null;
+    const box = document.getElementById('chart').getBoundingClientRect();
+    const p = c.convertFromPixel({ geoIndex: 0 }, [box.width / 2, box.height / 2]);
+    return p ? [+p[0].toFixed(2), +p[1].toFixed(2)] : null;
+  }
   function cameraParams() {
     const v = state.view;
     if (v === 'globe') return { 视角: '3D 全球', 地球半径: +globeR().toFixed(3), 旋转: +globe._dbg().rot.toFixed(1), 倾角: +globe._dbg().tilt.toFixed(3), 半径范围: [0.24, 0.56] };
     const lv = LEVEL[v];
     return {
       视角: LABEL[v], 比例: +cam.z.toFixed(2), 中心: [+cam.cx.toFixed(2), +cam.cy.toFixed(2)],
-      可视跨度: [+(360 / cam.z).toFixed(1), +(128 / cam.z).toFixed(1)],
+      实测中心: screenCenter(), 可视跨度: realSpan() || [+(360 / cam.z).toFixed(1), +(128 / cam.z).toFixed(1)],
       该层适配: lv.fit, 该层范围: [lv.min, lv.max],
       放大到: lv.inAt || null, 缩小到: lv.outAt || null
     };
@@ -671,7 +689,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     el.innerHTML = '<b>' + pr.视角 + '</b>\n'
       + (state.view === 'globe'
         ? '半径 ' + pr.地球半径 + '（范围 ' + pr.半径范围.join('–') + '）\n旋转 ' + pr.旋转 + '° · 倾角 ' + pr.倾角
-        : '比例 ' + pr.比例 + '×\n中心 ' + pr.中心[0] + '°, ' + pr.中心[1] + '°  （可视跨度 ' + pr.可视跨度[0] + '° × ' + pr.可视跨度[1] + '°）\n本层适配 ' + pr.该层适配 + '× · 范围 ' + pr.该层范围[0] + '–' + pr.该层范围[1]
+        : '比例 ' + pr.比例 + '×\n中心 ' + pr.中心[0] + '°, ' + pr.中心[1] + '°\n实测中心 ' + (pr.实测中心 ? pr.实测中心[0] + '°, ' + pr.实测中心[1] + '°' : '—') + '  （可视跨度 ' + pr.可视跨度[0] + '° × ' + pr.可视跨度[1] + '°）\n本层适配 ' + pr.该层适配 + '× · 范围 ' + pr.该层范围[0] + '–' + pr.该层范围[1]
           + '\n进下一级 ' + (pr.放大到 ? pr.放大到 + '×' : '—') + ' · 退上一级 ' + (pr.缩小到 ? pr.缩小到 + '×' : '—'));
   }
   function paintHint() {
