@@ -388,13 +388,18 @@
       cam.r = clamp(startZ / lv.fit * .30, .42, .52);
       cam.tr = .34; cam.slowR = true;
     } else {
-      cam.tcx = c ? c[0] : lv.center[0];
-      cam.tcy = c ? c[1] : lv.center[1];
-      /* 进入新层时比例挨着上一层方向：放大进入偏上限、缩小进入偏下限，但都留出余量，
-         这样既有连续性，也不会因为贴住边界而在下一手势里连跳两级 */
-      const rel = clamp((startZ / lv.fit) / (lv.max / lv.min), .15, .8);
-      cam.z = lv.min + (lv.max - lv.min) * (keepGoing ? rel + .15 : rel);
-      cam.tz = clamp(startZ * (keepGoing ? 1.08 : .93), lv.min * 1.02, lv.max * 1.1);
+      /* 二维层级之间：① 中心沿用「当前屏幕中心」，不再跳到该层默认中心（这就是"突然位移"的原因）；
+         ② 比例贴住行进方向的边界（放大进入用新层下限、缩小进入用新层上限），
+            跨层时看到的范围连续，缩放才自然。
+         中国 ↔ 湖南 是同一张底图，中心可以直接沿用；全球 ↔ 中国 是两张不同底图，
+         中心要做经度归一化，比例按边界取最近的一档。 */
+      const sameMap = (state.view === 'china' || state.view === 'hunan');
+      const cx = ((cam.cx + 180) % 360 + 360) % 360 - 180;
+      cam.tcx = sameMap ? cam.cx : cx;
+      cam.tcy = sameMap ? cam.cy : cam.cy;
+      cam.cx = cam.tcx; cam.cy = cam.tcy;
+      cam.z = keepGoing ? lv.min * 1.05 : lv.max * .95;
+      cam.tz = clamp(cam.z * (keepGoing ? 1.1 : .92), lv.min * .92, lv.max * 1.18);
     }
     render();                       /* 先把目标视图画出来，避免中间出现空帧 */
     if (toGlobe) document.getElementById('stage').classList.add('globe-on');
