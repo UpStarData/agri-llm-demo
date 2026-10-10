@@ -42,6 +42,12 @@
   .tools button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 
   /* 底部：提示 + 数据点开关 */
+  .params{position:absolute;left:16px;bottom:16px;z-index:31;padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.96);
+    border:1px solid rgba(30,58,92,.16);color:#4c5f74;font:11.5px/1.75 ui-monospace,'SF Mono',Menlo,monospace;white-space:pre}
+  .params b{color:#1c2a3a;font-weight:600}
+  .copycfg{position:absolute;left:16px;bottom:calc(16px + 92px);z-index:31;padding:4px 9px;border-radius:8px;border:1px solid rgba(30,58,92,.16);
+    background:rgba(255,255,255,.96);color:#4c5f74;font-size:11px;cursor:pointer}
+  .copycfg:hover{border-color:#2f6fd0;color:#2f6fd0}
   .hint{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:30;
     padding:5px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--dim);font-size:12px;white-space:nowrap}
   .legend{position:absolute;left:16px;bottom:16px;z-index:30;padding:9px 12px;border-radius:10px;background:var(--panel);
@@ -53,7 +59,7 @@
   .tip span{display:block;color:var(--mut)}
   @media(max-width:600px){
     .topbar{gap:8px;padding:0 10px}.brand b{display:none}.hint{font-size:11px;padding:4px 10px;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
-    .legend{display:none}
+    .legend,.params,.copycfg{display:none}
   }
 </style>
 </head>
@@ -82,6 +88,8 @@
     放到上限 / 缩到下限：切视角<br>
     <em>点小圆点 = 查看事实（不切视角）</em>
   </div>
+  <div class="params" id="params" aria-live="polite"></div>
+  <button class="copycfg" id="copycfg" title="复制当前视角参数">复制参数</button>
   <div class="hint" id="hint"></div>
   <div class="tip" id="tip" hidden></div>
 </div>
@@ -144,7 +152,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   const LABEL = { globe: '全球 3D', world: '全球 2D', china: '中国', hunan: '湖南' };
   const LEVEL = {
     world: { map: 'worldChina', center: [105, 35], fit: 1.26, bounds: [[-25, 72], [335, -56]], min: 1.1, max: 2.6, inAt: 2.15 },
-    china: { map: 'china', center: [104.1, 35.6], fit: 1.0, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
+    china: { map: 'china', center: [104.1, 35.6], fit: 1.59, min: .85, max: 4.0, inAt: 2.6, outAt: .95 },
     hunan: { map: 'china', center: [111.9, 27.4], fit: 5.2, min: 3.4, max: 16, outAt: 3.5 }
   };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -380,6 +388,9 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
       }
       paintScale();
       moveIdle = now;
+      if (Math.abs(cam.tcx - cam.cx) > 5e-3 || Math.abs(cam.tcy - cam.cy) > 5e-3) paintScale();   /* 中心平移时也刷新读数 */
+    } else if (Math.abs(cam.tcx - cam.cx) > 5e-3 || Math.abs(cam.tcy - cam.cy) > 5e-3) {
+      paintScale();
     } else if (moveIdle && performance.now() - moveIdle > 120) {
       /* 手势结束：目标直接对齐当前值，不再继续滑动 */
       moveIdle = 0;
@@ -619,10 +630,30 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     paintScale();
     paintHint();
   }
+  let readoutAt = 0;
+  function cameraParams() {
+    const v = state.view;
+    if (v === 'globe') return { 视角: '3D 全球', 地球半径: +globeR().toFixed(3), 旋转: +globe._dbg().rot.toFixed(1), 倾角: +globe._dbg().tilt.toFixed(3), 半径范围: [0.24, 0.56] };
+    const lv = LEVEL[v];
+    return {
+      视角: LABEL[v], 比例: +cam.z.toFixed(2), 中心: [+cam.cx.toFixed(2), +cam.cy.toFixed(2)],
+      该层适配: lv.fit, 该层范围: [lv.min, lv.max],
+      放大到: lv.inAt || null, 缩小到: lv.outAt || null
+    };
+  }
   function paintScale() {
     document.getElementById('scale').textContent = state.view === 'globe'
       ? '地球半径 ' + (globeR() * 100).toFixed(0) + '%'
       : '比例 ' + cam.z.toFixed(2) + '×';
+    const now = performance.now();
+    if (now - readoutAt < 120) return;      /* 读数限流，别每帧写 DOM */
+    readoutAt = now;
+    const pr = cameraParams(), el = document.getElementById('params');
+    el.innerHTML = '<b>' + pr.视角 + '</b>\n'
+      + (state.view === 'globe'
+        ? '半径 ' + pr.地球半径 + '（范围 ' + pr.半径范围.join('–') + '）\n旋转 ' + pr.旋转 + '° · 倾角 ' + pr.倾角
+        : '比例 ' + pr.比例 + '×\n中心 ' + pr.中心[0] + '°, ' + pr.中心[1] + '°\n本层适配 ' + pr.该层适配 + '× · 范围 ' + pr.该层范围[0] + '–' + pr.该层范围[1]
+          + '\n进下一级 ' + (pr.放大到 ? pr.放大到 + '×' : '—') + ' · 退上一级 ' + (pr.缩小到 ? pr.缩小到 + '×' : '—'));
   }
   function paintHint() {
     const el = document.getElementById('hint');
@@ -659,11 +690,17 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 
   globe = createGlobe();
   globe._r = .34;
+  globe._dbg = () => ({ rot: globe.probe(0, 0).rot, tilt: globe.probe(0, 0).tilt });
+  document.getElementById('copycfg').onclick = () => {
+    const txt = JSON.stringify(cameraParams());
+    navigator.clipboard && navigator.clipboard.writeText(txt).then(() => toast('参数已复制：' + txt), () => toast(txt));
+  };
   requestAnimationFrame(anim);
   bindUI();
   render();
   window.__MAPLAB_READY = true;
   window.__maplab = {
+    camera: () => cameraParams(),
     view: () => state.view, state, cam, setView, stepZoom, zoomFactor, globe, perf: () => ({ frames: frameCount, ms: +frameCost.toFixed(2) })
   };
 })();
