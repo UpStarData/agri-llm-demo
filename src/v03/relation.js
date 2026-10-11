@@ -781,18 +781,117 @@ window.V03Relation = (function () {
     '公共事件':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
     '行政区划':['行政级别','上级区域','主要农产品']
   };
+  /* ---------- 卡片配图：内联 SVG，按对象领域给不同图形与配色（不引外部图片） ---------- */
+  const ART_PALETTE = {
+    variety: ['#166534', '#4ade80'], commodity: ['#166534', '#4ade80'], region: ['#1e3a8a', '#60a5fa'], admin: ['#1e3a8a', '#60a5fa'],
+    market: ['#7c2d12', '#fb923c'], channel: ['#7c2d12', '#fb923c'],
+    company: ['#3b0764', '#a78bfa'], agency: ['#78350f', '#fbbf24'], facility: ['#0c4a6e', '#38bdf8'],
+    metric: ['#164e63', '#22d3ee'], base: ['#14532d', '#86efac'], resource: ['#14532d', '#86efac'], person: ['#4c1d95', '#c4b5fd'],
+    operator: ['#3b0764', '#a78bfa'], institution: ['#78350f', '#fbbf24'], logistics: ['#0c4a6e', '#38bdf8'],
+    default: ['#334155', '#94a3b8']
+  };
+  const ART_SHAPE = {
+    commodity: (a, b) => ART_SHAPE.variety(a, b),
+    admin: (a, b) => ART_SHAPE.region(a, b),
+    channel: (a, b) => ART_SHAPE.market(a, b),
+    resource: (a, b) => ART_SHAPE.base(a, b),
+    operator: (a, b) => ART_SHAPE.company(a, b),
+    institution: (a, b) => ART_SHAPE.agency(a, b),
+    logistics: (a, b) => ART_SHAPE.facility(a, b),
+    variety: (a, b) => '<path d="M34 20c8 0 14 7 14 16s-6 17-14 17-14-8-14-17 6-16 14-16z" fill="url(#g)" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M34 20V10" stroke="' + b + '" stroke-width="2"/><circle cx="46" cy="14" r="4" fill="' + b + '" opacity=".85"/>' +
+      '<path d="M22 30h24M22 38h24M22 46h24" stroke="rgba(255,255,255,.28)" stroke-width="1.4"/>',
+    region: (a, b) => '<circle cx="34" cy="36" r="20" fill="none" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M14 36h40M34 16c8 8 8 32 0 40M34 16c-8 8-8 32 0 40" fill="none" stroke="' + b + '" stroke-width="1.2" opacity=".8"/>' +
+      '<circle cx="26" cy="30" r="3" fill="' + b + '"/><circle cx="43" cy="43" r="3" fill="' + b + '"/>',
+    market: (a, b) => '<rect x="12" y="30" width="44" height="22" fill="none" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M8 30l8-14h36l8 14z" fill="' + b + '" opacity=".35" stroke="' + b + '" stroke-width="1.4"/>' +
+      '<path d="M24 52V38h20v14" fill="none" stroke="' + b + '" stroke-width="1.4"/>',
+    company: (a, b) => '<rect x="14" y="24" width="40" height="30" fill="none" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M22 24V14h24v10M24 34h8M38 34h8M24 44h8M38 44h8" stroke="' + b + '" stroke-width="1.5" fill="none"/>',
+    agency: (a, b) => '<rect x="14" y="16" width="40" height="40" rx="3" fill="none" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M22 28h24M22 36h24M22 44h14" stroke="' + b + '" stroke-width="1.5"/>',
+    facility: (a, b) => '<path d="M10 52h48M16 52V30l18-14 18 14v22" fill="none" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M28 52V38h12v14" fill="none" stroke="' + b + '" stroke-width="1.4"/>',
+    metric: (a, b) => '<path d="M12 52h44M12 52V16" stroke="' + b + '" stroke-width="1.6" fill="none"/>' +
+      '<rect x="18" y="38" width="7" height="14" fill="' + b + '" opacity=".8"/><rect x="30" y="28" width="7" height="24" fill="' + b + '" opacity=".6"/>' +
+      '<rect x="42" y="20" width="7" height="32" fill="' + b + '" opacity=".9"/>',
+    base: (a, b) => '<path d="M8 50h48" stroke="' + b + '" stroke-width="1.6"/>' +
+      '<path d="M14 50V30h10v20M28 50V22h12v28M46 50V34h10v16" fill="none" stroke="' + b + '" stroke-width="1.5"/>',
+    person: (a, b) => '<circle cx="34" cy="26" r="9" fill="none" stroke="' + b + '" stroke-width="1.8"/>' +
+      '<path d="M16 54c4-10 32-10 36 0" fill="none" stroke="' + b + '" stroke-width="1.8"/>'
+  };
+  /* 同一领域内再按名称变化：3 套形状轮换 + 色相偏移，避免"每张图都一样" */
+  const ART_VARIANTS = {
+    commodity: ['variety', 'market', 'base'], variety: ['variety', 'base', 'metric'],
+    admin: ['region', 'base', 'metric'], region: ['region', 'metric', 'base'],
+    channel: ['market', 'facility', 'region'], market: ['market', 'region', 'metric'],
+    operator: ['company', 'person', 'market'], company: ['company', 'facility', 'person'],
+    institution: ['agency', 'metric', 'company'], logistics: ['facility', 'logistics', 'region'],
+    resource: ['base', 'region', 'metric'], metric: ['metric', 'company', 'region'],
+    facility: ['facility', 'agency', 'logistics'], base: ['base', 'region', 'variety'], person: ['person', 'company', 'agency']
+  };
+  const hashOf = (str) => { let h = 0; for (let i = 0; i < String(str).length; i++) h = (h * 31 + String(str).charCodeAt(i)) % 9973; return h };
+  const shift = (hex, deg) => {
+    const n = parseInt(hex.slice(1), 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const f = (v) => Math.max(0, Math.min(255, Math.round(v + deg)));
+    return '#' + ((f(r) << 16) | (f(g) << 8) | f(b)).toString(16).padStart(6, '0');
+  };
+  const artOf = (o) => {
+    const key = ART_PALETTE[o.domain] ? o.domain : 'default';
+    const h = hashOf(o.id || o.name || '');
+    const shapeKey = (ART_VARIANTS[key] || [key])[h % (ART_VARIANTS[key] || [key]).length];
+    const base = ART_PALETTE[shapeKey] || ART_PALETTE[key] || ART_PALETTE.default;
+    const a = shift(base[0], ((h % 5) - 2) * 12);
+    const b = shift(base[1], ((h % 7) - 3) * 10);
+    const shape = (ART_SHAPE[shapeKey] || ART_SHAPE.company)(a, b);
+    const gid = 'ag-' + String(o.id || o.name).replace(/[^a-zA-Z0-9]/g, '') + '-' + shapeKey;
+    const main = '<svg viewBox="0 0 68 68" aria-hidden="true">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="' + a + '"/><stop offset="1" stop-color="' + b + '"/></linearGradient></defs>' +
+      '<rect width="68" height="68" fill="' + a + '" opacity=".12"/>' +
+      '<g fill="none">' + shape.replace(/url\(#g\)/g, 'url(#' + gid + ')') + '</g></svg>';
+    /* 品种/市场这类"有实物"的对象多给一张小图，像多贴了一张照片 */
+    const second = ['commodity', 'variety', 'market', 'channel', 'resource', 'base'].includes(key)
+      ? '<svg viewBox="0 0 68 68" aria-hidden="true"><g fill="none">' +
+        (ART_SHAPE[['region', 'metric', 'base'][h % 3]](shift(a, 18), shift(b, 12))) + '</g></svg>' : '';
+    return '<span class="rc-art rc-art--' + shapeKey + '">' + main + (second ? '<span class="rc-art-2">' + second + '</span>' : '') + '</span>';
+  };
+
+  /* 卡片类型筛选（面板内记忆，不写进全局状态） */
+  let cardDom = 'all';
+  const DOM_LABEL = { variety: '品种', commodity: '品种', region: '产区/地区', admin: '行政区域', market: '市场', channel: '渠道',
+    company: '经营主体', operator: '经营主体', agency: '机构', institution: '机构/制度', facility: '设施', logistics: '物流设施',
+    metric: '指标', base: '基地', resource: '资源', person: '人物' };
+
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     const nogeo = objs.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
     const ordered = nogeo;
-    const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
-    dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
+    /* 类型筛选 + 领域交错：不再清一色区域，品种/市场/主体/指标/机构都露出来 */
+    const filtered = cardDom === 'all' ? ordered : ordered.filter(o => o.domain === cardDom);
+    const buckets = {};
+    filtered.forEach(o => { (buckets[o.domain] = buckets[o.domain] || []).push(o) });
+    const keys = Object.keys(buckets);
+    const interleaved = [];
+    for (let i = 0; interleaved.length < filtered.length; i++) keys.forEach(k => { if (buckets[k][i]) interleaved.push(buckets[k][i]) });
+    const capped = st.rel.allCards ? interleaved : interleaved.slice(0, 36);
+    const counts = {};
+    ordered.forEach(o => { counts[o.domain] = (counts[o.domain] || 0) + 1 });
+    const chips = '<div class="rc-filter">' +
+      '<button class="rc-chip' + (cardDom === 'all' ? ' on' : '') + '" data-dom="all">全部 ' + ordered.length + '</button>' +
+      Object.keys(DOM_LABEL).filter(k => counts[k]).map(k =>
+        '<button class="rc-chip' + (cardDom === k ? ' on' : '') + '" data-dom="' + k + '">' + DOM_LABEL[k] + ' ' + counts[k] + '</button>').join('') +
+      '</div>';
+    dom.body.innerHTML = chips + (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
       const kv = (o.props || []).filter(([k]) => (CARD_SUMMARY[kind] || []).includes(k)).slice(0, 3)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 18)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
-      return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
+      return '<button class="rel-card rc--' + (o.domain || 'default') + '" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
+        artOf(o) +
         '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
         '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' +
@@ -804,6 +903,11 @@ window.V03Relation = (function () {
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
+    /* 类型筛选：点一下换一类，面板内本地记忆 */
+    dom.body.querySelectorAll('.rc-chip').forEach(n => n.onclick = () => {
+      cardDom = n.dataset.dom || 'all';
+      renderPanel(S.state, F.objects(S.state));
+    });
   }
 
   /* ---------- A6：抽屉内容（本体详情 / 关系详情） ---------- */
