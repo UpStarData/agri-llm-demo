@@ -84,6 +84,11 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
 .rel-hint span{color:var(--dim)}
 .rel-hint span.on{color:var(--ink);font-weight:var(--f-semi)}
 .rel-hint i{font-style:normal;color:var(--hint);opacity:.7}
+/* 面包屑与下钻按钮可点：数据一密，光靠点地图容易点到本体对象上 */
+.rel-hint span.jump{cursor:pointer;padding:1px 3px;pointer-events:auto}
+.rel-hint span.jump:hover,.rel-hint span.jump:focus-visible{color:var(--ink);background:var(--hair);outline:0}
+.rel-hint b.drill{cursor:pointer;pointer-events:auto;font-weight:var(--f-semi);color:var(--accent);margin-left:8px;padding-left:9px;border-left:1px solid var(--hair)}
+.rel-hint b.drill:hover,.rel-hint b.drill:focus-visible{text-decoration:underline;outline:0}
 .rel-hint em{font-style:normal;color:var(--hint);margin-left:6px;padding-left:8px;border-left:1px solid var(--hair)}
 @media (max-width:820px){.rel-hint{font-size:.625rem;padding:3px 9px;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
   .rel-hint em{display:none}}

@@ -220,6 +220,20 @@ window.V03Relation = (function () {
     /* L2 / L3 用中国地图，与事实层共用同一份数据 */
     if (window.__CHINA_GEO && !echarts.getMap('china')) { try { echarts.registerMap('china', window.__CHINA_GEO); } catch (e) { console.error('registerMap china', e); } }
   }
+  /* 行政区域判定：区域对象的 id 形如 e:rgn:430700，类型/标签带“区域/省/市” */
+  const isRegionObj = o => {
+    if (!o) return false;
+    const id = String(o.id || '');
+    if (/^e:rgn:/.test(id)) return true;
+    const t = String(o.type || '') + String(o.label || o.sub || '');
+    return /区域|省|市|州|县/.test(t) && !/市场/.test(t);
+  };
+  /* 一层一层往里：世界 → 中国 → 湖南（当前数据集只覆盖湖南，落到其它省会是空图） */
+  function drillIn() {
+    if (relLevel() === 'L1') { enterLevel('L2', null); return true; }
+    if (relLevel() === 'L2') { enterLevel('L3', relFocus() || '湖南'); return true; }
+    return false;
+  }
   function ensureChart() {
     if (chart) return chart;
     mapReady();
@@ -228,11 +242,22 @@ window.V03Relation = (function () {
     chart.on('click', p => {
       const sid = p.seriesId || '';
       if (sid === 'relGraph') {
-        if (p.dataType === 'node' && p.data && p.data.id) openObject(p.data.id);
+        if (p.dataType === 'node' && p.data && p.data.id) {
+          /* 点行政区域 = 逐级进入（与事实层同一规则）；点本体对象/关系才开详情。
+             关联层的“区域”本身也是本体对象，之前一律弹详情，节点一多就再也进不去下一级。 */
+          const obj = D.objById(p.data.id) || p.data;
+          if (isRegionObj(obj)) return drillIn();
+          return openObject(p.data.id);
+        }
         if (p.dataType === 'edge' && p.data && p.data.id) S.set({ rel: { sel: p.data.id, kind: 'relation', stack: [{ kind: 'relation', id: p.data.id }] } });
         return;
       }
-      if ((sid === 'relNode' || sid === 'relNodeLabel') && p.data && p.data.objId) return openObject(p.data.objId);
+      if ((sid === 'relNode' || sid === 'relNodeLabel') && p.data && p.data.objId) {
+        /* 地图视角下的区域点：同样按“点行政区域 = 逐级进入”处理 */
+        const robj = D.objById(p.data.objId) || p.data;
+        if (isRegionObj(robj)) return drillIn();
+        return openObject(p.data.objId);
+      }
       if (sid === 'relLine' && p.data && p.data.id) {
         const r = D.relById(p.data.id);
         if (r) S.set({ rel: { sel: r.id, kind: 'relation', stack: S.state.rel.stack.concat([{ kind: 'relation', id: r.id }]) } });
@@ -884,14 +909,26 @@ window.V03Relation = (function () {
     if (dom.hint) {
       const lv = relLevel();
       dom.hint.hidden = st.rel.view !== 'geo';
-      /* 层级面包屑 + 一句交互提示；不做可点按钮 */
+      /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
       const trail = ['世界', '中国', relFocus() || '省区'];
       const at = lv === 'L1' ? 0 : lv === 'L2' ? 1 : 2;
       dom.hint.innerHTML = trail.slice(0, at + 1).map((t, i) =>
-        '<span' + (i === at ? ' class="on"' : '') + '>' + t + '</span>').join('<i>›</i>')
-        + '<em>' + (lv === 'L1' ? '点击地图或双击进入中国 · 双指缩放 · Esc 返回'
-          : lv === 'L2' ? '点击省份或双击进入省区 · 滚轮缩小返回世界 · Esc 返回'
-          : '滚轮缩小或 Esc 返回全国') + '</em>';
+        '<span class="jump' + (i === at ? ' on' : '') + '" role="button" tabindex="0" title="跳到' + t + '">' + t + '</span>').join('<i>›</i>')
+        + '<em>' + (lv === 'L1' ? '点击地图进中国（点本体/关系看详情）· 双指缩放 · Esc 返回'
+          : lv === 'L2' ? '点击省份进省区 · 点本体/关系看详情 · 滚轮缩小返回世界 · Esc 返回'
+          : '滚轮缩小或 Esc 返回全国') + '</em>'
+        + '<b class="drill" role="button" tabindex="0">' + (lv === 'L1' ? '进入中国 →' : lv === 'L2' ? '进入' + (relFocus() || '湖南') + ' →' : '返回全国') + '</b>';
+      dom.hint.querySelectorAll('span.jump').forEach((el, i) => {
+        const go = () => { const want = i === 0 ? 'L1' : i === 1 ? 'L2' : 'L3'; if (relLevel() !== want) enterLevel(want, want === 'L3' ? (relFocus() || '湖南') : null); };
+        el.onclick = go;
+        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+      });
+      const drillBtn = dom.hint.querySelector('b.drill');
+      if (drillBtn) {
+        const go = () => { if (!drillIn()) enterLevel('L2', null); };
+        drillBtn.onclick = go;
+        drillBtn.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+      }
     }
     if (shownView !== st.rel.view) {
       shownView = st.rel.view;
