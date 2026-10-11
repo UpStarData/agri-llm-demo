@@ -77,16 +77,3 @@ agri-llm-demo/
 ## 回滚
 
 某个版本有问题时，直接给上一个版本的地址即可；需要下线时删除对应目录并更新本文件（旧地址会 404），或保留目录只从版本目录页移除链接。
-
-## 推演层（MiroFish 预览 · 独立发布轨）
-
-原型（上表）与推演层是两条发布轨：推演层的改动直接发到 https://upstardata.github.io/mirofish-frontend-preview/ ，每次改动都按提交时间记在下面。
-
-| 时间（北京时间） | 改了什么 | 提交 |
-| --- | --- | --- |
-| 2026-10-12 03:16 | Realistic graph: hubs and uneven communities from the data side, organic layout | `08977e4` |
-| 2026-10-12 03:02 | Fix built-in run gaps: timeline card text, staged graph build, clustered layout, report entry points | `9b3483c` |
-| 2026-10-12 02:40 | Data report rebuilt to the V0.0 look: landing-style cover, globe page, scroll paging | `dd2932c` |
-| 2026-10-12 02:32 | Built-in runs: 120+120 entity graph, staged reveal, market/industry environments, stepwise report, V0.0-styled data report | `b74eda1` |
-| 2026-10-12 02:07 | Built-in runs drive the whole flow; report gains a paged data-report style | `1ddafe7` |
-| 2026-10-12 01:49 | Built-in simulations: two complete demo runs (durian price / origin rivalry) in two report styles | `1c92d47` |
