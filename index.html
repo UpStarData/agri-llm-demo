@@ -831,7 +831,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.0.14</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.1</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -895,7 +895,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"a5fd5d4f59ad","git":"035c96a","builtAt":"2026-10-11T17:49:23.590Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"c801bc4723d7","git":"c44fcca","builtAt":"2026-10-11T20:47:19.926Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -8162,7 +8162,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.0.14',
+      source: 'AgriLink v1.1',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
