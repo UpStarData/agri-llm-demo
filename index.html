@@ -526,8 +526,8 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
 .rel-card .rc-dom{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim)}
 .rel-card .rc-sub{font-size:.625rem;font-weight:var(--f-light);color:var(--mut);line-height:1.5;margin-top:2px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.rel-card .rc-thumb{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:-6px -8px 6px;height:46px;
-  padding:0 8px;border-radius:5px 5px 0 0;
+.rel-card .rc-thumb{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:6px 0 4px;height:52px;
+  padding:0 9px;border-radius:4px;
   background:linear-gradient(135deg,color-mix(in srgb,var(--rc) 16%,#fff),color-mix(in srgb,var(--rc) 4%,#fff));
   border-bottom:1px solid color-mix(in srgb,var(--rc) 22%,#fff)}
 .rel-card .rc-thumb i{font-style:normal;font-size:.5625rem;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -837,7 +837,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.3</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.4</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -901,7 +901,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"c931ca96f887","git":"3deedfc","builtAt":"2026-10-12T00:04:46.767Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"c3be67f9855a","git":"722bb8d","builtAt":"2026-10-12T00:08:57.910Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -7962,18 +7962,51 @@ window.V03Relation = (function () {
     '公共事件':['事件类型','事件状态','开始时间','结束时间','发生地区','影响对象','影响环节'],
     '行政区划':['行政级别','上级区域','主要农产品']
   };
+  /* ---------- 卡片分类与字段 ----------
+     不展示行政/区域类；从这些分类里各摘自己的核心字段（每类字段不同） ---------- */
+  const CARD_KINDS = ['variety', 'commodity', 'market', 'channel', 'operator', 'company',
+    'institution', 'agency', 'logistics', 'facility', 'resource', 'base', 'metric', 'person'];
+  const KIND_FIELDS = {
+    variety: ['品类', '品种', '等级', '产季', '可用量', '主产地', '价格区间', '口感'],
+    commodity: ['品类', '品种', '等级', '产季', '可用量', '主产地', '价格区间', '口感'],
+    market: ['类型', '所在地', '辐射范围', '日均交易', '主要品类', '入场规则', '结算'],
+    channel: ['类型', '覆盖', '门店数', '主要品类', '补货节奏', '结算'],
+    operator: ['角色', '主营', '覆盖区域', '依赖', '结算方式', '规模'],
+    company: ['角色', '主营', '覆盖区域', '依赖', '结算方式', '规模'],
+    institution: ['类型', '职责', '依据', '适用对象', '生效时间', '监管口径'],
+    agency: ['类型', '职责', '依据', '适用对象', '生效时间', '监管口径'],
+    logistics: ['能力', '时效', '覆盖', '温控', '峰值', '运价'],
+    facility: ['能力', '时效', '覆盖', '温控', '峰值'],
+    resource: ['规模', '主栽品种', '产季', '认证', '供应能力', '单产'],
+    base: ['规模', '主栽品种', '产季', '认证', '供应能力', '单产'],
+    metric: ['口径', '基线', '周期', '来源', '目标'],
+    person: ['角色', '所属', '关注', '影响力']
+  };
+  const KIND_LABEL = { variety: '品种', commodity: '品种', market: '市场', channel: '渠道', operator: '经营主体',
+    company: '经营主体', institution: '机构/制度', agency: '机构', logistics: '物流设施', facility: '设施',
+    resource: '资源', base: '基地', metric: '指标', person: '人物' };
+  /* 这些分类的卡片在摘要下面带一张图 */
+  const KIND_WITH_IMAGE = ['variety', 'commodity', 'market', 'channel', 'resource', 'base', 'logistics', 'facility'];
+
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
-    const nogeo = objs.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
+    /* 不显示行政/区域类对象：卡片只展现有信息量的本体分类 */
+    const kept = objs.filter(o => {
+      const d = String(o.domain || '').toLowerCase();
+      const t = String(F.relKind(o) || '');
+      return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t);
+    });
+    const nogeo = kept.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
     const ordered = nogeo;
     const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
-      /* 字段更丰富：优先展示该类型的常用字段，最多 5 条；没有命中的再把剩余字段补上 */
-      const wanted = CARD_SUMMARY[kind] || [];
-      const picked = (o.props || []).filter(([k]) => wanted.includes(k));
-      const rest = (o.props || []).filter(([k]) => !wanted.includes(k));
+      /* 字段：先摘该分类自己的核心字段，再从详情补齐，最后补图谱算出来的字段 */
+      const wanted = KIND_FIELDS[o.domain] || CARD_SUMMARY[kind] || [];
+      const props = o.props || [];
+      const picked = props.filter(([k]) => wanted.includes(k));
+      const rest = props.filter(([k]) => !wanted.includes(k));
       /* 字段更丰富：原有字段 + 从图谱里算出来的字段（关系数、关联主体、所在层级、坐标） */
       const relsOf = D.relationsOf(o.id);
       const nb = [];
@@ -7983,20 +8016,25 @@ window.V03Relation = (function () {
       if (nb.length) extra.push(['关联主体', nb.slice(0, 2).join('、')]);
       extra.push(['所在层级', lvlName]);
       if (Number.isFinite(o.lng) && Number.isFinite(o.lat)) extra.push(['坐标', o.lng.toFixed(1) + ', ' + o.lat.toFixed(1)]);
-      const kv = picked.concat(rest, extra).slice(0, 6)
+      const LABEL_FIX = { '对象域': '分类', '坐标精度': '', '状态': '状态' };
+      const kv = picked.concat(rest, extra)
+        .filter(([k]) => LABEL_FIX[k] !== '')
+        .map(([k, v]) => [LABEL_FIX[k] || k, v])
+        .slice(0, 6)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 22)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
       /* 有些卡片带一张图（像事实层那样）：有图源的直接出，没图源的按类型出一部分 */
       const h = (() => { let x = 0; const t = String(o.id || o.name); for (let i = 0; i < t.length; i++) x = (x * 31 + t.charCodeAt(i)) % 9973; return x })();
       const imgKind = /variety|commodity|market|base|resource|channel/.test(o.domain || '');
       const hasImg = !!(o.imageUrl || o.media || o.thumb || o.cover);
-      const showImg = hasImg || (h % 3 === 0) || (imgKind && h % 2 === 0);   /* 有一些卡片带图（约一半） */
-      const thumb = showImg ? '<span class="rc-thumb"><i>' + esc((o.sourceName || o.sub || kind || '').slice(0, 14)) + '</i><em>▤</em></span>' : '';
+      /* 指定分类里也只是一部分带图（大约一半），避免整屏都是图 */
+      const showImg = hasImg || (KIND_WITH_IMAGE.indexOf(o.domain) >= 0 && h % 2 === 0);
+      const thumb = showImg ? '<span class="rc-thumb"><i>' + esc((o.sourceName || o.sub || kind || '').slice(0, 16)) + '</i><em>▤</em></span>' : '';
       const update = o.updatedAt || o.updated || o.sourceName || o.publishedAt || '';
-      return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' + thumb +
+      return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
         '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
-        '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' +
+        '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' + thumb +
         (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
         '<span class="rc-m">' + relCount + ' 条关系' + (update ? ' · ' + esc(String(update).slice(0, 16)) : '') + ' · 查看详情 →</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
@@ -8188,7 +8226,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.3',
+      source: 'AgriLink v1.4',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
