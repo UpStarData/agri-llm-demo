@@ -39,8 +39,8 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
 .rel-card .rc-dom{font-size:.59375rem;font-weight:var(--f-light);color:var(--dim)}
 .rel-card .rc-sub{font-size:.625rem;font-weight:var(--f-light);color:var(--mut);line-height:1.5;margin-top:2px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.rel-card .rc-thumb{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:-6px -8px 6px;height:46px;
-  padding:0 8px;border-radius:5px 5px 0 0;
+.rel-card .rc-thumb{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:6px 0 4px;height:52px;
+  padding:0 9px;border-radius:4px;
   background:linear-gradient(135deg,color-mix(in srgb,var(--rc) 16%,#fff),color-mix(in srgb,var(--rc) 4%,#fff));
   border-bottom:1px solid color-mix(in srgb,var(--rc) 22%,#fff)}
 .rel-card .rc-thumb i{font-style:normal;font-size:.5625rem;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
