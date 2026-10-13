@@ -46,7 +46,13 @@
   <div class="tbl">
     <div class="row head"><div>版本</div><div>内容</div><div>更新时间（北京时间）</div><div>构建指纹 / 源码</div></div>
     <div class="row">
-      <div class="v now">V1.5</div>
+      <div class="v now">V1.6</div>
+      <div class="d">修正 V1.5 的两处问题：① 影响圆恢复——根因是数据侧缺影响半径，现改为「真实半径优先、缺失按严重度推算」，实测 753 个影响圆随点出现；② 时间范围那一排移到快捷键组正上方（不再混进快捷键，顺序与回归测试一致）。V1.5 发布时测试是失败的（我的发布链没拦住），本条为修好后的版本<br><a target="_blank" rel="noopener noreferrer" href="../v1.6/">进入 /v1.6/ →</a> <a href="../latest/">去最新版 →</a></div>
+      <div class="u"><time datetime="2026-10-13T11:46+08:00">2026-10-13 11:46</time></div>
+      <div class="m">022f524fd9f3<br>2e384cd</div>
+    </div>
+    <div class="row">
+      <div class="v">V1.5</div>
       <div class="d">时间范围新增「近半年 / 近一年」并从左侧菜单移到地图右下角单独一排（两层）；左侧「地图快捷控制」整段隐藏（两层）；事实/关联卡片自动滚动（非线性、缓慢，手动操作时暂停），新事实弹提示后自动消失且保留在列表顶部；地理影响圆恢复（有半径按半径、无半径按影响等级）；切换时间范围时按时间透明度淡入淡出（一个月内不透明、1~2 个月 90%、之后衰减到消失）并以非线性速度生长<br><a target="_blank" rel="noopener noreferrer" href="../v1.5/">进入 /v1.5/ →</a> <a href="../latest/">去最新版 →</a></div>
       <div class="u"><time datetime="2026-10-13T11:42+08:00">2026-10-13 11:42</time></div>
       <div class="m">361ac91449c7<br>c174b1e</div>
