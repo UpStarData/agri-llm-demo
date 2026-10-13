@@ -212,9 +212,9 @@ window.V03Relation = (function () {
     const c = focus ? (D.PROV_CENTER || {})[focus] : null;
     camera.level = lv;
     if (lv === 'L3') {
-      /* 省区视角要同时看到东南亚来源地：取景放宽，东南亚各国 → 红星 的国际连线才在视野里 */
-      camera.center = [106.2, 21.8];
-      camera.zoom = 3.6;
+      /* 省区视角贴紧本省（湖南），国际连线用"贴边弧线"接到视野边缘，不再把取景拉到整个东南亚 */
+      camera.center = [111.9, 27.4];
+      camera.zoom = 6.4;
     } else {
       camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
       camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
@@ -465,7 +465,8 @@ window.V03Relation = (function () {
     rels.forEach(r => {
       const from = pos[r.from], to = pos[r.to];
       if (!from || !to) return;
-      if (!S.state.rel.crossRegion && chart && S.state.rel.view === 'geo') {
+      /* L3（湖南）要保留跨境线（东南亚来源地 → 红星），所以省区视角不做跨区域剔除 */
+      if (!S.state.rel.crossRegion && chart && S.state.rel.view === 'geo' && relLevel() !== 'L3') {
         const inside = point => {const xy=chart.convertToPixel({geoIndex:0},point);return xy && xy[0]>=0 && xy[0]<=dom.canvas.clientWidth && xy[1]>=0 && xy[1]<=dom.canvas.clientHeight;};
         if (inside(from[1]) !== inside(to[1])) return;
       }
@@ -474,17 +475,40 @@ window.V03Relation = (function () {
       /* 线条颜色沿用关系类型色（原版基线的彩色流向线）；有关注对象时只压暗无关线 */
       const color = typeColor(r.type);
       const copies = from.length;
+      /* L3：境外来源地不放进视野，而是把它"贴"到视野边缘，用虚线弧指进来（两端都处理，任一端被贴边即为国际线） */
+      let anyClamped = false;
+      const edgeClamp = (arr) => {
+        if (relLevel() !== 'L3' || !chart) return arr;
+        try {
+          const W = dom.canvas.clientWidth, H = dom.canvas.clientHeight, m = 26;
+          if (!(W > 10 && H > 10)) return arr;
+          const out = arr.map((pt) => {
+            const q = chart.convertToPixel({ geoIndex: 0 }, pt); if (!Array.isArray(q)) return pt;
+            if (q[0] >= m && q[0] <= W - m && q[1] >= m && q[1] <= H - m) return pt;
+            const cx = W / 2, cy = H / 2;
+            const k = Math.min((W / 2 - m) / Math.max(1, Math.abs(q[0] - cx)), (H / 2 - m) / Math.max(1, Math.abs(q[1] - cy)));
+            const back = chart.convertFromPixel({ geoIndex: 0 }, [cx + (q[0] - cx) * k, cy + (q[1] - cy) * k]);
+            if (!Array.isArray(back)) return pt;
+            anyClamped = true;
+            return [back[0], back[1]];
+          });
+          return out;
+        } catch (e) { return arr }          /* 取像素失败就按原样画，绝不让它把渲染打断 */
+      };
+      const fromClamped = edgeClamp(from);
+      const toClamped = edgeClamp([to[0]]);
+      const isIntl = relLevel() === 'L3' && anyClamped;
       for (let copy = 0; copy < copies; copy++) {
-      const a = from[copy], b = to[copy].slice();
+      const a = fromClamped[copy], b = toClamped[0].slice();
       if (b[0] - a[0] > 180) b[0] -= 360;
       if (b[0] - a[0] < -180) b[0] += 360;
       out.push({
         id: r.id, coords: [a, b],
         lineStyle: {
-          color: color,
+          color: isIntl ? '#b45309' : color,
           width: Math.max(isFocus ? 1.8 : 1.15, (r.factIds||[]).length>=5 ? 2.6 : (r.factIds||[]).length>=2 ? 1.7 : 1.15),
-          opacity: focus ? (isFocus ? .95 : .08) : (total <= 60 ? .66 : .52),
-          type: 'solid',
+          opacity: isIntl ? .8 : (focus ? (isFocus ? .95 : .08) : (total <= 60 ? .66 : .52)),
+          type: isIntl ? 'dashed' : 'solid',          /* 国际线用虚线，和境内实线区分 */
           curveness: .18
         },
         _focus: isFocus,
@@ -919,7 +943,7 @@ window.V03Relation = (function () {
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     if (ordered.length && ordered[0].id !== lastTopObjId) {
-      if (lastTopObjId) { newFactToast(esc(String(ordered[0].name || '').slice(0, 28))); relFlashStar(ordered[0]); }
+      if (lastTopObjId) { newFactToast('新本体 · ' + esc(String(ordered[0].name || '').slice(0, 26))); relFlashStar(ordered[0]); }
       lastTopObjId = ordered[0].id;
     }
     autoScrollCards(dom.body);

@@ -550,14 +550,19 @@ window.V03Fact = (function () {
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [], ripples = [];
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
-    const tooClose = (x, y) => usedHalo.some(p2 => Math.abs(p2[0] - x) < 28 && Math.abs(p2[1] - y) < 24);
+    /* 间距按"屏幕像素"算（原来比的是经纬度，等于 28°，中国全境只放得下 2 个 → 只剩 1 个光晕） */
+    const toPx = (lng, lat) => { try { const q = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]); return Array.isArray(q) ? q : null } catch (e) { return null } };
+    const tooClose = (lng, lat) => {
+      const q = toPx(lng, lat); if (!q) return false;
+      return usedHalo.some(p2 => Math.abs(p2[0] - q[0]) < 26 && Math.abs(p2[1] - q[1]) < 24);
+    };
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
         /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
-        if (diameter > 0 && f.impact === 'high' && halos.length < 18 && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且互相不重叠 */
+        if (diameter > 0 && f.impact === 'high' && halos.length < 24 && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且屏幕间距足够 */
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
@@ -569,7 +574,7 @@ window.V03Fact = (function () {
           itemStyle: { opacity: (() => {
             const target = ageAlpha(f, st.time);
             /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
-            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : Math.max(0.06, target);
+            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
           })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
     });
