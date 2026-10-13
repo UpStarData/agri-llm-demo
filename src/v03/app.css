@@ -474,3 +474,18 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .sk-search-term span{overflow:hidden;text-overflow:ellipsis;flex:1}.sk-search-term button{font-size:19px;color:var(--mut);line-height:1;cursor:pointer}
 .mapsk:has(.search-pop) .sk-search-term{display:none}
 @media(max-width:650px){.mapsk .sk-pop.search-pop{right:0;bottom:calc(100% + 9px);width:min(360px,calc(100vw - 20px))}.sk-search-term{right:0;bottom:calc(100% + 9px);max-width:calc(100vw - 20px)}}
+
+/* ---------------- 时间范围（地图右下角单独一排）+ 新事实提示 ---------------- */
+.sk-time{position:absolute;left:0;right:0;bottom:calc(100% + 8px);display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border-radius:999px;background:var(--glass);backdrop-filter:var(--blur);box-shadow:var(--shadow);
+  white-space:nowrap;width:fit-content;margin-left:auto}
+.sk-time-h{font-size:.59375rem;color:var(--hint);margin-right:2px}
+.sk-tb{border:1px solid transparent;background:transparent;color:var(--mut);font:500 .625rem var(--font,inherit);
+  padding:4px 9px;border-radius:999px;cursor:pointer;transition:.18s}
+.sk-tb:hover{color:var(--ink);background:#0000000d}
+.sk-tb.on{background:var(--ink);color:#fff}
+#toastHost{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.nfact-toast{padding:9px 14px;border-radius:10px;background:#111827f2;color:#fff;font-size:.75rem;box-shadow:0 10px 30px #0003;
+  opacity:0;transform:translateY(-8px);transition:opacity .35s ease,transform .35s ease}
+.nfact-toast.on{opacity:1;transform:none}
+.nfact-toast b{color:#7dd3fc;margin-right:6px}

@@ -91,7 +91,7 @@
   }
 
   /* ---------- F6：快捷键（地图右下角 + 菜单内同一组状态） ---------- */
-  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月']];
+  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月'], ['180d', '近半年'], ['365d', '近一年']];
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
@@ -169,6 +169,18 @@
     const na = [];
     closePop();
     mount.innerHTML = '';
+    /* 时间范围：地图右下角单独一排（事实层与关联层共用） */
+    if (mode === 'map') {
+      const trow = el('div', 'sk-time');
+      trow.appendChild(el('span', 'sk-time-h', '时间范围'));
+      TIME_OPTS.forEach(([value, label]) => {
+        const b = el('button', 'sk-tb' + (st.time === value ? ' on' : ''), label);
+        b.setAttribute('aria-pressed', String(st.time === value));
+        b.onclick = () => S.set({ time: value });
+        trow.appendChild(b);
+      });
+      mount.appendChild(trow);
+    }
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
     const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
@@ -259,6 +271,7 @@
   function renderMapSk() {
     const box = $('mapSk'), st = S.state;
     const show = st.panels.shortcuts && st.tab !== 'sim';
+    /* 时间范围那排始终显示（不受"地图快捷键总开关"影响） */
     box.style.display = show ? 'grid' : 'none';
     if (!show) { closePop(); return; }
     renderShortcutBar(box, { mode: 'map' });
@@ -435,26 +448,11 @@
       body.appendChild(overlay);
     }
 
-    /* ③ 地图快捷控制（与地图右下角同一组状态） */
-    const s3 = el('section', 'mn-sec');
-    s3.appendChild(el('div', 'mn-h', '地图快捷控制'));
-    const bar = el('div', 'mn-sk');
-    renderShortcutBar(bar, { mode: 'menu' });
-    s3.appendChild(bar);
-    body.appendChild(s3);
+    /* ③ 地图快捷控制：按要求整段隐藏（两层都不在左侧出现）
+       时间范围改到地图右下角快捷键里单独一排 */
     /* ④ 地图快捷键总开关（独立一段） */
     const s4 = el('section', 'mn-sec');
-    s4.appendChild(el('div', 'mn-h', '时间范围与地图控制'));
-    if (!isRel) {
-      const times = el('div', 'mn-varieties');
-      TIME_OPTS.forEach(([value, label]) => {
-        const b = el('button', 'l3' + (st.time === value ? ' on' : ''), label);
-        b.setAttribute('aria-pressed', String(st.time === value));
-        b.onclick = () => S.set({ time: value });
-        times.appendChild(b);
-      });
-      s4.appendChild(times);
-    }
+    s4.appendChild(el('div', 'mn-h', '地图快捷键'));
     const master = el('label', 'mn-master');
     master.innerHTML = '<input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '>' +
       '<span><b>地图快捷键</b><small>只控制地图右下角整组快捷键；关闭后本面板快捷控制仍可用</small></span>';
