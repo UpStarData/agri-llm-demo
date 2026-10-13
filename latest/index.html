@@ -508,6 +508,21 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .fcard.is-fresh{box-shadow:0 0 0 2px #0ea5e955, 0 10px 24px -18px #0b7285}
 .fcard.is-fresh::after{content:"新接入";position:absolute;top:8px;right:8px;font-size:.5625rem;color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd;border-radius:999px;padding:1px 6px}
 .fcard{position:relative}
+
+/* ---------------- V0.8 同款：新事实/新本体接入时坐标处闪一颗星 ---------------- */
+.star-flash{position:absolute;pointer-events:none;z-index:20;transform-origin:50% 50%;will-change:transform,opacity;
+  animation:starFlash .9s cubic-bezier(.22,1,.36,1) forwards}
+.star-flash i{display:block;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.98),rgba(255,236,150,.85) 38%,rgba(255,214,102,.25) 62%,rgba(255,214,102,0) 78%);
+  box-shadow:0 0 10px rgba(255,220,120,.75)}
+.star-flash.dim i{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.75;box-shadow:0 0 6px rgba(255,220,120,.5)}
+.star-flash.bright i{transform:scale(1.5)}
+@keyframes starFlash{
+  0%{opacity:0;transform:scale(.3)}
+  20%{opacity:1;transform:scale(1.2)}
+  50%{opacity:.7;transform:scale(1)}
+  100%{opacity:0;transform:scale(.5)}
+}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -861,7 +876,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.8</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.9</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -925,7 +940,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"1754e534f15e","git":"c988ae5","builtAt":"2026-10-13T04:18:33.556Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"b0f96f9bdf7d","git":"bee8834","builtAt":"2026-10-13T04:41:38.636Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -3582,6 +3597,8 @@ window.V03Pkg = (function () {
         const sev = Number(f.severity);
         return Number.isFinite(sev) ? radiusOf(sev) : 140;
       })(),
+      /* 半径是不是推算出来的：推算的不画影响圆（否则几百个圆叠成一大块晕） */
+      radiusEstimated: !(Number(f.geo && f.geo.impactRadiusKm) > 0),
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
       embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,
@@ -6608,6 +6625,25 @@ window.V03Fact = (function () {
     return Math.max(0, .9 * (1 - k));
   };
 
+
+  /* ---------- V0.8 的"星星亮起"：新事实接入时在坐标处闪一颗星（DOM 动画，1 秒后自动移除） ---------- */
+  function flashStar(f, level) {
+    if (!f || f.lng == null || !chart) return;
+    let px = null;
+    try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { px = null; }
+    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
+    const host = dom.map || dom.mapBox || (chart.getDom && chart.getDom());
+    if (!host) return;
+    const box = host.getBoundingClientRect();
+    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;   /* 视野外不闪 */
+    const d = document.createElement('div');
+    d.className = 'star-flash ' + (level === 'bright' || f.impact === 'high' ? 'bright' : 'dim');
+    d.dataset.fid = f.id || '';
+    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px';
+    d.innerHTML = '<i></i>';
+    host.appendChild(d);
+    setTimeout(() => d.remove(), 1000);
+  }
   /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
   let lastTopFactId = null;
   const freshIds = new Set();
@@ -6749,12 +6785,12 @@ window.V03Fact = (function () {
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
-        /* 影响圆 = V0.8 的径向渐变光晕（不是描边圆）：中心实、向外淡出到透明 */
-        if (diameter > 0) {
+        /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
+        if (diameter > 0 && (!f.radiusEstimated || f.impact === 'high')) {   /* 高影响事实给光晕，其余不画，避免叠成大圆晕 */
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-              { offset: 0, color: hexA(p.dot, .16 * a0) }, { offset: .55, color: hexA(p.dot, .07 * a0) },
+              { offset: 0, color: hexA(p.dot, .12 * a0) }, { offset: .55, color: hexA(p.dot, .05 * a0) },
               { offset: 1, color: hexA(p.dot, 0) }] } } });
           if (f.impact === 'high') ripples.push({ id: f.id, name: f.title, value });
         }
@@ -7108,6 +7144,7 @@ window.V03Fact = (function () {
       if (lastTopFactId) {
         freshIds.add(facts[0].id);
         freshNote(dom.sideBody, '新事实接入 · ' + String(facts[0].title || '').slice(0, 22));
+        flashStar(facts[0]);          /* 地图上那颗星 */
       }
       lastTopFactId = facts[0].id;
     }
@@ -7332,7 +7369,8 @@ window.V03Relation = (function () {
   const REL_LEVEL = {
     L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, bounds: [[-25, 72], [335, -56]], box: [1.26, 2.4], inAt: 2.2 },
     L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, box: [0.86, 3.2], inAt: 2.7, outAt: 0.9 },
-    L3: { map: 'china', center: [111.73, 27.54], zoom: 9.08, box: [3.4, 16] }
+    /* L3 取景同时包含湖南与东南亚来源地，这样国际连线才在视野里 */
+    L3: { map: 'worldChina', center: [106.2, 21.8], zoom: 3.6, box: [2.2, 16] }
   };
 
   /* ---------- 实验页确认过的手感：阻尼缩放 + 缓动（与事实层同一套参数） ---------- */
@@ -7375,12 +7413,14 @@ window.V03Relation = (function () {
   const inLevel = (lng, lat) => {
     const lv = relLevel();
     if (lv === 'L1') return true;
-    if (lng < 73 || lng > 136 || lat < 17.5 || lat > 54.5) return false;
+    const outside = lng < 73 || lng > 136 || lat < 17.5 || lat > 54.5;
+    /* L3（湖南）要画"东南亚各国 → 红星"的国际连线：境外来源地一律放行；
+       L2 仍只收中国境内 */
+    if (lv === 'L3') return outside ? true : !(window.V03Mass && V03Mass.insideMap) || V03Mass.insideMap(lv, lng, lat);
+    if (outside) return false;
     /* 用真实省界多边形判断，避免把邻国 / 邻省的本体画进来 */
     if (window.V03Mass && V03Mass.insideMap && !V03Mass.insideMap(lv, lng, lat)) return false;
-    if (lv === 'L2') return true;
-    const c = (D.PROV_CENTER || {})[relFocus()];
-    return c ? Math.abs(lng - c[0]) <= 2.8 && Math.abs(lat - c[1]) <= 2.4 : true;
+    return true;
   };
   const nearProvince = center => {
     if (!center) return null;
@@ -7516,10 +7556,17 @@ window.V03Relation = (function () {
   /* 层级变化（含被其它地方改写）时把相机对准该层级 */
   function fitLevel() {
     const lv = relLevel(), t = REL_LEVEL[lv];
-    const c = relFocus() ? (D.PROV_CENTER || {})[relFocus()] : null;
+    const focus = relFocus();                                  /* 原来这里错用了未定义的 focus，省区视角一直没走到覆盖值 */
+    const c = focus ? (D.PROV_CENTER || {})[focus] : null;
     camera.level = lv;
-    camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
-    camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
+    if (lv === 'L3') {
+      /* 省区视角要同时看到东南亚来源地：取景放宽，东南亚各国 → 红星 的国际连线才在视野里 */
+      camera.center = [106.2, 21.8];
+      camera.zoom = 3.6;
+    } else {
+      camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
+      camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
+    }
   }
 
   function mapReady() {
@@ -7884,7 +7931,8 @@ window.V03Relation = (function () {
       id: 'relFlow-' + color.replace(/[^a-z0-9]/gi, ''),
       type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false,
       data: groups.get(color).map(l => ({ id: l.id + '-f', coords: l.coords, lineStyle: { opacity: 0, curveness: .22 } })),
-      effect: { show: true, period: FLOW_PERIODS[k % FLOW_PERIODS.length], trailLength: .38, symbol: 'circle', symbolSize: 4.6, color },
+      effect: { show: true, period: FLOW_PERIODS[k % FLOW_PERIODS.length] * (relLevel() === 'L2' ? 1.7 : 1),   /* 中国视角放慢 */
+        trailLength: .38, symbol: 'circle', symbolSize: 4.6, color },
       lineStyle: { curveness: .22, opacity: 0 }
     }));
   }
@@ -8149,6 +8197,21 @@ window.V03Relation = (function () {
     setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3600);
   }
   let lastTopObjId = null;
+  /* 新本体接入：同样闪一颗星（与事实层同一套观感） */
+  function relFlashStar(o) {
+    if (!o || o.lng == null || !chart) return;
+    let px = null;
+    try { px = chart.convertToPixel({ geoIndex: 0 }, [o.lng, o.lat]); } catch (e) { px = null; }
+    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
+    const host = dom.canvas || chart.getDom && chart.getDom(); if (!host) return;
+    const box = host.getBoundingClientRect();
+    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;
+    const d = document.createElement('div');
+    d.className = 'star-flash ' + ((o.degree || 0) >= 8 ? 'bright' : 'dim');
+    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px'; d.innerHTML = '<i></i>';
+    host.appendChild(d); setTimeout(() => d.remove(), 1000);
+  }
+
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     /* 不显示行政/区域类对象：卡片只展现有信息量的本体分类 */
@@ -8204,7 +8267,7 @@ window.V03Relation = (function () {
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     if (ordered.length && ordered[0].id !== lastTopObjId) {
-      if (lastTopObjId) newFactToast(esc(String(ordered[0].name || '').slice(0, 28)));
+      if (lastTopObjId) { newFactToast(esc(String(ordered[0].name || '').slice(0, 28))); relFlashStar(ordered[0]); }
       lastTopObjId = ordered[0].id;
     }
     autoScrollCards(dom.body);
@@ -8392,7 +8455,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.8',
+      source: 'AgriLink v1.9',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -8610,30 +8673,16 @@ window.V03Sim = (function () {
     const na = [];
     closePop();
     mount.innerHTML = '';
-    /* 时间范围：地图右下角"单独一排"，放在快捷键组正上方（不在 #mapSk 内部，避免混进快捷键） */
-    if (mode === 'map' && mount.parentElement && st.tab === 'relation') {
-      /* 关联层不显示时间范围那一排；从事实层切过来时要清掉残留 */
-      const stale = mount.parentElement.querySelector('.sk-time'); if (stale) stale.remove();
-    }
-    if (mode === 'map' && mount.parentElement && st.tab !== 'relation') {
-      let trow = mount.parentElement.querySelector('.sk-time');
-      if (!trow) { trow = el('div', 'sk-time'); mount.parentElement.insertBefore(trow, mount) }
-      trow.innerHTML = '';
-      trow.appendChild(el('span', 'sk-time-h', '时间范围'));
-      TIME_OPTS.forEach(([value, label]) => {
-        const b = el('button', 'sk-tb' + (st.time === value ? ' on' : ''), label);
-        b.setAttribute('aria-pressed', String(st.time === value));
-        b.onclick = () => S.set({ time: value });
-        trow.appendChild(b);
-      });
-    }
+    /* 时间范围改为快捷键组里的一个图标按钮（日历图标，和其它快捷键同一套样式与交互） */
+    const staleTime = mount.parentElement && mount.parentElement.querySelector('.sk-time');
+    if (staleTime) staleTime.remove();
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
     const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
-      : ['zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];
+      : ['time','zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];   /* 时间范围并入快捷键组 */
     (mode === 'map' ? order.map(k => SK.find(x => x.k === k)) : SK).forEach((sk, idx) => {
       if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen'].includes(sk.k)) return;
-      if (mode === 'map' && st.tab !== 'relation' && !['zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
+      if (mode === 'map' && st.tab !== 'relation' && !['time','zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
       if (st.tab !== 'relation' && (sk.k === 'crossRegion' || sk.kind === 'view')) return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
