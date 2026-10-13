@@ -377,23 +377,42 @@ window.V03Fact = (function () {
 
 
   /* ---------- V0.8 的"星星亮起"：新事实接入时在坐标处闪一颗星（DOM 动画，1 秒后自动移除） ---------- */
+  /* 验收接口：手动触发一次"新事实接入"（通知条 + 星星），便于确认效果 */
+  function notifyNewest() {
+    const st = S.state;
+    const list = F.mappable(F.factsAtLevel(st));
+    const f = list[0]; if (!f) return null;
+    freshIds.add(f.id);
+    /* 先重画卡片（带上「新接入」标记），再插提示条 —— 顺序反了会被重画冲掉 */
+    try { renderCards(); } catch (e) { /* 忽略 */ }
+    freshNote(dom.sideBody, '新事实接入 · ' + String(f.title || '').slice(0, 22));
+    flashStar(f, 'bright');
+    setTimeout(() => flashStar(f, 'bright'), 150);      /* 再补一颗，避免首帧尺寸未就绪 */
+    return f.id;
+  }
+
   function flashStar(f, level) {
     if (!f || f.lng == null || !chart) return;
     let px = null;
     try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { px = null; }
     if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
-    const host = dom.map || dom.mapBox || (chart.getDom && chart.getDom());
+    /* 优先用 ECharts 自己的容器（一定存在且已定位），避免 dom.map 未定义时静默失败 */
+    const host = (chart.getDom && chart.getDom()) || document.getElementById('factMap') || dom.map;
     if (!host) return;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
     const box = host.getBoundingClientRect();
-    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;   /* 视野外不闪 */
+    window.__starDebug = { px: px, box: [Math.round(box.width), Math.round(box.height)] };
+    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) { window.__starDebug.skip = '视野外'; return; }   /* 视野外不闪 */
     const d = document.createElement('div');
     d.className = 'star-flash ' + (level === 'bright' || f.impact === 'high' ? 'bright' : 'dim');
     d.dataset.fid = f.id || '';
     d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px';
     d.innerHTML = '<i></i>';
     host.appendChild(d);
-    setTimeout(() => d.remove(), 1000);
+    window.__starCount = (window.__starCount || 0) + 1;
+    setTimeout(() => { d.remove(); }, 1000);
   }
+  window.__flashStar = flashStar;   /* 验收/调试入口：window.__flashStar(f) */
   /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
   let lastTopFactId = null;
   const freshIds = new Set();
@@ -530,22 +549,28 @@ window.V03Fact = (function () {
     if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [], ripples = [];
+    const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
+    const tooClose = (x, y) => usedHalo.some(p2 => Math.abs(p2[0] - x) < 28 && Math.abs(p2[1] - y) < 24);
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
         /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
-        if (diameter > 0 && (!f.radiusEstimated || f.impact === 'high')) {   /* 高影响事实给光晕，其余不画，避免叠成大圆晕 */
+        if (diameter > 0 && f.impact === 'high' && halos.length < 18 && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且互相不重叠 */
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-              { offset: 0, color: hexA(p.dot, .12 * a0) }, { offset: .55, color: hexA(p.dot, .05 * a0) },
+              { offset: 0, color: hexA(p.dot, .10 * a0) }, { offset: .55, color: hexA(p.dot, .04 * a0) },
               { offset: 1, color: hexA(p.dot, 0) }] } } });
-          if (f.impact === 'high') ripples.push({ id: f.id, name: f.title, value });
+          if (f.impact === 'high' && ripples.length < 8) { ripples.push({ id: f.id, name: f.title, value }); usedHalo.push([value[0], value[1]]); }
         }
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
-          itemStyle: { opacity: Math.max(0.06, ageAlpha(f, st.time)), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
+          itemStyle: { opacity: (() => {
+            const target = ageAlpha(f, st.time);
+            /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
+            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : Math.max(0.06, target);
+          })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
@@ -660,15 +685,6 @@ window.V03Fact = (function () {
     flashTimer = setInterval(push, 60);
   }
   const flashIds = () => freshFlashes.map(x => x.factId);
-  function flashStar(f, level) {
-    if (!f || f.lng == null || S.state.tab !== 'fact' || S.state.sk.mode3d) return;
-    if (window.V03Mass && !V03Mass.insideMap(S.state.geo.level, f.lng, f.lat)) return;
-    if (!chart) return;
-    const id = 'fresh-' + (++flashSeq);
-    const color = (catOf(f) || {}).c || '#e4a449';
-    mapPoints(f.lng, f.lat).forEach(value => freshFlashes.push({ id, factId: f.id, value, t0: performance.now(), dur: PULSE_MS, color }));
-    syncFlashSeries();
-  }
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -1090,6 +1106,6 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, worldLongitude, worldCopies,
+  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
     mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();

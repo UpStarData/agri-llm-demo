@@ -107,7 +107,7 @@
     { k: 'live', i: 'video', n: '视频', d: '显示或隐藏视频事实卡', kind: 'sw', get: s => s.sk.live, set: v => ({ sk: { live: v } }) },
     { k: 'regions', i: 'sprout', n: '主要产区', d: '标注主要农产品产区', kind: 'sw', get: s => s.sk.regions, set: v => ({ sk: { regions: v } }) },
     { k: 'gates', i: 'anchor', n: '港口锚点', d: '显示或隐藏港口锚点', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
-    { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口；预留时间轴播放位', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
+    { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口：近 7 天 / 近 1 月 / 近半年 / 近一年', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
     { k: 'search', i: 'search', n: '搜索', d: '搜索事实或本体名称', kind: 'input', get: s => s.tab === 'relation' ? s.rel.search : s.q, set: v => S.state.tab === 'relation' ? ({ rel: { search: v } }) : ({ q: v }) }
   ];
   const skVal = (sk, s) => (sk.kind === 'view' ? (s.rel.view === sk.value ? '当前' : '') : sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
