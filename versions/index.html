@@ -46,7 +46,13 @@
   <div class="tbl">
     <div class="row head"><div>版本</div><div>内容</div><div>更新时间（北京时间）</div><div>构建指纹 / 源码</div></div>
     <div class="row">
-      <div class="v now">V2.0</div>
+      <div class="v now">V2.1</div>
+      <div class="d">按验收报告逐条修：光晕间距改为按屏幕像素（原来比的是经纬度，导致中国/湖南只剩 1 个光晕）——实测 全球 24 / 中国 23 / 湖南 18；时间窗口内最老的点透明度降到 0（原来是 0.06）；湖南省区视角修正为贴紧湖南（center 111.9/27.4, zoom 6.4，东南亚仍在视野内），跨境线不再被剔除并改为虚线；关联层"新本体"通知前缀不再写死"新事实"。说明：数据里真正的跨境关系只有 2 条，所以"东南亚 → 红星"目前只画出 2 条虚线，补一层表现用虚线（上限 14 条）是下一步<br><a target="_blank" rel="noopener noreferrer" href="../v2.1/">进入 /v2.1/ →</a> <a href="../latest/">去最新版 →</a></div>
+      <div class="u"><time datetime="2026-10-13T13:45+08:00">2026-10-13 13:45</time></div>
+      <div class="m">ec569c3d8ba8<br>3124cb1</div>
+    </div>
+    <div class="row">
+      <div class="v">V2.0</div>
       <div class="d">修掉中国下方的大圆晕（原因：湖南周边几十个光晕+涟漪叠在一起；现限量 18 个且互相至少隔 28px，涟漪 8 个，实测 15/8 且 0 组过近）；时间范围选中后能看到过程——点逐步长出、老点边出现边变淡、结束定住（实测透明度下限降到 0.06、最新点为 1.0）；"星星亮起"此前因 flashStar 被重复定义而从未生效，已修并验证（通知条 + 星星 + 新接入卡片三项同时出现）；去掉时间项的"时间轴播放"描述；推演层左侧新增图谱 / 地图(2D) / 地球(3D) 三态图标切换（右下角）<br><a target="_blank" rel="noopener noreferrer" href="../v2.0/">进入 /v2.0/ →</a> <a href="../latest/">去最新版 →</a></div>
       <div class="u"><time datetime="2026-10-13T12:56+08:00">2026-10-13 12:56</time></div>
       <div class="m">6df3afd66073<br>0922e5e</div>
