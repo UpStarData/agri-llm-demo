@@ -169,30 +169,16 @@
     const na = [];
     closePop();
     mount.innerHTML = '';
-    /* 时间范围：地图右下角"单独一排"，放在快捷键组正上方（不在 #mapSk 内部，避免混进快捷键） */
-    if (mode === 'map' && mount.parentElement && st.tab === 'relation') {
-      /* 关联层不显示时间范围那一排；从事实层切过来时要清掉残留 */
-      const stale = mount.parentElement.querySelector('.sk-time'); if (stale) stale.remove();
-    }
-    if (mode === 'map' && mount.parentElement && st.tab !== 'relation') {
-      let trow = mount.parentElement.querySelector('.sk-time');
-      if (!trow) { trow = el('div', 'sk-time'); mount.parentElement.insertBefore(trow, mount) }
-      trow.innerHTML = '';
-      trow.appendChild(el('span', 'sk-time-h', '时间范围'));
-      TIME_OPTS.forEach(([value, label]) => {
-        const b = el('button', 'sk-tb' + (st.time === value ? ' on' : ''), label);
-        b.setAttribute('aria-pressed', String(st.time === value));
-        b.onclick = () => S.set({ time: value });
-        trow.appendChild(b);
-      });
-    }
+    /* 时间范围改为快捷键组里的一个图标按钮（日历图标，和其它快捷键同一套样式与交互） */
+    const staleTime = mount.parentElement && mount.parentElement.querySelector('.sk-time');
+    if (staleTime) staleTime.remove();
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
     const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
-      : ['zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];
+      : ['time','zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];   /* 时间范围并入快捷键组 */
     (mode === 'map' ? order.map(k => SK.find(x => x.k === k)) : SK).forEach((sk, idx) => {
       if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen'].includes(sk.k)) return;
-      if (mode === 'map' && st.tab !== 'relation' && !['zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
+      if (mode === 'map' && st.tab !== 'relation' && !['time','zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
       if (st.tab !== 'relation' && (sk.k === 'crossRegion' || sk.kind === 'view')) return;
       const api = layerApi();
       const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;

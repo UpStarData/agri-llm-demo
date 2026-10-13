@@ -498,3 +498,18 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .fcard.is-fresh{box-shadow:0 0 0 2px #0ea5e955, 0 10px 24px -18px #0b7285}
 .fcard.is-fresh::after{content:"新接入";position:absolute;top:8px;right:8px;font-size:.5625rem;color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd;border-radius:999px;padding:1px 6px}
 .fcard{position:relative}
+
+/* ---------------- V0.8 同款：新事实/新本体接入时坐标处闪一颗星 ---------------- */
+.star-flash{position:absolute;pointer-events:none;z-index:20;transform-origin:50% 50%;will-change:transform,opacity;
+  animation:starFlash .9s cubic-bezier(.22,1,.36,1) forwards}
+.star-flash i{display:block;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.98),rgba(255,236,150,.85) 38%,rgba(255,214,102,.25) 62%,rgba(255,214,102,0) 78%);
+  box-shadow:0 0 10px rgba(255,220,120,.75)}
+.star-flash.dim i{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.75;box-shadow:0 0 6px rgba(255,220,120,.5)}
+.star-flash.bright i{transform:scale(1.5)}
+@keyframes starFlash{
+  0%{opacity:0;transform:scale(.3)}
+  20%{opacity:1;transform:scale(1.2)}
+  50%{opacity:.7;transform:scale(1)}
+  100%{opacity:0;transform:scale(.5)}
+}
