@@ -170,7 +170,7 @@
     closePop();
     mount.innerHTML = '';
     /* 时间范围：地图右下角"单独一排"，放在快捷键组正上方（不在 #mapSk 内部，避免混进快捷键） */
-    if (mode === 'map' && mount.parentElement) {
+    if (mode === 'map' && mount.parentElement && st.tab !== 'relation') {
       let trow = mount.parentElement.querySelector('.sk-time');
       if (!trow) { trow = el('div', 'sk-time'); mount.parentElement.insertBefore(trow, mount) }
       trow.innerHTML = '';

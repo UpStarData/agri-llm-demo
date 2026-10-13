@@ -377,6 +377,18 @@ window.V03Fact = (function () {
 
   /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
   let lastTopFactId = null;
+  const freshIds = new Set();
+  /* 卡片区内的"新接入"提示条：插入卡片流最上方，3.8 秒后淡出移除 */
+  function freshNote(host, text) {
+    if (!host) return;
+    const old = host.querySelector('.fresh-note'); if (old) old.remove();
+    const n = document.createElement('div');
+    n.className = 'fresh-note';
+    n.innerHTML = '<b>新接入</b>' + text;
+    host.insertBefore(n, host.firstChild);
+    requestAnimationFrame(() => n.classList.add('on'));
+    setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3800);
+  }
   function autoScrollCards(el) {
     if (!el || el.__auto) return;
     el.__auto = { t: 0, raf: 0, paused: 0, lastTop: el.scrollTop };
@@ -498,14 +510,21 @@ window.V03Fact = (function () {
     const gk = ensureGrow(st);
     if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
     const lv = LEVEL[st.geo.level], p = palette();
-    const halos = [], pts = [];
+    const halos = [], pts = [], ripples = [];
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
-        if (diameter > 0) halos.push({ id: f.id, value, symbolSize: Math.max(14, diameter * 1.15),
-          itemStyle: { color: hexA(p.dot, .18 * ageAlpha(f, st.time)), borderColor: hexA(p.dot, .7), borderWidth: 1.2 } });
+        /* 影响圆 = V0.8 的径向渐变光晕（不是描边圆）：中心实、向外淡出到透明 */
+        if (diameter > 0) {
+          const a0 = ageAlpha(f, st.time);
+          halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
+            itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
+              { offset: 0, color: hexA(p.dot, .16 * a0) }, { offset: .55, color: hexA(p.dot, .07 * a0) },
+              { offset: 1, color: hexA(p.dot, 0) }] } } });
+          if (f.impact === 'high') ripples.push({ id: f.id, name: f.title, value });
+        }
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { opacity: Math.max(0.06, ageAlpha(f, st.time)), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
@@ -519,6 +538,9 @@ window.V03Fact = (function () {
         large: true, largeThreshold: 1000, progressive: 0, animation: false,
         itemStyle: { color: p.mass } },
       { id: 'halo', type: 'scatter', coordinateSystem: 'geo', data: st.sk.influence ? halos : [], silent: true, z: 2, symbol: 'circle' },
+      /* 高影响事实的涟漪（V0.8 同款）：静默、周期性扩散 */
+      { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripples : [], silent: true, z: 3,
+        showEffectOn: 'render', rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 }, itemStyle: { opacity: .55 } },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' },
       flashSeries()
     ].filter(Boolean);
@@ -844,12 +866,16 @@ window.V03Fact = (function () {
       return;
     }
     const scroll = dom.sideBody.scrollTop;
-    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
+    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>'
+    dom.sideBody.querySelectorAll('.fcards .fcard').forEach((el) => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh') }); +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
     dom.sideBody.scrollTop = scroll;
-    /* 有新事实进来：先弹一下，再自动消失；列表按时间倒序，滚到顶部即可看到 */
+    /* 新事实/新本体：卡片区顶部出提示条（几秒后自动消失），新条目置顶并带「新接入」标记 */
     if (facts.length && facts[0].id !== lastTopFactId) {
-      if (lastTopFactId) newFactToast(esc(String(facts[0].title || '').slice(0, 28)));
+      if (lastTopFactId) {
+        freshIds.add(facts[0].id);
+        freshNote(dom.sideBody, '新事实接入 · ' + String(facts[0].title || '').slice(0, 22));
+      }
       lastTopFactId = facts[0].id;
     }
     autoScrollCards(dom.sideBody);
