@@ -502,10 +502,9 @@ window.V03Fact = (function () {
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
-        /* 影响圆：有影响半径的按半径画；没有半径的按影响等级给一档默认圆，保证这层效果始终看得见 */
-        const impactHalo = { high: 34, mid: 24, low: 16 }[f.impact] || 18;
-        const dia = Math.max(diameter > 0 ? diameter * 1.15 : impactHalo, 14);
-        halos.push({ id: f.id, value, symbolSize: dia,
+        /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
+           之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
+        if (diameter > 0) halos.push({ id: f.id, value, symbolSize: Math.max(14, diameter * 1.15),
           itemStyle: { color: hexA(p.dot, .18 * ageAlpha(f, st.time)), borderColor: hexA(p.dot, .7), borderWidth: 1.2 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { opacity: Math.max(0.06, ageAlpha(f, st.time)), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });

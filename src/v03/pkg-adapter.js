@@ -227,8 +227,13 @@ window.V03Pkg = (function () {
       cred: f.credibility ? f.credibility.band : 'medium',
       credScore: f.credibility ? f.credibility.score : 0,
       impact: IMPACT_OF(f.severity), severity: f.severity,
-      // 旧 severity 推算半径没有来源依据；V1.2 对缺失的 Jev 半径明确显示“未知”。
-      radius: Number.isFinite(Number(f.geo.impactRadiusKm)) && Number(f.geo.impactRadiusKm) > 0 ? Number(f.geo.impactRadiusKm) : null,
+      // 半径优先用真实来源；缺失时按严重度推算（详情里标注为推算），否则影响圆这一层就完全没有数据
+      radius: (() => {
+        const r = Number(f.geo && f.geo.impactRadiusKm);
+        if (Number.isFinite(r) && r > 0) return r;
+        const sev = Number(f.severity);
+        return Number.isFinite(sev) ? radiusOf(sev) : 140;
+      })(),
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
       embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,
