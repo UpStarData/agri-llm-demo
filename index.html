@@ -852,7 +852,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.5</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.6</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -916,7 +916,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"361ac91449c7","git":"05b75dc","builtAt":"2026-10-13T03:42:16.630Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"022f524fd9f3","git":"c174b1e","builtAt":"2026-10-13T03:45:51.810Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -3566,8 +3566,13 @@ window.V03Pkg = (function () {
       cred: f.credibility ? f.credibility.band : 'medium',
       credScore: f.credibility ? f.credibility.score : 0,
       impact: IMPACT_OF(f.severity), severity: f.severity,
-      // 旧 severity 推算半径没有来源依据；V1.2 对缺失的 Jev 半径明确显示“未知”。
-      radius: Number.isFinite(Number(f.geo.impactRadiusKm)) && Number(f.geo.impactRadiusKm) > 0 ? Number(f.geo.impactRadiusKm) : null,
+      // 半径优先用真实来源；缺失时按严重度推算（详情里标注为推算），否则影响圆这一层就完全没有数据
+      radius: (() => {
+        const r = Number(f.geo && f.geo.impactRadiusKm);
+        if (Number.isFinite(r) && r > 0) return r;
+        const sev = Number(f.severity);
+        return Number.isFinite(sev) ? radiusOf(sev) : 140;
+      })(),
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
       embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,
@@ -6721,10 +6726,9 @@ window.V03Fact = (function () {
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
-        /* 影响圆：有影响半径的按半径画；没有半径的按影响等级给一档默认圆，保证这层效果始终看得见 */
-        const impactHalo = { high: 34, mid: 24, low: 16 }[f.impact] || 18;
-        const dia = Math.max(diameter > 0 ? diameter * 1.15 : impactHalo, 14);
-        halos.push({ id: f.id, value, symbolSize: dia,
+        /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
+           之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
+        if (diameter > 0) halos.push({ id: f.id, value, symbolSize: Math.max(14, diameter * 1.15),
           itemStyle: { color: hexA(p.dot, .18 * ageAlpha(f, st.time)), borderColor: hexA(p.dot, .7), borderWidth: 1.2 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { opacity: Math.max(0.06, ageAlpha(f, st.time)), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
@@ -8353,7 +8357,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.5',
+      source: 'AgriLink v1.6',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -8571,9 +8575,11 @@ window.V03Sim = (function () {
     const na = [];
     closePop();
     mount.innerHTML = '';
-    /* 时间范围：地图右下角单独一排（事实层与关联层共用） */
-    if (mode === 'map') {
-      const trow = el('div', 'sk-time');
+    /* 时间范围：地图右下角"单独一排"，放在快捷键组正上方（不在 #mapSk 内部，避免混进快捷键） */
+    if (mode === 'map' && mount.parentElement) {
+      let trow = mount.parentElement.querySelector('.sk-time');
+      if (!trow) { trow = el('div', 'sk-time'); mount.parentElement.insertBefore(trow, mount) }
+      trow.innerHTML = '';
       trow.appendChild(el('span', 'sk-time-h', '时间范围'));
       TIME_OPTS.forEach(([value, label]) => {
         const b = el('button', 'sk-tb' + (st.time === value ? ' on' : ''), label);
@@ -8581,7 +8587,6 @@ window.V03Sim = (function () {
         b.onclick = () => S.set({ time: value });
         trow.appendChild(b);
       });
-      mount.appendChild(trow);
     }
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');

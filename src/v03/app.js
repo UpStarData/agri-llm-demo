@@ -169,9 +169,11 @@
     const na = [];
     closePop();
     mount.innerHTML = '';
-    /* 时间范围：地图右下角单独一排（事实层与关联层共用） */
-    if (mode === 'map') {
-      const trow = el('div', 'sk-time');
+    /* 时间范围：地图右下角"单独一排"，放在快捷键组正上方（不在 #mapSk 内部，避免混进快捷键） */
+    if (mode === 'map' && mount.parentElement) {
+      let trow = mount.parentElement.querySelector('.sk-time');
+      if (!trow) { trow = el('div', 'sk-time'); mount.parentElement.insertBefore(trow, mount) }
+      trow.innerHTML = '';
       trow.appendChild(el('span', 'sk-time-h', '时间范围'));
       TIME_OPTS.forEach(([value, label]) => {
         const b = el('button', 'sk-tb' + (st.time === value ? ' on' : ''), label);
@@ -179,7 +181,6 @@
         b.onclick = () => S.set({ time: value });
         trow.appendChild(b);
       });
-      mount.appendChild(trow);
     }
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
