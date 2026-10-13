@@ -489,3 +489,12 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
   opacity:0;transform:translateY(-8px);transition:opacity .35s ease,transform .35s ease}
 .nfact-toast.on{opacity:1;transform:none}
 .nfact-toast b{color:#7dd3fc;margin-right:6px}
+
+/* ---------------- 卡片区内的"新接入"提示 + 新卡片标记 ---------------- */
+.fresh-note{margin:0 0 8px;padding:9px 12px;border-radius:10px;background:#0ea5e91a;border:1px solid #0ea5e955;color:#0b7285;
+  font-size:.6875rem;display:flex;gap:8px;align-items:center;opacity:0;transform:translateY(-6px);transition:opacity .35s,transform .35s}
+.fresh-note.on{opacity:1;transform:none}
+.fresh-note b{color:#0369a1}
+.fcard.is-fresh{box-shadow:0 0 0 2px #0ea5e955, 0 10px 24px -18px #0b7285}
+.fcard.is-fresh::after{content:"新接入";position:absolute;top:8px;right:8px;font-size:.5625rem;color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd;border-radius:999px;padding:1px 6px}
+.fcard{position:relative}
