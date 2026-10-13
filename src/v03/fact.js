@@ -375,6 +375,25 @@ window.V03Fact = (function () {
     return Math.max(0, .9 * (1 - k));
   };
 
+
+  /* ---------- V0.8 的"星星亮起"：新事实接入时在坐标处闪一颗星（DOM 动画，1 秒后自动移除） ---------- */
+  function flashStar(f, level) {
+    if (!f || f.lng == null || !chart) return;
+    let px = null;
+    try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { px = null; }
+    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
+    const host = dom.map || dom.mapBox || (chart.getDom && chart.getDom());
+    if (!host) return;
+    const box = host.getBoundingClientRect();
+    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;   /* 视野外不闪 */
+    const d = document.createElement('div');
+    d.className = 'star-flash ' + (level === 'bright' || f.impact === 'high' ? 'bright' : 'dim');
+    d.dataset.fid = f.id || '';
+    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px';
+    d.innerHTML = '<i></i>';
+    host.appendChild(d);
+    setTimeout(() => d.remove(), 1000);
+  }
   /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
   let lastTopFactId = null;
   const freshIds = new Set();
@@ -516,12 +535,12 @@ window.V03Fact = (function () {
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
-        /* 影响圆 = V0.8 的径向渐变光晕（不是描边圆）：中心实、向外淡出到透明 */
-        if (diameter > 0) {
+        /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
+        if (diameter > 0 && (!f.radiusEstimated || f.impact === 'high')) {   /* 高影响事实给光晕，其余不画，避免叠成大圆晕 */
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-              { offset: 0, color: hexA(p.dot, .16 * a0) }, { offset: .55, color: hexA(p.dot, .07 * a0) },
+              { offset: 0, color: hexA(p.dot, .12 * a0) }, { offset: .55, color: hexA(p.dot, .05 * a0) },
               { offset: 1, color: hexA(p.dot, 0) }] } } });
           if (f.impact === 'high') ripples.push({ id: f.id, name: f.title, value });
         }
@@ -875,6 +894,7 @@ window.V03Fact = (function () {
       if (lastTopFactId) {
         freshIds.add(facts[0].id);
         freshNote(dom.sideBody, '新事实接入 · ' + String(facts[0].title || '').slice(0, 22));
+        flashStar(facts[0]);          /* 地图上那颗星 */
       }
       lastTopFactId = facts[0].id;
     }

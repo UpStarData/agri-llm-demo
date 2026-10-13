@@ -234,6 +234,8 @@ window.V03Pkg = (function () {
         const sev = Number(f.severity);
         return Number.isFinite(sev) ? radiusOf(sev) : 140;
       })(),
+      /* 半径是不是推算出来的：推算的不画影响圆（否则几百个圆叠成一大块晕） */
+      radiusEstimated: !(Number(f.geo && f.geo.impactRadiusKm) > 0),
       media: mediaOf(f, card), mediaNote: (MEDIA_NOTE[f.cardType] || MEDIA_NOTE.news)(card),
       embeddable: card.embeddable || 'unknown',
       sourcePlugin: f.sourcePlugin, sourceUrl: f.sourceUrl || '', authorityTier: f.authorityTier,

@@ -21,7 +21,8 @@ window.V03Relation = (function () {
   const REL_LEVEL = {
     L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, bounds: [[-25, 72], [335, -56]], box: [1.26, 2.4], inAt: 2.2 },
     L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, box: [0.86, 3.2], inAt: 2.7, outAt: 0.9 },
-    L3: { map: 'china', center: [111.73, 27.54], zoom: 9.08, box: [3.4, 16] }
+    /* L3 取景同时包含湖南与东南亚来源地，这样国际连线才在视野里 */
+    L3: { map: 'worldChina', center: [106.2, 21.8], zoom: 3.6, box: [2.2, 16] }
   };
 
   /* ---------- 实验页确认过的手感：阻尼缩放 + 缓动（与事实层同一套参数） ---------- */
@@ -64,12 +65,14 @@ window.V03Relation = (function () {
   const inLevel = (lng, lat) => {
     const lv = relLevel();
     if (lv === 'L1') return true;
-    if (lng < 73 || lng > 136 || lat < 17.5 || lat > 54.5) return false;
+    const outside = lng < 73 || lng > 136 || lat < 17.5 || lat > 54.5;
+    /* L3（湖南）要画"东南亚各国 → 红星"的国际连线：境外来源地一律放行；
+       L2 仍只收中国境内 */
+    if (lv === 'L3') return outside ? true : !(window.V03Mass && V03Mass.insideMap) || V03Mass.insideMap(lv, lng, lat);
+    if (outside) return false;
     /* 用真实省界多边形判断，避免把邻国 / 邻省的本体画进来 */
     if (window.V03Mass && V03Mass.insideMap && !V03Mass.insideMap(lv, lng, lat)) return false;
-    if (lv === 'L2') return true;
-    const c = (D.PROV_CENTER || {})[relFocus()];
-    return c ? Math.abs(lng - c[0]) <= 2.8 && Math.abs(lat - c[1]) <= 2.4 : true;
+    return true;
   };
   const nearProvince = center => {
     if (!center) return null;
@@ -205,10 +208,17 @@ window.V03Relation = (function () {
   /* 层级变化（含被其它地方改写）时把相机对准该层级 */
   function fitLevel() {
     const lv = relLevel(), t = REL_LEVEL[lv];
-    const c = relFocus() ? (D.PROV_CENTER || {})[relFocus()] : null;
+    const focus = relFocus();                                  /* 原来这里错用了未定义的 focus，省区视角一直没走到覆盖值 */
+    const c = focus ? (D.PROV_CENTER || {})[focus] : null;
     camera.level = lv;
-    camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
-    camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
+    if (lv === 'L3') {
+      /* 省区视角要同时看到东南亚来源地：取景放宽，东南亚各国 → 红星 的国际连线才在视野里 */
+      camera.center = [106.2, 21.8];
+      camera.zoom = 3.6;
+    } else {
+      camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
+      camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
+    }
   }
 
   function mapReady() {
@@ -573,7 +583,8 @@ window.V03Relation = (function () {
       id: 'relFlow-' + color.replace(/[^a-z0-9]/gi, ''),
       type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false,
       data: groups.get(color).map(l => ({ id: l.id + '-f', coords: l.coords, lineStyle: { opacity: 0, curveness: .22 } })),
-      effect: { show: true, period: FLOW_PERIODS[k % FLOW_PERIODS.length], trailLength: .38, symbol: 'circle', symbolSize: 4.6, color },
+      effect: { show: true, period: FLOW_PERIODS[k % FLOW_PERIODS.length] * (relLevel() === 'L2' ? 1.7 : 1),   /* 中国视角放慢 */
+        trailLength: .38, symbol: 'circle', symbolSize: 4.6, color },
       lineStyle: { curveness: .22, opacity: 0 }
     }));
   }
@@ -838,6 +849,21 @@ window.V03Relation = (function () {
     setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3600);
   }
   let lastTopObjId = null;
+  /* 新本体接入：同样闪一颗星（与事实层同一套观感） */
+  function relFlashStar(o) {
+    if (!o || o.lng == null || !chart) return;
+    let px = null;
+    try { px = chart.convertToPixel({ geoIndex: 0 }, [o.lng, o.lat]); } catch (e) { px = null; }
+    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
+    const host = dom.canvas || chart.getDom && chart.getDom(); if (!host) return;
+    const box = host.getBoundingClientRect();
+    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;
+    const d = document.createElement('div');
+    d.className = 'star-flash ' + ((o.degree || 0) >= 8 ? 'bright' : 'dim');
+    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px'; d.innerHTML = '<i></i>';
+    host.appendChild(d); setTimeout(() => d.remove(), 1000);
+  }
+
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     /* 不显示行政/区域类对象：卡片只展现有信息量的本体分类 */
@@ -893,7 +919,7 @@ window.V03Relation = (function () {
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     if (ordered.length && ordered[0].id !== lastTopObjId) {
-      if (lastTopObjId) newFactToast(esc(String(ordered[0].name || '').slice(0, 28)));
+      if (lastTopObjId) { newFactToast(esc(String(ordered[0].name || '').slice(0, 28))); relFlashStar(ordered[0]); }
       lastTopObjId = ordered[0].id;
     }
     autoScrollCards(dom.body);
