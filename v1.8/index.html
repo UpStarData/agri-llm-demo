@@ -861,7 +861,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.7</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V1.8</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -925,7 +925,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"bf7896138ff4","git":"712f333","builtAt":"2026-10-13T04:17:27.998Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"1754e534f15e","git":"c988ae5","builtAt":"2026-10-13T04:18:33.556Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -8392,7 +8392,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v1.7',
+      source: 'AgriLink v1.8',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
@@ -8611,6 +8611,10 @@ window.V03Sim = (function () {
     closePop();
     mount.innerHTML = '';
     /* 时间范围：地图右下角"单独一排"，放在快捷键组正上方（不在 #mapSk 内部，避免混进快捷键） */
+    if (mode === 'map' && mount.parentElement && st.tab === 'relation') {
+      /* 关联层不显示时间范围那一排；从事实层切过来时要清掉残留 */
+      const stale = mount.parentElement.querySelector('.sk-time'); if (stale) stale.remove();
+    }
     if (mode === 'map' && mount.parentElement && st.tab !== 'relation') {
       let trow = mount.parentElement.querySelector('.sk-time');
       if (!trow) { trow = el('div', 'sk-time'); mount.parentElement.insertBefore(trow, mount) }
