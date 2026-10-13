@@ -520,7 +520,7 @@ window.V03Data = (function () {
     /* 相对时间窗口 */
     inWindow: (date, win) => {
       if (win === 'all') return true;
-      const days = { today: 0, '7d': 7, '30d': 30 }[win] ?? 30;
+      const days = { today: 0, '7d': 7, '30d': 30, '180d': 180, '365d': 365 }[win] ?? 30;
       const t = Date.parse(String(date || '').slice(0, 10) + 'T00:00:00Z'), now = Date.parse(TODAY + 'T00:00:00Z');
       return Number.isFinite(t) && t <= now && (now - t) / 86400000 <= days;
     }

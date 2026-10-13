@@ -807,6 +807,37 @@ window.V03Relation = (function () {
   /* 这些分类的卡片在摘要下面带一张图 */
   const KIND_WITH_IMAGE = ['variety', 'commodity', 'market', 'channel', 'resource', 'base', 'logistics', 'facility'];
 
+
+  /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
+  function autoScrollCards(el) {
+    if (!el || el.__auto) return;
+    el.__auto = { t: 0, raf: 0, paused: 0, lastTop: el.scrollTop };
+    const stepFn = () => {
+      const a = el.__auto;
+      a.raf = requestAnimationFrame(stepFn);
+      if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
+      if (Date.now() < a.paused) return;
+      if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { a.t += 0.016; if (a.t > 6) { a.t = 0; el.scrollTop = 0 }    /* 到底停一下再回到顶部 */
+        if (a.t > 0 && a.t < 0.02) { a.paused = Date.now() + 1800 } return }
+      a.t += 0.016;
+      const speed = 0.35 + 0.75 * (1 + Math.sin(a.t * 0.7)) / 2;      /* 0.35~1.1 px/帧，来回变速，不线性 */
+      el.scrollTop += speed;
+      a.lastTop = el.scrollTop;
+    };
+    a: { el.__auto.raf = requestAnimationFrame(stepFn); }
+    el.addEventListener('pointerdown', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) });
+    el.addEventListener('wheel', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) }, { passive: true });
+  }
+  function newFactToast(msg) {
+    const host = document.getElementById('toastHost') || (() => { const d = document.createElement('div'); d.id = 'toastHost'; document.body.appendChild(d); return d })();
+    const n = document.createElement('div'); n.className = 'nfact-toast';
+    n.innerHTML = '<b>新事实</b>' + msg;
+    host.appendChild(n);
+    requestAnimationFrame(() => n.classList.add('on'));
+    setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3600);
+  }
+  let lastTopObjId = null;
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     /* 不显示行政/区域类对象：卡片只展现有信息量的本体分类 */
@@ -861,6 +892,11 @@ window.V03Relation = (function () {
       ;
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
+    if (ordered.length && ordered[0].id !== lastTopObjId) {
+      if (lastTopObjId) newFactToast(esc(String(ordered[0].name || '').slice(0, 28)));
+      lastTopObjId = ordered[0].id;
+    }
+    autoScrollCards(dom.body);
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
   }
 

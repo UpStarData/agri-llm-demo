@@ -341,6 +341,70 @@ window.V03Fact = (function () {
   };
 
   const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
+  /* 切换时间范围时的事实点"持续生长"：只长点，不画线；非线性速度，约 3 秒长满 */
+  let growK = 1, growRaf = 0, growKey = null;
+  function ensureGrow(st) {
+    if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
+    if (growKey !== st.time) {
+      growKey = st.time;
+      growK = 0;
+      if (!growRaf) {
+        const t0 = performance.now();
+        const tick = () => {
+          growRaf = 0;
+          const p = (performance.now() - t0) / 3200;
+          growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
+          if (chart) chart.setOption(mapOption(), { notMerge: true });   /* 绕开签名判断，直接重画地图层 */
+          if (growK < 1) growRaf = requestAnimationFrame(tick);
+        };
+        growRaf = requestAnimationFrame(tick);
+      }
+    }
+    return growK;
+  }
+  /* 时间透明度：近 1 个月不透明 → 1~2 个月 90% → 之后线性衰减到 0（窗口边界处消失） */
+  const ageAlpha = (f, win) => {
+    const span = { today: 1, '7d': 7, '30d': 30, '180d': 180, '365d': 365 }[win] || 30;
+    const t = Date.parse(String(f.date || '').slice(0, 10) + 'T00:00:00Z');
+    const now = Date.parse(String(D.TODAY || new Date().toISOString().slice(0, 10)) + 'T00:00:00Z');
+    if (!Number.isFinite(t)) return 1;
+    const days = Math.max(0, (now - t) / 86400000);
+    if (days <= 30) return 1;
+    if (days <= 60) return .9;
+    const k = (days - 60) / Math.max(1, span - 60);
+    return Math.max(0, .9 * (1 - k));
+  };
+
+  /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
+  let lastTopFactId = null;
+  function autoScrollCards(el) {
+    if (!el || el.__auto) return;
+    el.__auto = { t: 0, raf: 0, paused: 0, lastTop: el.scrollTop };
+    const stepFn = () => {
+      const a = el.__auto;
+      a.raf = requestAnimationFrame(stepFn);
+      if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
+      if (Date.now() < a.paused) return;
+      if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
+      if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { a.t += 0.016; if (a.t > 6) { a.t = 0; el.scrollTop = 0 }    /* 到底停一下再回到顶部 */
+        if (a.t > 0 && a.t < 0.02) { a.paused = Date.now() + 1800 } return }
+      a.t += 0.016;
+      const speed = 0.35 + 0.75 * (1 + Math.sin(a.t * 0.7)) / 2;      /* 0.35~1.1 px/帧，来回变速，不线性 */
+      el.scrollTop += speed;
+      a.lastTop = el.scrollTop;
+    };
+    el.__auto.raf = requestAnimationFrame(stepFn);
+    el.addEventListener('pointerdown', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) });
+    el.addEventListener('wheel', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) }, { passive: true });
+  }
+  function newFactToast(msg) {
+    const host = document.getElementById('toastHost') || (() => { const d = document.createElement('div'); d.id = 'toastHost'; document.body.appendChild(d); return d })();
+    const n = document.createElement('div'); n.className = 'nfact-toast';
+    n.innerHTML = '<b>新事实</b>' + msg;
+    host.appendChild(n);
+    requestAnimationFrame(() => n.classList.add('on'));
+    setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3600);
+  }
   const radiusPx = f => {
     if (!Number.isFinite(f.radius) || f.radius <= 0) return 0;
     const width = (dom.map && dom.map.clientWidth) || 1000;
@@ -429,16 +493,22 @@ window.V03Fact = (function () {
 
   function mapOption() {
     const st = S.state, all = F.factsAtLevel(st);
-    const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
+    let facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
+    /* 生长：切换时间范围后，点按非线性速度逐步出现（最新的先出，老的随透明度衰减消失） */
+    const gk = ensureGrow(st);
+    if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [];
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
-        if (diameter >= 8) halos.push({ id: f.id, value, symbolSize: diameter,
-          itemStyle: { color: hexA(p.dot, .1), borderColor: hexA(p.dot, .55), borderWidth: 1 } });
+        /* 影响圆：有影响半径的按半径画；没有半径的按影响等级给一档默认圆，保证这层效果始终看得见 */
+        const impactHalo = { high: 34, mid: 24, low: 16 }[f.impact] || 18;
+        const dia = Math.max(diameter > 0 ? diameter * 1.15 : impactHalo, 14);
+        halos.push({ id: f.id, value, symbolSize: dia,
+          itemStyle: { color: hexA(p.dot, .18 * ageAlpha(f, st.time)), borderColor: hexA(p.dot, .7), borderWidth: 1.2 } });
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
-          itemStyle: { color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
+          itemStyle: { opacity: Math.max(0.06, ageAlpha(f, st.time)), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
@@ -778,6 +848,12 @@ window.V03Fact = (function () {
     dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
     dom.sideBody.scrollTop = scroll;
+    /* 有新事实进来：先弹一下，再自动消失；列表按时间倒序，滚到顶部即可看到 */
+    if (facts.length && facts[0].id !== lastTopFactId) {
+      if (lastTopFactId) newFactToast(esc(String(facts[0].title || '').slice(0, 28)));
+      lastTopFactId = facts[0].id;
+    }
+    autoScrollCards(dom.sideBody);
     dom.sideBody.onscroll = () => {
       if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
         visibleCardCount += 20;
