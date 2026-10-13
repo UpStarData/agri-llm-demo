@@ -876,7 +876,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V2.0</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V2.1</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -940,7 +940,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"6df3afd66073","git":"2ba50e6","builtAt":"2026-10-13T04:55:53.802Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"ec569c3d8ba8","git":"0922e5e","builtAt":"2026-10-13T05:45:25.438Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -6800,14 +6800,19 @@ window.V03Fact = (function () {
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [], ripples = [];
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
-    const tooClose = (x, y) => usedHalo.some(p2 => Math.abs(p2[0] - x) < 28 && Math.abs(p2[1] - y) < 24);
+    /* 间距按"屏幕像素"算（原来比的是经纬度，等于 28°，中国全境只放得下 2 个 → 只剩 1 个光晕） */
+    const toPx = (lng, lat) => { try { const q = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]); return Array.isArray(q) ? q : null } catch (e) { return null } };
+    const tooClose = (lng, lat) => {
+      const q = toPx(lng, lat); if (!q) return false;
+      return usedHalo.some(p2 => Math.abs(p2[0] - q[0]) < 26 && Math.abs(p2[1] - q[1]) < 24);
+    };
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
         /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
-        if (diameter > 0 && f.impact === 'high' && halos.length < 18 && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且互相不重叠 */
+        if (diameter > 0 && f.impact === 'high' && halos.length < 24 && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且屏幕间距足够 */
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
@@ -6819,7 +6824,7 @@ window.V03Fact = (function () {
           itemStyle: { opacity: (() => {
             const target = ageAlpha(f, st.time);
             /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
-            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : Math.max(0.06, target);
+            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
           })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
       });
     });
@@ -7576,9 +7581,9 @@ window.V03Relation = (function () {
     const c = focus ? (D.PROV_CENTER || {})[focus] : null;
     camera.level = lv;
     if (lv === 'L3') {
-      /* 省区视角要同时看到东南亚来源地：取景放宽，东南亚各国 → 红星 的国际连线才在视野里 */
-      camera.center = [106.2, 21.8];
-      camera.zoom = 3.6;
+      /* 省区视角贴紧本省（湖南），国际连线用"贴边弧线"接到视野边缘，不再把取景拉到整个东南亚 */
+      camera.center = [111.9, 27.4];
+      camera.zoom = 6.4;
     } else {
       camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
       camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
@@ -7829,7 +7834,8 @@ window.V03Relation = (function () {
     rels.forEach(r => {
       const from = pos[r.from], to = pos[r.to];
       if (!from || !to) return;
-      if (!S.state.rel.crossRegion && chart && S.state.rel.view === 'geo') {
+      /* L3（湖南）要保留跨境线（东南亚来源地 → 红星），所以省区视角不做跨区域剔除 */
+      if (!S.state.rel.crossRegion && chart && S.state.rel.view === 'geo' && relLevel() !== 'L3') {
         const inside = point => {const xy=chart.convertToPixel({geoIndex:0},point);return xy && xy[0]>=0 && xy[0]<=dom.canvas.clientWidth && xy[1]>=0 && xy[1]<=dom.canvas.clientHeight;};
         if (inside(from[1]) !== inside(to[1])) return;
       }
@@ -7838,17 +7844,40 @@ window.V03Relation = (function () {
       /* 线条颜色沿用关系类型色（原版基线的彩色流向线）；有关注对象时只压暗无关线 */
       const color = typeColor(r.type);
       const copies = from.length;
+      /* L3：境外来源地不放进视野，而是把它"贴"到视野边缘，用虚线弧指进来（两端都处理，任一端被贴边即为国际线） */
+      let anyClamped = false;
+      const edgeClamp = (arr) => {
+        if (relLevel() !== 'L3' || !chart) return arr;
+        try {
+          const W = dom.canvas.clientWidth, H = dom.canvas.clientHeight, m = 26;
+          if (!(W > 10 && H > 10)) return arr;
+          const out = arr.map((pt) => {
+            const q = chart.convertToPixel({ geoIndex: 0 }, pt); if (!Array.isArray(q)) return pt;
+            if (q[0] >= m && q[0] <= W - m && q[1] >= m && q[1] <= H - m) return pt;
+            const cx = W / 2, cy = H / 2;
+            const k = Math.min((W / 2 - m) / Math.max(1, Math.abs(q[0] - cx)), (H / 2 - m) / Math.max(1, Math.abs(q[1] - cy)));
+            const back = chart.convertFromPixel({ geoIndex: 0 }, [cx + (q[0] - cx) * k, cy + (q[1] - cy) * k]);
+            if (!Array.isArray(back)) return pt;
+            anyClamped = true;
+            return [back[0], back[1]];
+          });
+          return out;
+        } catch (e) { return arr }          /* 取像素失败就按原样画，绝不让它把渲染打断 */
+      };
+      const fromClamped = edgeClamp(from);
+      const toClamped = edgeClamp([to[0]]);
+      const isIntl = relLevel() === 'L3' && anyClamped;
       for (let copy = 0; copy < copies; copy++) {
-      const a = from[copy], b = to[copy].slice();
+      const a = fromClamped[copy], b = toClamped[0].slice();
       if (b[0] - a[0] > 180) b[0] -= 360;
       if (b[0] - a[0] < -180) b[0] += 360;
       out.push({
         id: r.id, coords: [a, b],
         lineStyle: {
-          color: color,
+          color: isIntl ? '#b45309' : color,
           width: Math.max(isFocus ? 1.8 : 1.15, (r.factIds||[]).length>=5 ? 2.6 : (r.factIds||[]).length>=2 ? 1.7 : 1.15),
-          opacity: focus ? (isFocus ? .95 : .08) : (total <= 60 ? .66 : .52),
-          type: 'solid',
+          opacity: isIntl ? .8 : (focus ? (isFocus ? .95 : .08) : (total <= 60 ? .66 : .52)),
+          type: isIntl ? 'dashed' : 'solid',          /* 国际线用虚线，和境内实线区分 */
           curveness: .18
         },
         _focus: isFocus,
@@ -8283,7 +8312,7 @@ window.V03Relation = (function () {
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
     if (ordered.length && ordered[0].id !== lastTopObjId) {
-      if (lastTopObjId) { newFactToast(esc(String(ordered[0].name || '').slice(0, 28))); relFlashStar(ordered[0]); }
+      if (lastTopObjId) { newFactToast('新本体 · ' + esc(String(ordered[0].name || '').slice(0, 26))); relFlashStar(ordered[0]); }
       lastTopObjId = ordered[0].id;
     }
     autoScrollCards(dom.body);
@@ -8471,7 +8500,7 @@ window.V03Sim = (function () {
       region: f.region || '', source: f.source || '', confidence: f.confidence ?? null
     }));
     return {
-      source: 'AgriLink v2.0',
+      source: 'AgriLink v2.1',
       facts,
       relation: relation ? { id: relation.id, type: relation.type, note: relation.note || '', factIds: relation.factIds || [] } : null,
       requirement: promptInput ? promptInput.value.trim() : ''
