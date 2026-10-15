@@ -1,7 +1,7 @@
 {
-  "hash": "ec569c3d8ba8",
-  "git": "0922e5e",
-  "builtAt": "2026-10-13T05:45:25.453Z",
+  "hash": "d10eb918a051",
+  "git": "5d5a4eb",
+  "builtAt": "2026-10-15T09:55:52.736Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -18,6 +18,7 @@
     "src/v03/store.js",
     "src/v03/filter.js",
     "src/v03/globe.js",
+    "src/v03/intake.js",
     "src/v03/fact.js",
     "src/v03/relation.js",
     "src/v03/mirofish-bridge.js",
@@ -40,6 +41,11 @@
     "data/pkg/geo/ports.geojson",
     "data/pkg/geo/airports.geojson",
     "data/pkg/geo/nodes.geojson",
+    "data/pkg2/weather-facts.json",
+    "data/pkg2/airports-large.geojson",
+    "data/pkg2/live-channels.json",
+    "data/pkg2/extra-facts.json",
+    "data/pkg2/global-facts.json",
     "build.mjs",
     "vendor/echarts.min.js",
     "vendor/hls.min.js",
@@ -49,5 +55,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 7266246
+  "bytes": 8717580
 }
