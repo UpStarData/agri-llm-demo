@@ -13,17 +13,12 @@
    ============================================================ */
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '', shownView = '';
+  let root, chart, dom = {}, sig = '', shownView = '', geometrySig = '';
   const globe = window.V03Globe.create();   /* 与事实层共用同一套三维渲染 */
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, roamTimer: null, level: null };
   /* 与事实层一致的三级视角：L1 全球 → L2 中国 → L3 省区。
      3D 放大到极致切二维，二维缩到最小回 3D；点地图与事实层一样逐级下钻。 */
-  const REL_LEVEL = {
-    L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, bounds: [[-25, 72], [335, -56]], box: [1.26, 2.4], inAt: 2.2 },
-    L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, box: [0.86, 3.2], inAt: 2.7, outAt: 0.9 },
-    /* L3 取景同时包含湖南与东南亚来源地，这样国际连线才在视野里 */
-    L3: { map: 'worldChina', center: [106.2, 21.8], zoom: 3.6, box: [2.2, 16] }
-  };
+  const REL_LEVEL = Object.fromEntries(['L1', 'L2', 'L3'].map(lv => [lv, window.V03Fact.viewConfig(lv, '湖南')]));
 
   /* ---------- 实验页确认过的手感：阻尼缩放 + 缓动（与事实层同一套参数） ---------- */
   const FEEL = { step: 1.09, gain: .0003, pinchGain: .00075, maxStep: .022, cap: .62, idle: 280 };
@@ -59,7 +54,7 @@ window.V03Relation = (function () {
   const GRAPH_BOX = [1.26, 3.0];
   const relLevel = () => S.state.rel.level || 'L1';
   const relFocus = () => S.state.rel.focus || null;
-  const levelCfg = () => REL_LEVEL[relLevel()];
+  const levelCfg = () => window.V03Fact.viewConfig(relLevel(), relFocus());
   const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
   const mapPoints = (lng, lat) => relLevel() === 'L1' ? window.V03Fact.worldCopies(lng, lat) : [[lng, lat]];
   const inLevel = (lng, lat) => {
@@ -161,14 +156,23 @@ window.V03Relation = (function () {
       globe.setVisible(S.state.tab === 'relation' && S.state.rel.view === 'globe');
     });
     /* 每新增一条事实：先亮星，再把它的关系线接上（与底部同一路流水事件） */
+    const streamFacts = new Set();
     S.onEvent('stream:line', p => {
       if (S.state.tab !== 'relation' || !p || !p.fact) return;
       const fact = p.fact;
+      if (streamFacts.has(fact.id)) return;
+      streamFacts.add(fact.id);
       const objects = (fact.objects || []).map(id => D.objById(id)).filter(Boolean);
       const ids = new Set(objects.map(o => o.id));
       const relations = D.RELATIONS.filter(r => ids.has(r.from) || ids.has(r.to)).slice(0, 6);
       /* 没有本体对象时（例如事件型事实）只按坐标亮一颗星 */
       flashObjects(objects.length ? objects : [fact], relations);
+      relFlashStar(fact);
+      receiveObjects(objects);
+    });
+    S.onEvent('data:ingested', p => {
+      (p.facts || []).forEach(relFlashStar);
+      receiveObjects(p.objects || []);
     });
   }
 
@@ -207,18 +211,9 @@ window.V03Relation = (function () {
   }
   /* 层级变化（含被其它地方改写）时把相机对准该层级 */
   function fitLevel() {
-    const lv = relLevel(), t = REL_LEVEL[lv];
-    const focus = relFocus();                                  /* 原来这里错用了未定义的 focus，省区视角一直没走到覆盖值 */
-    const c = focus ? (D.PROV_CENTER || {})[focus] : null;
-    camera.level = lv;
-    if (lv === 'L3') {
-      /* 省区视角贴紧本省（湖南），国际连线用"贴边弧线"接到视野边缘，不再把取景拉到整个东南亚 */
-      camera.center = [111.9, 27.4];
-      camera.zoom = 6.4;
-    } else {
-      camera.center = c ? [(PROV_VIEW[focus] || c)[0], (PROV_VIEW[focus] || c)[1]] : (t.center ? t.center.slice() : camera.center);
-      camera.zoom = c ? (PROV_VIEW[focus] ? PROV_VIEW[focus][2] : c[2]) : t.zoom;
-    }
+    const t = levelCfg();
+    camera.level = relLevel() + '|' + (relFocus() || '');
+    camera.center = t.center.slice(); camera.zoom = t.zoom;
   }
 
   function mapReady() {
@@ -248,7 +243,7 @@ window.V03Relation = (function () {
     if (chart) return chart;
     mapReady();
     if (!dom.canvas || !window.echarts) return null;
-    chart = echarts.init(dom.canvas);
+    chart = echarts.init(dom.canvas, null, { devicePixelRatio: Math.min(1.25, window.devicePixelRatio || 1) });
     chart.on('click', p => {
       const sid = p.seriesId || '';
       if (sid === 'relGraph') {
@@ -268,7 +263,7 @@ window.V03Relation = (function () {
         if (isRegionObj(robj)) return drillIn();
         return openObject(p.data.objId);
       }
-      if (sid === 'relLine' && p.data && p.data.id) {
+      if ((sid === 'relLine' || sid === 'relFocusLine') && p.data && p.data.id) {
         const r = D.relById(p.data.id);
         if (r) S.set({ rel: { sel: r.id, kind: 'relation', stack: S.state.rel.stack.concat([{ kind: 'relation', id: r.id }]) } });
         return;
@@ -331,7 +326,7 @@ window.V03Relation = (function () {
   /* 自绘提示：ECharts 的 tooltip 在 notMerge 重设后会命中已释放的容器节点（控制台报错），改为自己画 */
   function tipHTML(p) {
     const sid = p.seriesId || '';
-    if (sid === 'relLine' || (sid === 'relGraph' && p.dataType === 'edge')) {
+    if (sid === 'relLine' || sid === 'relFocusLine' || (sid === 'relGraph' && p.dataType === 'edge')) {
       const r = D.relById(p.data && p.data.id);
       if (!r) return '';
       const a = D.objById(r.from), b = D.objById(r.to);
@@ -346,7 +341,7 @@ window.V03Relation = (function () {
     const html = tipHTML(p);
     if (!html) { hideTip(); return; }
     dom.tip.innerHTML = html;
-    dom.tip.dataset.kind = (p.seriesId === 'relLine' || p.dataType === 'edge') ? 'relation' : 'object';
+    dom.tip.dataset.kind = (p.seriesId === 'relLine' || p.seriesId === 'relFocusLine' || p.dataType === 'edge') ? 'relation' : 'object';
     dom.tip.hidden = false; tipVisible = true;
     positionTip();
   }
@@ -458,73 +453,79 @@ window.V03Relation = (function () {
   };
 
   function linesData(objs, rels, focus, reveal) {
-    const pos = {};
-    objs.forEach(o => { if (o.geo !== false && o.lat != null && inLevel(o.lng, o.lat)) pos[o.id] = mapPoints(o.lng, o.lat); });
-    const out = [], labels = [], related = new Set();
-    const total = rels.filter(r => pos[r.from] && pos[r.to]).length;
-    rels.forEach(r => {
-      const from = pos[r.from], to = pos[r.to];
-      if (!from || !to) return;
-      /* L3（湖南）要保留跨境线（东南亚来源地 → 红星），所以省区视角不做跨区域剔除 */
-      if (!S.state.rel.crossRegion && chart && S.state.rel.view === 'geo' && relLevel() !== 'L3') {
-        const inside = point => {const xy=chart.convertToPixel({geoIndex:0},point);return xy && xy[0]>=0 && xy[0]<=dom.canvas.clientWidth && xy[1]>=0 && xy[1]<=dom.canvas.clientHeight;};
-        if (inside(from[1]) !== inside(to[1])) return;
+    const pos = new Map(objs.filter(o => o.geo !== false && Number.isFinite(o.lng) && Number.isFinite(o.lat) && Math.abs(o.lng) <= 180 && Math.abs(o.lat) <= 90).map(o => [o.id, o]));
+    const hash = text => { let h = 0; for (const c of text) h = (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0; return h; };
+    const records = [], seen = new Set(), out = [], labels = [], related = new Set();
+    for (const r of rels) {
+      const a = pos.get(r.from), b = pos.get(r.to);
+      if (!a || !b || !inLevel(a.lng, a.lat) || !inLevel(b.lng, b.lat)) continue;
+      const insideA = a.lng >= 73 && a.lng <= 136 && a.lat >= 17.5 && a.lat <= 54.5;
+      const insideB = b.lng >= 73 && b.lng <= 136 && b.lat >= 17.5 && b.lat <= 54.5;
+      // Province view includes real cross-border links into the province, not foreign-to-foreign links.
+      if (relLevel() === 'L3' && !insideA && !insideB) continue;
+      const delta = Math.hypot(a.lng - b.lng, a.lat - b.lat);
+      if (delta < .03) continue;
+      const isFocus = !!focus && (r.from === focus || r.to === focus);
+      if (!isFocus && (r.confidence < .6 || !(r.factIds || []).length)) continue;
+      const geoKey = o => [o.lng.toFixed(2), o.lat.toFixed(2)].join(',');
+      const key = [geoKey(a), geoKey(b), r.type].join('|');
+      if (seen.has(key)) continue; seen.add(key);
+      const score = (r.factIds || []).length * 4 + r.confidence * 10;
+      const bucket = [Math.floor((a.lng + 180) / 45), Math.floor((a.lat + 90) / 30), Math.floor((b.lng + 180) / 45), Math.floor((b.lat + 90) / 30)].join('|');
+      records.push({ r, a, b, isFocus, score, bucket });
+    }
+    records.sort((a, b) => Number(b.isFocus) - Number(a.isFocus) || b.score - a.score || a.r.id.localeCompare(b.r.id));
+    // Round robin over geographic corridors prevents a single Pacific hub taking the whole budget.
+    const buckets = new Map();
+    records.forEach(x => { if (!buckets.has(x.bucket)) buckets.set(x.bucket, []); buckets.get(x.bucket).push(x); });
+    const chosen = [], endpointCounts = new Map(), midpointCounts = new Map();
+    for (let i = 0; i < records.length && chosen.length < 96; i++) {
+      for (const bucket of buckets.values()) {
+        const x = bucket[i]; if (!x || chosen.length >= 96) continue;
+        let a = [x.a.lng, x.a.lat], b = [x.b.lng, x.b.lat];
+        if (relLevel() === 'L1') {
+          a[0] = V03Fact.worldLongitude(a[0]);
+          b[0] = V03Fact.worldLongitude(b[0]);
+          b[0] += Math.round((a[0] - b[0]) / 360) * 360;
+          const shift = Math.round((camera.center[0] - (a[0] + b[0]) / 2) / 360) * 360;
+          a[0] += shift; b[0] += shift;
+        }
+        const midpoint = [Math.floor(((a[0] + b[0]) / 2 + 360) % 360 / 30), Math.floor(((a[1] + b[1]) / 2 + 90) / 20)].join('|');
+        if (!x.isFocus && ((midpointCounts.get(midpoint) || 0) >= 5 || (endpointCounts.get(x.r.from) || 0) >= 7 || (endpointCounts.get(x.r.to) || 0) >= 7)) continue;
+        midpointCounts.set(midpoint, (midpointCounts.get(midpoint) || 0) + 1);
+        [x.r.from, x.r.to].forEach(id => endpointCounts.set(id, (endpointCounts.get(id) || 0) + 1));
+        chosen.push({ ...x, coords: [a, b] });
       }
-      const isFocus = focus && (r.from === focus || r.to === focus);
-      if (isFocus) related.add(r.id);
-      /* 线条颜色沿用关系类型色（原版基线的彩色流向线）；有关注对象时只压暗无关线 */
-      const color = typeColor(r.type);
-      const copies = from.length;
-      /* L3：境外来源地不放进视野，而是把它"贴"到视野边缘，用虚线弧指进来（两端都处理，任一端被贴边即为国际线） */
-      let anyClamped = false;
-      const edgeClamp = (arr) => {
-        if (relLevel() !== 'L3' || !chart) return arr;
-        try {
-          const W = dom.canvas.clientWidth, H = dom.canvas.clientHeight, m = 26;
-          if (!(W > 10 && H > 10)) return arr;
-          const out = arr.map((pt) => {
-            const q = chart.convertToPixel({ geoIndex: 0 }, pt); if (!Array.isArray(q)) return pt;
-            if (q[0] >= m && q[0] <= W - m && q[1] >= m && q[1] <= H - m) return pt;
-            const cx = W / 2, cy = H / 2;
-            const k = Math.min((W / 2 - m) / Math.max(1, Math.abs(q[0] - cx)), (H / 2 - m) / Math.max(1, Math.abs(q[1] - cy)));
-            const back = chart.convertFromPixel({ geoIndex: 0 }, [cx + (q[0] - cx) * k, cy + (q[1] - cy) * k]);
-            if (!Array.isArray(back)) return pt;
-            anyClamped = true;
-            return [back[0], back[1]];
-          });
-          return out;
-        } catch (e) { return arr }          /* 取像素失败就按原样画，绝不让它把渲染打断 */
-      };
-      const fromClamped = edgeClamp(from);
-      const toClamped = edgeClamp([to[0]]);
-      const isIntl = relLevel() === 'L3' && anyClamped;
-      for (let copy = 0; copy < copies; copy++) {
-      const a = fromClamped[copy], b = toClamped[0].slice();
-      if (b[0] - a[0] > 180) b[0] -= 360;
-      if (b[0] - a[0] < -180) b[0] += 360;
-      out.push({
-        id: r.id, coords: [a, b],
-        lineStyle: {
-          color: isIntl ? '#b45309' : color,
-          width: Math.max(isFocus ? 1.8 : 1.15, (r.factIds||[]).length>=5 ? 2.6 : (r.factIds||[]).length>=2 ? 1.7 : 1.15),
-          opacity: isIntl ? .8 : (focus ? (isFocus ? .95 : .08) : (total <= 60 ? .66 : .52)),
-          type: isIntl ? 'dashed' : 'solid',          /* 国际线用虚线，和境内实线区分 */
-          curveness: .18
-        },
-        _focus: isFocus,
-        _score: (r.factIds || []).length * 4 + (r.confidence || 0) * 10
-      });
-      /* 关系语义标签：只在可辨认的场景出现（焦点相关线，或全局线数量很少时） */
-      if (isFocus || (!focus && total <= 40)) {
-        labels.push({
-          id: r.id + '-l', coords: [a, b],
-          label: { show: true, position: 'middle', formatter: r.type, fontSize: 9, color: palette().ink,
-            backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3 },
-          lineStyle: { opacity: 0 }
+    }
+    const total = chosen.length;
+    for (const x of chosen) {
+      const { r, isFocus } = x;
+      let coords = x.coords, international = false;
+      if (relLevel() === 'L3' && chart) {
+        const W = dom.canvas.clientWidth, H = dom.canvas.clientHeight, m = 28;
+        coords = coords.map(pt => {
+          const q = chart.convertToPixel({ geoIndex: 0 }, pt);
+          if (!q || !q.every(Number.isFinite) || q[0] >= m && q[0] <= W - m && q[1] >= m && q[1] <= H - m) return pt;
+          international = true;
+          const k = Math.min((W / 2 - m) / Math.max(1, Math.abs(q[0] - W / 2)), (H / 2 - m) / Math.max(1, Math.abs(q[1] - H / 2)));
+          const p = chart.convertFromPixel({ geoIndex: 0 }, [W / 2 + (q[0] - W / 2) * k, H / 2 + (q[1] - H / 2) * k]);
+          return Array.isArray(p) && p.every(Number.isFinite) ? p : pt;
         });
       }
+      const h = hash(r.id), sign = h % 2 ? 1 : -1;
+      const curveness = sign * (.06 + (h % 5) * .035);
+      const line = { id: r.id, coords,
+        lineStyle: { color: typeColor(r.type), width: isFocus ? 1.8 : 1.05,
+          opacity: focus ? (isFocus ? .9 : .1) : .48, type: international ? 'dashed' : 'solid', curveness },
+        _focus: isFocus, _score: x.score };
+      out.push(line);
+      if (isFocus) {
+        related.add(r.id);
+        labels.push({ id: r.id + '-l', coords, label: { show: true, position: 'middle', formatter: r.type,
+          fontSize: 9, color: palette().ink, backgroundColor: palette().labelBg, padding: [1, 3] },
+          lineStyle: { opacity: 0, curveness } });
       }
-    });
+    }
     /* 入场渐进：先把本体点亮，再一条一条把线画出来（焦点线优先） */
     if (reveal && reveal.on && reveal.t < 1) {
       const t = reveal.t;
@@ -606,7 +607,7 @@ window.V03Relation = (function () {
       /* 每个关系色一条流动series，id 由颜色固定，不会有旧数据残留 */
       id: 'relFlow-' + color.replace(/[^a-z0-9]/gi, ''),
       type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false,
-      data: groups.get(color).map(l => ({ id: l.id + '-f', coords: l.coords, lineStyle: { opacity: 0, curveness: .22 } })),
+      data: groups.get(color).map(l => ({ id: l.id + '-f', coords: l.coords, lineStyle: { opacity: 0, curveness: l.lineStyle.curveness } })),
       effect: { show: true, period: FLOW_PERIODS[k % FLOW_PERIODS.length] * (relLevel() === 'L2' ? 1.7 : 1),   /* 中国视角放慢 */
         trailLength: .38, symbol: 'circle', symbolSize: 4.6, color },
       lineStyle: { curveness: .22, opacity: 0 }
@@ -661,7 +662,7 @@ window.V03Relation = (function () {
       backgroundColor: 'transparent',
       geo: {
         map: cfg.map, roam: true, zoom: camera.zoom, center: camera.center.slice(),
-        boundingCoords: lv === 'L1' ? cfg.bounds : undefined,
+        boundingCoords: cfg.bounds,
         itemStyle: { areaColor: p.land, borderColor: p.line, borderWidth: .7 },
         regions: regionNames.filter(Boolean).flatMap(name => (lv === 'L1' ? [-1, 0, 1].map(copy => copy ? name + '@' + copy : name) : [name])
           .map(displayName => ({ name: displayName, itemStyle: { areaColor: window.V03Fact.mapRegionColor(name, lv) } }))),
@@ -671,9 +672,11 @@ window.V03Relation = (function () {
       tooltip: { show: false },   /* 提示由 .rel-tip 自绘，见 showTip() */
       series: [
         { id: 'relLineGlow', type: 'lines', coordinateSystem: 'geo', silent: true, z: 2, polyline: false, animation: false,
-          data: focusLines.map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .12, curveness: .18 } })) },
-        { id: 'relLine', type: 'lines', coordinateSystem: 'geo', z: 3, polyline: false, data: lines, animation: false,
+          data: focusLines.map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .12, curveness: l.lineStyle.curveness } })) },
+        { id: 'relLine', type: 'lines', coordinateSystem: 'geo', silent: true, z: 3, polyline: false, data: lines, animation: false,
           lineStyle: { curveness: .22 } },
+        { id: 'relFocusLine', type: 'lines', coordinateSystem: 'geo', silent: false, z: 3, polyline: false,
+          data: focusLines, animation: false, cursor: 'pointer' },
         ...flowSeries(flowLines, p, 90),
         { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels, animation: false },
         { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer', animation: false },
@@ -726,7 +729,7 @@ window.V03Relation = (function () {
     };
   }
 
-  function paintFocus() {
+  function paintFocus(includeFlow = false) {
     if (S.state.rel.view !== 'geo') return;
     const st = S.state;
     if (!chart) return;
@@ -735,9 +738,10 @@ window.V03Relation = (function () {
     const flowLines = pickFlowLines(lines, lines.filter(l => l._focus), 90);
     chart.setOption({
       series: [
-        ...flowSeries(flowLines, palette(), 90),
-        { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .12, curveness: .18 } })) },
+        ...(includeFlow ? flowSeries(flowLines, palette(), 90) : []),
+        { id: 'relLineGlow', data: lines.filter(l => l._focus).map(l => ({ id: l.id + '-g', coords: l.coords, lineStyle: { color: l.lineStyle.color, width: 4, opacity: .12, curveness: l.lineStyle.curveness } })) },
         { id: 'relLine', data: lines, animation: false },
+        { id: 'relFocusLine', data: lines.filter(l => l._focus), animation: false },
         { id: 'relLineLabel', data: labels, animation: false },
         { id: 'relNode', data: nodesData(F.objects(st), focusId(), intro) }
       ]
@@ -749,16 +753,21 @@ window.V03Relation = (function () {
   let intro = { on: false, t: 0, t0: 0, timer: 0 };
   let fresh = [], freshSeq = 0;
 
+  const visitedViews = new Set();
   function beginIntro() {
     if (S.state.rel.view !== 'geo') return;
+    const key = relLevel() + '|' + (relFocus() || '');
+    clearInterval(intro.timer); intro.timer = 0;
+    if (visitedViews.has(key)) { intro.on = false; intro.t = 1; return; }
+    visitedViews.add(key);
     intro.on = true; intro.t = 0; intro.t0 = performance.now();
     clearInterval(intro.timer);
     intro.timer = setInterval(() => {
-      if (S.state.rel.view !== 'geo') { clearInterval(intro.timer); intro.timer = 0; intro.on = false; return; }
+      if (S.state.tab !== 'relation' || S.state.rel.view !== 'geo') { clearInterval(intro.timer); intro.timer = 0; intro.on = false; return; }
       /* 用户正在拖动地图时先让路，别和漫游抢帧 */
       if (dragging || camera.raf) { intro.t0 += 60; return; }
       intro.t = Math.min(1, (performance.now() - intro.t0) / INTRO_MS);
-      paintFocus();
+      paintFocus(true);
       if (intro.t >= 1) { clearInterval(intro.timer); intro.timer = 0; intro.on = false; }
     }, 60);
   }
@@ -819,7 +828,7 @@ window.V03Relation = (function () {
   /* ---------- 卡片分类与字段 ----------
      不展示行政/区域类；从这些分类里各摘自己的核心字段（每类字段不同） ---------- */
   const CARD_KINDS = ['variety', 'commodity', 'market', 'channel', 'operator', 'company',
-    'institution', 'agency', 'logistics', 'facility', 'resource', 'base', 'metric', 'person'];
+    'institution', 'agency', 'logistics', 'facility', 'resource', 'base', 'environment', 'metric', 'person'];
   const KIND_FIELDS = {
     variety: ['品类', '品种', '等级', '产季', '可用量', '主产地', '价格区间', '口感'],
     commodity: ['品类', '品种', '等级', '产季', '可用量', '主产地', '价格区间', '口感'],
@@ -850,6 +859,7 @@ window.V03Relation = (function () {
     const stepFn = () => {
       const a = el.__auto;
       a.raf = requestAnimationFrame(stepFn);
+      if (S.state.tab !== 'relation' || !S.state.panels.cards || document.hidden) return;
       if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
       if (Date.now() < a.paused) return;
       if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
@@ -864,28 +874,44 @@ window.V03Relation = (function () {
     el.addEventListener('pointerdown', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) });
     el.addEventListener('wheel', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) }, { passive: true });
   }
-  function newFactToast(msg) {
-    const host = document.getElementById('toastHost') || (() => { const d = document.createElement('div'); d.id = 'toastHost'; document.body.appendChild(d); return d })();
-    const n = document.createElement('div'); n.className = 'nfact-toast';
-    n.innerHTML = '<b>新事实</b>' + msg;
-    host.appendChild(n);
-    requestAnimationFrame(() => n.classList.add('on'));
-    setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3600);
-  }
-  let lastTopObjId = null;
-  /* 新本体接入：同样闪一颗星（与事实层同一套观感） */
+  const freshOrder = [], seenArrivals = new Set();
   function relFlashStar(o) {
-    if (!o || o.lng == null || !chart) return;
-    let px = null;
-    try { px = chart.convertToPixel({ geoIndex: 0 }, [o.lng, o.lat]); } catch (e) { px = null; }
-    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
-    const host = dom.canvas || chart.getDom && chart.getDom(); if (!host) return;
-    const box = host.getBoundingClientRect();
-    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) return;
-    const d = document.createElement('div');
-    d.className = 'star-flash ' + ((o.degree || 0) >= 8 ? 'bright' : 'dim');
-    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px'; d.innerHTML = '<i></i>';
-    host.appendChild(d); setTimeout(() => d.remove(), 1000);
+    if (!o || !Number.isFinite(o.lng) || S.state.tab !== 'relation') return false;
+    let px = S.state.rel.view === 'globe' ? globe.screenPoint(o.lng, o.lat) : null;
+    if (S.state.rel.view === 'geo' && chart) {
+      for (const value of mapPoints(o.lng, o.lat)) {
+        const q = chart.convertToPixel({ geoIndex: 0 }, value);
+        if (q && q.every(Number.isFinite) && q[0] >= 0 && q[0] <= dom.canvas.clientWidth && q[1] >= 0 && q[1] <= dom.canvas.clientHeight) { px = q; break; }
+      }
+    }
+    return V03Intake.star(dom.main, px, o.id);
+  }
+  function receiveObjects(objects, force = false) {
+    const list = objects.filter(o => o && D.objById(o.id) && CARD_KINDS.includes(o.domain) && (force || !seenArrivals.has(o.id)));
+    list.forEach(o => {
+      seenArrivals.add(o.id);
+      const at = freshOrder.indexOf(o.id); if (at >= 0) freshOrder.splice(at, 1);
+      freshOrder.unshift(o.id);
+    });
+    freshOrder.length = Math.min(20, freshOrder.length);
+    if (!list.length || S.state.tab !== 'relation') return;
+    renderPanel(S.state, F.objects(S.state));
+    V03Intake.note(dom.side, '新本体', list[0].name);
+    objects.forEach(relFlashStar);
+    dom.body.scrollTop = 0;
+    if (dom.body.__auto) dom.body.__auto.paused = Date.now() + 4500;
+  }
+  function notifyNewest() {
+    const objs = F.objects(S.state);
+    const mapped = objs.filter(o => o.geo !== false && inLevel(o.lng, o.lat));
+    const visible = mapped.find(o => {
+      if (S.state.rel.view === 'globe') return globe.screenPoint(o.lng, o.lat);
+      const q = chart && chart.convertToPixel({ geoIndex: 0 }, mapPoints(o.lng, o.lat)[relLevel() === 'L1' ? 1 : 0]);
+      return q && q[0] > 40 && q[0] < dom.canvas.clientWidth - 40 && q[1] > 40 && q[1] < dom.canvas.clientHeight - 40;
+    });
+    const card = objs.find(o => CARD_KINDS.includes(o.domain));
+    receiveObjects([visible, card].filter(Boolean), true);
+    return (visible || card)?.id;
   }
 
   function renderPanel(st, objs) {
@@ -897,7 +923,7 @@ window.V03Relation = (function () {
       return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t);
     });
     const nogeo = kept.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
-    const ordered = nogeo;
+    const ordered = nogeo.sort((a, b) => (freshOrder.indexOf(a.id) < 0 ? 1e9 : freshOrder.indexOf(a.id)) - (freshOrder.indexOf(b.id) < 0 ? 1e9 : freshOrder.indexOf(b.id)));
     const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
@@ -942,10 +968,7 @@ window.V03Relation = (function () {
       ;
     const more = dom.body.querySelector('#relMore');
     if (more) more.onclick = () => S.set({ rel: { allCards: !st.rel.allCards } });
-    if (ordered.length && ordered[0].id !== lastTopObjId) {
-      if (lastTopObjId) { newFactToast('新本体 · ' + esc(String(ordered[0].name || '').slice(0, 26))); relFlashStar(ordered[0]); }
-      lastTopObjId = ordered[0].id;
-    }
+    dom.body.querySelectorAll('[data-obj]').forEach(el => el.classList.toggle('is-fresh', freshOrder.includes(el.dataset.obj)));
     autoScrollCards(dom.body);
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
   }
@@ -1044,10 +1067,10 @@ window.V03Relation = (function () {
     const st = S.state;
     globe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, D.revision, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
-    if (camera.level !== st.rel.level) fitLevel();
+    if (camera.level !== relLevel() + '|' + (relFocus() || '')) fitLevel();
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
     if (dom.hint) {
@@ -1087,8 +1110,18 @@ window.V03Relation = (function () {
       if (st.rel.view === 'geo') { camera.zoom = Math.max(levelCfg().box[0], Math.min(levelCfg().box[1], camera.zoom)); }
       /* 图层不可见时容器是 0 尺寸，此时 resize 会让 ECharts 在空画布上 drawImage 报错 */
       if (dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0) c.resize();
-      c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
-      if (st.rel.view === 'geo') beginIntro();
+      const nextGeometry = JSON.stringify([st.rel.view, relLevel(), relFocus(), st.rel.search, st.varieties,
+        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme, D.revision]);
+      if (geometrySig !== nextGeometry) {
+        if (st.rel.view === 'geo') {
+          beginIntro();
+          const cfg = levelCfg();
+          c.setOption({ geo: { map: cfg.map, center: camera.center.slice(), zoom: camera.zoom,
+            boundingCoords: cfg.bounds, itemStyle: { areaColor: palette().land } }, series: [] }, { notMerge: true });
+        }
+        c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
+        geometrySig = nextGeometry;
+      } else if (st.rel.view === 'geo') paintFocus();
     }
 
     renderPanel(st, objs);
@@ -1106,6 +1139,14 @@ window.V03Relation = (function () {
       globe: globe.debug()
     };
   };
-  const setVisible = active => globe.setVisible(active && S.state.rel.view === 'globe');
-  return { mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
+  let mapAnimationPaused = false;
+  const setVisible = active => {
+    globe.setVisible(active && S.state.rel.view === 'globe');
+    const paused = !active || S.state.rel.view === 'globe';
+    if (chart && paused !== mapAnimationPaused) {
+      if (paused) chart.getZr().animation.stop(); else chart.getZr().animation.start();
+      mapAnimationPaused = paused;
+    }
+  };
+  return { notifyNewest, receiveObjects, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
 })();

@@ -16,7 +16,7 @@ window.V03Pkg = (function () {
   const EVIDENCE_IN = P.evidence || [], SOURCES_IN = P.sources || [], OBS_IN = P.observations || [];
   /* D0/D4：第三方补充包（重点农产品补齐事实 + Open-Meteo 天气事实 + OurAirports 大型机场 + 公开直播频道） */
   const P2 = window.__AGRI_PKG2__ || {};
-  const EX_FACTS = (P2.extra || []).concat(P2.weather || []);
+  const EX_FACTS = (P2.extra || []).concat(P2.weather || [], P2.global || []);
   const STREAM_IN = P.stream || { events: [], loopMs: 1 };
 
   /* ---------- 类型 / 分类 字典（事实层冷色色系，与关联层暖色系区分） ---------- */
@@ -152,6 +152,7 @@ window.V03Pkg = (function () {
     news: c => c.sourceName || '新闻'
   };
   function evidenceOf(f) {
+    if (Array.isArray(f.evidence) && f.evidence.length) return f.evidence;
     const list = evidenceByFact[f.factId] || [];
     if (list.length) {
       return list.map(e => {

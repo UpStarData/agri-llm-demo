@@ -82,7 +82,7 @@ window.V03Globe = (function () {
   };
 
   /* ---------- 入场动效 ---------- */
-  let introT0 = 0, introOn = false;
+  let introT0 = 0, introOn = false, introStarted = false;
   const NODE_SPAN = 1500, LINE_BASE = 1400, LINE_SPAN = 1500, LINE_DUR = 620, LIT_DUR = 460;
   let nodeDelay = [], routeDelay = [], flashes = [];
 
@@ -168,6 +168,7 @@ window.V03Globe = (function () {
       const keep = new Set(d.keep || []);
       nodes = ranked.filter(o => keep.has(o.id) || ranked.indexOf(o) < 150).slice(0, 170);
       const limit = d.limit || 44;
+      const oldRoutes = new Map(routes.map(r => [r.id, r]));
       routes = relations.map(r => ({ r, a: geoIndex.get(r.from), b: geoIndex.get(r.to) })).filter(x => x.a && x.b &&
         Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat) > 10)
         .map(x => ({
@@ -176,7 +177,7 @@ window.V03Globe = (function () {
         }))
         .sort((a, b) => Number(b.keep) - Number(a.keep) || b.score - a.score)
         .slice(0, limit)
-        .map((route, i) => ({ ...route, phase: (i * .37) % 1, speed: .17 + (i % 5) * .035, drawFrom: 0 }));
+        .map((route, i) => ({ ...route, phase: oldRoutes.get(route.id)?.phase ?? (i * .37) % 1, speed: oldRoutes.get(route.id)?.speed ?? .17 + (i % 5) * .035, drawFrom: oldRoutes.get(route.id)?.drawFrom || 0 }));
       nodes = nodes.slice().sort((a, b) => Number(keep.has(b.id)) - Number(keep.has(a.id)));
       points = []; marks = [];
     }
@@ -202,7 +203,7 @@ window.V03Globe = (function () {
       if (route) route.drawFrom = now + 180;
     });
   }
-  function replay() { beginIntro(); }
+  function replay() { if (!introStarted) { beginIntro(); introStarted = true; } }
 
   function draw(now) {
     const w = canvas.clientWidth, h = canvas.clientHeight, cx = w * .5, cy = h * .5;
@@ -451,7 +452,7 @@ window.V03Globe = (function () {
     if (!was) canvas.classList.remove('view-fade');
     if (!next) { if (raf) cancelAnimationFrame(raf); raf = 0; return; }
     resize();
-    if (!was) { beginIntro(); radiusScale = .38; canvas.classList.add('view-fade'); void canvas.offsetWidth; }   /* 每次回到三维都从舒适半径开始，留出放大余量 */
+    if (!was) { if (!introStarted) { beginIntro(); introStarted = true; } radiusScale = .38; canvas.classList.add('view-fade'); void canvas.offsetWidth; }   /* 每次回到三维都从舒适半径开始，留出放大余量 */
     if (!raf) raf = requestAnimationFrame(loop);
   }
 
@@ -471,7 +472,13 @@ window.V03Globe = (function () {
     nodes: nodes.length, routes: routes.length, points: points.length, marks: marks.length,
     hits: hits.length, flashes: flashes.length, intro: introOn ? Math.round(performance.now() - introT0) : -1
   });
-  return { mount, update, setVisible, zoomBy, zoomByFactor, zoomState, flash, replay, debug };
+  function screenPoint(lng, lat) {
+    if (!visible || !canvas) return null;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    const p = project(lng, lat, w / 2, h / 2, Math.min(w, h) * radiusScale);
+    return p.z > 0 ? [p.x, p.y] : null;
+  }
+  return { mount, update, setVisible, zoomBy, zoomByFactor, zoomState, flash, replay, debug, screenPoint };
   }
   return { create };
 })();
