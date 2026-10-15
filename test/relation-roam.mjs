@@ -10,6 +10,8 @@ try {
   await page.waitForFunction(() => window.__AGRI_READY === true);
   await page.evaluate(() => V03Store.set({ tab: 'relation', rel: { view: 'geo' } }));
   await page.waitForFunction(() => echarts.getInstanceByDom(document.getElementById('relCanvas'))?.getOption().geo?.length);
+  // Test steady-state roaming after the deliberate first-visit reveal finishes.
+  await page.waitForFunction(() => V03Relation.debug().intro === -1);
   await page.evaluate(() => {
     const chart = echarts.getInstanceByDom(document.getElementById('relCanvas'));
     const group = chart.getViewOfComponentModel(chart.getModel().getComponent('geo', 0)).group.childAt(0);

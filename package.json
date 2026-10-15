@@ -1,6 +1,6 @@
 {
   "name": "agri-llm-demo",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "description": "AgriLink 农链 V1.0.9 · 新增配色 3（Atlas/iipmaps 抽色）与配色选择器",
   "type": "module",
@@ -13,7 +13,7 @@
     "test": "node test/prd-v101.mjs",
     "test:v03": "node test/v03.mjs",
     "shots": "node test/shots-v03.mjs",
-    "test:all": "node test/prd-v101.mjs && node test/world-wrap-v0813.mjs && node test/relation-roam.mjs",
+    "test:all": "node test/prd-v101.mjs && node test/world-wrap-v0813.mjs && node test/relation-roam.mjs && node test/intake-map-regression.mjs",
     "compare": "node test/compare-v03.mjs",
     "fonts": "python3 tools/subset-fonts.py",
     "shots:v2": "node test/shots-v2.mjs",
