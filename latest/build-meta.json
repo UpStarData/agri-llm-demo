@@ -1,7 +1,7 @@
 {
-  "hash": "d10eb918a051",
-  "git": "5d5a4eb",
-  "builtAt": "2026-10-15T09:55:52.736Z",
+  "hash": "ba23e708a923",
+  "git": "0a3f338",
+  "builtAt": "2026-10-15T12:37:14.150Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -19,6 +19,8 @@
     "src/v03/filter.js",
     "src/v03/globe.js",
     "src/v03/intake.js",
+    "src/v03/media.js",
+    "src/v03/feed.js",
     "src/v03/fact.js",
     "src/v03/relation.js",
     "src/v03/mirofish-bridge.js",
@@ -46,6 +48,10 @@
     "data/pkg2/live-channels.json",
     "data/pkg2/extra-facts.json",
     "data/pkg2/global-facts.json",
+    "data/pkg2/v23-weather.json",
+    "data/pkg2/v23-projects.json",
+    "data/pkg2/v23-streams.json",
+    "data/pkg2/v23-media.json",
     "build.mjs",
     "vendor/echarts.min.js",
     "vendor/hls.min.js",
@@ -55,5 +61,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 8717580
+  "bytes": 13419829
 }
