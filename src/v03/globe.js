@@ -107,7 +107,7 @@ window.V03Globe = (function () {
       if (wasMove) return;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left, y = e.clientY - rect.top;
-      const hit = hits.find(h => Math.hypot(h.x - x, h.y - y) < 10);
+      const hit = hits.find(h => h.kind!=='relation' && Math.hypot(h.x - x, h.y - y) < 10) || hits.find(h => Math.hypot(h.x - x, h.y - y) < 9);
       if (hit) return onPick(hit.kind, hit.id);
       /* 没有点到点：任意区域（含海洋）都进入二维全球视角 */
       onZoomEdge('surface');
@@ -166,14 +166,15 @@ window.V03Globe = (function () {
       relations.forEach(r => { degree.set(r.from, (degree.get(r.from) || 0) + 1); degree.set(r.to, (degree.get(r.to) || 0) + 1); });
       const ranked = [...geoIndex.values()].sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
       const keep = new Set(d.keep || []);
-      nodes = ranked.filter(o => keep.has(o.id) || ranked.indexOf(o) < 150).slice(0, 170);
+      nodes = window.V03Feed ? V03Feed.sampleGeo(ranked,220,keep) : ranked.slice(0,170);
       const limit = d.limit || 44;
       const oldRoutes = new Map(routes.map(r => [r.id, r]));
       routes = relations.map(r => ({ r, a: geoIndex.get(r.from), b: geoIndex.get(r.to) })).filter(x => x.a && x.b &&
         Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat) > 10)
         .map(x => ({
-          id: x.r.id, points: arc(x.a, x.b), color: colorOf(x.r.type), keep: keep.has(x.r.id),
-          score: Math.min(120, Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat)) + (x.r.confidence || 0) * 24
+          id: x.r.id, points: arc(x.a, x.b), color: colorOf(x.r.type), keep: keep.has(x.r.id)||keep.has(x.r.from)||keep.has(x.r.to),
+          important:x.r.priority==='high'||(x.r.factIds||[]).length>=6,
+          score: Math.min(120, Math.hypot(x.a.lng - x.b.lng, x.a.lat - x.b.lat)) + (x.r.confidence || 0) * 24 + (x.r.priority==='high'?100:0)
         }))
         .sort((a, b) => Number(b.keep) - Number(a.keep) || b.score - a.score)
         .slice(0, limit)
@@ -335,7 +336,9 @@ window.V03Globe = (function () {
         if (pt.z <= 0) continue;
         if (j === 0 || pts[j - 1].z <= 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
       }
-      ctx.strokeStyle = hexA(route.color, .52); ctx.lineWidth = 1.35; ctx.stroke();
+      const opacity=route.keep?.85:route.important?.28:.025;
+      ctx.strokeStyle = hexA(route.color, opacity); ctx.lineWidth = route.keep?1.9:1.15; ctx.stroke();
+      if(opacity>=.08)for(let j=1;j<upto;j++){if(pts[j].z>0)hits.push({x:pts[j].x,y:pts[j].y,kind:'relation',id:route.id});}
       if (drawn < 1) {
         const head = pts[upto];
         if (head && head.z > 0) {
@@ -352,6 +355,7 @@ window.V03Globe = (function () {
         const j0 = Math.floor(idx), j1 = Math.min(total - 1, j0 + 1), t = idx - j0;
         if (j0 < 0 || pts[j0].z <= 0 || pts[j1].z <= 0) continue;
         const x = pts[j0].x + (pts[j1].x - pts[j0].x) * t, y = pts[j0].y + (pts[j1].y - pts[j0].y) * t;
+        if(k===0)hits.push({x,y,kind:'relation',id:route.id});
         const fade = 1 - k / tail;
         ctx.beginPath(); ctx.arc(x, y, 1.3 + fade * 2.4, 0, TAU);
         ctx.fillStyle = k === 0 ? '#ffffff' : hexA(route.color, .16 + fade * .74);

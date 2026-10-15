@@ -101,7 +101,8 @@ window.V03Filter = (function () {
     s = s || window.V03Store.state;
     const set = selected(s, 'catKeys', FACT_ITEMS);
     return D.FACTS.filter(f =>
-      D.inWindow(f.date, s.time) &&
+      (f.persistent || D.inWindow(f.date, s.time)) &&
+      (!window.V03Feed || V03Feed.isFactVisible(f.id)) &&
       matched(f, set) &&
       varietyOk(f, s.varieties) &&
       regionOk(f, s.region) &&
@@ -149,7 +150,7 @@ window.V03Filter = (function () {
     const carried = new Set();
     (s.carry || []).forEach(id => { const f = D.factById(id); if (f) (f.objects || []).forEach(o => carried.add(o)); });
 
-    let list = D.OBJECTS.filter(o => set.has(relKind(o)));
+    let list = D.OBJECTS.filter(o => set.has(relKind(o)) && (!window.V03Feed || V03Feed.isObjectVisible(o.id)));
     if (rel.domain && rel.domain !== 'all') list = list.filter(o => o.domain === rel.domain);
     if (rel.search) {
       const q = rel.search.toLowerCase();
@@ -185,7 +186,7 @@ window.V03Filter = (function () {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
       const today = D.TODAY || new Date().toISOString().slice(0,10);
-      return { rows:[['当前本体',4128],['今日新增本体',12],['今日新增关系',9]],note:'' };
+      return { rows:[['当前本体',D.OBJECTS.length],['当前关系',D.RELATIONS.length]],note:'' };
     }
     const list = D.FACTS;
     const raw = list.length;
