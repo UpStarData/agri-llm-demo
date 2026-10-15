@@ -1,0 +1,88 @@
+{
+  "红星全球农批中心": {
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=%E7%BA%A2%E6%98%9F%E5%85%A8%E7%90%83%E5%86%9C%E6%89%B9%E4%B8%AD%E5%BF%83&format=jsonv2&limit=1",
+    "results": [
+      {
+        "place_id": 421187820,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "node",
+        "osm_id": 13955204684,
+        "lat": "28.0992042",
+        "lon": "113.0713320",
+        "category": "highway",
+        "type": "bus_stop",
+        "place_rank": 30,
+        "importance": 5.557106889443835e-05,
+        "addresstype": "highway",
+        "name": "红星全球农批中心",
+        "display_name": "红星全球农批中心, 长沙绕城高速, 同升街道, 跳马镇, 雨花区, 长沙市, 湖南省, 410019, 中国",
+        "boundingbox": [
+          "28.0991542",
+          "28.0992542",
+          "113.0712820",
+          "113.0713820"
+        ]
+      }
+    ]
+  },
+  "酉阳 板溪工业园": {
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=%E9%85%89%E9%98%B3+%E6%9D%BF%E6%BA%AA%E5%B7%A5%E4%B8%9A%E5%9B%AD&format=jsonv2&limit=1",
+    "results": [
+      {
+        "place_id": 224201557,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 882962806,
+        "lat": "31.8744406",
+        "lon": "117.2755354",
+        "category": "amenity",
+        "type": "university",
+        "place_rank": 30,
+        "importance": 6.629205767905726e-05,
+        "addresstype": "amenity",
+        "name": "合肥工业大学六安路校区",
+        "display_name": "合肥工业大学六安路校区, 阜南路, 杏花社区, 三孝口, 三孝口街道, 庐阳区, 合肥市, 安徽省, 230061, 中国",
+        "boundingbox": [
+          "31.8725682",
+          "31.8753566",
+          "117.2732479",
+          "117.2779448"
+        ]
+      }
+    ]
+  },
+  "邵阳县 九公桥镇 金盆村": {
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=%E9%82%B5%E9%98%B3%E5%8E%BF+%E4%B9%9D%E5%85%AC%E6%A1%A5%E9%95%87+%E9%87%91%E7%9B%86%E6%9D%91&format=jsonv2&limit=1",
+    "results": []
+  },
+  "酉阳土家族苗族自治县": {
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=%E9%85%89%E9%98%B3%E5%9C%9F%E5%AE%B6%E6%97%8F%E8%8B%97%E6%97%8F%E8%87%AA%E6%B2%BB%E5%8E%BF&format=jsonv2&limit=1&countrycodes=cn",
+    "results": [
+      {
+        "place_id": 240932914,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "relation",
+        "osm_id": 2693035,
+        "lat": "28.8444140",
+        "lon": "108.7634259",
+        "category": "boundary",
+        "type": "administrative",
+        "place_rank": 12,
+        "importance": 0.48329605146839477,
+        "addresstype": "city",
+        "name": "酉阳土家族苗族自治县",
+        "display_name": "酉阳土家族苗族自治县, 重庆市, 中国",
+        "boundingbox": [
+          "28.3275820",
+          "29.4051377",
+          "108.3075867",
+          "109.3156967"
+        ]
+      }
+    ]
+  },
+  "湖南省邵阳县九公桥镇": {
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=%E6%B9%96%E5%8D%97%E7%9C%81%E9%82%B5%E9%98%B3%E5%8E%BF%E4%B9%9D%E5%85%AC%E6%A1%A5%E9%95%87&format=jsonv2&limit=1&countrycodes=cn",
+    "results": []
+  }
+}

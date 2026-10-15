@@ -1,0 +1,1104 @@
+{
+  "facts": [
+    {
+      "factId": "v23-hongxing-0",
+      "factType": "profile",
+      "status": "active",
+      "title": "红星集团与酉阳华渝签约共建武陵山农产品流通中心",
+      "summary": "公开报道确认红星实业集团与酉阳华渝合作建设流通中心，推进区域农产品流通。",
+      "category": "news",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:youyang-huayu",
+        "e:v23:hongxing-youyang"
+      ],
+      "occurredAt": "2025-07-04T12:00:00Z",
+      "publishedAt": "2025-07-04T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          108.7634259,
+          28.844414
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-CQ",
+            "name": "重庆市"
+          },
+          {
+            "level": "city",
+            "code": "酉阳土家族苗族自治县",
+            "name": "酉阳土家族苗族自治县"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://www.agri.cn/zx/xxlb/zq/202507/t20250704_8746564.htm",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "红星集团与酉阳华渝签约共建武陵山农产品流通中心",
+          "sourceName": "中国农业农村信息网",
+          "publishedAt": "2025-07-04"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "中国农业农村信息网",
+          "q": "公开报道确认红星实业集团与酉阳华渝合作建设流通中心，推进区域农产品流通。",
+          "url": "https://www.agri.cn/zx/xxlb/zq/202507/t20250704_8746564.htm"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2025-07-04",
+        "sourceUrl": "https://www.agri.cn/zx/xxlb/zq/202507/t20250704_8746564.htm",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-1",
+      "factType": "profile",
+      "status": "active",
+      "title": "红星酉阳武陵山农批招商中心揭牌",
+      "summary": "2026年2月11日招商中心揭牌，项目涵盖贸易、仓储、加工、物流等功能。",
+      "category": "news",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:youyang-huayu",
+        "e:v23:hongxing-youyang"
+      ],
+      "occurredAt": "2026-02-11T12:00:00Z",
+      "publishedAt": "2026-02-11T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          108.7634259,
+          28.844414
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-CQ",
+            "name": "重庆市"
+          },
+          {
+            "level": "city",
+            "code": "酉阳土家族苗族自治县",
+            "name": "酉阳土家族苗族自治县"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://youyang.gov.cn/sy_236/yyyw/202602/t20260212_15439651.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "红星酉阳武陵山农批招商中心揭牌",
+          "sourceName": "酉阳县人民政府",
+          "publishedAt": "2026-02-11"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "酉阳县人民政府",
+          "q": "2026年2月11日招商中心揭牌，项目涵盖贸易、仓储、加工、物流等功能。",
+          "url": "https://youyang.gov.cn/sy_236/yyyw/202602/t20260212_15439651.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2026-02-11",
+        "sourceUrl": "https://youyang.gov.cn/sy_236/yyyw/202602/t20260212_15439651.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-2",
+      "factType": "profile",
+      "status": "active",
+      "title": "截至2026-08-10：酉阳红星一期建设完成约95%",
+      "summary": "该日报道一期建设进度约95%、招商签约率超过86%；这是报道当时的进展，不代表实时施工数据。",
+      "category": "news",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:youyang-huayu",
+        "e:v23:hongxing-youyang"
+      ],
+      "occurredAt": "2026-08-10T12:00:00Z",
+      "publishedAt": "2026-08-10T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          108.7634259,
+          28.844414
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-CQ",
+            "name": "重庆市"
+          },
+          {
+            "level": "city",
+            "code": "酉阳土家族苗族自治县",
+            "name": "酉阳土家族苗族自治县"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://youyang.gov.cn/ysyy/yshd/202608/t20260810_15911759.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "截至2026-08-10：酉阳红星一期建设完成约95%",
+          "sourceName": "酉阳县人民政府",
+          "publishedAt": "2026-08-10",
+          "imageUrl": "https://youyang.gov.cn/ysyy/yshd/202608/W020260810386904499593_ORIGIN.jpg"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "酉阳县人民政府",
+          "q": "该日报道一期建设进度约95%、招商签约率超过86%；这是报道当时的进展，不代表实时施工数据。",
+          "url": "https://youyang.gov.cn/ysyy/yshd/202608/t20260810_15911759.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2026-08-10",
+        "sourceUrl": "https://youyang.gov.cn/ysyy/yshd/202608/t20260810_15911759.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-3",
+      "factType": "profile",
+      "status": "active",
+      "title": "红星酉阳武陵山农批中心一期启用",
+      "summary": "2026年9月报道确认一期启用，项目辐射渝鄂湘黔区域并推进冷链与农产品集散。",
+      "category": "news",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:youyang-huayu",
+        "e:v23:hongxing-youyang"
+      ],
+      "occurredAt": "2026-09-24T12:00:00Z",
+      "publishedAt": "2026-09-24T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          108.7634259,
+          28.844414
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-CQ",
+            "name": "重庆市"
+          },
+          {
+            "level": "city",
+            "code": "酉阳土家族苗族自治县",
+            "name": "酉阳土家族苗族自治县"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://cq.people.com.cn/n2/2026/0924/c367650-41707128.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "红星酉阳武陵山农批中心一期启用",
+          "sourceName": "人民网重庆",
+          "publishedAt": "2026-09-24"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "人民网重庆",
+          "q": "2026年9月报道确认一期启用，项目辐射渝鄂湘黔区域并推进冷链与农产品集散。",
+          "url": "https://cq.people.com.cn/n2/2026/0924/c367650-41707128.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2026-09-24",
+        "sourceUrl": "https://cq.people.com.cn/n2/2026/0924/c367650-41707128.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-4",
+      "factType": "profile",
+      "status": "active",
+      "title": "邵阳县金盆村与长沙红星集团建立产销合作",
+      "summary": "报道记载金盆村建设蔬菜、水稻、油菜基地，聘请农科专家指导，由长沙红星集团负责销售，并签订长期战略合作协议。",
+      "category": "circulation",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:hongxing-jinpen"
+      ],
+      "occurredAt": "2024-08-14T12:00:00Z",
+      "publishedAt": "2024-08-14T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          111.27,
+          26.99
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "邵阳县",
+            "name": "邵阳县"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://sy.rednet.cn/content/646842/58/14180519.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "邵阳县金盆村与长沙红星集团建立产销合作",
+          "sourceName": "红网邵阳",
+          "publishedAt": "2024-08-14",
+          "imageUrl": "https://img.rednet.cn/2024/11-27/b75e9ac0-72cc-4a57-9b62-ded079def248.png"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "红网邵阳",
+          "q": "报道记载金盆村建设蔬菜、水稻、油菜基地，聘请农科专家指导，由长沙红星集团负责销售，并签订长期战略合作协议。",
+          "url": "https://sy.rednet.cn/content/646842/58/14180519.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2024-08-14",
+        "sourceUrl": "https://sy.rednet.cn/content/646842/58/14180519.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-5",
+      "factType": "profile",
+      "status": "active",
+      "title": "红星联动花垣乡镇合作社发展辣椒配送",
+      "summary": "2022年报道回顾：2021年红星在花垣联动4个乡镇、19家合作社，发展3000余亩辣椒种植与配送销售。",
+      "category": "circulation",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:hongxing-huayuan",
+        "e:cmd:chili"
+      ],
+      "occurredAt": "2022-07-26T12:00:00Z",
+      "publishedAt": "2022-07-26T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          109.48,
+          28.58
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "花垣县",
+            "name": "花垣县"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://cs.rednet.cn/m/content/2022/07/26/11561574.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "红星联动花垣乡镇合作社发展辣椒配送",
+          "sourceName": "红网长沙",
+          "publishedAt": "2022-07-26",
+          "imageUrl": "https://imgs.rednet.cn/data/24/IMAGE_TENANT_LIB/IMAGE/7020202/2022/7/26/908236fb65534deeba44e7cd07c5cf47.png"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "红网长沙",
+          "q": "2022年报道回顾：2021年红星在花垣联动4个乡镇、19家合作社，发展3000余亩辣椒种植与配送销售。",
+          "url": "https://cs.rednet.cn/m/content/2022/07/26/11561574.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2022-07-26",
+        "sourceUrl": "https://cs.rednet.cn/m/content/2022/07/26/11561574.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-6",
+      "factType": "profile",
+      "status": "active",
+      "title": "红星全球农批中心经营泰国榴莲与智利车厘子",
+      "summary": "2023年春节前市场报道列明泰国榴莲、智利车厘子等进口水果；关系按原文国家和品种建立，不扩展到未经证实的具体产区。",
+      "category": "circulation",
+      "cardType": "news",
+      "entityIds": [
+        "e:ent-hongxing-group",
+        "e:v23:hongxing-global",
+        "e:rgn:THA",
+        "e:rgn:CHL",
+        "e:cmd:durian",
+        "e:cmd:cherry"
+      ],
+      "occurredAt": "2023-01-19T12:00:00Z",
+      "publishedAt": "2023-01-19T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          113.071332,
+          28.0992042
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "长沙市",
+            "name": "长沙市"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://hnny.rednet.cn/content/646745/53/12249954.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "红星全球农批中心经营泰国榴莲与智利车厘子",
+          "sourceName": "红网/人民网",
+          "publishedAt": "2023-01-19",
+          "imageUrl": "https://img.rednet.cn/2023/01-19/71c04c69-08c7-46ae-9269-7c8f08b7e2b4.jpg"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "红网/人民网",
+          "q": "2023年春节前市场报道列明泰国榴莲、智利车厘子等进口水果；关系按原文国家和品种建立，不扩展到未经证实的具体产区。",
+          "url": "https://hnny.rednet.cn/content/646745/53/12249954.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2023-01-19",
+        "sourceUrl": "https://hnny.rednet.cn/content/646745/53/12249954.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    },
+    {
+      "factId": "v23-hongxing-7",
+      "factType": "profile",
+      "status": "active",
+      "title": "红星全球农批中心进口水果冷链到货报道",
+      "summary": "2022年春节前，报道记录红星进口交易区有车厘子、榴莲等水果从国内港口运抵。",
+      "category": "logistics",
+      "cardType": "news",
+      "entityIds": [
+        "e:v23:hongxing-global",
+        "e:cmd:durian",
+        "e:cmd:cherry"
+      ],
+      "occurredAt": "2022-01-29T12:00:00Z",
+      "publishedAt": "2022-01-29T12:00:00Z",
+      "ingestedAt": "2026-10-15T11:00:00Z",
+      "geo": {
+        "geoPoint": [
+          113.071332,
+          28.0992042
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "长沙市",
+            "name": "长沙市"
+          }
+        ],
+        "scopeLayer": "L3"
+      },
+      "sourceUrl": "https://hn.people.com.cn/n2/2022/0129/c356884-35119132.html",
+      "sourcePlugin": "hongxing-public-report",
+      "severity": 55,
+      "credibility": {
+        "score": 0.9,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "title": "红星全球农批中心进口水果冷链到货报道",
+          "sourceName": "人民网湖南",
+          "publishedAt": "2022-01-29"
+        }
+      },
+      "evidence": [
+        {
+          "k": "公开报道",
+          "t": "人民网湖南",
+          "q": "2022年春节前，报道记录红星进口交易区有车厘子、榴莲等水果从国内港口运抵。",
+          "url": "https://hn.people.com.cn/n2/2022/0129/c356884-35119132.html"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "public-report",
+        "sourcePlugin": "v23-hongxing-network",
+        "sourceDate": "2022-01-29",
+        "sourceUrl": "https://hn.people.com.cn/n2/2022/0129/c356884-35119132.html",
+        "dateMeaning": "原文报道/事件日期；长期项目资料，不冒充今日新闻"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "entityId": "e:v23:hongxing-global",
+      "type": "Market",
+      "canonicalName": "红星全球农批中心",
+      "status": "active",
+      "priority": "high",
+      "geo": {
+        "geoPoint": [
+          113.071332,
+          28.0992042
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "长沙市",
+            "name": "长沙市"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "红星农副产品交易网络；沿用邻近同名公交站参考点",
+        "coordinateMeaning": "行政区/邻近站点代表点，非建筑轮廓或项目边界"
+      },
+      "commodityTags": [
+        "榴莲",
+        "车厘子",
+        "辣椒"
+      ],
+      "supportingFactIds": [
+        "v23-hongxing-6",
+        "v23-hongxing-7"
+      ],
+      "image": {
+        "url": "https://img.rednet.cn/2023/01-19/71c04c69-08c7-46ae-9269-7c8f08b7e2b4.jpg",
+        "sourceUrl": "https://hnny.rednet.cn/content/646745/53/12249954.html",
+        "caption": "红星全球农批中心原文配图",
+        "credit": "hnny.rednet.cn"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "note": "红星农副产品交易网络；沿用邻近同名公交站参考点"
+      }
+    },
+    {
+      "entityId": "e:v23:hongxing-youyang",
+      "type": "Market",
+      "canonicalName": "红星酉阳武陵山农批中心",
+      "status": "active",
+      "priority": "high",
+      "geo": {
+        "geoPoint": [
+          108.7634259,
+          28.844414
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-CQ",
+            "name": "重庆市"
+          },
+          {
+            "level": "city",
+            "code": "酉阳土家族苗族自治县",
+            "name": "酉阳土家族苗族自治县"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "红星实业集团与酉阳华渝共同建设；定位采用酉阳县行政代表点",
+        "coordinateMeaning": "行政区/邻近站点代表点，非建筑轮廓或项目边界"
+      },
+      "commodityTags": [
+        "水果",
+        "蔬菜",
+        "农产品"
+      ],
+      "supportingFactIds": [
+        "v23-hongxing-0",
+        "v23-hongxing-1",
+        "v23-hongxing-2",
+        "v23-hongxing-3"
+      ],
+      "image": {
+        "url": "https://youyang.gov.cn/ysyy/yshd/202608/W020260810386904499593_ORIGIN.jpg",
+        "sourceUrl": "https://youyang.gov.cn/ysyy/yshd/202608/t20260810_15911759.html",
+        "caption": "酉阳项目资料图 · 2026-08-10 报道",
+        "credit": "youyang.gov.cn"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "note": "红星实业集团与酉阳华渝共同建设；定位采用酉阳县行政代表点"
+      }
+    },
+    {
+      "entityId": "e:v23:hongxing-jinpen",
+      "type": "Base",
+      "canonicalName": "邵阳县金盆村产销合作项目",
+      "status": "active",
+      "priority": "high",
+      "geo": {
+        "geoPoint": [
+          111.27,
+          26.99
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "邵阳县",
+            "name": "邵阳县"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "金盆村种植基地与长沙红星集团开展产销合作；定位为邵阳县代表点",
+        "coordinateMeaning": "行政区/邻近站点代表点，非建筑轮廓或项目边界"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-hongxing-4"
+      ],
+      "image": {
+        "url": "https://img.rednet.cn/2024/11-27/b75e9ac0-72cc-4a57-9b62-ded079def248.png",
+        "sourceUrl": "https://sy.rednet.cn/content/646842/58/14180519.html",
+        "caption": "来源原文配图",
+        "credit": "sy.rednet.cn"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "note": "金盆村种植基地与长沙红星集团开展产销合作；定位为邵阳县代表点"
+      }
+    },
+    {
+      "entityId": "e:v23:hongxing-huayuan",
+      "type": "Base",
+      "canonicalName": "花垣县辣椒产销合作基地",
+      "status": "active",
+      "priority": "high",
+      "geo": {
+        "geoPoint": [
+          109.48,
+          28.58
+        ],
+        "geoPrecision": "approx",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-HN",
+            "name": "湖南省"
+          },
+          {
+            "level": "city",
+            "code": "花垣县",
+            "name": "花垣县"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "报道记录红星在花垣联动乡镇与合作社发展辣椒配送；县级参考点",
+        "coordinateMeaning": "行政区/邻近站点代表点，非建筑轮廓或项目边界"
+      },
+      "commodityTags": [
+        "辣椒"
+      ],
+      "supportingFactIds": [
+        "v23-hongxing-5"
+      ],
+      "image": {
+        "url": "https://imgs.rednet.cn/data/24/IMAGE_TENANT_LIB/IMAGE/7020202/2022/7/26/908236fb65534deeba44e7cd07c5cf47.png",
+        "sourceUrl": "https://cs.rednet.cn/m/content/2022/07/26/11561574.html",
+        "caption": "来源原文配图",
+        "credit": "cs.rednet.cn"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "note": "报道记录红星在花垣联动乡镇与合作社发展辣椒配送；县级参考点"
+      }
+    },
+    {
+      "entityId": "e:v23:youyang-huayu",
+      "type": "Enterprise",
+      "canonicalName": "酉阳华渝产业集团",
+      "status": "active",
+      "priority": "high",
+      "geo": {
+        "geoPoint": null,
+        "geoPrecision": "none",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "CHN",
+            "name": "中国"
+          },
+          {
+            "level": "province",
+            "code": "CN-CQ",
+            "name": "重庆市"
+          },
+          {
+            "level": "city",
+            "code": "酉阳县",
+            "name": "酉阳县"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "酉阳武陵山农批中心共建方",
+        "coordinateMeaning": "行政区/邻近站点代表点，非建筑轮廓或项目边界"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-hongxing-0",
+        "v23-hongxing-1",
+        "v23-hongxing-2",
+        "v23-hongxing-3"
+      ],
+      "image": null,
+      "provenanceMeta": {
+        "dataMode": "real",
+        "note": "酉阳武陵山农批中心共建方"
+      }
+    }
+  ],
+  "relations": [
+    {
+      "relationId": "r:v23:e:ent-hongxing-group|CO_BUILDS|e:v23:hongxing-youyang",
+      "relationType": "CO_BUILDS",
+      "sourceEntityId": "e:ent-hongxing-group",
+      "targetEntityId": "e:v23:hongxing-youyang",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-0",
+        "v23-hongxing-1",
+        "v23-hongxing-3"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 3,
+        "note": "双方合作共建，不能解读为红星单独持有全部股权"
+      }
+    },
+    {
+      "relationId": "r:v23:e:v23:youyang-huayu|CO_BUILDS|e:v23:hongxing-youyang",
+      "relationType": "CO_BUILDS",
+      "sourceEntityId": "e:v23:youyang-huayu",
+      "targetEntityId": "e:v23:hongxing-youyang",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-0",
+        "v23-hongxing-3"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 2,
+        "note": "酉阳华渝为共建方"
+      }
+    },
+    {
+      "relationId": "r:v23:e:ent-hongxing-group|OPERATES|e:v23:hongxing-global",
+      "relationType": "OPERATES",
+      "sourceEntityId": "e:ent-hongxing-group",
+      "targetEntityId": "e:v23:hongxing-global",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-6"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 1,
+        "note": "红星市场运营网络"
+      }
+    },
+    {
+      "relationId": "r:v23:e:v23:hongxing-jinpen|COOPERATES_WITH|e:ent-hongxing-group",
+      "relationType": "COOPERATES_WITH",
+      "sourceEntityId": "e:v23:hongxing-jinpen",
+      "targetEntityId": "e:ent-hongxing-group",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-4"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 1,
+        "note": "邵阳项目为产销合作，不宣称是红星全资市场"
+      }
+    },
+    {
+      "relationId": "r:v23:e:v23:hongxing-huayuan|COOPERATES_WITH|e:ent-hongxing-group",
+      "relationType": "COOPERATES_WITH",
+      "sourceEntityId": "e:v23:hongxing-huayuan",
+      "targetEntityId": "e:ent-hongxing-group",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-5"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 1,
+        "note": "辣椒种植与配送销售合作"
+      }
+    },
+    {
+      "relationId": "r:v23:e:rgn:THA|FLOWS_INTO|e:v23:hongxing-global",
+      "relationType": "FLOWS_INTO",
+      "sourceEntityId": "e:rgn:THA",
+      "targetEntityId": "e:v23:hongxing-global",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-6"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 1,
+        "note": "泰国榴莲在红星市场经营；国别参考线，非已核实的逐段物流轨迹"
+      }
+    },
+    {
+      "relationId": "r:v23:e:rgn:CHL|FLOWS_INTO|e:v23:hongxing-global",
+      "relationType": "FLOWS_INTO",
+      "sourceEntityId": "e:rgn:CHL",
+      "targetEntityId": "e:v23:hongxing-global",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-6"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 1,
+        "note": "智利车厘子在红星市场经营；国别参考线"
+      }
+    },
+    {
+      "relationId": "r:v23:e:v23:hongxing-global|TRADES_IN|e:cmd:durian",
+      "relationType": "TRADES_IN",
+      "sourceEntityId": "e:v23:hongxing-global",
+      "targetEntityId": "e:cmd:durian",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-6",
+        "v23-hongxing-7"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 2,
+        "note": "依据原文列出的经营或合作品种"
+      }
+    },
+    {
+      "relationId": "r:v23:e:v23:hongxing-global|TRADES_IN|e:cmd:cherry",
+      "relationType": "TRADES_IN",
+      "sourceEntityId": "e:v23:hongxing-global",
+      "targetEntityId": "e:cmd:cherry",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-6",
+        "v23-hongxing-7"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 2,
+        "note": "依据原文列出的经营或合作品种"
+      }
+    },
+    {
+      "relationId": "r:v23:e:v23:hongxing-huayuan|TRADES_IN|e:cmd:chili",
+      "relationType": "TRADES_IN",
+      "sourceEntityId": "e:v23:hongxing-huayuan",
+      "targetEntityId": "e:cmd:chili",
+      "nature": "verified",
+      "priority": "high",
+      "supportingFactIds": [
+        "v23-hongxing-5"
+      ],
+      "validity": {
+        "validFrom": "2026-10-15"
+      },
+      "provenanceMeta": {
+        "dataMode": "real",
+        "supportCount": 1,
+        "note": "依据原文列出的经营或合作品种"
+      }
+    }
+  ]
+}

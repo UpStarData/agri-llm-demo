@@ -11,11 +11,14 @@
    ============================================================ */
 window.V03Pkg = (function () {
   const P = window.__AGRI_PKG__ || {};
+  const P2 = window.__AGRI_PKG2__ || {};
+  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams].filter(Boolean);
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
-  const FACTS_IN = P.facts || [], ENTITIES_IN = P.entities || [], RELATIONS_IN = P.relations || [];
+  const FACTS_IN = (P.facts || []).concat(...EXPANSIONS.map(p => p.facts || [])),
+    ENTITIES_IN = (P.entities || []).concat(...EXPANSIONS.map(p => p.entities || [])),
+    RELATIONS_IN = (P.relations || []).concat(...EXPANSIONS.map(p => p.relations || []));
   const EVIDENCE_IN = P.evidence || [], SOURCES_IN = P.sources || [], OBS_IN = P.observations || [];
   /* D0/D4：第三方补充包（重点农产品补齐事实 + Open-Meteo 天气事实 + OurAirports 大型机场 + 公开直播频道） */
-  const P2 = window.__AGRI_PKG2__ || {};
   const EX_FACTS = (P2.extra || []).concat(P2.weather || [], P2.global || []);
   const STREAM_IN = P.stream || { events: [], loopMs: 1 };
 
@@ -25,7 +28,7 @@ window.V03Pkg = (function () {
   const TYPE2DOMAIN = {
     Commodity: 'commodity', Base: 'resource', Enterprise: 'operator', Person: 'operator',
     Market: 'channel', LogisticsNode: 'logistics', Organization: 'institution',
-    Region: 'admin', MetricObservation: 'metric'
+    Region: 'admin', MetricObservation: 'metric', WeatherArea: 'environment', MediaChannel: 'operator'
   };
   const TYPE_EMOJI = {
     Market: '🏬', Enterprise: '🏢', Base: '🌱', Commodity: '🍎', Organization: '🏛️',
@@ -42,7 +45,8 @@ window.V03Pkg = (function () {
   const REL_LABEL = {
     SUPPLIES_TO: '供应流向', FLOWS_INTO: '流入', FLOWS_OUT_OF: '流出', SHIPS_THROUGH: '运输经由',
     PRODUCES: '生产', LOCATED_IN: '行政归属', AFFECTS: '影响', DEPENDS_ON: '依赖',
-    COVERS: '覆盖', TRADES: '贸易', SUBSTITUTES: '替代', PRICE_TRANSMITS_TO: '价格传导'
+    COVERS: '覆盖', TRADES: '贸易', SUBSTITUTES: '替代', PRICE_TRANSMITS_TO: '价格传导',
+     CO_BUILDS:'共建', OPERATES:'运营', COOPERATES_WITH:'产销合作', TRADES_IN:'经营'
   };
   const STAGE_LABEL = {
     ingest: '接入', extract: '抽取', resolve: '归并', geo: '定位', score: '评分', link: '关联', graph: '图谱', warn: '告警'
@@ -177,7 +181,7 @@ window.V03Pkg = (function () {
   /* ---------- 视频源可嵌入性核验（2026-09-21 实测 HTTP 响应头：无 X-Frame-Options / CSP frame-ancestors） ----------
      只有核验通过的源才允许在卡片/详情内挂载播放器；其余一律静态卡片降级（不伪造播放器）。 */
   /* 公开 m3u8（hls.js 直连播放）：CCTV-17 来自 ChinaIPTV 维护的可用地址；http 页面下可播，
-     https 页面因混合内容限制会自动退回 iframe 播放页（见 fact.js 的优先级链）。 */
+     https 页面因混合内容限制只保留来源外链，不嵌入整站网页。 */
   const HLS_SOURCES = {
     'real-video-cctv17-live': 'http://183.196.25.171:808/hls/93/index.m3u8'
   };
@@ -206,7 +210,7 @@ window.V03Pkg = (function () {
     const vv = VERIFIED_EMBED[f.factId];
     if (vv) card = Object.assign({}, card, { embeddable: 'yes', embedUrl: vv.url, provider: vv.provider, mediaTitle: vv.title, isLive: true });
     if (HLS_SOURCES[f.factId]) card = Object.assign({}, card, { hlsUrl: HLS_SOURCES[f.factId], embeddable: 'yes', isLive: true });
-    else if (card.embeddable === 'yes' || f.cardType === 'video') {
+    else if (!card.hlsUrl && (card.embeddable === 'yes' || f.cardType === 'video')) {
       const ch = channelFor(card.mediaTitle);
       if (ch) card = Object.assign({}, card, { hlsUrl: ch, embeddable: 'yes' });
     }
@@ -216,7 +220,7 @@ window.V03Pkg = (function () {
       id: f.factId, prov: pm.dataMode || 'generated',
       title: cleanText(f.title), summary: stripTech(cleanText(f.summary)),
       cat: f.category, cardType: f.cardType, card: cleanCard(card), cardTypeName: f.cardType,
-      taxonomy: f.taxonomy || {}, factType: f.factType, status: f.status,
+      taxonomy: f.taxonomy || {}, factType: f.factType, status: f.status, persistent: f.factType === 'profile' || f.cardType === 'video' && !!card.isLive,
       level: f.geo.scopeLayer || 'L1',
       region: regionLabel(f), regionPath: normalizePath(f.geo.regionPath),
       province: (provinceOf(f.geo.regionPath) || {}).name || null,
@@ -357,6 +361,7 @@ window.V03Pkg = (function () {
       entityType: e.type, typeName: ONT.lookup[e.type] || e.type,
       domain: dom, emoji: TYPE_EMOJI[e.type] || '📊',
       name: e.canonicalName,
+      image: e.image || null, sourceUrl: e.provenanceMeta?.sourceUrl || '', priority: e.priority,
       sub: (() => {
         const cleaned = stripTech(cleanText(a.landmark || a.function || a.role || a.adminArea || ''));
         return cleaned || (ONT.lookup[e.type] || '') + '对象';
@@ -386,7 +391,7 @@ window.V03Pkg = (function () {
       changedBy: (r.supportingFactIds || [])[0] || null,
       factIds: r.supportingFactIds || [],
       note: TECH.test(String((r.provenanceMeta || {}).note || '')) ? '' : ((r.provenanceMeta || {}).note || ''),
-      review: (r.review || {}).state
+      review: (r.review || {}).state, priority: r.priority
     };
   });
 
@@ -434,7 +439,7 @@ window.V03Pkg = (function () {
 
   return {
     datasetId: MANIFEST.datasetId || 'agrilink-demo-v1', datasetVersion: MANIFEST.datasetVersion || '1.0.0',
-    collectedAt: MANIFEST.collectedAt || '', TODAY: MANIFEST.collectedAt || '2026-09-21',
+    collectedAt: MANIFEST.collectedAt || '', TODAY: P2.v23Weather?.snapshotDate || MANIFEST.collectedAt || '2026-09-21',
     FACTS, OBJECTS, RELATIONS, REGIONS, GATES, STREAM, STREAM_LOOP,
     ONTOLOGY: ONT, SOURCES: SOURCES_IN, EVIDENCE: EVIDENCE_IN, OBSERVATIONS: OBS_IN,
     CARD_SCHEMA: P.cards || {}, STATS, MANIFEST, VALIDATION: P.validation || {},

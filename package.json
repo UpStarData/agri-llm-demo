@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
-  "description": "AgriLink 农链 V1.0.9 · 新增配色 3（Atlas/iipmaps 抽色）与配色选择器",
+  "description": "AgriLink V2.3 · 全球事实分批加载、实时接入、红星项目与直连直播",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -24,7 +24,8 @@
     "test:v081": "node test/v081-map-anchor.mjs",
     "test:v083": "node test/probe-roam-frames.mjs --pan-only --assert-visual && node test/probe-roam-frames.mjs --single-round --zoom-only --assert-visual",
     "test:prd": "node test/prd-v101.mjs",
-    "test:v107": "node test/v107-relation-interactions.mjs"
+    "test:v107": "node test/v107-relation-interactions.mjs",
+    "test:v23": "node test/v23-interactions.mjs && node test/v23-delivery.mjs && node test/v23-media.mjs"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

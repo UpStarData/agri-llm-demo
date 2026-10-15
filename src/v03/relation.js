@@ -125,7 +125,7 @@ window.V03Relation = (function () {
     root = el; root.innerHTML = TPL;
     dom = { main: root.querySelector('#relMain'), canvas: root.querySelector('#relCanvas'), globe: root.querySelector('#relGlobe'), side: root.querySelector('#relSide'), body: root.querySelector('#relBody'), tip: root.querySelector('#relTip'), hint: root.querySelector('#relHint') };
     globe.mount(dom.globe, {
-      pick: (kind, id) => { if (kind === 'object') openObject(id); },
+      pick: (kind, id) => { if (kind === 'object') openObject(id); else if(kind==='relation')openRelation(id); },
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.rel.view !== 'globe') return;
@@ -142,6 +142,19 @@ window.V03Relation = (function () {
       camAdd(-e.deltaY * (e.ctrlKey ? FEEL.pinchGain : FEEL.gain));
     }, { capture: true, passive: false });
     bindPinch(dom.canvas);
+    let press = null;
+    dom.canvas.addEventListener('pointerdown', e => {
+      const r = dom.canvas.getBoundingClientRect();
+      press = { x: e.clientX, y: e.clientY, route: routeAt([e.clientX-r.left,e.clientY-r.top]) };
+    }, true);
+    // Silent flow series keep geographic navigation clear; resolve their visible particles here.
+    dom.canvas.addEventListener('click', e => {
+      if (S.state.rel.view !== 'geo' || press && Math.hypot(e.clientX-press.x,e.clientY-press.y)>5) return;
+      const r = dom.canvas.getBoundingClientRect(), id = press?.route || routeAt([e.clientX-r.left,e.clientY-r.top]);
+      press = null;
+      if (!id) return;
+      e.preventDefault(); e.stopImmediatePropagation(); e.stopPropagation(); openRelation(id);
+    }, true);
     dom.canvas.addEventListener('pointerdown', () => { dragging = true; }, true);
     window.addEventListener('pointerup', () => { if (!dragging) return; dragging = false; if (hover) { hover = null; paintFocus(); } });
     /* 二维缩到最小再往下：回三维地球（与事实层同一套边界行为） */
@@ -174,6 +187,7 @@ window.V03Relation = (function () {
       (p.facts || []).forEach(relFlashStar);
       receiveObjects(p.objects || []);
     });
+    S.onEvent('feed:arrival', p=>{if(S.state.tab==='relation'){relFlashStar(p.fact);receiveObjects(p.objects||[],true,p.mode==='snapshot-replay');}});
   }
 
   function toast(msg) { if (window.V03Shell) window.V03Shell.toast(msg); }
@@ -233,7 +247,7 @@ window.V03Relation = (function () {
     const t = String(o.type || '') + String(o.label || o.sub || '');
     return /区域|省|市|州|县/.test(t) && !/市场/.test(t);
   };
-  /* 一层一层往里：世界 → 中国 → 湖南（当前数据集只覆盖湖南，落到其它省会是空图） */
+  /* 默认路径：世界 → 中国 → 湖南；地图缩放也可按实际省份进入。 */
   function drillIn() {
     if (relLevel() === 'L1') { enterLevel('L2', null); return true; }
     if (relLevel() === 'L2') { enterLevel('L3', relFocus() || '湖南'); return true; }
@@ -358,6 +372,41 @@ window.V03Relation = (function () {
   function openObject(id) {
     S.set({ rel: { sel: id, kind: 'object', stack: [{ kind: 'object', id }] } });
   }
+  function openRelation(id) {
+    if (!D.relById(id)) return;
+    const stack = S.state.rel.stack || [];
+    S.set({ rel: { sel: id, kind: 'relation', stack: stack.concat([{kind:'relation',id}]) } });
+  }
+  function routeAt(point) {
+    if (!chart || S.state.rel.view !== 'geo') return null;
+    let best = null, distance = 9;
+    const take = (id,p) => { const d=Math.hypot(p[0]-point[0],p[1]-point[1]); if(d<distance && D.relById(id)){distance=d;best=id;} };
+    const allSeries=chart.getModel().getSeries();
+    for (const series of allSeries.filter(s=>s.id.startsWith('relFlow-'))) {
+      const data=series.getData();
+      {
+        for(let i=0;i<data.count();i++) {
+          const el=data.getItemGraphicEl(i)?.childAt(1), raw=data.getRawDataItem(i);
+          if(el && !el.ignore) take(raw.relationId || raw.id.replace(/-f$/,''),el.transformCoordToGlobal(0,0));
+        }
+      }
+    }
+    if(best)return best; // Visible moving symbols win over nearby background curves.
+    for(const series of allSeries.filter(s=>s.id==='relLine'||s.id==='relFocusLine')) {
+      const data=series.getData();
+      {
+        for(let i=0;i<data.count();i++) {
+          const raw=data.getRawDataItem(i); if(raw.lineStyle.opacity<.08)continue;
+          const curve=data.getItemGraphicEl(i)?.childAt(0),q=curve?.shape;if(!q)continue;
+          for(let step=0;step<=32;step++) {
+            const t=step/32,u=1-t;
+            take(raw.id,curve.transformCoordToGlobal(u*u*q.x1+2*u*t*q.cpx1+t*t*q.x2,u*u*q.y1+2*u*t*q.cpy1+t*t*q.y2));
+          }
+        }
+      }
+    }
+    return best;
+  }
 
   /* 缩放后决策（滚轮 / 双指 / ＋－按钮共用）：到阀值切层，到边界收敛 */
   function afterZoom() {
@@ -456,7 +505,7 @@ window.V03Relation = (function () {
     const pos = new Map(objs.filter(o => o.geo !== false && Number.isFinite(o.lng) && Number.isFinite(o.lat) && Math.abs(o.lng) <= 180 && Math.abs(o.lat) <= 90).map(o => [o.id, o]));
     const hash = text => { let h = 0; for (const c of text) h = (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0; return h; };
     const records = [], seen = new Set(), out = [], labels = [], related = new Set();
-    for (const r of rels) {
+    for (const r of rels.slice().sort((a,b)=>Number(b.priority==='high')-Number(a.priority==='high'))) {
       const a = pos.get(r.from), b = pos.get(r.to);
       if (!a || !b || !inLevel(a.lng, a.lat) || !inLevel(b.lng, b.lat)) continue;
       const insideA = a.lng >= 73 && a.lng <= 136 && a.lat >= 17.5 && a.lat <= 54.5;
@@ -470,7 +519,7 @@ window.V03Relation = (function () {
       const geoKey = o => [o.lng.toFixed(2), o.lat.toFixed(2)].join(',');
       const key = [geoKey(a), geoKey(b), r.type].join('|');
       if (seen.has(key)) continue; seen.add(key);
-      const score = (r.factIds || []).length * 4 + r.confidence * 10;
+      const score = (r.factIds || []).length * 4 + r.confidence * 10 + (r.priority==='high'?100:0);
       const bucket = [Math.floor((a.lng + 180) / 45), Math.floor((a.lat + 90) / 30), Math.floor((b.lng + 180) / 45), Math.floor((b.lat + 90) / 30)].join('|');
       records.push({ r, a, b, isFocus, score, bucket });
     }
@@ -514,9 +563,11 @@ window.V03Relation = (function () {
       }
       const h = hash(r.id), sign = h % 2 ? 1 : -1;
       const curveness = sign * (.06 + (h % 5) * .035);
+      const important = r.priority === 'high' || (r.factIds || []).length >= 6 || /红星/.test(x.a.name + x.b.name) ||
+        chosen.indexOf(x) % 7 === 0 && Math.hypot(x.a.lng-x.b.lng,x.a.lat-x.b.lat)>12;
       const line = { id: r.id, coords,
         lineStyle: { color: typeColor(r.type), width: isFocus ? 1.8 : 1.05,
-          opacity: focus ? (isFocus ? .9 : .1) : .48, type: international ? 'dashed' : 'solid', curveness },
+          opacity: focus ? (isFocus ? .9 : .018) : important ? .28 : .025, type: international ? 'dashed' : 'solid', curveness },
         _focus: isFocus, _score: x.score };
       out.push(line);
       if (isFocus) {
@@ -558,10 +609,11 @@ window.V03Relation = (function () {
 
   function nodesData(objs, focus, reveal) {
     let peripheral = 0;
-    const list = objs.filter(o => o.geo !== false && o.lat != null && inLevel(o.lng, o.lat)).filter(o => {
-      if (focus === o.id || D.relationsOf(o.id).length) return true;
+    const candidates = objs.filter(o => o.geo !== false && o.lat != null && inLevel(o.lng, o.lat)).filter(o => {
+      if (focus === o.id || freshOrder.includes(o.id) || D.relationsOf(o.id).length) return true;
       return peripheral++ % 3 === 0;
-    }).slice(0, 220);
+    });
+    const list = window.V03Feed ? V03Feed.sampleGeo(candidates,relLevel()==='L1'?420:380,new Set([focus,...freshOrder])) : candidates.slice(0,380);
     return list.flatMap((o, i) => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
       const isFocus = focus === o.id;
@@ -607,48 +659,12 @@ window.V03Relation = (function () {
       /* 每个关系色一条流动series，id 由颜色固定，不会有旧数据残留 */
       id: 'relFlow-' + color.replace(/[^a-z0-9]/gi, ''),
       type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false,
-      data: groups.get(color).map(l => ({ id: l.id + '-f', coords: l.coords, lineStyle: { opacity: 0, curveness: l.lineStyle.curveness } })),
+      data: groups.get(color).map(l => ({ id: l.id + '-f', relationId: l.id, coords: l.coords, lineStyle: { opacity: 0, curveness: l.lineStyle.curveness } })),
       effect: { show: true, period: FLOW_PERIODS[k % FLOW_PERIODS.length] * (relLevel() === 'L2' ? 1.7 : 1),   /* 中国视角放慢 */
         trailLength: .38, symbol: 'circle', symbolSize: 4.6, color },
       lineStyle: { curveness: .22, opacity: 0 }
     }));
   }
-  /* 新本体接入：一次性的柔和光晕，缓慢亮起再淡出（参考早期版本的新数据效果，不做循环闪烁） */
-  const PULSE_MS = 2800;
-  const pulseCurve = t => (t < .34 ? easeOut(t / .34) : Math.max(0, 1 - (t - .34) / .66));
-  function freshData() {
-    const now = performance.now();
-    fresh = fresh.filter(f => now - f.t0 < f.dur);
-    return fresh.flatMap(f => {
-      const t = clamp((now - f.t0) / f.dur, 0, 1);
-      const a = pulseCurve(t);
-      return mapPoints(f.lng, f.lat).map(value => ({
-        id: f.id, value,
-        symbolSize: 7 + 20 * easeOut(Math.min(1, t / .34)),
-        itemStyle: { color: f.color, opacity: a * .5, borderColor: f.color, borderWidth: 1, shadowColor: f.color, shadowBlur: 20 * a }
-      }));
-    });
-  }
-  function freshSeries() {
-    const data = freshData();
-    if (!data.length) return null;
-    return { id: 'relFresh', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 9, data, animation: false };
-  }
-  /* 有一条新本体就按 60ms 推进一次光度，全部淡出后自动收尾 */
-  let freshTimer = 0;
-  function syncFresh() {
-    clearInterval(freshTimer); freshTimer = 0;
-    if (!fresh.length || !chart || S.state.rel.view !== 'geo') return;
-    const push = () => {
-      if (!chart || S.state.rel.view !== 'geo' || !fresh.length) { clearInterval(freshTimer); freshTimer = 0; return; }
-      const s2 = freshSeries();
-      chart.setOption({ series: [s2 || { id: 'relFresh', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 9, data: [] }] }, { lazyUpdate: true });
-      if (!s2) { clearInterval(freshTimer); freshTimer = 0; }
-    };
-    push();
-    freshTimer = setInterval(push, 60);
-  }
-
   function option(objs, rels, st) {
     const p = palette(), cfg = levelCfg(), lv = relLevel();
     const focus = focusId();
@@ -682,7 +698,7 @@ window.V03Relation = (function () {
         { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer', animation: false },
         { id: 'relPorts', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 6,
           data: st.sk.gates ? D.GATES.filter(g => g.kind === 'port').flatMap(g => mapPoints(g.lng, g.lat).map(value => ({ value, name: g.name, symbolSize: 11, label: { show: true, formatter: '⚓', position: 'inside', fontSize: 10 }, itemStyle: { color: '#e1a653' } }))) : [] },
-        ...[freshSeries()].filter(Boolean)
+
       ]
     };
   }
@@ -751,7 +767,7 @@ window.V03Relation = (function () {
   /* ---------- 入场动效：先缓慢点亮本体，再逐条连线；连完持续流动 ---------- */
   const INTRO_MS = 3200;
   let intro = { on: false, t: 0, t0: 0, timer: 0 };
-  let fresh = [], freshSeq = 0;
+
 
   const visitedViews = new Set();
   function beginIntro() {
@@ -772,18 +788,9 @@ window.V03Relation = (function () {
     }, 60);
   }
 
-  /* 新本体接入：缓慢亮起再淡出一次，随后它的新线从头画到尾 */
+  /* 新本体沿用 V0.8 DOM 亮星，不增加地图影响圆。 */
   function flashObjects(objects, relations) {
-    const now = performance.now();
-    objects.filter(Boolean).forEach((o, i) => {
-      if (o.geo === false || !Number.isFinite(o.lng) || !inLevel(o.lng, o.lat)) return;
-      fresh.push({ id: 'rel-fresh-' + (++freshSeq), lng: o.lng, lat: o.lat, t0: now + i * 160, dur: PULSE_MS, color: domOf(o).c || '#e4a449' });
-    });
-    if (!fresh.length) return;
-    if (S.state.rel.view === 'globe') globe.flash(objects.map(o => o && o.id).filter(Boolean), relations.map(r => r && r.id));
-    syncFresh();
-    /* 新线晚一点再接上，看得出「先亮起、后连线」 */
-    setTimeout(() => { if (S.state.rel.view === 'geo') paintFocus(); }, 1100);
+    objects.filter(Boolean).forEach(relFlashStar);
   }
 
   /* ---------- PRD V1.3：右侧本体卡片与地图视角分离，包含可定位和不可定位本体 ---------- */
@@ -848,8 +855,6 @@ window.V03Relation = (function () {
   const KIND_LABEL = { variety: '品种', commodity: '品种', market: '市场', channel: '渠道', operator: '经营主体',
     company: '经营主体', institution: '机构/制度', agency: '机构', logistics: '物流设施', facility: '设施',
     resource: '资源', base: '基地', metric: '指标', person: '人物' };
-  /* 这些分类的卡片在摘要下面带一张图 */
-  const KIND_WITH_IMAGE = ['variety', 'commodity', 'market', 'channel', 'resource', 'base', 'logistics', 'facility'];
 
 
   /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
@@ -886,7 +891,7 @@ window.V03Relation = (function () {
     }
     return V03Intake.star(dom.main, px, o.id);
   }
-  function receiveObjects(objects, force = false) {
+  function receiveObjects(objects, force = false, replay = false) {
     const list = objects.filter(o => o && D.objById(o.id) && CARD_KINDS.includes(o.domain) && (force || !seenArrivals.has(o.id)));
     list.forEach(o => {
       seenArrivals.add(o.id);
@@ -896,7 +901,8 @@ window.V03Relation = (function () {
     freshOrder.length = Math.min(20, freshOrder.length);
     if (!list.length || S.state.tab !== 'relation') return;
     renderPanel(S.state, F.objects(S.state));
-    V03Intake.note(dom.side, '新本体', list[0].name);
+    if(S.state.rel.view==='geo')paintFocus();
+    V03Intake.note(dom.side, replay?'本体接入回放':'新本体', list[0].name);
     objects.forEach(relFlashStar);
     dom.body.scrollTop = 0;
     if (dom.body.__auto) dom.body.__auto.paused = Date.now() + 4500;
@@ -922,7 +928,7 @@ window.V03Relation = (function () {
       const t = String(F.relKind(o) || '');
       return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t);
     });
-    const nogeo = kept.slice().sort((a,b)=>String(recentOf(b)).localeCompare(String(recentOf(a))));
+    const nogeo = kept.slice().sort((a,b)=>Number(b.priority==='high')-Number(a.priority==='high') || Number(b.domain==='commodity')-Number(a.domain==='commodity') || String(recentOf(b)).localeCompare(String(recentOf(a))));
     const ordered = nogeo.sort((a, b) => (freshOrder.indexOf(a.id) < 0 ? 1e9 : freshOrder.indexOf(a.id)) - (freshOrder.indexOf(b.id) < 0 ? 1e9 : freshOrder.indexOf(b.id)));
     const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
@@ -949,13 +955,7 @@ window.V03Relation = (function () {
         .slice(0, 6)
         .map(([k, v]) => '<span class="rc-kv"><i>' + esc(k) + '</i>' + esc(String(v).slice(0, 22)) + '</span>').join('');
       const relCount = D.relationsOf(o.id).length;
-      /* 有些卡片带一张图（像事实层那样）：有图源的直接出，没图源的按类型出一部分 */
-      const h = (() => { let x = 0; const t = String(o.id || o.name); for (let i = 0; i < t.length; i++) x = (x * 31 + t.charCodeAt(i)) % 9973; return x })();
-      const imgKind = /variety|commodity|market|base|resource|channel/.test(o.domain || '');
-      const hasImg = !!(o.imageUrl || o.media || o.thumb || o.cover);
-      /* 指定分类里也只是一部分带图（大约一半），避免整屏都是图 */
-      const showImg = hasImg || (KIND_WITH_IMAGE.indexOf(o.domain) >= 0 && h % 2 === 0);
-      const thumb = showImg ? '<span class="rc-thumb"><i>' + esc((o.sourceName || o.sub || kind || '').slice(0, 16)) + '</i><em>▤</em></span>' : '';
+      const thumb = V03Media.figure(o,'object');
       const update = o.updatedAt || o.updated || o.sourceName || o.publishedAt || '';
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
         '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
@@ -971,6 +971,7 @@ window.V03Relation = (function () {
     dom.body.querySelectorAll('[data-obj]').forEach(el => el.classList.toggle('is-fresh', freshOrder.includes(el.dataset.obj)));
     autoScrollCards(dom.body);
     dom.body.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => openObject(n.dataset.obj));
+    V03Media.mount(dom.body);
   }
 
   /* ---------- A6：抽屉内容（本体详情 / 关系详情） ---------- */
@@ -992,6 +993,7 @@ window.V03Relation = (function () {
       <div class="fd">
         <div class="fd-id">${esc(F.relKind(o)||dm.n)}</div>
         <h3>${esc(o.name)}</h3>
+        ${V03Media.figure(o,'object',true)}
 
         <div class="fd-sec">
           <h4>分类与所在地</h4>
@@ -1021,6 +1023,7 @@ window.V03Relation = (function () {
         <button type="button" class="rel-start-sim">基于该本体发起推演</button>
       </div>`;
     box.querySelector('.rel-start-sim').onclick = () => S.set({ carry: [...new Set([...(S.state.carry || []), ...(o.factIds || [])])], tab: 'sim' });
+    V03Media.mount(box);
     box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
     box.querySelectorAll('[data-rel]').forEach(n => n.onclick = () => {
       const stack = S.state.rel.stack || [];
@@ -1035,6 +1038,7 @@ window.V03Relation = (function () {
       <div class="fd">
         <div class="fd-id">关系详情</div>
         <h3>${esc(a ? a.name : r.from)} → ${esc(r.type)} → ${esc(b ? b.name : r.to)}</h3>
+        ${V03Media.figure(facts[0]||a||b, facts.length?'fact':'object',true)}
 
         <div class="fd-sec">
           <h4>关系类型</h4><p>${esc(r.type)}</p>
@@ -1057,6 +1061,7 @@ window.V03Relation = (function () {
         <button type="button" class="rel-start-sim">基于该关系发起推演</button>
       </div>`;
     box.querySelector('.rel-start-sim').onclick = () => S.set({carry:[...new Set([...(S.state.carry||[]),...(r.factIds||[])])],tab:'sim'});
+    V03Media.mount(box);
     box.querySelectorAll('[data-fact]').forEach(n=>n.onclick=()=>openFact(n.dataset.fact));
     box.querySelectorAll('[data-object]').forEach(n=>n.onclick=()=>{const stack=S.state.rel.stack||[];S.set({rel:{sel:n.dataset.object,kind:'object',stack:stack.concat([{kind:'object',id:n.dataset.object}])}});});
   }
@@ -1067,7 +1072,7 @@ window.V03Relation = (function () {
     const st = S.state;
     globe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, D.revision, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, D.revision, st.dataRevision, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
     if (camera.level !== relLevel() + '|' + (relFocus() || '')) fitLevel();
@@ -1111,15 +1116,17 @@ window.V03Relation = (function () {
       /* 图层不可见时容器是 0 尺寸，此时 resize 会让 ECharts 在空画布上 drawImage 报错 */
       if (dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0) c.resize();
       const nextGeometry = JSON.stringify([st.rel.view, relLevel(), relFocus(), st.rel.search, st.varieties,
-        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme, D.revision]);
+        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme, D.revision, st.dataRevision]);
       if (geometrySig !== nextGeometry) {
-        if (st.rel.view === 'geo') {
+        const frame=[st.rel.view,relLevel(),relFocus(),st.theme].join('|'),freshFrame=frame!==mapFrame;
+        if (st.rel.view === 'geo' && freshFrame) {
           beginIntro();
           const cfg = levelCfg();
           c.setOption({ geo: { map: cfg.map, center: camera.center.slice(), zoom: camera.zoom,
             boundingCoords: cfg.bounds, itemStyle: { areaColor: palette().land } }, series: [] }, { notMerge: true });
         }
-        c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: true });
+        c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: freshFrame || st.rel.view==='graph' });
+        mapFrame=frame;
         geometrySig = nextGeometry;
       } else if (st.rel.view === 'geo') paintFocus();
     }
@@ -1139,7 +1146,7 @@ window.V03Relation = (function () {
       globe: globe.debug()
     };
   };
-  let mapAnimationPaused = false;
+  let mapAnimationPaused = false, mapFrame='';
   const setVisible = active => {
     globe.setVisible(active && S.state.rel.view === 'globe');
     const paused = !active || S.state.rel.view === 'globe';
@@ -1148,5 +1155,12 @@ window.V03Relation = (function () {
       mapAnimationPaused = paused;
     }
   };
-  return { notifyNewest, receiveObjects, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
+  function arrivalCandidates(){
+    const list=F.objects(S.state).filter(o=>o.geo!==false&&Number.isFinite(o.lng)&&inLevel(o.lng,o.lat));
+    return list.filter(o=>{
+      if(S.state.rel.view==='globe')return globe.screenPoint(o.lng,o.lat);
+      return chart && mapPoints(o.lng,o.lat).some(v=>{const p=chart.convertToPixel({geoIndex:0},v);return p&&p[0]>25&&p[0]<dom.canvas.clientWidth-25&&p[1]>25&&p[1]<dom.canvas.clientHeight-25;});
+    });
+  }
+  return { notifyNewest, receiveObjects, arrivalCandidates, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
 })();

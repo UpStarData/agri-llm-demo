@@ -25,7 +25,7 @@ try {
     controls: [...document.querySelectorAll('#mapSk button')].map(b => b.dataset.k),
     total: document.querySelector('#menuBody .relation-overview')?.textContent }));
   if (rel.controls.join(',') !== 'zoomIn,zoomOut,view3d,view2d,viewGraph,search,gates,fullscreen') throw Error('关联层快捷键数量或顺序失效: ' + rel.controls);
-  if (rel.view !== 'globe' || !rel.controls.includes('viewGraph') || !rel.total.includes('4128')) throw Error('关联层默认视图、控制或概览失效');
+  if (rel.view !== 'globe' || !rel.controls.includes('viewGraph') || !rel.total.includes(String(await page.evaluate(()=>V03Data.OBJECTS.length)))) throw Error('关联层默认视图、控制或概览失效');
   if ((await page.locator('#menuBody').textContent()).includes('暂无记录')) throw Error('图例仍包含无数据提示');
   await page.locator('#mapSk button[data-k=gates]').click();
   if (!await page.evaluate(() => V03Store.state.sk.gates)) throw Error('港口锚点开关失效');
