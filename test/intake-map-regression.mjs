@@ -14,7 +14,7 @@ try {
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(pathToFileURL(path.resolve('index.html')).href);
   await page.waitForFunction(() => window.__AGRI_READY);
-  await page.evaluate(() => V03Store.set({ panels: { stream: false }, geo: { level: 'L3', focus: '湖南' } }));
+  await page.evaluate(() => { V03Feed.complete(); V03Feed.stop(); V03Store.set({ time:'all', panels: { stream: false }, geo: { level: 'L3', focus: '湖南' } }); });
   const inspectHalos = () => page.evaluate(() => {
     const c = echarts.getInstanceByDom(document.querySelector('#factMap'));
     const data = c.getOption().series.find(s => s.id === 'halo').data;
@@ -22,6 +22,7 @@ try {
     return { count: data.length, maxDiameter: Math.max(0, ...data.map(h => h.symbolSize)),
       minSpacing: Math.min(Infinity, ...xy.flatMap((a, i) => xy.slice(i + 1).map(b => Math.hypot(a[0] - b[0], a[1] - b[1])))) };
   });
+  await page.waitForFunction(()=>echarts.getInstanceByDom(document.querySelector('#factMap')).getOption().series.find(s=>s.id==='halo').data.length>0,{},{timeout:12000});
   report.coldHunan = await inspectHalos();
   assert(report.coldHunan.count > 0 && report.coldHunan.maxDiameter <= 100 && report.coldHunan.minSpacing >= 25, JSON.stringify(report.coldHunan));
   await page.screenshot({ path: path.join(out, 'fact-hunan.png') });

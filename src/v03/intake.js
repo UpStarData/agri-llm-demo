@@ -20,11 +20,12 @@ window.V03Intake = (() => {
     if (x < 0 || y < 0 || x > box.width || y > box.height) return false;
     // Keep a burst bounded; existing stars finish their own animation.
     const active = host.querySelectorAll('.star-flash');
+    active.forEach(n=>{if(n.dataset.fid===id)n.remove();});
     if (active.length >= 6) active[0].remove();
     const node = document.createElement('div');
     node.className = 'star-flash ' + (bright ? 'bright' : 'dim'); node.dataset.fid = id;
     node.style.left = x + 'px'; node.style.top = y + 'px'; node.innerHTML = '<i></i>';
-    host.append(node); setTimeout(() => node.remove(), 1200);
+    host.append(node); setTimeout(() => node.remove(), 1000);
     return true;
   }
   return { note, star };

@@ -486,14 +486,7 @@
     body.appendChild(row);
     while (body.children.length > 90) body.removeChild(body.firstChild);
     body.scrollTop = body.scrollHeight;
-    /* B3/M7 + A4：带星标的记录同时向地图发一次「新本体接入」。
-       事实层亮星；关联层先亮星、再把新线接上。日志只是回放，不写入新事实。 */
-    if (e.star && e.star.factId) {
-      const known = D.factById(e.star.factId);
-      const point = e.star.geoPoint || [];
-      const fact = known || { id: e.star.factId, lng: point[0], lat: point[1], objects: [], impact: e.star.level === 'bright' ? 'high' : 'low' };
-      S.emit('stream:line', { fact, level: e.star.level || 'dim' });
-    }
+    // Historical processing logs do not impersonate newly ingested records.
   }
   function scheduleStream() {
     clearTimeout(ST.timer);
@@ -689,7 +682,10 @@
       refreshLayers(false);
       if (changed.some(k => ['time', 'q', 'catKeys', 'varieties', 'region', 'relKeys', 'geo', 'tab', 'rel', 'sk', 'carry', 'factObj'].includes(k))) shakeLogo();
     });
-    S.onEvent('data:ingested', () => S.set({ dataRevision: D.revision }));
+    let dataRevision=0;
+    S.onEvent('data:ingested', () => S.set({ dataRevision: ++dataRevision }));
+    S.onEvent('data:revealed', () => S.set({ dataRevision: ++dataRevision }));
+    S.onEvent('feed:log', p => { const body=$('streamBody');if(!body)return;const row=el('div','st-line');row.appendChild(el('span','tx',p.text));body.appendChild(row);while(body.children.length>90)body.firstChild.remove();body.scrollTop=body.scrollHeight; });
     S.onEvent('toast', toast);
     S.onEvent('jump', p => { if (p && p.tab) S.set({ tab: p.tab }); });
     window.V03Shell = {
@@ -762,6 +758,7 @@
       ,overview: () => ({ value: Math.floor(OV.base + OV.extra), today: OV.today, history: OV.history.slice(), running: !!OV.timer })
     };
     window.__AGRI_READY = true;
+    window.V03Feed?.start();
   }
   document.addEventListener('DOMContentLoaded', boot);
   if (document.readyState !== 'loading') boot();
