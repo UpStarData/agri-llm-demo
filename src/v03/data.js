@@ -489,13 +489,65 @@ window.V03Data = (function () {
 
   const ALL_FACTS = PKG ? PKG.FACTS : PACK_FACTS;
   const ALL_OBJECTS = PKG ? PKG.OBJECTS : PACK_OBJECTS;
-  const ALL_RELATIONS = PKG ? PKG.RELATIONS : PACK_RELATIONS;
+  const RAW_RELATIONS = PKG ? PKG.RELATIONS : PACK_RELATIONS;
+  const objectIds = new Set(ALL_OBJECTS.map(o => o.id));
+  const sourceObjects = new Map(ALL_OBJECTS.map(o => [o.id, o]));
+  const sourceFacts = new Map(ALL_FACTS.map(f => [f.id, f]));
+  const countryOf = o => ((o?.regionPath || []).find(p => p.level === 'country') || {}).code;
+  const tradeFlows = new Set(['SUPPLIES_TO', 'FLOWS_INTO', 'FLOWS_OUT_OF', 'SHIPS_THROUGH']);
+  function supportedFlow(r, objectOf, factOf) {
+    const a = countryOf(objectOf(r.from)), b = countryOf(objectOf(r.to));
+    return !tradeFlows.has(r.typeCode) || !a || !b || a === b || (r.factIds || []).some(id => {
+      const ids = factOf(id)?.objects || []; return ids.includes(r.from) && ids.includes(r.to);
+    });
+  }
+  const relationAliases = {}, uniqueRelations = new Map();
+  const relationAudit = { input: RAW_RELATIONS.length, duplicates: 0, invalid: 0, unsupportedCrossBorder: 0 };
+  RAW_RELATIONS.forEach(r => {
+    if (!r.id || r.from === r.to || !objectIds.has(r.from) || !objectIds.has(r.to) || !Number.isFinite(r.confidence) || r.confidence < 0 || r.confidence > 1) { relationAudit.invalid++; return; }
+    // A country-level import story cannot establish a route into an arbitrary local market.
+    // Keep the original package for audit; expose only cross-border flows supported at both endpoints.
+    if (!supportedFlow(r, id => sourceObjects.get(id), id => sourceFacts.get(id))) { relationAudit.unsupportedCrossBorder++; return; }
+    const key = [r.from, r.to, r.type].join('|'), old = uniqueRelations.get(key);
+    if (old) {
+      old.factIds = [...new Set([...(old.factIds || []), ...(r.factIds || [])])];
+      old.confidence = Math.max(old.confidence, r.confidence);
+      relationAliases[r.id] = old; relationAudit.duplicates++;
+    } else uniqueRelations.set(key, { ...r });
+  });
+  const ALL_RELATIONS = [...uniqueRelations.values()];
+  relationAudit.output = ALL_RELATIONS.length;
 
   const idx = arr => arr.reduce((m, x) => { if (!m[x.id]) m[x.id] = x; return m; }, {});
   /* 数据包优先；自带数据（BASE_/ATLAS_）作别名兜底：推演层 run / report 里的引用依旧可解析 */
-  const F = idx(ALL_FACTS.concat(PACK_FACTS)), O = idx(ALL_OBJECTS.concat(PACK_OBJECTS)), R = idx(ALL_RELATIONS.concat(PACK_RELATIONS));
+  const F = idx(ALL_FACTS.concat(PACK_FACTS)), O = idx(ALL_OBJECTS.concat(PACK_OBJECTS)), R = Object.assign(idx(ALL_RELATIONS.concat(PACK_RELATIONS)), relationAliases);
+  const relationsIndex = new Map();
+  function indexRelations() {
+    relationsIndex.clear();
+    ALL_RELATIONS.forEach(r => [r.from, r.to].forEach(id => { if (!relationsIndex.has(id)) relationsIndex.set(id, []); relationsIndex.get(id).push(r); }));
+  }
+  indexRelations();
+  let revision = 0;
+  function ingest(batch = {}) {
+    const added = { facts: [], objects: [], relations: [] };
+    for (const [kind, list, index] of [['objects', ALL_OBJECTS, O], ['facts', ALL_FACTS, F], ['relations', ALL_RELATIONS, R]]) {
+      for (const item of batch[kind] || []) {
+        if (!item || !item.id || index[item.id]) continue;
+        if (kind === 'relations' && (!O[item.from] || !O[item.to] || item.from === item.to ||
+          !Number.isFinite(item.confidence) || item.confidence < 0 || item.confidence > 1 || !supportedFlow(item, id => O[id], id => F[id]))) continue;
+        if (item.lng != null && (!Number.isFinite(item.lng) || !Number.isFinite(item.lat) || Math.abs(item.lng) > 180 || Math.abs(item.lat) > 90)) continue;
+        list.push(item); index[item.id] = item; added[kind].push(item);
+      }
+    }
+    if (Object.values(added).some(x => x.length)) {
+      revision++; indexRelations();
+      if (window.V03Store) V03Store.emit('data:ingested', added);
+    }
+    return added;
+  }
 
   return {
+    ingest, get revision() { return revision; }, relationAudit,
     TODAY, CATS, DOMAINS, PROV_CENTER, CHINA_BOX, FACTS: ALL_FACTS, OBJECTS: ALL_OBJECTS, RELATIONS: ALL_RELATIONS, STREAM,
     REGIONS, GATES, NODES: GATES.filter(g => g.kind === 'node'), PACK,
     /* 数据包对象（事实层 / 关联层正式数据源）；自带走 BASE_* 别名，供推演层与降级使用 */
@@ -513,7 +565,7 @@ window.V03Data = (function () {
     /* 事实 → 相关对象/关系；对象/关系 → 支撑事实 */
     factsOfObject: id => ALL_FACTS.filter(f => (f.objects || []).includes(id)),
     factsOfRelation: id => ALL_FACTS.filter(f => (f.relations || []).includes(id)),
-    relationsOf: id => ALL_RELATIONS.filter(r => r.from === id || r.to === id),
+    relationsOf: id => relationsIndex.get(id) || [],
     factsFor: ids => (ids || []).map(i => F[i]).filter(Boolean),
     /* 一组事实里最近的日期（左侧菜单「最近更新时间」用） */
     latestDate: list => ((list || []).map(f => f.date).sort().pop()) || null,
