@@ -507,8 +507,13 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
   box-shadow:0 0 10px rgba(255,220,120,.75)}
 .star-flash.dim i{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;opacity:.75;box-shadow:0 0 6px rgba(255,220,120,.5)}
 .star-flash.bright i{transform:scale(1.5)}
-.star-flash::after{content:"";position:absolute;left:-12px;top:-12px;width:24px;height:24px;background:#fff8ce;
-  clip-path:polygon(50% 0,58% 40%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 40%)}
+.media-figure{margin:8px 0;overflow:hidden;border-radius:7px;background:#edf1ee;max-width:100%}
+.media-figure img{display:block;width:100%;height:110px;object-fit:cover}
+.media-figure.detail img{height:220px;max-height:35vh}
+.media-figure figcaption{padding:4px 6px;font-size:10px;line-height:1.4;color:#64748b;overflow-wrap:anywhere}
+.media-figure.unavailable{min-height:38px}
+.fc-player video{width:100%;height:100%;object-fit:cover}
+.fc-player button{position:absolute;inset:0;border:0;background:#172c3a66;color:#fff;cursor:pointer}
 .rel-card.is-fresh{box-shadow:0 0 0 2px #0ea5e955}
 @keyframes starFlash{
   0%{opacity:0;transform:scale(.3)}

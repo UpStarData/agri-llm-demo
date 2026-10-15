@@ -192,7 +192,8 @@ window.V03Fact = (function () {
       if (!p || !p.fact || S.state.tab !== 'fact' || seen.has(p.fact.id)) return;
       seen.add(p.fact.id); receiveFact(p.fact);
     });
-    S.onEvent('data:ingested', p => { (p.facts || []).forEach(receiveFact); });
+    S.onEvent('data:ingested', p => { (p.facts || []).forEach(f=>receiveFact(f)); });
+    S.onEvent('feed:arrival', p=>{if(S.state.tab==='fact')receiveFact(p.fact,{replay:p.mode==='snapshot-replay'});});
   }
 
   /* ---------- 地图（浅色农业风） ---------- */
@@ -388,7 +389,7 @@ window.V03Fact = (function () {
   /* ---------- V0.8 的"星星亮起"：新事实接入时在坐标处闪一颗星（DOM 动画，1 秒后自动移除） ---------- */
   /* 验收接口：手动触发一次"新事实接入"（通知条 + 星星），便于确认效果 */
   const freshOrder = [];
-  function receiveFact(f) {
+  function receiveFact(f, options={}) {
     if (!f || !D.factById(f.id)) return null;
     freshIds.add(f.id);
     const at = freshOrder.indexOf(f.id); if (at >= 0) freshOrder.splice(at, 1);
@@ -397,7 +398,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, '新事实', f.title);
+      V03Intake.note(dom.side, options.replay?'事实接入回放':'新事实', f.title);
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -543,6 +544,7 @@ window.V03Fact = (function () {
     if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
     const lv = LEVEL[st.geo.level], p = palette();
     const halos = [], pts = [], ripples = [];
+    const pointGroups = new Map();
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
     /* 间距按"屏幕像素"算（原来比的是经纬度，等于 28°，中国全境只放得下 2 个 → 只剩 1 个光晕） */
     const toPx = (lng, lat) => { try { const q = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]); return Array.isArray(q) && q.every(Number.isFinite) && q[0] >= 0 && q[0] <= dom.map.clientWidth && q[1] >= 0 && q[1] <= dom.map.clientHeight ? q : null } catch (e) { return null } };
@@ -565,12 +567,15 @@ window.V03Fact = (function () {
           usedHalo.push(toPx(value[0], value[1]));
           if (ripples.length < 8) ripples.push({ id: f.id, name: f.title, value });
         }
-        pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
+        const pointKey=value.map(v=>v.toFixed(4)).join('|'), existing=pointGroups.get(pointKey);
+        if(existing){existing.factIds.push(f.id);return;}
+        const point={ id: f.id, factIds:[f.id], name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { opacity: (() => {
             const target = ageAlpha(f, st.time);
             /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
             return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
-          })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } });
+          })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } };
+        pointGroups.set(pointKey,point);pts.push(point);
       });
     });
     /* 质量级采样层：代表数据库体量（每个三级类型 1 万 / 10 万 / 100 万条），只作密度表达，不参与交互 */
@@ -621,7 +626,7 @@ window.V03Fact = (function () {
           }
           if (sid === 'facts') {
             const f = D.factById(p.data.id); if (!f) return '';
-            return '<b>' + esc(f.title) + '</b><br>' + esc(f.region) + ' · ' + f.date + '<br>' + esc(leafOf(f).n || catOf(f).n);
+            return '<b>' + esc(f.title) + '</b><br>' + esc(f.region) + ' · ' + f.date + '<br>' + esc(leafOf(f).n || catOf(f).n) + ((p.data.factIds||[]).length>1?'<br>该位置共 '+p.data.factIds.length+' 条事实，点击查看最新记录':'');
           }
           const it = allOverlays().find(r => r.id === (p.data || {}).id);
           return it ? '<b>' + esc(it.name) + '</b>' + (it.variety ? '<br>' + esc(it.variety) : '') : (p.name || '');
@@ -684,7 +689,7 @@ window.V03Fact = (function () {
     push();
     flashTimer = setInterval(push, 60);
   }
-  const flashIds = () => freshFlashes.map(x => x.factId);
+  const flashIds = () => [...document.querySelectorAll('#layer-fact .star-flash')].map(n=>n.dataset.fid);
 
   /* ---------- 点击 ---------- */
   function openFact(id) {
@@ -740,15 +745,13 @@ window.V03Fact = (function () {
     return '⛅';
   };
   const fmtNum = v => (typeof v === 'number' ? (Math.abs(v) >= 1000 ? v.toLocaleString() : v) : v == null ? '—' : v);
-  /* 可嵌入播放条件：① 数据来自已核验可嵌入的公开源（响应头无 X-Frame-Options / CSP frame-ancestors）
-     ② 页面本身通过 http(s) 打开 —— 公开直播源的播放器帧会以 CSP frame-ancestors 拒绝 file:// 祖先，
-     此时按静态降级卡片处理（保留原始外链），避免控制台报错与"黑屏播放器"。 */
+  /* 只挂载公开直连 HLS，页面来源只作为外链。 */
   const CAN_EMBED = typeof location !== 'undefined' && (location.protocol === 'http:' || location.protocol === 'https:');
-  const isPlayable = f => CAN_EMBED && f.cardType === 'video' && f.card && f.card.embeddable === 'yes' && !!f.card.embedUrl;
+  const isPlayable = f => isStreamable(f);
   /* m3u8 直连：hls.js 可用，且流地址协议与页面协议一致（避免 https 页面被混合内容拦截） */
   const pageProto = (typeof location !== 'undefined' ? location.protocol : 'file:');
-  const canHls = url => !!url && typeof Hls !== 'undefined' && Hls.isSupported() &&
-    (url.indexOf('https://') === 0 ? pageProto === 'https:' : pageProto === 'http:');
+  const canHls = url => CAN_EMBED && /^https?:\/\//.test(url || '') && !(pageProto==='https:' && url.startsWith('http:')) &&
+    ((typeof Hls !== 'undefined' && Hls.isSupported()) || !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl'));
   const isStreamable = f => !!(f.cardType === 'video' && f.card && f.card.hlsUrl && canHls(f.card.hlsUrl));
   function hexA(hex, a) {
     const h = String(hex).replace('#', '');
@@ -774,67 +777,65 @@ window.V03Fact = (function () {
       return '<i class="' + (dn ? 'dn' : '') + '" style="height:' + hgt.toFixed(0) + '%"></i>';
     }).join('') + '</div>';
   }
-  /* 播放器懒挂载：仅当卡片进入视口且「直播流」开启时挂载 iframe（离开视口卸载，减少第三方资源与噪音） */
+  /* 播放器懒挂载；同时最多一个解码器，离开视口立即释放。 */
   const VIS = {
-    io: null,
+    io: null, active:null,
     init() {
       if (this.io || typeof IntersectionObserver === 'undefined') return;
       this.io = new IntersectionObserver(list => list.forEach(en => VIS.apply(en.target, en.isIntersecting)), { rootMargin: '160px', threshold: .01 });
     },
     apply(box, visible) {
       if (!box || !box.dataset || box.dataset.embed !== '1') return;
+      box._visible=visible;
       const on = S.state.sk.live && visible;
       box.classList.toggle('paused', !on);
-      const frame = box.querySelector('iframe'), video = box.querySelector('video');
-      if (on && !frame && !video && box.dataset.hls) {
-        /* D1：m3u8 直连（hls.js） */
-        const v = document.createElement('video');
-        v.muted = true; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', '');
-        box.appendChild(v);
-        try {
-          const hls = new Hls({ lowLatencyMode: false, liveDurationInfinity: true });
-          box._hls = hls;
-          hls.loadSource(box.dataset.hls);
-          hls.attachMedia(v);
-          hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); });
-          hls.on(Hls.Events.ERROR, () => { /* 流不可用时退回 iframe 播放页 */
-            try { hls.destroy(); } catch (e) {}
-            box._hls = null; v.remove();
-            if (box.dataset.src) { const f2 = document.createElement('iframe'); f2.src = box.dataset.src; f2.allowFullscreen = true; box.appendChild(f2); }
-          });
-        } catch (e) { v.remove(); }
-        return;
-      }
-      if (on && !frame && !video && box.dataset.src) {
-        const f2 = document.createElement('iframe');
-        f2.src = box.dataset.src; f2.title = box.dataset.title || '直播'; f2.allowFullscreen = true;
-        box.appendChild(f2);
+      const video = box.querySelector('video');
+      if (on && !video && box.dataset.hls) {
+        if(this.active && !this.active.isConnected)this.dispose(this.active);
+        if((!this.active || box.closest('.drawer')) && !box._failed)this.play(box);
+        else if(!box.querySelector('button'))this.button(box,'点击播放');
       }
       if (!on) {
-        if (frame) frame.remove();
-        if (box._hls) { try { box._hls.destroy(); } catch (e) {} box._hls = null; }
-        if (video) video.remove();
+        this.dispose(box);
       }
+    },
+    dispose(scope){
+      const boxes=scope?.matches?.('.fc-player')?[scope]:[...(scope?.querySelectorAll?.('.fc-player')||[])];
+      boxes.forEach(box=>{if(box._hls){box._hls.destroy();box._hls=null;}const v=box.querySelector('video');if(v){v.pause();v.removeAttribute('src');v.load();v.remove();}if(this.active===box)this.active=null;if(!box.isConnected)this.io?.unobserve(box);});
+    },
+    button(box,text){box.querySelectorAll('button').forEach(b=>b.remove());const b=document.createElement('button');b.type='button';b.textContent=text;b.onclick=e=>{e.stopPropagation();box._failed=false;this.play(box);};box.appendChild(b);},
+    play(box){
+      if(this.active && this.active!==box){const previous=this.active;this.dispose(previous);this.button(previous,'点击播放');}
+      this.dispose(box);this.active=box;box.querySelectorAll('button').forEach(b=>b.remove());
+      const v=document.createElement('video');v.muted=true;v.autoplay=true;v.controls=true;v.playsInline=true;v.preload='none';v.poster=box.dataset.poster||'';v.setAttribute('playsinline','');box.appendChild(v);
+      box.onclick=e=>e.stopPropagation();
+      const fail=()=>{box._failed=true;this.dispose(box);this.button(box,'直播源暂不可用 · 点击重试');};
+      v.addEventListener('error',fail,{once:true});
+      if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=box.dataset.hls;v.play().catch(()=>{});return;}
+      try{const hls=new Hls({lowLatencyMode:false,maxBufferLength:8,maxMaxBufferLength:15,backBufferLength:0,capLevelToPlayerSize:true,startLevel:0});box._hls=hls;
+        hls.loadSource(box.dataset.hls);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,()=>v.play().catch(()=>{}));hls.on(Hls.Events.ERROR,(_,data)=>{if(data.fatal)fail();});
+      }catch{fail();}
     },
     sync() {
       this.init();
+      if(this.active && !this.active.isConnected)this.dispose(this.active);
       const boxes = [...document.querySelectorAll('.fc-player[data-embed="1"]')];
-      boxes.forEach(box => { if (this.io) { this.io.observe(box); } else this.apply(box, true); });
+      boxes.forEach(box => { box.onclick=e=>e.stopPropagation(); if (this.io) { this.io.observe(box); } else this.apply(box, true); });
     }
   };
 
   function videoBlock(f) {
     const c = f.card || {};
-    if (isPlayable(f) || isStreamable(f)) {
+    if (isStreamable(f)) {
       const hlsAttr = isStreamable(f) ? ' data-hls="' + esc(c.hlsUrl) + '"' : '';
-      const srcAttr = isPlayable(f) ? ' data-src="' + esc(c.embedUrl) + '"' : '';
+      const srcAttr = '';
       return '<div class="fc-player" data-embed="1" data-play="' + (S.state.sk.live ? 1 : 0) + '"' + srcAttr + hlsAttr +
-        ' data-title="' + esc(c.mediaTitle || '视频') + '">' + (S.state.sk.live ? '' : '<span class="pause">已暂停</span>') + '</div>';
+        ' data-poster="'+esc(window.V03Media?.photo(f)?.url||'')+'" data-title="' + esc(c.mediaTitle || '视频') + '">' + (S.state.sk.live ? '' : '<span class="pause">已暂停</span>') + '</div>';
     }
     return '<div class="fc-static" data-embed="0">' +
       '<div class="fs-line"><span class="fs-ic">▤</span><b>' + esc(c.mediaTitle || f.title) + '</b></div>' +
       '<div class="fs-why">' + esc(c.fallbackReason || '该视频源暂不可直接播放，保留静态卡片') + '</div>' +
-      (c.embedUrl ? '<a class="ext" href="' + esc(c.embedUrl) + '" target="_blank" rel="noopener noreferrer">打开原始视频源</a>' : '') + '</div>';
+      (c.hlsUrl || c.embedUrl ? '<a class="ext" href="' + esc(c.hlsUrl || c.embedUrl) + '" target="_blank" rel="noopener noreferrer">打开原始视频源</a>' : '') + '</div>';
   }
   const dataLabel = f => f.prov === 'real' ? '真实来源' : f.prov === 'deidentified' ? '脱敏数据' : '模拟数据';
   const sourceCount = f => new Set((f.evidence || []).map(e => e.t || e.url || e.k).filter(Boolean)).size;
@@ -880,13 +881,12 @@ window.V03Fact = (function () {
         body = videoBlock(f) + '<h5>' + esc(f.title) + '</h5><p>' + esc(f.summary) + '</p>';
         break;
       default:
-        body = (c.imageUrl ? '<div class="thumb">' + esc(c.sourceName || '') + '<span class="cam">▤</span></div>' : '') +
-          '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
+        body = '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
     return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
       '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
-      body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
+      V03Media.figure(f) + body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 
   let visibleCardCount = 20;
@@ -894,7 +894,7 @@ window.V03Fact = (function () {
     const st = S.state;
     const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
       const ai = freshOrder.indexOf(a.id), bi = freshOrder.indexOf(b.id);
-      return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi);
+      return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi) || Number(b.id.startsWith('v23-hongxing'))-Number(a.id.startsWith('v23-hongxing'));
     });
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
@@ -904,6 +904,10 @@ window.V03Fact = (function () {
       return;
     }
     const scroll = dom.sideBody.scrollTop;
+    const stableKey=facts.slice(0,visibleCardCount).map(f=>f.id).join('|')+'|'+st.sk.live;
+    if(dom.sideBody.dataset.cards===stableKey){VIS.sync();return;}
+    dom.sideBody.dataset.cards=stableKey;
+    VIS.dispose(dom.sideBody);
     dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
     dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh'); });
@@ -923,6 +927,7 @@ window.V03Fact = (function () {
       el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } };
     });
     VIS.sync();
+    V03Media.mount(dom.sideBody);
   }
 
   /* ---------- F10：事实详情（右侧嵌套抽屉） ---------- */
@@ -949,6 +954,7 @@ window.V03Fact = (function () {
       <div class="fd">
         <div class="fd-id">事实 ID：${esc(f.id)}</div>
         <h3>${esc(f.title)}</h3>
+        ${f.cardType==='video' ? (isStreamable(f)?'':V03Media.figure(f,'fact',true))+videoBlock(f) : V03Media.figure(f,'fact',true)}
         <div class="fd-sec"><h4>事实摘要</h4><p>${esc(f.summary || '来源材料未提供摘要')}</p></div>
         <div class="fd-sec"><h4>分类与时间</h4>
           ${row('分类', [leaf.group, leaf.sub, leaf.n].filter(Boolean).join(' › '))}
@@ -987,6 +993,7 @@ window.V03Fact = (function () {
     const toLog = box.querySelector('#toLog');
     if (toLog) toLog.onclick = () => S.set({ logOpen: !st.logOpen });
     VIS.sync();
+    V03Media.mount(box);
   }
   const uniq = a => a.filter((x, i) => a.indexOf(x) === i);
 
@@ -994,9 +1001,10 @@ window.V03Fact = (function () {
   function globePayload() {
     const st = S.state, all = F.factsAtLevel(st);
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
-    const points = facts.map(f => ({
+    const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()];
+    const points = unique.map(f => ({
       id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, big: f.impact === 'high',
-      halo: (st.sk.influence && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
+      halo: (st.sk.influence && !f.radiusEstimated && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
       haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
     const overlay = (st.sk.regions ? regionsAtLevel() : [])
@@ -1039,7 +1047,7 @@ window.V03Fact = (function () {
     const st = S.state;
     const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
-      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme, D.revision]);
+      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme, D.revision, st.dataRevision]);
     if (key === sig) return; sig = key;
 
     dom.searchStatus.hidden = !st.q;
@@ -1059,20 +1067,24 @@ window.V03Fact = (function () {
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
       const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
-        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme, D.revision]);
+        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme, D.revision, st.dataRevision]);
       if (nextMapSig !== mapSig) {
         applyMap();
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live, st.newFacts, D.revision]);
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live, st.newFacts, D.revision, st.dataRevision]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 
+  let mapFrame='';
   function applyMap() {
-    chart.setOption(mapOption(false), { notMerge: true });
-    const influence = mapOption(true).series.filter(s => s.id === 'halo' || s.id === 'ripple');
-    chart.setOption({ series: influence }, { silent: true });
+    const frame=JSON.stringify([S.state.geo,S.state.theme]);
+    if(frame!==mapFrame){
+      chart.setOption(mapOption(false), { notMerge: true });
+      mapFrame=frame;
+    }
+    chart.setOption({ series: mapOption(true).series }, { silent: true });
   }
   function viewConfig(level, focus) {
     const t = LEVEL[level], c = level === 'L3' ? (PROV_VIEW[focus || '湖南'] || PROV[focus || '湖南']) : null;
@@ -1111,5 +1123,5 @@ window.V03Fact = (function () {
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
   return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
-    viewConfig, receiveFact, mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
+    viewConfig, receiveFact, arrivalCandidates:()=>F.mappable(F.factsAtLevel(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
