@@ -689,6 +689,7 @@
       refreshLayers(false);
       if (changed.some(k => ['time', 'q', 'catKeys', 'varieties', 'region', 'relKeys', 'geo', 'tab', 'rel', 'sk', 'carry', 'factObj'].includes(k))) shakeLogo();
     });
+    S.onEvent('data:ingested', () => S.set({ dataRevision: D.revision }));
     S.onEvent('toast', toast);
     S.onEvent('jump', p => { if (p && p.tab) S.set({ tab: p.tab }); });
     window.V03Shell = {

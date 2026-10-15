@@ -187,7 +187,12 @@ window.V03Fact = (function () {
       S.set({ sk: { mode3d: true } });
       if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
     }, { capture: true, passive: false });
-    S.onEvent('stream:line', p => flashStar(p && p.fact, p && p.level));
+    const seen = new Set();
+    S.onEvent('stream:line', p => {
+      if (!p || !p.fact || S.state.tab !== 'fact' || seen.has(p.fact.id)) return;
+      seen.add(p.fact.id); receiveFact(p.fact);
+    });
+    S.onEvent('data:ingested', p => { (p.facts || []).forEach(receiveFact); });
   }
 
   /* ---------- 地图（浅色农业风） ---------- */
@@ -195,7 +200,7 @@ window.V03Fact = (function () {
     if (chart) return chart;
     mapReady();
     if (!dom.map || !window.echarts) return null;
-    chart = echarts.init(dom.map);
+    chart = echarts.init(dom.map, null, { devicePixelRatio: Math.min(1.25, window.devicePixelRatio || 1) });
     chart.on('click', onMapClick);
     /* 交互（滚轮/拖拽）后把相机状态同步回 camera，保证缩放按钮与层级切换一致 */
     chart.on('georoam', () => {
@@ -234,7 +239,7 @@ window.V03Fact = (function () {
     const st = S.state;
     if (st.geo.level === level && (!focus || st.geo.focus === focus)) return;
     const t = LEVEL[level];
-    const c = focus && PROV[focus] ? PROV[focus] : null;
+    const c = focus ? (PROV_VIEW[focus] || PROV[focus]) : null;
     S.set({ geo: { level, focus: focus || null }, factId: null });
     camera.level = level + '|' + (focus || '');
     camera.center = c ? [c[0], c[1]] : (t.center ? t.center.slice() : camera.center);
@@ -349,12 +354,16 @@ window.V03Fact = (function () {
       growKey = st.time;
       growK = 0;
       if (!growRaf) {
-        const t0 = performance.now();
+        const t0 = performance.now(); let paintedAt = 0;
         const tick = () => {
           growRaf = 0;
           const p = (performance.now() - t0) / 3200;
           growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
-          if (chart) chart.setOption(mapOption(), { notMerge: true });   /* 绕开签名判断，直接重画地图层 */
+          const now = performance.now();
+          if (S.state.tab === 'fact' && (now - paintedAt >= 80 || growK === 1)) {
+            paintedAt = now;
+            if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap();
+          }
           if (growK < 1) growRaf = requestAnimationFrame(tick);
         };
         growRaf = requestAnimationFrame(tick);
@@ -378,61 +387,54 @@ window.V03Fact = (function () {
 
   /* ---------- V0.8 的"星星亮起"：新事实接入时在坐标处闪一颗星（DOM 动画，1 秒后自动移除） ---------- */
   /* 验收接口：手动触发一次"新事实接入"（通知条 + 星星），便于确认效果 */
-  function notifyNewest() {
-    const st = S.state;
-    const list = F.mappable(F.factsAtLevel(st));
-    const f = list[0]; if (!f) return null;
+  const freshOrder = [];
+  function receiveFact(f) {
+    if (!f || !D.factById(f.id)) return null;
     freshIds.add(f.id);
-    /* 先重画卡片（带上「新接入」标记），再插提示条 —— 顺序反了会被重画冲掉 */
-    try { renderCards(); } catch (e) { /* 忽略 */ }
-    freshNote(dom.sideBody, '新事实接入 · ' + String(f.title || '').slice(0, 22));
-    flashStar(f, 'bright');
-    setTimeout(() => flashStar(f, 'bright'), 150);      /* 再补一颗，避免首帧尺寸未就绪 */
+    const at = freshOrder.indexOf(f.id); if (at >= 0) freshOrder.splice(at, 1);
+    freshOrder.unshift(f.id); freshOrder.length = Math.min(20, freshOrder.length);
+    // Arrival is explicit: changing filters or sorting existing cards is not an arrival.
+    S.set({ newFacts: freshOrder.slice() });
+    if (S.state.tab === 'fact') {
+      renderCards();
+      V03Intake.note(dom.side, '新事实', f.title);
+      flashStar(f, 'bright');
+      if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
+      dom.sideBody.scrollTop = 0;
+    }
     return f.id;
   }
-
+  function notifyNewest() {
+    const list = F.mappable(F.factsAtLevel(S.state));
+    const visible = list.find(f => visiblePixel(f));
+    return receiveFact(visible || list[0]);
+  }
+  function visiblePixel(f) {
+    if (!f || !Number.isFinite(f.lng) || !Number.isFinite(f.lat)) return null;
+    if (S.state.sk.mode3d) return globe.screenPoint(f.lng, f.lat);
+    if (!chart) return null;
+    const W = dom.map.clientWidth, H = dom.map.clientHeight;
+    for (const value of mapPoints(f.lng, f.lat)) {
+      const q = chart.convertToPixel({ geoIndex: 0 }, value);
+      if (Array.isArray(q) && q.every(Number.isFinite) && q[0] >= 0 && q[0] <= W && q[1] >= 0 && q[1] <= H) return q;
+    }
+    return null;
+  }
   function flashStar(f, level) {
-    if (!f || f.lng == null || !chart) return;
-    let px = null;
-    try { px = chart.convertToPixel({ geoIndex: 0 }, [f.lng, f.lat]); } catch (e) { px = null; }
-    if (!Array.isArray(px) || !isFinite(px[0]) || !isFinite(px[1])) return;
-    /* 优先用 ECharts 自己的容器（一定存在且已定位），避免 dom.map 未定义时静默失败 */
-    const host = (chart.getDom && chart.getDom()) || document.getElementById('factMap') || dom.map;
-    if (!host) return;
-    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
-    const box = host.getBoundingClientRect();
-    window.__starDebug = { px: px, box: [Math.round(box.width), Math.round(box.height)] };
-    if (px[0] < 0 || px[1] < 0 || px[0] > box.width || px[1] > box.height) { window.__starDebug.skip = '视野外'; return; }   /* 视野外不闪 */
-    const d = document.createElement('div');
-    d.className = 'star-flash ' + (level === 'bright' || f.impact === 'high' ? 'bright' : 'dim');
-    d.dataset.fid = f.id || '';
-    d.style.left = px[0] + 'px'; d.style.top = px[1] + 'px';
-    d.innerHTML = '<i></i>';
-    host.appendChild(d);
-    window.__starCount = (window.__starCount || 0) + 1;
-    setTimeout(() => { d.remove(); }, 1000);
+    if (S.state.tab !== 'fact') return false;
+    // V0.8's positioned overlay; world seam copies and 3D projection share the same presentation.
+    return V03Intake.star(dom.mapBox, visiblePixel(f), f && f.id, level === 'bright' || f && f.impact === 'high');
   }
-  window.__flashStar = flashStar;   /* 验收/调试入口：window.__flashStar(f) */
+  window.__flashStar = flashStar;
   /* ---------- 卡片自动滚动（非线性、慢）+ 新事实提示 ---------- */
-  let lastTopFactId = null;
   const freshIds = new Set();
-  /* 卡片区内的"新接入"提示条：插入卡片流最上方，3.8 秒后淡出移除 */
-  function freshNote(host, text) {
-    if (!host) return;
-    const old = host.querySelector('.fresh-note'); if (old) old.remove();
-    const n = document.createElement('div');
-    n.className = 'fresh-note';
-    n.innerHTML = '<b>新接入</b>' + text;
-    host.insertBefore(n, host.firstChild);
-    requestAnimationFrame(() => n.classList.add('on'));
-    setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3800);
-  }
   function autoScrollCards(el) {
     if (!el || el.__auto) return;
     el.__auto = { t: 0, raf: 0, paused: 0, lastTop: el.scrollTop };
     const stepFn = () => {
       const a = el.__auto;
       a.raf = requestAnimationFrame(stepFn);
+      if (S.state.tab !== 'fact' || !S.state.panels.cards || document.hidden) return;
       if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
       if (Date.now() < a.paused) return;
       if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
@@ -446,14 +448,6 @@ window.V03Fact = (function () {
     el.__auto.raf = requestAnimationFrame(stepFn);
     el.addEventListener('pointerdown', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) });
     el.addEventListener('wheel', () => { el.__auto && (el.__auto.paused = Date.now() + 4000) }, { passive: true });
-  }
-  function newFactToast(msg) {
-    const host = document.getElementById('toastHost') || (() => { const d = document.createElement('div'); d.id = 'toastHost'; document.body.appendChild(d); return d })();
-    const n = document.createElement('div'); n.className = 'nfact-toast';
-    n.innerHTML = '<b>新事实</b>' + msg;
-    host.appendChild(n);
-    requestAnimationFrame(() => n.classList.add('on'));
-    setTimeout(() => { n.classList.remove('on'); setTimeout(() => n.remove(), 400) }, 3600);
   }
   const radiusPx = f => {
     if (!Number.isFinite(f.radius) || f.radius <= 0) return 0;
@@ -541,7 +535,7 @@ window.V03Fact = (function () {
       .map(displayName => ({ name: displayName, itemStyle: { areaColor: regionFill(name, p, level) } })));
   };
 
-  function mapOption() {
+  function mapOption(withInfluence = true) {
     const st = S.state, all = F.factsAtLevel(st);
     let facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     /* 生长：切换时间范围后，点按非线性速度逐步出现（最新的先出，老的随透明度衰减消失） */
@@ -551,10 +545,10 @@ window.V03Fact = (function () {
     const halos = [], pts = [], ripples = [];
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
     /* 间距按"屏幕像素"算（原来比的是经纬度，等于 28°，中国全境只放得下 2 个 → 只剩 1 个光晕） */
-    const toPx = (lng, lat) => { try { const q = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]); return Array.isArray(q) ? q : null } catch (e) { return null } };
+    const toPx = (lng, lat) => { try { const q = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]); return Array.isArray(q) && q.every(Number.isFinite) && q[0] >= 0 && q[0] <= dom.map.clientWidth && q[1] >= 0 && q[1] <= dom.map.clientHeight ? q : null } catch (e) { return null } };
     const tooClose = (lng, lat) => {
       const q = toPx(lng, lat); if (!q) return false;
-      return usedHalo.some(p2 => Math.abs(p2[0] - q[0]) < 26 && Math.abs(p2[1] - q[1]) < 24);
+      return usedHalo.some(p2 => Math.hypot(p2[0] - q[0], p2[1] - q[1]) < 40);
     };
     facts.forEach((f, index) => {
       const diameter = radiusPx(f);
@@ -562,13 +556,14 @@ window.V03Fact = (function () {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
         /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
-        if (diameter > 0 && f.impact === 'high' && halos.length < 24 && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且屏幕间距足够 */
+        if (withInfluence && diameter > 0 && f.impact === 'high' && halos.length < 24 && toPx(value[0], value[1]) && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且屏幕间距足够 */
           const a0 = ageAlpha(f, st.time);
-          halos.push({ id: f.id, value, symbolSize: Math.max(16, diameter * 1.2),
+          halos.push({ id: f.id, value, symbolSize: Math.min(88, Math.max(16, diameter * 1.2)),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
               { offset: 0, color: hexA(p.dot, .10 * a0) }, { offset: .55, color: hexA(p.dot, .04 * a0) },
               { offset: 1, color: hexA(p.dot, 0) }] } } });
-          if (f.impact === 'high' && ripples.length < 8) { ripples.push({ id: f.id, name: f.title, value }); usedHalo.push([value[0], value[1]]); }
+          usedHalo.push(toPx(value[0], value[1]));
+          if (ripples.length < 8) ripples.push({ id: f.id, name: f.title, value });
         }
         pts.push({ id: f.id, name: f.title, value, symbolSize: DOT_SIZE,
           itemStyle: { opacity: (() => {
@@ -897,7 +892,10 @@ window.V03Fact = (function () {
   let visibleCardCount = 20;
   function renderCards() {
     const st = S.state;
-    const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video');
+    const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
+      const ai = freshOrder.indexOf(a.id), bi = freshOrder.indexOf(b.id);
+      return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi);
+    });
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
       dom.sideBody.innerHTML = '<div class="empty">当前筛选下没有事实<br><button class="btn sec" id="clrF">恢复默认筛选</button></div>';
@@ -906,19 +904,10 @@ window.V03Fact = (function () {
       return;
     }
     const scroll = dom.sideBody.scrollTop;
-    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>'
-    dom.sideBody.querySelectorAll('.fcards .fcard').forEach((el) => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh') }); +
+    dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
+    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh'); });
     dom.sideBody.scrollTop = scroll;
-    /* 新事实/新本体：卡片区顶部出提示条（几秒后自动消失），新条目置顶并带「新接入」标记 */
-    if (facts.length && facts[0].id !== lastTopFactId) {
-      if (lastTopFactId) {
-        freshIds.add(facts[0].id);
-        freshNote(dom.sideBody, '新事实接入 · ' + String(facts[0].title || '').slice(0, 22));
-        flashStar(facts[0]);          /* 地图上那颗星 */
-      }
-      lastTopFactId = facts[0].id;
-    }
     autoScrollCards(dom.sideBody);
     dom.sideBody.onscroll = () => {
       if (dom.sideBody.scrollTop + dom.sideBody.clientHeight >= dom.sideBody.scrollHeight - 120 && visibleCardCount < facts.length) {
@@ -1050,7 +1039,7 @@ window.V03Fact = (function () {
     const st = S.state;
     const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
-      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme]);
+      st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme, D.revision]);
     if (key === sig) return; sig = key;
 
     dom.searchStatus.hidden = !st.q;
@@ -1062,30 +1051,40 @@ window.V03Fact = (function () {
     if (c && !st.sk.mode3d) {
       if (camera.level !== lvKey) {
         camera.level = lvKey;
-        const t = LEVEL[st.geo.level], focus = PROV[st.geo.focus || (st.geo.level === 'L3' ? '湖南' : '')];
+        const name = st.geo.focus || (st.geo.level === 'L3' ? '湖南' : '');
+        const t = LEVEL[st.geo.level], focus = PROV_VIEW[name] || PROV[name];
         const target = focus ? [focus[0], focus[1]] : t.center;
         const zoom = focus ? focus[2] : t.zoom;
         if (st.geo.level === 'L3' && focus) { camera.center = [focus[0], focus[1]]; camera.zoom = focus[2]; }
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
       const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
-        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme]);
+        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme, D.revision]);
       if (nextMapSig !== mapSig) {
-        c.setOption(mapOption(), { notMerge: true });
+        applyMap();
         mapSig = nextMapSig;
       } else c.resize();
     }
-    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live]);
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live, st.newFacts, D.revision]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 
+  function applyMap() {
+    chart.setOption(mapOption(false), { notMerge: true });
+    const influence = mapOption(true).series.filter(s => s.id === 'halo' || s.id === 'ripple');
+    chart.setOption({ series: influence }, { silent: true });
+  }
+  function viewConfig(level, focus) {
+    const t = LEVEL[level], c = level === 'L3' ? (PROV_VIEW[focus || '湖南'] || PROV[focus || '湖南']) : null;
+    return { ...t, center: c ? c.slice(0, 2) : t.center.slice(), zoom: c ? c[2] : t.zoom, box: t.zoomBox.slice() };
+  }
   const debug = () => {
     const st = S.state, all = F.factsAtLevel(st), pts = F.mappable(all);
     const vid = D.FACTS.filter(f => f.cardType === 'video');
     return {
       level: st.geo.level, focus: st.geo.focus, mode3d: st.sk.mode3d, zoom: camera.zoom,
       facts: all.length, mappable: pts.length,
-      halos: st.sk.influence ? pts.length : 0,
+      halos: chart && !st.sk.mode3d ? (chart.getOption().series.find(s => s.id === 'halo')?.data.length || 0) : 0,
       regionMarks: st.sk.regions ? D.REGIONS.length : 0,
       gateMarks: st.sk.gates ? D.GATES.length : 0,
       videoTotal: vid.length,
@@ -1112,5 +1111,5 @@ window.V03Fact = (function () {
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
   return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
-    mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
+    viewConfig, receiveFact, mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
