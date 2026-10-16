@@ -377,6 +377,9 @@ window.V03Fact = (function () {
   }
   /* 时间透明度：近 1 个月不透明 → 1~2 个月 90% → 之后线性衰减到 0（窗口边界处消失） */
   const ageAlpha = (f, win) => {
+    // Archive profiles intentionally survive the current-event window. Their
+    // original publication date remains visible; do not make retained records invisible.
+    if (f.persistent) return .9;
     const span = { today: 1, '7d': 7, '30d': 30, '180d': 180, '365d': 365 }[win] || 30;
     const t = Date.parse(String(f.date || '').slice(0, 10) + 'T00:00:00Z');
     const now = Date.parse(String(D.TODAY || new Date().toISOString().slice(0, 10)) + 'T00:00:00Z');
@@ -409,7 +412,7 @@ window.V03Fact = (function () {
     return f.id;
   }
   function notifyNewest() {
-    const list = F.mappable(F.factsAtLevel(S.state));
+    const list = F.mappable(F.mapFacts(S.state));
     const visible = list.find(f => visiblePixel(f));
     return receiveFact(visible || list[0]);
   }
@@ -425,7 +428,7 @@ window.V03Fact = (function () {
     return null;
   }
   function flashStar(f, level) {
-    if (S.state.tab !== 'fact') return false;
+    if (S.state.tab !== 'fact' || !F.mapEligible(f)) return false;
     // V0.8's positioned overlay; world seam copies and 3D projection share the same presentation.
     return V03Intake.star(dom.mapBox, visiblePixel(f), f && f.id, level === 'bright' || f && f.impact === 'high');
   }
@@ -540,7 +543,7 @@ window.V03Fact = (function () {
   };
 
   function mapOption(withInfluence = true) {
-    const st = S.state, all = F.factsAtLevel(st);
+    const st = S.state, all = F.mapFacts(st);
     let facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     /* 生长：切换时间范围后，点按非线性速度逐步出现（最新的先出，老的随透明度衰减消失） */
     const gk = ensureGrow(st);
@@ -706,7 +709,7 @@ window.V03Fact = (function () {
   /* ---------- 点击 ---------- */
   function openFact(id) {
     const selected = D.factById(id);
-    const same = selected && F.mappable(F.factsAtLevel(S.state)).filter(f => Math.abs(f.lng - selected.lng) < 0.00001 && Math.abs(f.lat - selected.lat) < 0.00001);
+    const same = selected && F.mapEligible(selected) && F.mappable(F.mapFacts(S.state)).filter(f => Math.abs(f.lng - selected.lng) < 0.00001 && Math.abs(f.lat - selected.lat) < 0.00001);
     if (same && same.length > 1) {
       dom.chooser.hidden = false;
       dom.chooser.innerHTML = '<button class="overlay-close" type="button" aria-label="关闭">×</button><b>此位置有 ' + same.length + ' 条事实</b><div class="fact-chooser-list"></div>';
@@ -1010,7 +1013,7 @@ window.V03Fact = (function () {
 
   /* 三维地球：与关联层共用同一套渲染（V03Globe），本层只提供事实点与叠加标记 */
   function globePayload() {
-    const st = S.state, all = F.factsAtLevel(st);
+    const st = S.state, all = F.mapFacts(st);
     const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()];
     const points = unique.map(f => ({
@@ -1107,7 +1110,7 @@ window.V03Fact = (function () {
     const vid = D.FACTS.filter(f => f.cardType === 'video');
     return {
       level: st.geo.level, focus: st.geo.focus, mode3d: st.sk.mode3d, zoom: camera.zoom,
-      facts: all.length, mappable: pts.length,
+      facts: all.length, mapFacts: F.mapFacts(st).length, mappable: pts.length,
       halos: chart && !st.sk.mode3d ? (chart.getOption().series.find(s => s.id === 'halo')?.data.length || 0) : 0,
       regionMarks: st.sk.regions ? D.REGIONS.length : 0,
       gateMarks: st.sk.gates ? D.GATES.length : 0,
@@ -1135,5 +1138,5 @@ window.V03Fact = (function () {
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
   return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
-    viewConfig, receiveFact, arrivalCandidates:()=>F.mappable(F.factsAtLevel(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
+    viewConfig, receiveFact, visiblePosition:visiblePixel, arrivalCandidates:()=>F.mappable(F.mapFacts(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
