@@ -24,20 +24,17 @@ window.V03Store = (function () {
       influence: true,            // V1.2 地理影响圆
       fullscreen: false,          // M3 全屏
       live: true,                 // M4 直播流（默认开启：已验证可嵌入的公开直播源直接播放）
-      regions: false,             // M5 产区
-      gates: false,               // 港口
-      airports: false,            // 机场
-      markets: false,             // 农贸市场
-      risks: false,               // 地缘风险区，仅全球视角
+      regions: true,              // M5 产区：独立叠加图层默认开启
+      gates: true,                // 港口
+      airports: true,             // 机场
+      markets: true,              // 农贸市场
+      risks: true,                // 地缘风险区，仅全球视角
       mass: false                 // V1.2 仅绘真实存在于演示数据中的事实
     },
 
-    /* M7–M10：选择型快捷键（与筛选状态同源）
-       默认按权威指令：近 7 天 / 高可信 / 高影响。
-       数据包生成的记录在适配层做过确定性再平衡（每个地理分组内前 25% 落在 7 天内且为高可信高影响），
-       因此默认口径下全球视野仍有多区域星点；切到「全部」即恢复 342 点完整密度。
-       规则见 docs/V04b-数据包接入说明.md §5。 */
-    time: '7d',                   // today | 7d | 30d；前端最多展示近 30 天
+    /* 选择型快捷键与筛选状态同源。默认保留全球历年业务资料；
+       用户可主动切换近期窗口，原始统计期和报道日期不改写。 */
+    time: 'all',                  // 全球默认保留历史业务事实；原日期不改写
     cred: 'all',
     infl: 'all',
     q: '',

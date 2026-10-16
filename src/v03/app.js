@@ -91,7 +91,7 @@
   }
 
   /* ---------- F6：快捷键（地图右下角 + 菜单内同一组状态） ---------- */
-  const TIME_OPTS = [['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月'], ['180d', '近半年'], ['365d', '近一年']];
+  const TIME_OPTS = [['all', '全部时间'], ['today', '当天'], ['7d', '近 7 天'], ['30d', '近 1 月'], ['180d', '近半年'], ['365d', '近一年']];
   const CRED_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const INFL_OPTS = [['high', '高'], ['mid', '中'], ['low', '低'], ['all', '不限']];
   const SK = [
@@ -107,7 +107,7 @@
     { k: 'live', i: 'video', n: '视频', d: '显示或隐藏视频事实卡', kind: 'sw', get: s => s.sk.live, set: v => ({ sk: { live: v } }) },
     { k: 'regions', i: 'sprout', n: '主要产区', d: '标注主要农产品产区', kind: 'sw', get: s => s.sk.regions, set: v => ({ sk: { regions: v } }) },
     { k: 'gates', i: 'anchor', n: '港口锚点', d: '显示或隐藏港口锚点', kind: 'sw', get: s => s.sk.gates, set: v => ({ sk: { gates: v } }) },
-    { k: 'time', i: 'calendar', n: '时间范围', d: '事实时间窗口：近 7 天 / 近 1 月 / 近半年 / 近一年', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
+    { k: 'time', i: 'calendar', n: '时间范围', d: '默认全部时间，保留全球历史业务事实；可切换近期窗口', kind: 'sel', opts: TIME_OPTS, get: s => s.time, set: v => ({ time: v }) },
     { k: 'search', i: 'search', n: '搜索', d: '搜索事实或本体名称', kind: 'input', get: s => s.tab === 'relation' ? s.rel.search : s.q, set: v => S.state.tab === 'relation' ? ({ rel: { search: v } }) : ({ q: v }) }
   ];
   const skVal = (sk, s) => (sk.kind === 'view' ? (s.rel.view === sk.value ? '当前' : '') : sk.kind === 'sw' ? (sk.get(s) ? '开' : '关')
