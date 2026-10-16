@@ -407,21 +407,20 @@
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
       const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
-      const groups=[['生产供应','#4d966a',['生产','供应','采购']],['经营组织','#cf854a',['运营','入驻','合作']],['空间','#547baa',['位于','发生于']],['物流','#24a6a1',['运输至','储存于']],['政策','#8a6dba',['发布','适用于','监管']],['影响','#ca6975',['影响']]];
       const selected=st.relTypes;
-      groups.forEach(([name,color,types])=>{
-        relFilter.appendChild(el('div','mn-l2',name));
-        const row=el('div','mn-rel-types');
-        types.forEach(t=>{
+      relFilter.appendChild(el('div','mn-l2','当前范围内实际存在的关系'));
+        const typeRow=el('div','mn-rel-types');
+        F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
           const on=!Array.isArray(selected)||selected.includes(t);
           const b=el('button','l3'+(on?' on':''));
-          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
+          b.dataset.relType=t;
+          b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span><small>'+count+'</small>';
           b.setAttribute('aria-pressed',String(on));
-          b.onclick=()=>{const all=F.PRD_REL_TYPES.concat(F.legacyTypes());const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:all);on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
-          row.appendChild(b);
+          b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
+          typeRow.appendChild(b);
         });
-        relFilter.appendChild(row);
-      });
+        relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
       const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
       const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);

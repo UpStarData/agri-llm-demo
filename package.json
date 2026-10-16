@@ -1,8 +1,8 @@
 {
   "name": "agri-llm-demo",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "private": true,
-  "description": "AgriLink V2.6 · 业务资料、八省市覆盖与稳定首绘",
+  "description": "AgriLink V2.6.1 · 真实关系词表与编号对象清理",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -28,7 +28,8 @@
     "test:v23": "node test/v23-interactions.mjs && node test/v23-delivery.mjs && node test/v23-media.mjs",
     "test:v24": "node test/v24-framing.mjs && node test/v24-delivery.mjs && node test/v24-interactions.mjs && node test/v24-globe.mjs",
     "test:v25": "node test/v25-regional.mjs && node test/v25-delivery.mjs && node test/v24-framing.mjs && node test/v24-interactions.mjs && node test/v24-globe.mjs && node test/v23-interactions.mjs",
-    "test:v26": "node test/v26-business.mjs && node test/v25-regional.mjs && node test/v24-framing.mjs && node test/v23-interactions.mjs"
+    "test:v26": "node test/v26-business.mjs && node test/v25-regional.mjs && node test/v24-framing.mjs && node test/v23-interactions.mjs",
+    "test:v261": "node test/v261-taxonomy.mjs && npm run test:v26"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

@@ -488,7 +488,13 @@ window.V03Data = (function () {
   }
 
   const ALL_FACTS = PKG ? PKG.FACTS : PACK_FACTS;
-  const ALL_OBJECTS = PKG ? PKG.OBJECTS : PACK_OBJECTS;
+  // Keep raw package evidence, but do not expose placeholder/numbered shop instances
+  // as business ontologies in any view or in subsequent ingestion.
+  const numberedRetail = o => !!o && ['channel','operator'].includes(o.domain) &&
+    /超市\s*[-#]?\s*\d+|\d+\s*(?:号|分)?店|[一二三四五六七八九十百零〇]+号店/.test(o.name || '');
+  const suppressedObjectIds=new Set((PKG ? PKG.OBJECTS : PACK_OBJECTS).filter(numberedRetail).map(o=>o.id));
+  const ALL_OBJECTS = (PKG ? PKG.OBJECTS : PACK_OBJECTS).filter(o=>!suppressedObjectIds.has(o.id));
+  ALL_FACTS.forEach(f=>{f.objects=(f.objects||[]).filter(id=>!suppressedObjectIds.has(id));});
   const RAW_RELATIONS = PKG ? PKG.RELATIONS : PACK_RELATIONS;
   const objectIds = new Set(ALL_OBJECTS.map(o => o.id));
   const sourceObjects = new Map(ALL_OBJECTS.map(o => [o.id, o]));
@@ -502,7 +508,7 @@ window.V03Data = (function () {
     });
   }
   const relationAliases = {}, uniqueRelations = new Map();
-  const relationAudit = { input: RAW_RELATIONS.length, duplicates: 0, invalid: 0, unsupportedCrossBorder: 0 };
+  const relationAudit = { input: RAW_RELATIONS.length, duplicates: 0, invalid: 0, unsupportedCrossBorder: 0, suppressedObjects:suppressedObjectIds.size };
   RAW_RELATIONS.forEach(r => {
     if (!r.id || r.from === r.to || !objectIds.has(r.from) || !objectIds.has(r.to) || !Number.isFinite(r.confidence) || r.confidence < 0 || r.confidence > 1) { relationAudit.invalid++; return; }
     // A country-level import story cannot establish a route into an arbitrary local market.
@@ -533,6 +539,8 @@ window.V03Data = (function () {
     for (const [kind, list, index] of [['objects', ALL_OBJECTS, O], ['facts', ALL_FACTS, F], ['relations', ALL_RELATIONS, R]]) {
       for (const item of batch[kind] || []) {
         if (!item || !item.id || index[item.id]) continue;
+        if(kind==='objects' && numberedRetail(item)){suppressedObjectIds.add(item.id);continue;}
+        if(kind==='facts')item.objects=(item.objects||[]).filter(id=>!suppressedObjectIds.has(id));
         if (kind === 'relations' && (!O[item.from] || !O[item.to] || item.from === item.to ||
           !Number.isFinite(item.confidence) || item.confidence < 0 || item.confidence > 1 || !supportedFlow(item, id => O[id], id => F[id]))) continue;
         if (item.lng != null && (!Number.isFinite(item.lng) || !Number.isFinite(item.lat) || Math.abs(item.lng) > 180 || Math.abs(item.lat) > 90)) continue;
