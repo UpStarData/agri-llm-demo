@@ -1,0 +1,25 @@
+{
+  "title": "AgriLink 农链 · 事实层与关联层数据核查库",
+  "description": "这份库就是页面上两层正在使用的数据（同一份导出）：facts=事实层，objects/relations=关联层本体与关系。构建指纹与导出时间见 meta 表。可直接用 SQL 查询、也可以把任意表或视图导出 CSV。",
+  "license": "数据来源为公开来源，逐条保留 source_url；本库仅供核查与追溯。",
+  "databases": {
+    "agrilink": {
+      "tables": {
+        "facts": {"description": "事实层全部记录（55,218 条）"},
+        "objects": {"description": "关联层本体对象（5,189 个）"},
+        "relations": {"description": "关联层关系（4,096 条）"}
+      },
+      "queries": {
+        "覆盖缺口：独立点位少于 20 的国家": "select * from v_thin_countries",
+        "按国家看记录数/点位数/来源覆盖率": "select * from v_coverage_by_country order by distinct_points desc",
+        "按来源看记录数（哪一类数据占多少）": "select * from v_facts_by_origin",
+        "可疑行：缺来源/缺坐标/缺日期/标题重复": "select * from v_suspect_rows limit 500",
+        "同一个坐标上堆了多少条记录": "select * from v_coordinate_reuse",
+        "坐标精度自述（我们怎么标注定位含义）": "select * from v_localization_precision",
+        "全部来源 URL 及条数": "select * from v_fact_sources",
+        "中国各省事实条数": "select * from v_facts_by_province",
+        "关联层各国本体数量": "select * from v_objects_by_country limit 60"
+      }
+    }
+  }
+}
