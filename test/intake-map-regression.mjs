@@ -127,7 +127,11 @@ try {
   await page.screenshot({ path: path.join(out, 'relation-intake.png') });
   await page.evaluate(() => {
     const base = V03Filter.objects(V03Store.state).find(o => o.domain === 'commodity');
-    V03Data.ingest({ objects: [{ ...base, id: 'regression:ontology', name: '回归检查：新辣椒本体' }] });
+    // A newly extracted unlocated commodity belongs to the province through its
+    // supporting fact, rather than being shown in every region unconditionally.
+    const source=V03Data.FACTS.find(f=>f.province==='湖南省'&&f.lng&&f.lat);
+    const fact={...source,id:'regression:ontology-fact',objects:['regression:ontology']};
+    V03Data.ingest({ facts:[fact],objects: [{ ...base, id: 'regression:ontology', name: '回归检查：新辣椒本体',factIds:[fact.id] }] });
   });
   await page.waitForFunction(() => document.querySelector('#relSide .fresh-note.on')?.textContent.includes('新辣椒本体'));
   assert.equal(await page.locator('#relBody .rel-card').first().getAttribute('data-obj'), 'regression:ontology');
