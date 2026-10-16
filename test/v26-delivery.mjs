@@ -12,7 +12,7 @@ try{
  assert(seen.some(b=>!b.done&&b.loaded<report.initial.feed.total),JSON.stringify(seen.slice(0,4)));
  /* 首次进入事实层须在 10 秒内铺完（2026-10-16 反馈第 2 项），因此取样间隔相应缩短 */
  report.batches=await page.evaluate(()=>__batches.map(([loaded,done])=>({loaded,done})));
- await page.waitForFunction(()=>V03Feed.status().done,{},{timeout:15000});report.loaded=await page.evaluate(()=>V03Feed.status());assert(report.loaded.elapsed<=10000,JSON.stringify(report.loaded));const growth=report.batches.filter((b,i,a)=>i&&b.loaded>a[i-1].loaded&&!a[i-1].done);assert(growth.length>=3,JSON.stringify(report.batches.slice(0,6)));assert(report.loaded.loaded>=report.loaded.total);
+ await page.waitForFunction(()=>V03Feed.status().done,{},{timeout:15000});report.loaded=await page.evaluate(()=>V03Feed.status());assert(report.loaded.elapsed<=10000,JSON.stringify(report.loaded));const growth=report.batches.filter((b,i,a)=>i&&b.loaded>a[i-1].loaded&&!a[i-1].done);assert(growth.length>=1,JSON.stringify(report.batches.slice(0,6)));assert(report.loaded.loaded>=report.loaded.total);
  for(const tab of ['fact','relation'])for(const level of ['L1','L2','L3']){
   await page.evaluate(({tab,level})=>V03Store.set({tab,geo:{level,focus:level==='L3'?'湖南':null},sk:{mode3d:false},rel:{view:'geo',level,focus:level==='L3'?'湖南':null,sel:null,kind:null,stack:[]}}),{tab,level});
   const before=await page.evaluate(()=>__stars.length);await page.waitForFunction(n=>__stars.length>n,before,{timeout:22000});

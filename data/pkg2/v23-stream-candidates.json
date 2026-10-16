@@ -1,0 +1,82 @@
+[
+ {
+  "name": "Agricultura TV",
+  "country": "CL",
+  "url": "https://redirector.rudo.video/hls-video/ey6283je82983je9823je8jowowiekldk9838274/921tv/921tv.smil/playlist.m3u8"
+ },
+ {
+  "name": "FarmodaTV",
+  "country": "IQ",
+  "url": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8"
+ },
+ {
+  "name": "MRTV Farmer",
+  "country": "MM",
+  "url": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8"
+ },
+ {
+  "name": "NatureTime",
+  "country": "CA",
+  "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8"
+ },
+ {
+  "name": "Agro TV",
+  "country": "BG",
+  "url": "https://restr2.bgtv.bg/agro/hls/agro.m3u8"
+ },
+ {
+  "name": "Stingray Naturescape",
+  "country": "CA",
+  "url": "https://d39g1vxj2ef6in.cloudfront.net/v1/master/3fec3e5cac39a52b2132f9c66c83dae043dc17d4/prod-rakuten-stitched/master.m3u8?ads.xumo_channelId=88883056"
+ },
+ {
+  "name": "Agrotendencia TV",
+  "country": "CR",
+  "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8"
+ },
+ {
+  "name": "Terra Mater WILD",
+  "country": "DE",
+  "url": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8"
+ },
+ {
+  "name": "Radio Fiesta de Milagros TV",
+  "country": "HN",
+  "url": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8"
+ },
+ {
+  "name": "Zagros TV",
+  "country": "IQ",
+  "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8"
+ },
+ {
+  "name": "Zagros TV",
+  "country": "IR",
+  "url": "https://ncdn.telewebion.ir/zagros/live/playlist.m3u8"
+ },
+ {
+  "name": "Agro TV",
+  "country": "PE",
+  "url": "https://live-evg8.tv360.bitel.com.pe/bitel/agroSRT/playlist.m3u8"
+ },
+ {
+  "name": "Agro TV",
+  "country": "RO",
+  "url": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8"
+ },
+ {
+  "name": "Real Wild",
+  "country": "UK",
+  "url": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8"
+ },
+ {
+  "name": "PBS Nature",
+  "country": "US",
+  "url": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8"
+ },
+ {
+  "name": "WildEarth",
+  "country": "ZA",
+  "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8"
+ }
+]

@@ -4,16 +4,16 @@
       "factId": "v23-live-channel-0",
       "factType": "profile",
       "status": "active",
-      "title": "FarmodaTV · 农业/自然公开直播",
+      "title": "FarmodaTV（伊拉克）· 农业/自然公开直播",
       "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
       "category": "news",
       "cardType": "video",
       "entityIds": [
         "e:v23:live-channel:0"
       ],
-      "occurredAt": "2026-10-15T11:54:53.208779+00:00",
-      "publishedAt": "2026-10-15T11:54:53.208779+00:00",
-      "ingestedAt": "2026-10-15T11:54:53.208779+00:00",
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
       "sourceUrl": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8",
       "geo": {
         "geoPoint": null,
@@ -44,7 +44,7 @@
           "hlsUrl": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8",
           "isLive": true,
           "embeddable": "yes",
-          "lastCheckedAt": "2026-10-15T11:54:53.208779+00:00"
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
         }
       },
       "evidence": [
@@ -59,23 +59,23 @@
         "dataMode": "real",
         "dataOrigin": "user-provided-public-stream",
         "sourcePlugin": "v23-direct-hls",
-        "checkedAt": "2026-10-15T11:54:53.208779+00:00"
+        "checkedAt": "2026-10-16T06:54:50.800Z"
       }
     },
     {
       "factId": "v23-live-channel-1",
       "factType": "profile",
       "status": "active",
-      "title": "MRTV Farmer · 农业/自然公开直播",
+      "title": "MRTV Farmer（缅甸）· 农业/自然公开直播",
       "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
       "category": "news",
       "cardType": "video",
       "entityIds": [
         "e:v23:live-channel:1"
       ],
-      "occurredAt": "2026-10-15T11:55:02.157969+00:00",
-      "publishedAt": "2026-10-15T11:55:02.157969+00:00",
-      "ingestedAt": "2026-10-15T11:55:02.157969+00:00",
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
       "sourceUrl": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8",
       "geo": {
         "geoPoint": null,
@@ -106,7 +106,7 @@
           "hlsUrl": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8",
           "isLive": true,
           "embeddable": "yes",
-          "lastCheckedAt": "2026-10-15T11:55:02.157969+00:00"
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
         }
       },
       "evidence": [
@@ -121,23 +121,23 @@
         "dataMode": "real",
         "dataOrigin": "user-provided-public-stream",
         "sourcePlugin": "v23-direct-hls",
-        "checkedAt": "2026-10-15T11:55:02.157969+00:00"
+        "checkedAt": "2026-10-16T06:54:50.800Z"
       }
     },
     {
       "factId": "v23-live-channel-2",
       "factType": "profile",
       "status": "active",
-      "title": "NatureTime · 农业/自然公开直播",
+      "title": "NatureTime（加拿大）· 农业/自然公开直播",
       "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
       "category": "news",
       "cardType": "video",
       "entityIds": [
         "e:v23:live-channel:2"
       ],
-      "occurredAt": "2026-10-15T11:54:47.075518+00:00",
-      "publishedAt": "2026-10-15T11:54:47.075518+00:00",
-      "ingestedAt": "2026-10-15T11:54:47.075518+00:00",
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
       "sourceUrl": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8",
       "geo": {
         "geoPoint": null,
@@ -168,7 +168,7 @@
           "hlsUrl": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8",
           "isLive": true,
           "embeddable": "yes",
-          "lastCheckedAt": "2026-10-15T11:54:47.075518+00:00"
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
         }
       },
       "evidence": [
@@ -183,23 +183,85 @@
         "dataMode": "real",
         "dataOrigin": "user-provided-public-stream",
         "sourcePlugin": "v23-direct-hls",
-        "checkedAt": "2026-10-15T11:54:47.075518+00:00"
+        "checkedAt": "2026-10-16T06:54:50.800Z"
       }
     },
     {
       "factId": "v23-live-channel-3",
       "factType": "profile",
       "status": "active",
-      "title": "Agrotendencia TV · 农业/自然公开直播",
+      "title": "Agro TV（保加利亚）· 农业/自然公开直播",
       "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
       "category": "news",
       "cardType": "video",
       "entityIds": [
         "e:v23:live-channel:3"
       ],
-      "occurredAt": "2026-10-15T11:54:52.860453+00:00",
-      "publishedAt": "2026-10-15T11:54:52.860453+00:00",
-      "ingestedAt": "2026-10-15T11:54:52.860453+00:00",
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
+      "sourceUrl": "https://restr2.bgtv.bg/agro/hls/agro.m3u8",
+      "geo": {
+        "geoPoint": null,
+        "geoPrecision": "none",
+        "scopeLayer": "L1",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "BG",
+            "name": "保加利亚"
+          }
+        ]
+      },
+      "severity": 40,
+      "credibility": {
+        "score": 0.8,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "mediaTitle": "Agro TV",
+          "provider": "Agro TV",
+          "hlsUrl": "https://restr2.bgtv.bg/agro/hls/agro.m3u8",
+          "isLive": true,
+          "embeddable": "yes",
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
+        }
+      },
+      "evidence": [
+        {
+          "k": "播放源核验",
+          "t": "用户提供的公开直播清单",
+          "q": "已读取 HLS 清单及媒体分片，并通过 Chromium 实际解码出画验证。可用性随源站变化。",
+          "url": "https://restr2.bgtv.bg/agro/hls/agro.m3u8"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "user-provided-public-stream",
+        "sourcePlugin": "v23-direct-hls",
+        "checkedAt": "2026-10-16T06:54:50.800Z"
+      }
+    },
+    {
+      "factId": "v23-live-channel-4",
+      "factType": "profile",
+      "status": "active",
+      "title": "Agrotendencia TV（哥斯达黎加）· 农业/自然公开直播",
+      "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
+      "category": "news",
+      "cardType": "video",
+      "entityIds": [
+        "e:v23:live-channel:4"
+      ],
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
       "sourceUrl": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8",
       "geo": {
         "geoPoint": null,
@@ -230,7 +292,7 @@
           "hlsUrl": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8",
           "isLive": true,
           "embeddable": "yes",
-          "lastCheckedAt": "2026-10-15T11:54:52.860453+00:00"
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
         }
       },
       "evidence": [
@@ -245,24 +307,24 @@
         "dataMode": "real",
         "dataOrigin": "user-provided-public-stream",
         "sourcePlugin": "v23-direct-hls",
-        "checkedAt": "2026-10-15T11:54:52.860453+00:00"
+        "checkedAt": "2026-10-16T06:54:50.800Z"
       }
     },
     {
-      "factId": "v23-live-channel-4",
+      "factId": "v23-live-channel-5",
       "factType": "profile",
       "status": "active",
-      "title": "Agro TV · 农业/自然公开直播",
+      "title": "Terra Mater WILD（德国）· 农业/自然公开直播",
       "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
       "category": "news",
       "cardType": "video",
       "entityIds": [
-        "e:v23:live-channel:4"
+        "e:v23:live-channel:5"
       ],
-      "occurredAt": "2026-10-15T11:55:04.277952+00:00",
-      "publishedAt": "2026-10-15T11:55:04.277952+00:00",
-      "ingestedAt": "2026-10-15T11:55:04.277952+00:00",
-      "sourceUrl": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8",
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
+      "sourceUrl": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8",
       "geo": {
         "geoPoint": null,
         "geoPrecision": "none",
@@ -275,8 +337,8 @@
           },
           {
             "level": "country",
-            "code": "RO",
-            "name": "罗马尼亚"
+            "code": "DE",
+            "name": "德国"
           }
         ]
       },
@@ -287,12 +349,12 @@
       },
       "card": {
         "fields": {
-          "mediaTitle": "Agro TV",
-          "provider": "Agro TV",
-          "hlsUrl": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8",
+          "mediaTitle": "Terra Mater WILD",
+          "provider": "Terra Mater WILD",
+          "hlsUrl": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8",
           "isLive": true,
           "embeddable": "yes",
-          "lastCheckedAt": "2026-10-15T11:55:04.277952+00:00"
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
         }
       },
       "evidence": [
@@ -300,30 +362,278 @@
           "k": "播放源核验",
           "t": "用户提供的公开直播清单",
           "q": "已读取 HLS 清单及媒体分片，并通过 Chromium 实际解码出画验证。可用性随源站变化。",
-          "url": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8"
+          "url": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8"
         }
       ],
       "provenanceMeta": {
         "dataMode": "real",
         "dataOrigin": "user-provided-public-stream",
         "sourcePlugin": "v23-direct-hls",
-        "checkedAt": "2026-10-15T11:55:04.277952+00:00"
+        "checkedAt": "2026-10-16T06:54:50.800Z"
       }
     },
     {
-      "factId": "v23-live-channel-5",
+      "factId": "v23-live-channel-6",
       "factType": "profile",
       "status": "active",
-      "title": "WildEarth · 农业/自然公开直播",
+      "title": "Radio Fiesta de Milagros TV（洪都拉斯）· 农业/自然公开直播",
       "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
       "category": "news",
       "cardType": "video",
       "entityIds": [
-        "e:v23:live-channel:5"
+        "e:v23:live-channel:6"
       ],
-      "occurredAt": "2026-10-15T11:55:08.912518+00:00",
-      "publishedAt": "2026-10-15T11:55:08.912518+00:00",
-      "ingestedAt": "2026-10-15T11:55:08.912518+00:00",
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
+      "sourceUrl": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8",
+      "geo": {
+        "geoPoint": null,
+        "geoPrecision": "none",
+        "scopeLayer": "L1",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "HN",
+            "name": "洪都拉斯"
+          }
+        ]
+      },
+      "severity": 40,
+      "credibility": {
+        "score": 0.8,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "mediaTitle": "Radio Fiesta de Milagros TV",
+          "provider": "Radio Fiesta de Milagros TV",
+          "hlsUrl": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8",
+          "isLive": true,
+          "embeddable": "yes",
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
+        }
+      },
+      "evidence": [
+        {
+          "k": "播放源核验",
+          "t": "用户提供的公开直播清单",
+          "q": "已读取 HLS 清单及媒体分片，并通过 Chromium 实际解码出画验证。可用性随源站变化。",
+          "url": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "user-provided-public-stream",
+        "sourcePlugin": "v23-direct-hls",
+        "checkedAt": "2026-10-16T06:54:50.800Z"
+      }
+    },
+    {
+      "factId": "v23-live-channel-7",
+      "factType": "profile",
+      "status": "active",
+      "title": "Zagros TV（伊拉克）· 农业/自然公开直播",
+      "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
+      "category": "news",
+      "cardType": "video",
+      "entityIds": [
+        "e:v23:live-channel:7"
+      ],
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
+      "sourceUrl": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8",
+      "geo": {
+        "geoPoint": null,
+        "geoPrecision": "none",
+        "scopeLayer": "L1",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "IQ",
+            "name": "伊拉克"
+          }
+        ]
+      },
+      "severity": 40,
+      "credibility": {
+        "score": 0.8,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "mediaTitle": "Zagros TV",
+          "provider": "Zagros TV",
+          "hlsUrl": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8",
+          "isLive": true,
+          "embeddable": "yes",
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
+        }
+      },
+      "evidence": [
+        {
+          "k": "播放源核验",
+          "t": "用户提供的公开直播清单",
+          "q": "已读取 HLS 清单及媒体分片，并通过 Chromium 实际解码出画验证。可用性随源站变化。",
+          "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "user-provided-public-stream",
+        "sourcePlugin": "v23-direct-hls",
+        "checkedAt": "2026-10-16T06:54:50.800Z"
+      }
+    },
+    {
+      "factId": "v23-live-channel-8",
+      "factType": "profile",
+      "status": "active",
+      "title": "Real Wild（英国）· 农业/自然公开直播",
+      "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
+      "category": "news",
+      "cardType": "video",
+      "entityIds": [
+        "e:v23:live-channel:8"
+      ],
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
+      "sourceUrl": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8",
+      "geo": {
+        "geoPoint": null,
+        "geoPrecision": "none",
+        "scopeLayer": "L1",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "UK",
+            "name": "英国"
+          }
+        ]
+      },
+      "severity": 40,
+      "credibility": {
+        "score": 0.8,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "mediaTitle": "Real Wild",
+          "provider": "Real Wild",
+          "hlsUrl": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8",
+          "isLive": true,
+          "embeddable": "yes",
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
+        }
+      },
+      "evidence": [
+        {
+          "k": "播放源核验",
+          "t": "用户提供的公开直播清单",
+          "q": "已读取 HLS 清单及媒体分片，并通过 Chromium 实际解码出画验证。可用性随源站变化。",
+          "url": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "user-provided-public-stream",
+        "sourcePlugin": "v23-direct-hls",
+        "checkedAt": "2026-10-16T06:54:50.800Z"
+      }
+    },
+    {
+      "factId": "v23-live-channel-9",
+      "factType": "profile",
+      "status": "active",
+      "title": "PBS Nature（美国）· 农业/自然公开直播",
+      "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
+      "category": "news",
+      "cardType": "video",
+      "entityIds": [
+        "e:v23:live-channel:9"
+      ],
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
+      "sourceUrl": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8",
+      "geo": {
+        "geoPoint": null,
+        "geoPrecision": "none",
+        "scopeLayer": "L1",
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "US",
+            "name": "美国"
+          }
+        ]
+      },
+      "severity": 40,
+      "credibility": {
+        "score": 0.8,
+        "band": "high"
+      },
+      "card": {
+        "fields": {
+          "mediaTitle": "PBS Nature",
+          "provider": "PBS Nature",
+          "hlsUrl": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8",
+          "isLive": true,
+          "embeddable": "yes",
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
+        }
+      },
+      "evidence": [
+        {
+          "k": "播放源核验",
+          "t": "用户提供的公开直播清单",
+          "q": "已读取 HLS 清单及媒体分片，并通过 Chromium 实际解码出画验证。可用性随源站变化。",
+          "url": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8"
+        }
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "dataOrigin": "user-provided-public-stream",
+        "sourcePlugin": "v23-direct-hls",
+        "checkedAt": "2026-10-16T06:54:50.800Z"
+      }
+    },
+    {
+      "factId": "v23-live-channel-10",
+      "factType": "profile",
+      "status": "active",
+      "title": "WildEarth（南非）· 农业/自然公开直播",
+      "summary": "来自附件清单的公开播放源，直接播放媒体。频道节目以当前实际播出为准。",
+      "category": "news",
+      "cardType": "video",
+      "entityIds": [
+        "e:v23:live-channel:10"
+      ],
+      "occurredAt": "2026-10-16T06:54:50.800Z",
+      "publishedAt": "2026-10-16T06:54:50.800Z",
+      "ingestedAt": "2026-10-16T06:54:50.800Z",
       "sourceUrl": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
       "geo": {
         "geoPoint": null,
@@ -354,7 +664,7 @@
           "hlsUrl": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
           "isLive": true,
           "embeddable": "yes",
-          "lastCheckedAt": "2026-10-15T11:55:08.912518+00:00"
+          "lastCheckedAt": "2026-10-16T06:54:50.800Z"
         }
       },
       "evidence": [
@@ -369,7 +679,7 @@
         "dataMode": "real",
         "dataOrigin": "user-provided-public-stream",
         "sourcePlugin": "v23-direct-hls",
-        "checkedAt": "2026-10-15T11:55:08.912518+00:00"
+        "checkedAt": "2026-10-16T06:54:50.800Z"
       }
     }
   ],
@@ -473,6 +783,38 @@
     {
       "entityId": "e:v23:live-channel:3",
       "type": "MediaChannel",
+      "canonicalName": "Agro TV",
+      "status": "active",
+      "geo": {
+        "geoPoint": null,
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "BG",
+            "name": "保加利亚"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "公开直播频道"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-live-channel-3"
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "sourceUrl": "https://restr2.bgtv.bg/agro/hls/agro.m3u8"
+      }
+    },
+    {
+      "entityId": "e:v23:live-channel:4",
+      "type": "MediaChannel",
       "canonicalName": "Agrotendencia TV",
       "status": "active",
       "geo": {
@@ -495,7 +837,7 @@
       },
       "commodityTags": [],
       "supportingFactIds": [
-        "v23-live-channel-3"
+        "v23-live-channel-4"
       ],
       "provenanceMeta": {
         "dataMode": "real",
@@ -503,9 +845,9 @@
       }
     },
     {
-      "entityId": "e:v23:live-channel:4",
+      "entityId": "e:v23:live-channel:5",
       "type": "MediaChannel",
-      "canonicalName": "Agro TV",
+      "canonicalName": "Terra Mater WILD",
       "status": "active",
       "geo": {
         "geoPoint": null,
@@ -517,8 +859,8 @@
           },
           {
             "level": "country",
-            "code": "RO",
-            "name": "罗马尼亚"
+            "code": "DE",
+            "name": "德国"
           }
         ]
       },
@@ -527,15 +869,143 @@
       },
       "commodityTags": [],
       "supportingFactIds": [
-        "v23-live-channel-4"
+        "v23-live-channel-5"
       ],
       "provenanceMeta": {
         "dataMode": "real",
-        "sourceUrl": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8"
+        "sourceUrl": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8"
       }
     },
     {
-      "entityId": "e:v23:live-channel:5",
+      "entityId": "e:v23:live-channel:6",
+      "type": "MediaChannel",
+      "canonicalName": "Radio Fiesta de Milagros TV",
+      "status": "active",
+      "geo": {
+        "geoPoint": null,
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "HN",
+            "name": "洪都拉斯"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "公开直播频道"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-live-channel-6"
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "sourceUrl": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8"
+      }
+    },
+    {
+      "entityId": "e:v23:live-channel:7",
+      "type": "MediaChannel",
+      "canonicalName": "Zagros TV",
+      "status": "active",
+      "geo": {
+        "geoPoint": null,
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "IQ",
+            "name": "伊拉克"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "公开直播频道"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-live-channel-7"
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "sourceUrl": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8"
+      }
+    },
+    {
+      "entityId": "e:v23:live-channel:8",
+      "type": "MediaChannel",
+      "canonicalName": "Real Wild",
+      "status": "active",
+      "geo": {
+        "geoPoint": null,
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "UK",
+            "name": "英国"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "公开直播频道"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-live-channel-8"
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "sourceUrl": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8"
+      }
+    },
+    {
+      "entityId": "e:v23:live-channel:9",
+      "type": "MediaChannel",
+      "canonicalName": "PBS Nature",
+      "status": "active",
+      "geo": {
+        "geoPoint": null,
+        "regionPath": [
+          {
+            "level": "global",
+            "code": "GLOBAL",
+            "name": "全球"
+          },
+          {
+            "level": "country",
+            "code": "US",
+            "name": "美国"
+          }
+        ]
+      },
+      "attributes": {
+        "function": "公开直播频道"
+      },
+      "commodityTags": [],
+      "supportingFactIds": [
+        "v23-live-channel-9"
+      ],
+      "provenanceMeta": {
+        "dataMode": "real",
+        "sourceUrl": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8"
+      }
+    },
+    {
+      "entityId": "e:v23:live-channel:10",
       "type": "MediaChannel",
       "canonicalName": "WildEarth",
       "status": "active",
@@ -559,7 +1029,7 @@
       },
       "commodityTags": [],
       "supportingFactIds": [
-        "v23-live-channel-5"
+        "v23-live-channel-10"
       ],
       "provenanceMeta": {
         "dataMode": "real",
