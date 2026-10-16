@@ -73,7 +73,9 @@ window.V03Fact = (function () {
     const g = (F.FACT_TREE || []).find(x => (x.subs || []).some(sb => (sb.items || []).some(it => it.key === leafOf(f).key)));
     return g || null;
   };
-  const dotColor = f => (groupOf(f) || {}).color || catOf(f).c;
+  /* 一级事实分类色（V2.8.4）：地图点填充、地球、光晕、详情统一取这一份 */
+  const l1Color = f => (window.V03Theme ? window.V03Theme.fact((groupOf(f) || {}).key) : '') || (groupOf(f) || {}).color || catOf(f).c;
+  const dotColor = f => l1Color(f);
   const emojiOf = f => leafOf(f).e || catOf(f).e;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -585,8 +587,8 @@ window.V03Fact = (function () {
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.min(88, Math.max(16, diameter * 1.2)),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-              { offset: 0, color: hexA(p.dot, .10 * a0) }, { offset: .55, color: hexA(p.dot, .04 * a0) },
-              { offset: 1, color: hexA(p.dot, 0) }] } } });
+              { offset: 0, color: hexA(l1Color(f), .10 * a0) }, { offset: .55, color: hexA(l1Color(f), .04 * a0) },
+              { offset: 1, color: hexA(l1Color(f), 0) }] } } });
           usedHalo.push(toPx(value[0], value[1]));
           if (ripples.length < 8) ripples.push({ id: f.id, name: f.title, value });
         }
@@ -597,7 +599,7 @@ window.V03Fact = (function () {
             const target = ageAlpha(f, st.time);
             /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
             return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
-          })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } };
+          })(), color: l1Color(f), borderColor: 'rgba(255,255,255,.92)', borderWidth: .9 } };
         pointGroups.set(pointKey,point);pts.push(point);
       });
     });
@@ -616,7 +618,7 @@ window.V03Fact = (function () {
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer',
         symbolSize:DOT_SIZE,
         large: true, largeThreshold: 1500, progressive: 0,
-        itemStyle:{color:'#fffdf8',borderColor:p.dot,borderWidth:1.2} },
+        itemStyle:{borderColor:'rgba(255,255,255,.92)',borderWidth:.9} },
       flashSeries()
     ].filter(Boolean);
     // Explicit empty data clears an independently disabled layer under ECharts
@@ -1040,7 +1042,7 @@ window.V03Fact = (function () {
     const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()]
       .filter(f => plan.selected.has(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)));
     const points = unique.map(f => ({
-      id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, big: f.impact === 'high',
+      id: f.id, lng: f.lng, lat: f.lat, color: l1Color(f), big: f.impact === 'high',
       halo: (st.sk.influence && !f.radiusEstimated && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
       haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
