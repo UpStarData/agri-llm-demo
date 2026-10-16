@@ -1,102 +1,164 @@
 {
-  "errors": [],
-  "images": [
-    {
-      "kind": "fact",
-      "id": "v23-hongxing-2",
-      "url": "https://youyang.gov.cn/ysyy/yshd/202608/W020260810386904499593_ORIGIN.jpg",
-      "loaded": true,
-      "caption": "来源原文配图 · youyang.gov.cn"
-    },
-    {
-      "kind": "fact",
-      "id": "v23-weather-000-2026-10-13",
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Clouds_in_the_sky_in_August_2014.JPG/960px-Clouds_in_the_sky_in_August_2014.JPG",
-      "loaded": true,
-      "caption": "品种/主题资料图 · Wikimedia Commons · Jakec · CC BY-SA 4.0"
-    },
-    {
-      "kind": "object",
-      "id": "e:cmd:durian",
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Durian_Fruit_in_Yunnan.jpg/960px-Durian_Fruit_in_Yunnan.jpg",
-      "loaded": true,
-      "caption": "品种/主题资料图 · Wikimedia Commons · Rod Waddington · CC BY-SA 2.0"
-    },
-    {
-      "kind": "object",
-      "id": "e:cmd:cherry",
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/Cherry_Stella444.jpg/960px-Cherry_Stella444.jpg",
-      "loaded": true,
-      "caption": "品种/主题资料图 · Wikimedia Commons · Benjamint444, edited by Fir0002 · CC BY-SA 3.0"
-    },
-    {
-      "kind": "object",
-      "id": "e:cmd:chili",
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Man_turns_drying_chili_peppers%2C_Turkey.jpg/960px-Man_turns_drying_chili_peppers%2C_Turkey.jpg",
-      "loaded": true,
-      "caption": "品种/主题资料图 · Wikimedia Commons · Rotadefterim · CC BY-SA 4.0"
-    }
-  ],
-  "streams": [
-    {
-      "id": "v23-live-channel-0",
-      "title": "FarmodaTV · 农业/自然公开直播",
-      "played": true,
-      "width": 1920,
-      "time": 18.006371,
-      "decoders": 1,
-      "iframes": 0
-    },
-    {
-      "id": "v23-live-channel-1",
-      "title": "MRTV Farmer · 农业/自然公开直播",
-      "played": true,
-      "width": 720,
-      "time": 9.107323,
-      "decoders": 1,
-      "iframes": 0
-    },
-    {
-      "id": "v23-live-channel-2",
-      "title": "NatureTime · 农业/自然公开直播",
-      "played": true,
-      "width": 426,
-      "time": 2.645707,
-      "decoders": 1,
-      "iframes": 0
-    },
-    {
-      "id": "v23-live-channel-3",
-      "title": "Stingray Naturescape · 农业/自然公开直播",
-      "played": false,
-      "reason": "直播源暂不可用 · 点击重试"
-    },
-    {
-      "id": "v23-live-channel-4",
-      "title": "Agrotendencia TV · 农业/自然公开直播",
-      "played": true,
-      "width": 1920,
-      "time": 11.799521,
-      "decoders": 1,
-      "iframes": 0
-    },
-    {
-      "id": "v23-live-channel-5",
-      "title": "Agro TV · 农业/自然公开直播",
-      "played": true,
-      "width": 640,
-      "time": 4.61851,
-      "decoders": 1,
-      "iframes": 0
-    },
-    {
-      "id": "v23-live-channel-6",
-      "title": "WildEarth · 农业/自然公开直播",
-      "played": true,
-      "width": 640,
-      "time": 5.242778,
-      "decoders": 1,
-      "iframes": 0
-    }
-  ]
+ "errors": [],
+ "images": [
+  {
+   "kind": "fact",
+   "id": "v23-hongxing-2",
+   "url": "https://youyang.gov.cn/ysyy/yshd/202608/W020260810386904499593_ORIGIN.jpg",
+   "loaded": true,
+   "caption": "来源原文配图 · youyang.gov.cn"
+  },
+  {
+   "kind": "fact",
+   "id": "v23-weather-000-2026-10-13",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Clouds_in_the_sky_in_August_2014.JPG/960px-Clouds_in_the_sky_in_August_2014.JPG",
+   "loaded": true,
+   "caption": "品种/主题资料图 · Wikimedia Commons · Jakec · CC BY-SA 4.0"
+  },
+  {
+   "kind": "object",
+   "id": "e:cmd:durian",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Durian_Fruit_in_Yunnan.jpg/960px-Durian_Fruit_in_Yunnan.jpg",
+   "loaded": true,
+   "caption": "品种/主题资料图 · Wikimedia Commons · Rod Waddington · CC BY-SA 2.0"
+  },
+  {
+   "kind": "object",
+   "id": "e:cmd:cherry",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/Cherry_Stella444.jpg/960px-Cherry_Stella444.jpg",
+   "loaded": true,
+   "caption": "品种/主题资料图 · Wikimedia Commons · Benjamint444, edited by Fir0002 · CC BY-SA 3.0"
+  },
+  {
+   "kind": "object",
+   "id": "e:cmd:chili",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Man_turns_drying_chili_peppers%2C_Turkey.jpg/960px-Man_turns_drying_chili_peppers%2C_Turkey.jpg",
+   "loaded": true,
+   "caption": "品种/主题资料图 · Wikimedia Commons · Rotadefterim · CC BY-SA 4.0"
+  }
+ ],
+ "streams": [
+  {
+   "id": "v23-live-channel-0",
+   "title": "Agricultura TV（智利）· 农业/自然公开直播",
+   "url": "https://redirector.rudo.video/hls-video/ey6283je82983je9823je8jowowiekldk9838274/921tv/921tv.smil/playlist.m3u8",
+   "played": false,
+   "width": null,
+   "time": null,
+   "decoders": null,
+   "iframes": null,
+   "reason": "20 秒内未出画"
+  },
+  {
+   "id": "v23-live-channel-1",
+   "title": "FarmodaTV（伊拉克）· 农业/自然公开直播",
+   "url": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8",
+   "played": true,
+   "width": 1920,
+   "time": 2.737364,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-2",
+   "title": "MRTV Farmer（缅甸）· 农业/自然公开直播",
+   "url": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8",
+   "played": true,
+   "width": 720,
+   "time": 3.353288,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-3",
+   "title": "NatureTime（加拿大）· 农业/自然公开直播",
+   "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8",
+   "played": true,
+   "width": 426,
+   "time": 1.752317,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-4",
+   "title": "Agro TV（保加利亚）· 农业/自然公开直播",
+   "url": "https://restr2.bgtv.bg/agro/hls/agro.m3u8",
+   "played": true,
+   "width": 1920,
+   "time": 6.638621,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-5",
+   "title": "Agrotendencia TV（哥斯达黎加）· 农业/自然公开直播",
+   "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8",
+   "played": true,
+   "width": 1920,
+   "time": 5.375035,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-6",
+   "title": "Terra Mater WILD（德国）· 农业/自然公开直播",
+   "url": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8",
+   "played": true,
+   "width": 426,
+   "time": 3.07142,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-7",
+   "title": "Radio Fiesta de Milagros TV（洪都拉斯）· 农业/自然公开直播",
+   "url": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8",
+   "played": true,
+   "width": 1920,
+   "time": 5.50863,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-8",
+   "title": "Zagros TV（伊拉克）· 农业/自然公开直播",
+   "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8",
+   "played": true,
+   "width": 640,
+   "time": 9.952265,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-9",
+   "title": "Real Wild（英国）· 农业/自然公开直播",
+   "url": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8",
+   "played": true,
+   "width": 640,
+   "time": 4.391743,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-10",
+   "title": "PBS Nature（美国）· 农业/自然公开直播",
+   "url": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8",
+   "played": true,
+   "width": 426,
+   "time": 2.362437,
+   "decoders": 1,
+   "iframes": 0
+  },
+  {
+   "id": "v23-live-channel-11",
+   "title": "WildEarth（南非）· 农业/自然公开直播",
+   "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
+   "played": true,
+   "width": 640,
+   "time": 3.925334,
+   "decoders": 1,
+   "iframes": 0
+  }
+ ],
+ "checkedAt": "2026-10-16T06:54:50.800Z"
 }

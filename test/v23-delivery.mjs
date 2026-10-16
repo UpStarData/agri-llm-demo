@@ -19,7 +19,10 @@ try{
  assert(report.loaded.feed.elapsed<=40000);
  assert(report.loaded.feed.loaded>=3371);
  report.coverage=await page.evaluate(()=>{const list=V03Data.FACTS.filter(f=>f.id.startsWith('v23-weather'));return {russia:list.filter(f=>f.region.includes('俄罗斯')).length,canada:list.filter(f=>f.region.includes('加拿大')).length,china:list.filter(f=>f.regionPath.some(p=>p.name==='中国')).length,globalObjects:V03Data.OBJECTS.filter(o=>o.id.startsWith('e:v23:weather')).length};});
- assert(report.coverage.russia>=308);assert(report.coverage.canada>=161);assert(report.coverage.globalObjects===260);
+ assert(report.coverage.russia>=308);assert(report.coverage.canada>=161);
+ // V2.3 时的 260 个 e:v23:weather 伪本体已在 V2.5 按用户要求清零（气象记录留在事实层、不再建本体），
+ // 所以这里断言的是「不再有气象伪本体」，而不是旧快照的 260。
+ assert.equal(report.coverage.globalObjects,0,'气象记录不应再作为业务本体');
  report.views=[];
  for(const tab of ['fact','relation'])for(const level of ['L1','L2','L3']){
    await page.evaluate(({tab,level})=>V03Store.set({tab,time:'all',geo:{level,focus:level==='L3'?'湖南':null},rel:{view:'geo',level,focus:level==='L3'?'湖南':null,sel:null,kind:null,stack:[]},panels:{stream:false}}),{tab,level});
