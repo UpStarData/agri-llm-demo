@@ -1,7 +1,7 @@
 {
-  "hash": "38cebe20b09e",
-  "git": "c508fce",
-  "builtAt": "2026-10-16T03:37:46.299Z",
+  "hash": "82261c81e4e2",
+  "git": "18d95eb",
+  "builtAt": "2026-10-16T05:05:05.682Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -57,9 +57,9 @@
     "data/pkg2/v24-business.json",
     "data/pkg2/v25-hongxing.json",
     "data/pkg2/v25-hunan-areas.json",
-    "data/pkg2/v26-reports.json",
-    "data/pkg2/v27-global.json",
     "data/pkg2/v27-hongxing.json",
+    "data/pkg2/v28-reports.json",
+    "data/pkg2/v28-global.json",
     "build.mjs",
     "vendor/echarts.min.js",
     "vendor/hls.min.js",
@@ -69,5 +69,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 45928894
+  "bytes": 95435326
 }

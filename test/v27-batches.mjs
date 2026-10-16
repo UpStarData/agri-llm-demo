@@ -15,11 +15,11 @@ try {
   });
   await page.goto(pathToFileURL(path.resolve('index.html')).href);
   await page.waitForFunction(()=>window.__AGRI_READY);
-  const sample=()=>page.evaluate(()=>({feed:V03Feed.status(),map:V03Filter.mapFacts().length,global:V03Filter.mapFacts().filter(f=>f.id.startsWith('v27-wb:')).length,at:performance.now()}));
+  const sample=()=>page.evaluate(()=>({feed:V03Feed.status(),map:V03Filter.mapFacts().length,global:V03Filter.mapFacts().filter(f=>f.id.startsWith('v28-wb-')).length,at:performance.now()}));
   report.initial=await sample();
   assert(!report.initial.feed.done);
   for(let i=0;i<2;i++){
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(2000);
     report.batches.push(await sample());
   }
   assert(report.batches[1].global>report.batches[0].global);
@@ -43,11 +43,11 @@ try {
     window.__stopStable=()=>{active=false;return __stable;};
     requestAnimationFrame(tick);
   });
-  await page.waitForFunction(()=>V03Feed.status().done,{},{timeout:30000});
+  await page.waitForFunction(()=>V03Feed.status().done,{},{timeout:20000});
   report.loaded=await sample();
   report.stability=await page.evaluate(()=>__stopStable());
-  assert(report.loaded.feed.elapsed<40000);
-  assert(report.loaded.global>=5018);
+  assert(report.loaded.feed.elapsed<=10000,JSON.stringify(report.loaded.feed));
+  assert(report.loaded.global>=18000);
   assert.equal(report.stability.empty+report.stability.opacityDrops,0);
   assert(report.stability.maxRemoved<=12,JSON.stringify(report.stability));
   await page.evaluate(()=>V03Feed.stop());
