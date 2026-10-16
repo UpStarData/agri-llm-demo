@@ -90,10 +90,17 @@ window.V03Mass = (function () {
     }
     return level === 'L1' ? MAP_FEATURES.L1 : MAP_FEATURES.china;
   }
+  const containment = { world: new Map(), china: new Map() };
   function insideMap(level, lng, lat) {
     if (level !== 'L1' && !inChina(lng, lat)) return false;
-    return mapFeatures(level).some(f => lng >= f.bounds[0] && lng <= f.bounds[2] && lat >= f.bounds[1] && lat <= f.bounds[3]
+    // Boundaries are immutable. Daily observations at the same coordinate and
+    // animation frames share the same expensive polygon containment result.
+    const cache=level==='L1'?containment.world:containment.china, key=lng+'|'+lat;
+    if(cache.has(key))return cache.get(key);
+    const inside=mapFeatures(level).some(f => lng >= f.bounds[0] && lng <= f.bounds[2] && lat >= f.bounds[1] && lat <= f.bounds[3]
       && geometryContains(f.geometry, lng, lat));
+    cache.set(key,inside);
+    return inside;
   }
 
   /* ---------- 体量：按视角与分类字典的类型数计算 ---------- */
