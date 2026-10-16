@@ -1,7 +1,7 @@
 {
-  "hash": "a3f22a5c999d",
-  "git": "b707bda",
-  "builtAt": "2026-10-16T00:39:53.266Z",
+  "hash": "7c7bd25659ae",
+  "git": "52c318d",
+  "builtAt": "2026-10-16T01:40:23.310Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -16,6 +16,7 @@
     "src/v03/data-sim.js",
     "src/v03/dict-f3.js",
     "src/v03/store.js",
+    "src/v03/scope.js",
     "src/v03/filter.js",
     "src/v03/globe.js",
     "src/v03/intake.js",
@@ -54,6 +55,8 @@
     "data/pkg2/v23-media.json",
     "data/pkg2/v24-weather.json",
     "data/pkg2/v24-business.json",
+    "data/pkg2/v25-hongxing.json",
+    "data/pkg2/v25-hunan-areas.json",
     "build.mjs",
     "vendor/echarts.min.js",
     "vendor/hls.min.js",
@@ -63,5 +66,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 22990662
+  "bytes": 24254156
 }
