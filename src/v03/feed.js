@@ -1,10 +1,14 @@
 /* Bounded first paint, geographic batches, then verified report/business arrivals. */
 window.V03Feed = (() => {
   const D=V03Data,S=V03Store, loaded=new Set(), objects=new Set(), history=[];
-  const LOAD_MS=32000;
+  /* 首次进入事实层须在 10 秒内把全部事实点铺完（2026-10-16 反馈第 2 项）。
+     仍是页面内渐进铺点，不是网络流式下载；步进频率提高以免出现肉眼可见的“一大跳”。 */
+  const LOAD_MS=6500,TICK_MS=1000;
+  /* 亮星节奏：按 3/8/6/2/8/1 秒循环（2026-10-16 反馈第 4 项），不再用随机区间。 */
+  const STAR_CYCLE=[3000,8000,6000,2000,8000,1000];
   const reportQueue=(D.PKG?.ARRIVALS||[]).slice();
   const businessQueue=(window.__AGRI_PKG2__?.v24Business?.arrivals || []).slice();
-  let started=false,done=false,loadTimer=0,arrivalTimer=0,t0=0,cursor=0,revision=0,seq=0;
+  let started=false,done=false,loadTimer=0,arrivalTimer=0,t0=0,cursor=0,revision=0,seq=0,starStep=0;
   function sampleGeo(list,cap,priority=new Set()) {
     const chosen=[],ids=new Set(),buckets=new Map();
     const add=o=>{if(chosen.length<cap&&!ids.has(o.id)){chosen.push(o);ids.add(o.id);}};
@@ -15,7 +19,7 @@ window.V03Feed = (() => {
   }
   const plan=sampleGeo(D.FACTS.slice().sort((a,b)=>String(b.ingestedAt||b.date).localeCompare(String(a.ingestedAt||a.date))),D.FACTS.length);
   function expose(list) {list.forEach(f=>{loaded.add(f.id);(f.objects||[]).forEach(id=>objects.add(id));});}
-  expose(D.FACTS.filter(f=>f.persistent&&!/^v2[467]-/.test(f.id)));
+  expose(D.FACTS.filter(f=>f.persistent&&!/^v2[4678]-/.test(f.id)));
   expose(sampleGeo(D.FACTS.filter(f=>f.impact==='high'),72));
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
@@ -80,8 +84,9 @@ window.V03Feed = (() => {
     S.emit('feed:log',{text:(accepted?'实时接入':'接入回放')+' · '+(target.title||target.name)+' · '+new Date().toLocaleTimeString('zh-CN')});
     history.push({at:Math.round(performance.now()),view:key,mode:accepted?'live':'snapshot-replay'});if(history.length>40)history.shift();
   }
-  function schedule(){if(!started)return;clearTimeout(arrivalTimer);arrivalTimer=setTimeout(async()=>{await arrive();schedule();},7500+Math.random()*4500);}
+  function nextStarDelay(){return STAR_CYCLE[starStep++ % STAR_CYCLE.length];}
+  function schedule(){if(!started)return;clearTimeout(arrivalTimer);arrivalTimer=setTimeout(async()=>{await arrive();schedule();},nextStarDelay());}
   function stop(){started=false;clearInterval(loadTimer);clearTimeout(arrivalTimer);}
-  function start(){if(started)return;started=true;t0=performance.now();loadTimer=setInterval(step,1000);schedule();changed();}
-  return {start,stop,status,complete,sampleGeo,arrive,isFactVisible:id=>loaded.has(id),isObjectVisible:id=>!id.startsWith('e:v23:weather:')&&!id.startsWith('e:v24:')||objects.has(id),get revision(){return revision;}};
+  function start(){if(started)return;started=true;t0=performance.now();loadTimer=setInterval(step,TICK_MS);schedule();changed();}
+  return {start,stop,status,complete,sampleGeo,LOAD_MS,STAR_CYCLE,nextStarDelay,starStep:()=>starStep,arrive,isFactVisible:id=>loaded.has(id),isObjectVisible:id=>!id.startsWith('e:v23:weather:')&&!id.startsWith('e:v24:')||objects.has(id),get revision(){return revision;}};
 })();
