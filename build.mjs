@@ -81,14 +81,14 @@ const PKG2_FILES = [
   'data/pkg2/v24-weather.json','data/pkg2/v24-business.json','data/pkg2/v25-hongxing.json','data/pkg2/v25-hunan-areas.json',
   'data/pkg2/v27-hongxing.json',
   /* V2.8：全国 31 省公开农业报道（v28-reports）+ 世界银行农业序列扩围（v28-global，取代 v27-global） */
-  'data/pkg2/v28-reports.json','data/pkg2/v28-global.json'
+  'data/pkg2/v28-reports.json','data/pkg2/v28-global.json','data/pkg2/v29-markets.json'
 ];
 const pkg2Data = (() => {
   const read = f => { try { return JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch (e) { return null; } };
   const out = { weather: read('data/pkg2/weather-facts.json') || [], airports: read('data/pkg2/airports-large.geojson'), channels: read('data/pkg2/live-channels.json') || [], extra: read('data/pkg2/extra-facts.json') || [], global: read('data/pkg2/global-facts.json') || [] };
   Object.assign(out,{v23Weather:read('data/pkg2/v23-weather.json'),v23Projects:read('data/pkg2/v23-projects.json'),v23Streams:read('data/pkg2/v23-streams.json'),media:read('data/pkg2/v23-media.json')});
   Object.assign(out,{v24Weather:read('data/pkg2/v24-weather.json'),v24Business:read('data/pkg2/v24-business.json'),v25Hongxing:read('data/pkg2/v25-hongxing.json'),hunanAreas:read('data/pkg2/v25-hunan-areas.json')});
-  Object.assign(out,{v27Hongxing:read('data/pkg2/v27-hongxing.json'),v28Reports:read('data/pkg2/v28-reports.json'),v28Global:read('data/pkg2/v28-global.json')});
+  Object.assign(out,{v27Hongxing:read('data/pkg2/v27-hongxing.json'),v28Reports:read('data/pkg2/v28-reports.json'),v28Global:read('data/pkg2/v28-global.json'),v29Markets:read('data/pkg2/v29-markets.json')});
   return '<script>window.__AGRI_PKG2__=' + JSON.stringify(out) + ';</script>';
 })();
 
@@ -104,7 +104,7 @@ const data = [
 ].join('\n');
 const appJs = JS.map(f => `<script>\n${rd(f)}\n</script>`).join('\n');
 
-const INPUTS = ['src/v03/shell.html', ...CSS, ...JS, ...GEO, ...PKG_INPUTS, ...PKG2_FILES, 'build.mjs',
+const INPUTS = ['src/v03/shell.html', 'package.json', ...CSS, ...JS, ...GEO, ...PKG_INPUTS, ...PKG2_FILES, 'build.mjs',
   'vendor/echarts.min.js', 'vendor/hls.min.js', ...FACES.map(f => f.file)];
 const hh = crypto.createHash('sha256');
 INPUTS.forEach(p => { hh.update(p + '\0'); hh.update(rb(p)); });
@@ -114,6 +114,8 @@ try { git = execSync('git rev-parse --short HEAD', { cwd: root }).toString().tri
 
 let html = rd('src/v03/shell.html');
 html = put(html, '/*FONT_CSS*/', fontCss);
+/* 版本号从 package.json 注入：此前顶部品牌写死版本号，发布后页面仍显示旧版本。 */
+html = put(html, '/*APP_VER*/', 'V' + JSON.parse(rd('package.json')).version.replace(/\.0$/, ''));
 html = put(html, '/*APP_CSS*/', rd(CSS[0]));
 html = put(html, '/*REL_CSS*/', rd(CSS[1]));
 html = put(html, '/*SIM_CSS*/', rd(CSS[2]));
