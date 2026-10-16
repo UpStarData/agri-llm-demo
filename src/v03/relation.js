@@ -552,7 +552,7 @@ window.V03Relation = (function () {
     for (const x of chosen) {
       const { r, isFocus } = x;
       let coords = x.coords, international = false;
-      if (relLevel() === 'L3' && chart) {
+      if (relLevel() === 'L3' && chart && mapFrame === [S.state.rel.view,relLevel(),relFocus(),S.state.theme].join('|')) {
         const W = dom.canvas.clientWidth, H = dom.canvas.clientHeight, m = 28;
         coords = coords.map(pt => {
           const q = chart.convertToPixel({ geoIndex: 0 }, pt);
@@ -742,6 +742,8 @@ window.V03Relation = (function () {
       lineStyle: { color: focus && (r.from === focus || r.to === focus) ? '#e91e63' : '#c0c0c0',
         width: focus && (r.from === focus || r.to === focus) ? 2.5 : 1.5, opacity: 1, curveness: .08 }
     }));
+    dom.hint.hidden=false;
+    dom.hint.textContent='当前筛选 '+objs.length+' 个本体 / '+rels.length+' 条关系 · 展示 '+nodes.length+' 个本体 / '+links.length+' 条关系。优先当前关注、红星及重点品类，覆盖各分类后按连接数补齐至220个；仅显示端点均在子网内的真实关系。';
     return {
       backgroundColor: 'transparent',
       tooltip: { show: false },
@@ -785,7 +787,7 @@ window.V03Relation = (function () {
     clearInterval(intro.timer); intro.timer = 0;
     if (visitedViews.has(key)) { intro.on = false; intro.t = 1; return; }
     visitedViews.add(key);
-    intro.on = true; intro.t = 0; intro.t0 = performance.now();
+    intro.on = true; intro.t = .025; intro.t0 = performance.now() - INTRO_MS * .025;
     clearInterval(intro.timer);
     intro.timer = setInterval(() => {
       if (S.state.tab !== 'relation' || S.state.rel.view !== 'geo') { clearInterval(intro.timer); intro.timer = 0; intro.on = false; return; }
@@ -933,13 +935,21 @@ window.V03Relation = (function () {
     return (visible || card)?.id;
   }
 
+  function cardEligible(o, pendingRelations) {
+    const degree=D.relationsOf(o.id).length+(Array.isArray(pendingRelations)?pendingRelations.filter(r=>r.from===o.id||r.to===o.id).length:0);
+    if(o.domain==='channel' && (!degree || !/^https?:/.test(o.sourceUrl||'')))return false;
+    const retail=/超市|商超|食品零售|便利店|生鲜店|折扣店|果蔬店|直销店|批发商店|五金|日杂|supermarket|convenience|greengrocer/i.test(o.name+' '+o.sub);
+    if(!retail)return true;
+    const major=/永辉|沃尔玛|山姆|Costco|盒马|华润万家|大润发|家乐福|麦德龙|步步高|人人乐|世纪联华|联华|物美|家家悦|红旗连锁|中百|京东七鲜/i;
+    return major.test(o.name) && /^https?:/.test(o.sourceUrl||'') && degree>0;
+  }
   function renderPanel(st, objs) {
     dom.side.classList.toggle('off', !st.panels.cards);
     /* 不显示行政/区域类对象：卡片只展现有信息量的本体分类 */
     const kept = objs.filter(o => {
       const d = String(o.domain || '').toLowerCase();
       const t = String(F.relKind(o) || '');
-      return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t);
+      return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t) && cardEligible(o);
     });
     const scoped = kept; // F.objects already applies the same geographic scope as map and counts.
     const nogeo = scoped.slice().sort((a,b)=>Number(V03Scope.priority(b))-Number(V03Scope.priority(a)) || Number(b.priority==='high')-Number(a.priority==='high') || Number(b.domain==='commodity')-Number(a.domain==='commodity') || String(recentOf(b)).localeCompare(String(recentOf(a))));
@@ -1101,7 +1111,7 @@ window.V03Relation = (function () {
     if (camera.level !== relLevel() + '|' + (relFocus() || '')) fitLevel();
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
-    if (dom.hint) {
+    if (dom.hint && st.rel.view !== 'graph') {
       const lv = relLevel();
       dom.hint.hidden = st.rel.view !== 'geo';
       /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
@@ -1146,15 +1156,14 @@ window.V03Relation = (function () {
         const frame=[st.rel.view,relLevel(),relFocus(),st.theme].join('|'),freshFrame=frame!==mapFrame;
         if (st.rel.view === 'geo' && freshFrame) {
           beginIntro();
-          const cfg = levelCfg();
-          c.setOption({ geo: { map: cfg.map, center: camera.center.slice(), zoom: camera.zoom,
-            boundingCoords: cfg.bounds, itemStyle: { areaColor: palette().land } }, series: [] }, { notMerge: true });
+          // One complete first paint; no empty bootstrap geo or empty-node frame.
         }
         const next=st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st);
         // Incremental ingestion must not rebuild the geographic component or its roam transform.
         if(!freshFrame && st.rel.view==='geo') { delete next.geo; delete next.backgroundColor; }
         c.setOption(next, { notMerge: freshFrame });
         mapFrame=frame;
+        if(freshFrame && st.rel.view==='geo' && relLevel()==='L3')paintFocus(true);
         geometrySig = nextGeometry;
         paintedFocus=focusId()||'';
       } else if (st.rel.view === 'geo' && paintedFocus!==(focusId()||'')) {
@@ -1195,5 +1204,5 @@ window.V03Relation = (function () {
     const list=F.objects(S.state).filter(o=>o.geo!==false&&Number.isFinite(o.lng)&&inLevel(o.lng,o.lat));
     return list.filter(visiblePosition);
   }
-  return { notifyNewest, receiveObjects, arrivalCandidates, visiblePosition, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
+  return { cardEligible, notifyNewest, receiveObjects, arrivalCandidates, visiblePosition, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
 })();

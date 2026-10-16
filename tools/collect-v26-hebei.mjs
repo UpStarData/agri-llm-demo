@@ -1,0 +1,6 @@
+/* Public pagination as exposed by the municipal agriculture bureau's own UI. */
+import{chromium}from'playwright';import fs from'node:fs';
+const b=await chromium.launch();try{const p=await b.newPage();await p.goto('https://nyncj.sjz.gov.cn/columns/308bd406-5e94-435b-98d9-476cb2aa5ec3/index.html',{waitUntil:'domcontentloaded'});const rows=[];
+for(let n=1;n<=76;n++){const r=await p.evaluate(async n=>{const u='/columns/308bd406-5e94-435b-98d9-476cb2aa5ec3/templates/55a2b45d-eda0-4ba3-9bfa-aca3325972c4/blocks/4b80770d-24d3-4569-928f-6b21dc85f58e?page='+n+'&fix=0',response=await fetch(u);if(!response.ok)throw Error(response.status);const d=new DOMParser().parseFromString(await response.text(),'text/html');return [...d.querySelectorAll('.col_sbjg_li')].map(el=>({province:'河北省',title:el.querySelector('a').title,date:el.querySelector('.col_main1_day').textContent.trim(),url:el.querySelector('a').href,publisher:'石家庄市农业农村局',indexUrl:location.origin+u}));},n);rows.push(...r);if(n%15===0)console.log('Hebei pages',n,'reports',rows.length);}
+const path='data/pkg2/v26-reports-source.json',d=JSON.parse(fs.readFileSync(path));d.records=[...new Map([...d.records,...rows].map(r=>[r.url,r])).values()];d.counts['河北省']=rows.length;fs.writeFileSync(path,JSON.stringify(d)+'\n');console.log('Hebei',rows.length);
+}finally{await b.close();}

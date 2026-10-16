@@ -12,7 +12,7 @@
 window.V03Pkg = (function () {
   const P = window.__AGRI_PKG__ || {};
   const P2 = window.__AGRI_PKG2__ || {};
-  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing].filter(Boolean);
+  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing, P2.v26Reports].filter(Boolean);
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
   const entitiesRaw=(P.entities || []).concat(...EXPANSIONS.map(p=>p.entities || []));
   const observationIds=new Set(entitiesRaw.filter(e=>['WeatherArea','WeatherObservation','MetricObservation'].includes(e.type)).map(e=>e.entityId));
@@ -444,6 +444,8 @@ window.V03Pkg = (function () {
   const STREAM_LOOP = STREAM_IN.loopMs || 1;
 
   /* ---------- 概览与来源统计（内部验收口径） ---------- */
+  const ARRIVALS=FACTS.filter(f=>f.provenanceMeta?.arrivalReserved);
+  for(let i=FACTS.length-1;i>=0;i--)if(FACTS[i].provenanceMeta?.arrivalReserved)FACTS.splice(i,1);
   const STATS = P.stats || {};
   const MANIFEST = P.manifest || {};
   const realFacts = FACTS.filter(f => f.prov === 'real').length;
@@ -451,7 +453,7 @@ window.V03Pkg = (function () {
   return {
     datasetId: MANIFEST.datasetId || 'agrilink-demo-v1', datasetVersion: MANIFEST.datasetVersion || '1.0.0',
     collectedAt: MANIFEST.collectedAt || '', TODAY: P2.v23Weather?.snapshotDate || MANIFEST.collectedAt || '2026-09-21',
-    FACTS, OBJECTS, RELATIONS, REGIONS, GATES, STREAM, STREAM_LOOP,
+    FACTS, ARRIVALS, OBJECTS, RELATIONS, REGIONS, GATES, STREAM, STREAM_LOOP,
     ONTOLOGY: ONT, SOURCES: SOURCES_IN, EVIDENCE: EVIDENCE_IN, OBSERVATIONS: OBS_IN,
     CARD_SCHEMA: P.cards || {}, STATS, MANIFEST, VALIDATION: P.validation || {},
     CHANNELS,
