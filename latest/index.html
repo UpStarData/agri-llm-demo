@@ -891,7 +891,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.8.2</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.8.3</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -955,7 +955,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"dc6939257377","git":"d31d2bd","builtAt":"2026-10-16T07:15:04.038Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"515bb368bf2c","git":"3eed38b","builtAt":"2026-10-16T07:42:31.190Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5829,6 +5829,25 @@ window.V03Filter = (function () {
     return scopeFacts;
   }
 
+  /* 需求 4.2.3：右侧卡片区要承载「没有坐标、无法在地图上显示」的事实。
+     这类事实按 geo.scopeLayer 声明的层级归属视野（L1 全局事实在任何视野的卡片区都出现）；
+     有坐标的仍按地理范围收窄。地图侧不受影响：无坐标本来就不画点。 */
+  const LEVEL_RANK = { L1: 1, L2: 2, L3: 3 };
+  let cardBase = null, cardKey = '', cardFacts = [];
+  function factsForCards(s) {
+    s = s || window.V03Store.state;
+    const base = facts(s), key = JSON.stringify([s.geo.level, s.geo.focus, s.geo.city, s.geo.county]);
+    if (base !== cardBase || key !== cardKey) {
+      cardBase = base; cardKey = key;
+      const want = LEVEL_RANK[s.geo.level || 'L1'] || 1;
+      cardFacts = base.filter(f => {
+        if (Number.isFinite(f.lng) && Number.isFinite(f.lat)) return f.level !== 'hidden' && V03Scope.includes(f, s.geo);
+        return (LEVEL_RANK[f.level] || 3) <= want;
+      });
+    }
+    return cardFacts;
+  }
+
   // Map eligibility is separate from archive/card eligibility: hidden feeds remain searchable.
   function mapEligible(f) {
     const key=leafKeyOf(f)||'';
@@ -5950,7 +5969,7 @@ window.V03Filter = (function () {
 
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
-    facts, factsAll: facts, factsAtLevel, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
+    facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
     prov: x => (x && x.prov) || 'generated'
@@ -7581,7 +7600,8 @@ window.V03Fact = (function () {
   let visibleCardCount = 20;
   function renderCards() {
     const st = S.state;
-    const facts = F.factsAtLevel(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
+    /* 卡片区用 factsForCards：无坐标事实（如直播源）只在这里出现，地图侧不画。 */
+    const facts = F.factsForCards(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
       const ai = freshOrder.indexOf(a.id), bi = freshOrder.indexOf(b.id);
       return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi) || Number(V03Scope.priority(b))-Number(V03Scope.priority(a));
     });
