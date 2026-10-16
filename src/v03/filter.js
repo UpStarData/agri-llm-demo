@@ -52,6 +52,20 @@ window.V03Filter = (function () {
   }
   const PRD_REL_TYPES=['生产','供应','采购','运营','入驻','合作','位于','运输至','储存于','发布','适用于','监管','影响','发生于'];
   const legacyTypes=()=>[...new Set(D.RELATIONS.map(r=>r.type))].filter(t=>!PRD_REL_TYPES.includes(t));
+  const RELATION_COLORS={
+    '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
+    '供应':'#d68a3c','供应流向':'#d68a3c','运营':'#d68a3c','入驻':'#d68a3c','合作':'#d68a3c',
+    '流入':'#1fa9a2','流出':'#1fa9a2','运输至':'#1fa9a2','储存于':'#1fa9a2',
+    '运输经由':'#3f8fbf','位于':'#5a80b8','发生于':'#5a80b8','行政归属':'#5a80b8',
+    '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba','依赖':'#8a6dba','替代':'#8a6dba',
+    '影响':'#cf5f6a','价格传导':'#cf5f6a'
+  };
+  const relationTypeColor = type => RELATION_COLORS[type] || '#7ea0cf';
+  const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
+  function relationTypeOptions(s) {
+    const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
+    return relationTypes().filter(type=>counts.has(type)).map(type=>({type,count:counts.get(type),color:relationTypeColor(type)}));
+  }
   const flat = tree => tree.reduce((a, g) => a.concat(g.subs.reduce((b, s) => b.concat(s.items), [])), []);
   const FACT_ITEMS = flat(FACT_TREE), REL_ITEMS = flat(REL_TREE);
   const itemBy = (items, key) => items.find(x => x.key === key) || null;
@@ -241,7 +255,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
