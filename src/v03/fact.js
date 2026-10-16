@@ -379,7 +379,7 @@ window.V03Fact = (function () {
   const ageAlpha = (f, win) => {
     // Archive profiles intentionally survive the current-event window. Their
     // original publication date remains visible; do not make retained records invisible.
-    if (f.persistent) return .9;
+    if (f.persistent || win === 'all') return .9;
     const span = { today: 1, '7d': 7, '30d': 30, '180d': 180, '365d': 365 }[win] || 30;
     const t = Date.parse(String(f.date || '').slice(0, 10) + 'T00:00:00Z');
     const now = Date.parse(String(D.TODAY || new Date().toISOString().slice(0, 10)) + 'T00:00:00Z');
@@ -608,13 +608,13 @@ window.V03Fact = (function () {
         itemStyle:{color:'#fffdf8',borderColor:p.dot,borderWidth:1.2} },
       flashSeries()
     ].filter(Boolean);
-    if (st.sk.regions) markerSeries('regions', regionsAtLevel(), '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
-    if (st.sk.gates) {
-      markerSeries('gatesP', gatesAtLevel('port'), '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-    }
-    if (st.sk.airports) markerSeries('gatesA', gatesAtLevel('airport'), '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-    if (st.sk.markets) markerSeries('markets', v12Overlay('market'), '#a16207', '🛒', 13, true).forEach(x => series.push(x));
-    if (st.sk.risks && st.geo.level === 'L1') markerSeries('risks', v12Overlay('risk'), '#b91c1c', '⚠️', 13, false).forEach(x => series.push(x));
+    // Explicit empty data clears an independently disabled layer under ECharts
+    // merging; omitting the series would leave its previous markers on screen.
+    markerSeries('regions', st.sk.regions ? regionsAtLevel() : [], '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
+    markerSeries('gatesP', st.sk.gates ? gatesAtLevel('port') : [], '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+    markerSeries('gatesA', st.sk.airports ? gatesAtLevel('airport') : [], '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+    markerSeries('markets', st.sk.markets ? v12Overlay('market') : [], '#a16207', '🛒', 13, true).forEach(x => series.push(x));
+    markerSeries('risks', st.sk.risks && st.geo.level === 'L1' ? v12Overlay('risk') : [], '#b91c1c', '⚠️', 13, false).forEach(x => series.push(x));
     return {
       backgroundColor: 'transparent',
       /* Full map rebuilds (including level changes) must not tween independently of geo points. */
@@ -652,6 +652,11 @@ window.V03Fact = (function () {
   }
 
   function markerSeries(id, list, color, emoji, size, showLabel) {
+    // Airports are an independent reference overlay, not fact records. At
+    // world scale, thousands of emoji labels (including seam copies) obscure
+    // facts and make every pan expensive. Keep a geographically balanced set;
+    // country/province views use their full regional airport list.
+    if(id==='gatesA'&&S.state.geo.level==='L1')list=V03Feed.sampleGeo(list,180);
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
       data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: size }))),
@@ -1098,6 +1103,11 @@ window.V03Fact = (function () {
     if(frame!==mapFrame){
       chart.setOption(mapOption(false), { notMerge: true });
       mapFrame=frame;
+      // The new geo transform is now available for pixel-spaced halos. Other
+      // series were already drawn; resubmitting thousands of points doubles
+      // the synchronous work on every level change.
+      chart.setOption({series:mapOption(true).series.filter(s=>s.id==='halo'||s.id==='ripple')},{silent:true});
+      return;
     }
     chart.setOption({ series: mapOption(true).series }, { silent: true });
   }

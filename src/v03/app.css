@@ -97,6 +97,7 @@ svg{display:block}
 #stage{position:relative;flex:1;min-width:0;height:100%;overflow:hidden;background:var(--bg)}
 .layer{position:absolute;inset:0;display:none}
 .layer.on{display:block;animation:layerIn .26s var(--ease)}
+#layer-relation.on{animation:none}
 @keyframes layerIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #layer-sim{background:var(--bg)}
 

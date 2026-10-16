@@ -170,7 +170,7 @@ try {
         const t = performance.now();
         V03Store.set(tab === 'fact' ? { tab, geo: { level, focus: level === 'L3' ? '湖南' : null } }
           : { tab, rel: { view: 'geo', level, focus: level === 'L3' ? '湖南' : null } });
-        durations.push(performance.now() - t);
+        durations.push({tab,level,ms:performance.now() - t});
         const c = echarts.getInstanceByDom(document.querySelector(tab === 'fact' ? '#factMap' : '#relCanvas'));
         for (let i = 0; i < 15; i++) {
           c.dispatchAction({ type: 'geoRoam', componentType: 'geo', geoIndex: 0, dx: 2, dy: 1 });
@@ -180,7 +180,7 @@ try {
     }
     active = false;
     const sorted = dt.slice().sort((a, b) => a - b);
-    return { samples: dt.length, p95: sorted[Math.floor(sorted.length * .95)], max: Math.max(...dt), switchMax: Math.max(...durations) };
+    return { samples: dt.length, p95: sorted[Math.floor(sorted.length * .95)], max: Math.max(...dt), switchMax: Math.max(...durations.map(d=>d.ms)), views:durations };
   });
   assert(report.frames.p95 < 100 && report.frames.max < 250 && report.frames.switchMax < 200, JSON.stringify(report.frames));
   await page.setViewportSize({ width: 390, height: 844 });
