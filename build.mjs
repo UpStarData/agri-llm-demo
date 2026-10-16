@@ -78,15 +78,17 @@ const PKG2_FILES = [
   'data/pkg2/weather-facts.json', 'data/pkg2/airports-large.geojson',
   'data/pkg2/live-channels.json', 'data/pkg2/extra-facts.json', 'data/pkg2/global-facts.json',
   'data/pkg2/v23-weather.json','data/pkg2/v23-projects.json','data/pkg2/v23-streams.json','data/pkg2/v23-media.json',
-  'data/pkg2/v24-weather.json','data/pkg2/v24-business.json','data/pkg2/v25-hongxing.json','data/pkg2/v25-hunan-areas.json','data/pkg2/v26-reports.json',
-  'data/pkg2/v27-global.json','data/pkg2/v27-hongxing.json'
+  'data/pkg2/v24-weather.json','data/pkg2/v24-business.json','data/pkg2/v25-hongxing.json','data/pkg2/v25-hunan-areas.json',
+  'data/pkg2/v27-hongxing.json',
+  /* V2.8：全国 31 省公开农业报道（v28-reports）+ 世界银行农业序列扩围（v28-global，取代 v27-global） */
+  'data/pkg2/v28-reports.json','data/pkg2/v28-global.json'
 ];
 const pkg2Data = (() => {
   const read = f => { try { return JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch (e) { return null; } };
   const out = { weather: read('data/pkg2/weather-facts.json') || [], airports: read('data/pkg2/airports-large.geojson'), channels: read('data/pkg2/live-channels.json') || [], extra: read('data/pkg2/extra-facts.json') || [], global: read('data/pkg2/global-facts.json') || [] };
   Object.assign(out,{v23Weather:read('data/pkg2/v23-weather.json'),v23Projects:read('data/pkg2/v23-projects.json'),v23Streams:read('data/pkg2/v23-streams.json'),media:read('data/pkg2/v23-media.json')});
-  Object.assign(out,{v24Weather:read('data/pkg2/v24-weather.json'),v24Business:read('data/pkg2/v24-business.json'),v25Hongxing:read('data/pkg2/v25-hongxing.json'),hunanAreas:read('data/pkg2/v25-hunan-areas.json'),v26Reports:read('data/pkg2/v26-reports.json')});
-  Object.assign(out,{v27Global:read('data/pkg2/v27-global.json'),v27Hongxing:read('data/pkg2/v27-hongxing.json')});
+  Object.assign(out,{v24Weather:read('data/pkg2/v24-weather.json'),v24Business:read('data/pkg2/v24-business.json'),v25Hongxing:read('data/pkg2/v25-hongxing.json'),hunanAreas:read('data/pkg2/v25-hunan-areas.json')});
+  Object.assign(out,{v27Hongxing:read('data/pkg2/v27-hongxing.json'),v28Reports:read('data/pkg2/v28-reports.json'),v28Global:read('data/pkg2/v28-global.json')});
   return '<script>window.__AGRI_PKG2__=' + JSON.stringify(out) + ';</script>';
 })();
 

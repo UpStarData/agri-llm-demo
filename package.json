@@ -1,6 +1,6 @@
 {
   "name": "agri-llm-demo",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "private": true,
   "description": "AgriLink V2.7 · 全球业务事实恢复、叠加图层默认开启与稳定关联动画",
   "type": "module",
@@ -30,7 +30,8 @@
     "test:v25": "node test/v25-regional.mjs && node test/v25-delivery.mjs && node test/v24-framing.mjs && node test/v24-interactions.mjs && node test/v24-globe.mjs && node test/v23-interactions.mjs",
     "test:v26": "node test/v26-business.mjs && node test/v25-regional.mjs && node test/v24-framing.mjs && node test/v23-interactions.mjs",
     "test:v261": "node test/v261-taxonomy.mjs && npm run test:v26",
-    "test:v27": "node test/v27-global-motion.mjs && node test/v27-batches.mjs && npm run test:v261"
+    "test:v27": "node test/v27-global-motion.mjs && node test/v27-batches.mjs && npm run test:v261",
+    "test:v28": "node test/v28-delivery.mjs && node test/v26-delivery.mjs && npm run test:v27"
   },
   "devDependencies": {
     "playwright": "^1.58.2"

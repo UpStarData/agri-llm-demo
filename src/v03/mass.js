@@ -36,6 +36,17 @@ window.V03Mass = (function () {
     (data().GATES || []).forEach(g => out.push({ lng: g.lng, lat: g.lat, w: g.kind === 'port' ? 2 : 1, src: 'gate' }));
     (data().OBJECTS || []).forEach(o => { if (o.geo !== false && o.lat != null) out.push({ lng: o.lng, lat: o.lat, w: 1, src: 'entity' }); });
     Object.keys(data().PROV_CENTER || {}).forEach(k => { const c = data().PROV_CENTER[k]; out.push({ lng: c[0], lat: c[1], w: 2, src: 'province' }); });
+    /* 世界视角的密度锚点必须落在真正有数据的地方：把已接入的国家级统计事实
+       的去重参考坐标（世界银行提供的国家/首都参考点）也作为锚点，否则全球
+       视野的密度会全部堆在中国一侧。 */
+    const countrySeen = new Set();
+    (data().FACTS || []).forEach(f => {
+      if (f.level !== 'L1' || f.cardType === 'weather' || !Number.isFinite(f.lng) || !Number.isFinite(f.lat)) return;
+      const key = f.lng.toFixed(3) + '|' + f.lat.toFixed(3);
+      if (countrySeen.has(key)) return;
+      countrySeen.add(key);
+      out.push({ lng: f.lng, lat: f.lat, w: 2, src: 'country' });
+    });
     ANCHORS = out.length ? out : [{ lng: 0, lat: 20, w: 1, src: 'fallback' }];
     return ANCHORS;
   }

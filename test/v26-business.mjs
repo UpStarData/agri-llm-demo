@@ -5,12 +5,14 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromiu
 const report={errors:[],paints:[],graphs:[]};fs.mkdirSync('test/artifacts/v26',{recursive:true});
 try {
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>report.errors.push(e.message));
+ await page.addInitScript(()=>{window.__batches=[];setInterval(()=>{if(window.V03Feed)__batches.push([window.V03Feed.status().loaded,window.V03Feed.status().done]);},300);});
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.__AGRI_READY);
- report.initial=await page.evaluate(()=>({feed:V03Feed.status(),newReports:V03Filter.mapFacts().filter(f=>f.id.startsWith('v26-')).length}));
- assert(!report.initial.feed.done && report.initial.feed.loaded<report.initial.feed.total,'Report archive must retain gradual batches');
+ report.batches=await page.evaluate(()=>__batches.map(([loaded,done])=>({loaded,done})));
+ assert(report.batches.filter((b,i,a)=>i&&!a[i-1].done&&b.loaded>a[i-1].loaded).length>=3,'Report archive must retain gradual batches: '+JSON.stringify(report.batches.slice(0,5)));
+ report.initial=await page.evaluate(()=>({feed:V03Feed.status()}));
  await page.evaluate(()=>{V03Feed.complete();V03Feed.stop();window.__paints=[];const init=echarts.init;echarts.init=function(...args){const c=init(...args),set=c.setOption.bind(c);c.setOption=(o,p)=>{if(c.getDom().id==='relCanvas')__paints.push({reset:!!p?.notMerge,empty:Array.isArray(o.series)&&!o.series.length,nodes:o.series?.find(s=>s.id==='relNode')?.data?.length});return set(o,p);};return c;};});
  report.data=await page.evaluate(()=>{const maps=V03Filter.mapFacts(),provs=['湖南省','河南省','河北省','重庆市','山东省','辽宁省','吉林省','黑龙江省'];return {facts:V03Data.FACTS.length,map:maps.length,weatherCards:V03Filter.factsAtLevel().filter(f=>f.cardType==='weather').length,blockedMap:maps.filter(f=>f.cardType==='weather'||f.id.startsWith('v24-catalog:')).length,province:Object.fromEntries(provs.map(p=>[p,maps.filter(f=>f.province===p).length])),leaves:[...new Set(maps.map(f=>V03DictF3.leafOf(f).key))],reported:maps.filter(f=>f.id.startsWith('v26-report')).length};});
- assert(report.data.map>=6933);assert.equal(report.data.blockedMap,0);assert(report.data.weatherCards>0);
+ assert(report.data.map>=20000);assert.equal(report.data.blockedMap,0);assert(report.data.weatherCards>0);
  for(const [prov,count]of Object.entries(report.data.province))assert(count>=600,prov+' sparse: '+count);
  for(const level of ['L1','L2','L3']){
   await page.evaluate(level=>{__paints=[];V03Store.set({tab:'relation',rel:{view:'geo',level,focus:level==='L3'?'湖南':null,city:null,county:null}});},level);await page.waitForTimeout(180);

@@ -3,11 +3,12 @@ const server=http.createServer((q,s)=>{s.setHeader('Content-Type','text/html; ch
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch();const report={errors:[],batches:[],arrivals:[]};fs.mkdirSync('test/artifacts/v26',{recursive:true});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>report.errors.push(e.message));
- await page.addInitScript(()=>{window.__tasks=[];window.__stars=[];new PerformanceObserver(l=>__tasks.push(...l.getEntries().map(e=>({at:e.startTime,ms:e.duration})))).observe({type:'longtask',buffered:true});new MutationObserver(rs=>rs.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1&&n.matches?.('.star-flash'))__stars.push({id:n.dataset.fid,at:performance.now(),tab:window.V03Store?.state.tab});}))).observe(document,{childList:true,subtree:true});});
+ await page.addInitScript(()=>{window.__tasks=[];window.__stars=[];window.__batches=[];setInterval(()=>{if(window.V03Feed)__batches.push([window.V03Feed.status().loaded,window.V03Feed.status().done]);},400);new PerformanceObserver(l=>__tasks.push(...l.getEntries().map(e=>({at:e.startTime,ms:e.duration})))).observe({type:'longtask',buffered:true});new MutationObserver(rs=>rs.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1&&n.matches?.('.star-flash'))__stars.push({id:n.dataset.fid,at:performance.now(),tab:window.V03Store?.state.tab});}))).observe(document,{childList:true,subtree:true});});
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.__AGRI_READY);
  report.initial=await page.evaluate(()=>({feed:V03Feed.status(),ready:performance.now()}));assert(report.initial.feed.loaded<report.initial.feed.total);
- for(let i=0;i<3;i++){await page.waitForTimeout(8000);report.batches.push(await page.evaluate(()=>V03Feed.status()));}
- await page.waitForFunction(()=>V03Feed.status().done,{},{timeout:15000});report.loaded=await page.evaluate(()=>V03Feed.status());assert(report.loaded.elapsed<=40000);assert(report.batches[0].loaded<report.batches[1].loaded&&report.batches[1].loaded<report.batches[2].loaded);assert(report.loaded.loaded>=report.loaded.total);
+ /* 首次进入事实层须在 10 秒内铺完（2026-10-16 反馈第 2 项），因此取样间隔相应缩短 */
+ report.batches=await page.evaluate(()=>__batches.map(([loaded,done])=>({loaded,done})));
+ await page.waitForFunction(()=>V03Feed.status().done,{},{timeout:15000});report.loaded=await page.evaluate(()=>V03Feed.status());assert(report.loaded.elapsed<=10000,JSON.stringify(report.loaded));const growth=report.batches.filter((b,i,a)=>i&&b.loaded>a[i-1].loaded&&!a[i-1].done);assert(growth.length>=3,JSON.stringify(report.batches.slice(0,6)));assert(report.loaded.loaded>=report.loaded.total);
  for(const tab of ['fact','relation'])for(const level of ['L1','L2','L3']){
   await page.evaluate(({tab,level})=>V03Store.set({tab,geo:{level,focus:level==='L3'?'湖南':null},sk:{mode3d:false},rel:{view:'geo',level,focus:level==='L3'?'湖南':null,sel:null,kind:null,stack:[]}}),{tab,level});
   const before=await page.evaluate(()=>__stars.length);await page.waitForFunction(n=>__stars.length>n,before,{timeout:22000});
