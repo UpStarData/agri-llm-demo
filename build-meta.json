@@ -1,7 +1,7 @@
 {
-  "hash": "9bd72a593956",
-  "git": "0fa5cfb",
-  "builtAt": "2026-10-16T02:54:05.514Z",
+  "hash": "38cebe20b09e",
+  "git": "c508fce",
+  "builtAt": "2026-10-16T03:37:46.299Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -58,6 +58,8 @@
     "data/pkg2/v25-hongxing.json",
     "data/pkg2/v25-hunan-areas.json",
     "data/pkg2/v26-reports.json",
+    "data/pkg2/v27-global.json",
+    "data/pkg2/v27-hongxing.json",
     "build.mjs",
     "vendor/echarts.min.js",
     "vendor/hls.min.js",
@@ -67,5 +69,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 37159845
+  "bytes": 45928894
 }
