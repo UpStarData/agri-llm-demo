@@ -119,25 +119,12 @@ window.V03Filter = (function () {
   const shortProv = n => String(n || '').replace(/壮族自治区|回族自治区|维吾尔自治区|自治区|特别行政区|省|市$/g, '') || n;
   const DEFAULT_FOCUS = '湖南';
 
-  /* V1.2 地图显示层级只影响地图点位，不改变卡片数据。 */
-  const inChina = f => f.lng >= 73 && f.lng <= 136 && f.lat >= 17.5 && f.lat <= 54.5;
-  const inProvince = (f, focus) => {
-    const prov = (PKG && PKG.PROV_BY_SHORT ? PKG.PROV_BY_SHORT[focus] : null) || {};
-    const c = (D.PROV_CENTER || {})[focus];
-    if (prov.code && f.provinceCode === prov.code) return true;
-    if (shortProv(f.province) === focus) return true;
-    if(f.province)return false;
-    return !!(c && Math.abs(f.lng - c[0]) <= 2.8 && Math.abs(f.lat - c[1]) <= 2.4);
-  };
+  /* Geographic membership is shared by map, cards and overview. */
   function factsAtLevel(s) {
     s = s || window.V03Store.state;
-    const all = facts(s);
-    const lv = s.geo.level;
-    const focus = shortProv(s.geo.focus || DEFAULT_FOCUS);
-    return all.filter(f => f.level !== 'hidden' && f.level !== 'L4' &&
-      (lv === 'L1' || (lv === 'L2' && ['L2', 'L3'].includes(f.level) && inChina(f)) ||
-      (lv === 'L3' && f.level === 'L3' && inProvince(f, focus))));
+    return facts(s).filter(f => f.level !== 'hidden' && V03Scope.includes(f,s.geo));
   }
+
   const mappable = list => list.filter(f => f.lng != null && f.lat != null);
 
   function levelMixed(s) {
@@ -152,7 +139,7 @@ window.V03Filter = (function () {
   function objects(s) {
     s = s || window.V03Store.state;
     const rel = s.rel || {};
-    const cacheKey=JSON.stringify([D.revision,window.V03Feed?.revision,s.relKeys,s.varieties,s.carry,rel.domain,rel.search,rel.focusFact]);
+    const cacheKey=JSON.stringify([D.revision,window.V03Feed?.revision,s.relKeys,s.varieties,s.carry,rel.domain,rel.search,rel.focusFact,rel.level,rel.focus,rel.city,rel.county,rel.crossRegion]);
     if(cacheKey===objectCacheKey)return objectCache;
     const set = selected(s, 'relKeys', REL_ITEMS);
     const carried = new Set();
@@ -169,6 +156,13 @@ window.V03Filter = (function () {
         const f = D.factById(id);return f && varietyOk(f,s.varieties);
       })).flatMap(r => [r.from,r.to]));
       list=list.filter(o => supported.has(o.id) || (o.domain==='commodity' && s.varieties.some(v => o.name.includes(v))));
+    }
+    if ((rel.level||'L1') !== 'L1') {
+      const scope={level:rel.level,focus:rel.focus,city:rel.city,county:rel.county};
+      const local=new Set(list.filter(o=>V03Scope.includes(o,scope)).map(o=>o.id));
+      const neighbors=new Set(D.RELATIONS.filter(r=>local.has(r.from)||local.has(r.to)).flatMap(r=>[r.from,r.to]));
+      list=list.filter(o=>local.has(o.id)||neighbors.has(o.id)&&(!o.geo||rel.crossRegion&&
+        (o.lng<73||o.lng>136||o.lat<17.5||o.lat>54.5))||!o.geo&&(o.factIds||[]).some(id=>{const f=D.factById(id);return f&&V03Scope.includes(f,scope);}));
     }
     if (rel.focusFact) {
       const f = D.factById(rel.focusFact);
@@ -199,11 +193,10 @@ window.V03Filter = (function () {
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
-      const today = D.TODAY || new Date().toISOString().slice(0,10);
-      const ids=new Set(D.OBJECTS.filter(isBusinessObject).map(o=>o.id));
-      return { rows:[['当前本体',ids.size],['当前关系',D.RELATIONS.filter(r=>ids.has(r.from)&&ids.has(r.to)).length]],note:'' };
+      const ids=new Set(objects(s).map(o=>o.id));
+      return { rows:[['当前本体',ids.size],['当前关系',relations(s).length]],note:'' };
     }
-    const list = D.FACTS;
+    const list = factsAtLevel(s);
     const raw = list.length;
     const today = list.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length;
     return {
