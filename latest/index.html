@@ -454,10 +454,11 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .mn-ov.relation-overview .ov-i:first-child{grid-column:1/-1;padding-bottom:4px}
 .mn-ov.relation-overview .ov-i:first-child b{font-size:2rem;font-variant-numeric:tabular-nums}
 .mn-ov.relation-overview .ov-i:not(:first-child) b{font-size:1.15rem}
-.mn-rel-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.mn-rel-types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .mn-rel-types .l3{font-size:.6875rem;min-height:28px}
 .mn-rel-types .l3 i{flex:0 0 9px;width:9px;height:9px;border-radius:50%}
 .mn-rel-types .l3 span{flex:1}
+.mn-rel-types .l3 small{font-size:.6rem;color:var(--dim);font-variant-numeric:tabular-nums}
 /* Two row map controls; search opens a glass panel to the left. */
 .mapsk{grid-auto-flow:row;grid-template-columns:repeat(5,28px);grid-template-rows:repeat(2,28px);gap:3px;padding:6px}
 .mapsk .sk{height:28px;min-width:28px}
@@ -889,7 +890,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V2.6</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small>V2.6.1</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -953,7 +954,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"0bb85de27ed6","git":"8ae59a7","builtAt":"2026-10-16T02:33:54.343Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"9bd72a593956","git":"0fa5cfb","builtAt":"2026-10-16T02:54:05.445Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -4868,7 +4869,13 @@ window.V03Data = (function () {
   }
 
   const ALL_FACTS = PKG ? PKG.FACTS : PACK_FACTS;
-  const ALL_OBJECTS = PKG ? PKG.OBJECTS : PACK_OBJECTS;
+  // Keep raw package evidence, but do not expose placeholder/numbered shop instances
+  // as business ontologies in any view or in subsequent ingestion.
+  const numberedRetail = o => !!o && ['channel','operator'].includes(o.domain) &&
+    /超市\s*[-#]?\s*\d+|\d+\s*(?:号|分)?店|[一二三四五六七八九十百零〇]+号店/.test(o.name || '');
+  const suppressedObjectIds=new Set((PKG ? PKG.OBJECTS : PACK_OBJECTS).filter(numberedRetail).map(o=>o.id));
+  const ALL_OBJECTS = (PKG ? PKG.OBJECTS : PACK_OBJECTS).filter(o=>!suppressedObjectIds.has(o.id));
+  ALL_FACTS.forEach(f=>{f.objects=(f.objects||[]).filter(id=>!suppressedObjectIds.has(id));});
   const RAW_RELATIONS = PKG ? PKG.RELATIONS : PACK_RELATIONS;
   const objectIds = new Set(ALL_OBJECTS.map(o => o.id));
   const sourceObjects = new Map(ALL_OBJECTS.map(o => [o.id, o]));
@@ -4882,7 +4889,7 @@ window.V03Data = (function () {
     });
   }
   const relationAliases = {}, uniqueRelations = new Map();
-  const relationAudit = { input: RAW_RELATIONS.length, duplicates: 0, invalid: 0, unsupportedCrossBorder: 0 };
+  const relationAudit = { input: RAW_RELATIONS.length, duplicates: 0, invalid: 0, unsupportedCrossBorder: 0, suppressedObjects:suppressedObjectIds.size };
   RAW_RELATIONS.forEach(r => {
     if (!r.id || r.from === r.to || !objectIds.has(r.from) || !objectIds.has(r.to) || !Number.isFinite(r.confidence) || r.confidence < 0 || r.confidence > 1) { relationAudit.invalid++; return; }
     // A country-level import story cannot establish a route into an arbitrary local market.
@@ -4913,6 +4920,8 @@ window.V03Data = (function () {
     for (const [kind, list, index] of [['objects', ALL_OBJECTS, O], ['facts', ALL_FACTS, F], ['relations', ALL_RELATIONS, R]]) {
       for (const item of batch[kind] || []) {
         if (!item || !item.id || index[item.id]) continue;
+        if(kind==='objects' && numberedRetail(item)){suppressedObjectIds.add(item.id);continue;}
+        if(kind==='facts')item.objects=(item.objects||[]).filter(id=>!suppressedObjectIds.has(id));
         if (kind === 'relations' && (!O[item.from] || !O[item.to] || item.from === item.to ||
           !Number.isFinite(item.confidence) || item.confidence < 0 || item.confidence > 1 || !supportedFlow(item, id => O[id], id => F[id]))) continue;
         if (item.lng != null && (!Number.isFinite(item.lng) || !Number.isFinite(item.lat) || Math.abs(item.lng) > 180 || Math.abs(item.lat) > 90)) continue;
@@ -5718,6 +5727,20 @@ window.V03Filter = (function () {
   }
   const PRD_REL_TYPES=['生产','供应','采购','运营','入驻','合作','位于','运输至','储存于','发布','适用于','监管','影响','发生于'];
   const legacyTypes=()=>[...new Set(D.RELATIONS.map(r=>r.type))].filter(t=>!PRD_REL_TYPES.includes(t));
+  const RELATION_COLORS={
+    '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
+    '供应':'#d68a3c','供应流向':'#d68a3c','运营':'#d68a3c','入驻':'#d68a3c','合作':'#d68a3c',
+    '流入':'#1fa9a2','流出':'#1fa9a2','运输至':'#1fa9a2','储存于':'#1fa9a2',
+    '运输经由':'#3f8fbf','位于':'#5a80b8','发生于':'#5a80b8','行政归属':'#5a80b8',
+    '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba','依赖':'#8a6dba','替代':'#8a6dba',
+    '影响':'#cf5f6a','价格传导':'#cf5f6a'
+  };
+  const relationTypeColor = type => RELATION_COLORS[type] || '#7ea0cf';
+  const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
+  function relationTypeOptions(s) {
+    const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
+    return relationTypes().filter(type=>counts.has(type)).map(type=>({type,count:counts.get(type),color:relationTypeColor(type)}));
+  }
   const flat = tree => tree.reduce((a, g) => a.concat(g.subs.reduce((b, s) => b.concat(s.items), [])), []);
   const FACT_ITEMS = flat(FACT_TREE), REL_ITEMS = flat(REL_TREE);
   const itemBy = (items, key) => items.find(x => x.key === key) || null;
@@ -5907,7 +5930,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
@@ -7819,24 +7842,8 @@ window.V03Relation = (function () {
   };
   let dragging = false;
 
-  /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
-  const TYPE_COLOR = {
-    /* 生产与贸易：绿 */
-    '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
-    /* 供应与经营：橙（供给侧的流向线） */
-    '供应':'#d68a3c','供应流向':'#d68a3c','运营':'#d68a3c','入驻':'#d68a3c','合作':'#d68a3c',
-    /* 货物流向：青 */
-    '流入':'#1fa9a2','流出':'#1fa9a2','运输至':'#1fa9a2','储存于':'#1fa9a2',
-    /* 运输经由：青蓝 */
-    '运输经由':'#3f8fbf',
-    /* 位置与行政：蓝 */
-    '位于':'#5a80b8','发生于':'#5a80b8','行政归属':'#5a80b8',
-    /* 政策、依赖与替代：紫 */
-    '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba','依赖':'#8a6dba','替代':'#8a6dba',
-    /* 影响与价格传导：红 */
-    '影响':'#cf5f6a','价格传导':'#cf5f6a'
-  };
-  const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
+  /* 菜单、2D、3D、图谱共用同一类型色表。 */
+  const typeColor = F.relationTypeColor;
   /* 地图配色（与事实层同一套） */
   const MAP_PALETTE = {
     land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
@@ -8392,7 +8399,7 @@ window.V03Relation = (function () {
     return out;
   }
   const FLOW_PERIODS = [3.2, 4.4, 5.8, 7.2];
-  const FLOW_COLORS = [...new Set(Object.values(TYPE_COLOR))];
+  const FLOW_COLORS = [...new Set(F.relationTypes().map(typeColor).concat('#7ea0cf'))];
   function flowSeries(lines, p, limit) {
     const picked = lines.slice(0, limit || 90);
     const groups = new Map(FLOW_COLORS.map(c => [c, []]));
@@ -8478,7 +8485,7 @@ window.V03Relation = (function () {
     }));
     const links = rels.filter(r => ids.has(r.from) && ids.has(r.to)).map(r => ({
       id: r.id, name: r.type, source: r.from, target: r.to,
-      lineStyle: { color: focus && (r.from === focus || r.to === focus) ? '#e91e63' : '#c0c0c0',
+      lineStyle: { color: focus && (r.from === focus || r.to === focus) ? '#e91e63' : typeColor(r.type),
         width: focus && (r.from === focus || r.to === focus) ? 2.5 : 1.5, opacity: 1, curveness: .08 }
     }));
     dom.hint.hidden=false;
@@ -9423,21 +9430,20 @@ window.V03Sim = (function () {
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
       const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
-      const groups=[['生产供应','#4d966a',['生产','供应','采购']],['经营组织','#cf854a',['运营','入驻','合作']],['空间','#547baa',['位于','发生于']],['物流','#24a6a1',['运输至','储存于']],['政策','#8a6dba',['发布','适用于','监管']],['影响','#ca6975',['影响']]];
       const selected=st.relTypes;
-      groups.forEach(([name,color,types])=>{
-        relFilter.appendChild(el('div','mn-l2',name));
-        const row=el('div','mn-rel-types');
-        types.forEach(t=>{
+      relFilter.appendChild(el('div','mn-l2','当前范围内实际存在的关系'));
+        const typeRow=el('div','mn-rel-types');
+        F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
           const on=!Array.isArray(selected)||selected.includes(t);
           const b=el('button','l3'+(on?' on':''));
-          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
+          b.dataset.relType=t;
+          b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span><small>'+count+'</small>';
           b.setAttribute('aria-pressed',String(on));
-          b.onclick=()=>{const all=F.PRD_REL_TYPES.concat(F.legacyTypes());const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:all);on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
-          row.appendChild(b);
+          b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
+          typeRow.appendChild(b);
         });
-        relFilter.appendChild(row);
-      });
+        relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
       const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
       const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
