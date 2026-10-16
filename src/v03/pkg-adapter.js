@@ -12,7 +12,7 @@
 window.V03Pkg = (function () {
   const P = window.__AGRI_PKG__ || {};
   const P2 = window.__AGRI_PKG2__ || {};
-  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing, P2.v28Reports, P2.v28Global, P2.v27Hongxing].filter(Boolean);
+  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing, P2.v28Reports, P2.v28Global, P2.v29Markets, P2.v27Hongxing].filter(Boolean);
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
   const entitiesRaw=(P.entities || []).concat(...EXPANSIONS.map(p=>p.entities || []));
   const observationIds=new Set(entitiesRaw.filter(e=>['WeatherArea','WeatherObservation','MetricObservation'].includes(e.type)).map(e=>e.entityId));

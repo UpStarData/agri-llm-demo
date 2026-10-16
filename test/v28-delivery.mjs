@@ -82,6 +82,26 @@ try {
   assert(report.data.countries >= 200);
   assert(report.data.map >= 15000, JSON.stringify({map: report.data.map}));
   report.thin = Object.entries(report.data.byProv).filter(([, n]) => n < 400);
+  /* V2.9 foreign density: real market-price observations carry their own market
+     coordinates, so a covered country gets many distinct points, not one capital dot. */
+  await page.evaluate(() => V03Store.set({tab: 'fact', geo: {level: 'L1', focus: null, city: null, county: null}}));
+  await page.waitForTimeout(400);
+  report.markets = await page.evaluate(() => {
+    const fs = V03Filter.mapFacts().filter(f => f.id.startsWith('v29-mkt-'));
+    const by = {};
+    for (const f of fs) {
+      const code = (f.regionPath || [])[0]?.code || '?';
+      const key = f.lng.toFixed(4) + '|' + f.lat.toFixed(4);
+      (by[code] = by[code] || new Set()).add(key);
+    }
+    const points = Object.fromEntries(Object.entries(by).map(([k, v]) => [k, v.size]));
+    return {records: fs.length, countries: Object.keys(points).length, points,
+      rich: Object.values(points).filter(n => n >= 20).length,
+      withCoords: fs.filter(f => Number.isFinite(f.lng) && Number.isFinite(f.lat)).length};
+  });
+  assert(report.markets.records >= 4000, JSON.stringify({records: report.markets.records}));
+  assert.equal(report.markets.records, report.markets.withCoords);
+  assert(report.markets.rich >= 40, JSON.stringify({rich: report.markets.rich}));
   report.longTasks = await page.evaluate(() => __tasks.map(t => Math.round(t.ms)));
   // Interaction cost after the batches have settled (the numbers the reader actually feels).
   await page.evaluate(() => { __tasks.length = 0; });

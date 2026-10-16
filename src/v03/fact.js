@@ -551,7 +551,7 @@ window.V03Fact = (function () {
     if(key===planKey&&planCache)return planCache;
     const facts = F.mappable(F.mapFacts(st)).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const coordinates=new Map();facts.forEach(f=>{const k=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(k))coordinates.set(k,f);});
-    const cap=st.geo.level==='L1'?2600:st.geo.level==='L2'?2200:1600;
+    const cap=st.geo.level==='L1'?3200:st.geo.level==='L2'?2200:1600;
     const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set([...freshOrder,...facts.filter(V03Scope.priority).map(f=>f.id)])).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
     planCache={facts,selected};planKey=key;return planCache;
   }
@@ -1029,9 +1029,15 @@ window.V03Fact = (function () {
 
   /* 三维地球：与关联层共用同一套渲染（V03Globe），本层只提供事实点与叠加标记 */
   function globePayload() {
-    const st = S.state, all = F.mapFacts(st);
-    const facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
-    const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()];
+    const st = S.state;
+    /* 2D 与 3D 必须画同一批点：3D 之前不做任何采样，同一个世界里 3D 比 2D 多出一批点，
+       两个视角看起来是不同的数据。现在两者共用同一份采样方案（同一份缓存，不重复计算）。 */
+    const gk = ensureGrow(st);
+    const plan = mapPlan(st, gk < 1 ? gk : 1);
+    let facts = plan.facts;
+    if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
+    const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()]
+      .filter(f => plan.selected.has(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)));
     const points = unique.map(f => ({
       id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, big: f.impact === 'high',
       halo: (st.sk.influence && !f.radiusEstimated && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
