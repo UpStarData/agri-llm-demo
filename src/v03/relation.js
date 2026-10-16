@@ -80,24 +80,8 @@ window.V03Relation = (function () {
   };
   let dragging = false;
 
-  /* 关系类型 → 曲线色（浅色底上可辨的柔和色系，逐条可区分） */
-  const TYPE_COLOR = {
-    /* 生产与贸易：绿 */
-    '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
-    /* 供应与经营：橙（供给侧的流向线） */
-    '供应':'#d68a3c','供应流向':'#d68a3c','运营':'#d68a3c','入驻':'#d68a3c','合作':'#d68a3c',
-    /* 货物流向：青 */
-    '流入':'#1fa9a2','流出':'#1fa9a2','运输至':'#1fa9a2','储存于':'#1fa9a2',
-    /* 运输经由：青蓝 */
-    '运输经由':'#3f8fbf',
-    /* 位置与行政：蓝 */
-    '位于':'#5a80b8','发生于':'#5a80b8','行政归属':'#5a80b8',
-    /* 政策、依赖与替代：紫 */
-    '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba','依赖':'#8a6dba','替代':'#8a6dba',
-    /* 影响与价格传导：红 */
-    '影响':'#cf5f6a','价格传导':'#cf5f6a'
-  };
-  const typeColor = t => TYPE_COLOR[t] || '#7ea0cf';
+  /* 菜单、2D、3D、图谱共用同一类型色表。 */
+  const typeColor = F.relationTypeColor;
   /* 地图配色（与事实层同一套） */
   const MAP_PALETTE = {
     land: '#cfe9bd', land2: '#b6dfa4', line: 'rgba(224,128,118,.55)', ink: '#22303f', labelBg: 'rgba(255,255,255,.94)',
@@ -653,7 +637,7 @@ window.V03Relation = (function () {
     return out;
   }
   const FLOW_PERIODS = [3.2, 4.4, 5.8, 7.2];
-  const FLOW_COLORS = [...new Set(Object.values(TYPE_COLOR))];
+  const FLOW_COLORS = [...new Set(F.relationTypes().map(typeColor).concat('#7ea0cf'))];
   function flowSeries(lines, p, limit) {
     const picked = lines.slice(0, limit || 90);
     const groups = new Map(FLOW_COLORS.map(c => [c, []]));
@@ -739,7 +723,7 @@ window.V03Relation = (function () {
     }));
     const links = rels.filter(r => ids.has(r.from) && ids.has(r.to)).map(r => ({
       id: r.id, name: r.type, source: r.from, target: r.to,
-      lineStyle: { color: focus && (r.from === focus || r.to === focus) ? '#e91e63' : '#c0c0c0',
+      lineStyle: { color: focus && (r.from === focus || r.to === focus) ? '#e91e63' : typeColor(r.type),
         width: focus && (r.from === focus || r.to === focus) ? 2.5 : 1.5, opacity: 1, curveness: .08 }
     }));
     dom.hint.hidden=false;
