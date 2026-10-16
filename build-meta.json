@@ -1,7 +1,7 @@
 {
-  "hash": "515bb368bf2c",
-  "git": "3eed38b",
-  "builtAt": "2026-10-16T07:42:31.371Z",
+  "hash": "3b3bb1517a4e",
+  "git": "6215e7d",
+  "builtAt": "2026-10-16T09:37:10.851Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -17,6 +17,7 @@
     "src/v03/data-sim.js",
     "src/v03/dict-f3.js",
     "src/v03/store.js",
+    "src/v03/theme.js",
     "src/v03/scope.js",
     "src/v03/filter.js",
     "src/v03/globe.js",
@@ -71,5 +72,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 103375646
+  "bytes": 103380663
 }
