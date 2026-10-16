@@ -1,0 +1,15 @@
+import {chromium} from 'playwright';
+const URL='https://upstardata.github.io/agri-llm-demo/latest/';
+const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900}});
+const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.addInitScript(()=>{window.__stars=[];new MutationObserver(rs=>rs.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1&&n.matches?.('.star-flash'))__stars.push(Math.round(performance.now()));}))).observe(document,{childList:true,subtree:true});});
+const t0=Date.now();await p.goto(URL,{waitUntil:'load',timeout:180000});
+await p.waitForFunction(()=>window.__AGRI_READY,null,{timeout:180000});const ready=Date.now()-t0;
+await p.waitForFunction(()=>V03Feed.status().done,null,{timeout:30000});
+const load=await p.evaluate(()=>V03Feed.status());
+await p.waitForFunction(()=>__stars.length>=7,null,{timeout:90000});
+const stars=await p.evaluate(()=>__stars.slice(0,7));
+const gaps=stars.slice(1).map((t,i)=>t-stars[i]);
+const data=await p.evaluate(()=>{const fs=V03Filter.mapFacts(),prov=new Set(fs.map(f=>f.province).filter(Boolean));return{all:V03Data.FACTS.length,map:fs.length,provinces:prov.size,global:fs.filter(f=>f.id.startsWith('v28-wb-')).length,reports:fs.filter(f=>f.id.startsWith('v28-report-')).length,countries:new Set(fs.map(f=>(f.regionPath||[]).find(r=>r.level==='country')?.name).filter(Boolean)).size};});
+console.log(JSON.stringify({readyMs:ready,loadElapsed:load.elapsed,loaded:load.loaded,gaps,data,errors:errs},null,1));
+await b.close();
