@@ -550,7 +550,7 @@ window.V03Fact = (function () {
     // all three world copies, so dragging never reveals an empty culled region.
     const coordinates=new Map();facts.forEach(f=>{const key=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(key))coordinates.set(key,f);});
     const cap=st.geo.level==='L1'?2600:st.geo.level==='L2'?2200:1600;
-    const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set(freshOrder)).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
+    const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set([...freshOrder,...facts.filter(V03Scope.priority).map(f=>f.id)])).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
     const halos = [], pts = [], ripples = [];
     const pointGroups = new Map();
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
@@ -902,9 +902,9 @@ window.V03Fact = (function () {
   let visibleCardCount = 20;
   function renderCards() {
     const st = S.state;
-    const facts = F.facts(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
+    const facts = F.factsAtLevel(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
       const ai = freshOrder.indexOf(a.id), bi = freshOrder.indexOf(b.id);
-      return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi) || Number(b.id.startsWith('v23-hongxing'))-Number(a.id.startsWith('v23-hongxing'));
+      return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi) || Number(V03Scope.priority(b))-Number(V03Scope.priority(a));
     });
     dom.side.classList.toggle('off', !st.panels.cards);
     if (!facts.length) {
@@ -1056,7 +1056,7 @@ window.V03Fact = (function () {
   function update() {
     if (!root) return;
     const st = S.state;
-    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
+    const key = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus, st.geo.city, st.geo.county,
       st.factId, st.panels.cards, st.logOpen, st.carry, st.newFacts, st.sk.mode3d, st.sk.mass,
       st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.sk.live, st.theme, D.revision, st.dataRevision]);
     if (key === sig) return; sig = key;
@@ -1064,6 +1064,7 @@ window.V03Fact = (function () {
     dom.searchStatus.hidden = !st.q;
     if (st.q) dom.searchStatus.textContent = '搜索结果：' + st.q + ' · ' + F.facts(st).length + ' 条  ×';
 
+    V03Scope.mount(dom.mapBox,st.geo,patch=>S.set({geo:patch}));
     syncMode();
     const lvKey = st.geo.level + '|' + (st.geo.focus || '');
     const c = ensureChart();
@@ -1077,14 +1078,14 @@ window.V03Fact = (function () {
         if (st.geo.level === 'L3' && focus) { camera.center = [focus[0], focus[1]]; camera.zoom = focus[2]; }
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
-      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
+      const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus, st.geo.city, st.geo.county,
         st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme, D.revision, window.V03Feed?.revision]);
       if (nextMapSig !== mapSig) {
         applyMap();
         mapSig = nextMapSig;
       }
     }
-    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live, st.newFacts, D.revision, window.V03Feed?.revision]);
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus, st.geo.city, st.geo.county, st.panels.cards, st.sk.live, st.newFacts, D.revision, window.V03Feed?.revision]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* AgriLink V2.4 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
+/* AgriLink V2.5 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
    —— 事实、关联层可离线加载；推演工作台依赖线上 iframe
    node build.mjs            正常构建（缺文件即失败）
    node build.mjs --partial  允许缺文件（并行开发自测用） */
@@ -49,6 +49,7 @@ const JS = [
   'src/v03/data-sim.js',    // 推演层场景与轮次
   'src/v03/dict-f3.js',     // V2 指令 F3 事实三级分类字典（7/26/125）
   'src/v03/store.js',       // 唯一状态源
+  'src/v03/scope.js',
   'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
   'src/v03/globe.js',       // 三维地球（事实层 / 关联层共用同一套渲染）
   'src/v03/intake.js',      // 新事实/本体共用通知与星闪
@@ -77,13 +78,13 @@ const PKG2_FILES = [
   'data/pkg2/weather-facts.json', 'data/pkg2/airports-large.geojson',
   'data/pkg2/live-channels.json', 'data/pkg2/extra-facts.json', 'data/pkg2/global-facts.json',
   'data/pkg2/v23-weather.json','data/pkg2/v23-projects.json','data/pkg2/v23-streams.json','data/pkg2/v23-media.json',
-  'data/pkg2/v24-weather.json','data/pkg2/v24-business.json'
+  'data/pkg2/v24-weather.json','data/pkg2/v24-business.json','data/pkg2/v25-hongxing.json','data/pkg2/v25-hunan-areas.json'
 ];
 const pkg2Data = (() => {
   const read = f => { try { return JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch (e) { return null; } };
   const out = { weather: read('data/pkg2/weather-facts.json') || [], airports: read('data/pkg2/airports-large.geojson'), channels: read('data/pkg2/live-channels.json') || [], extra: read('data/pkg2/extra-facts.json') || [], global: read('data/pkg2/global-facts.json') || [] };
   Object.assign(out,{v23Weather:read('data/pkg2/v23-weather.json'),v23Projects:read('data/pkg2/v23-projects.json'),v23Streams:read('data/pkg2/v23-streams.json'),media:read('data/pkg2/v23-media.json')});
-  Object.assign(out,{v24Weather:read('data/pkg2/v24-weather.json'),v24Business:read('data/pkg2/v24-business.json')});
+  Object.assign(out,{v24Weather:read('data/pkg2/v24-weather.json'),v24Business:read('data/pkg2/v24-business.json'),v25Hongxing:read('data/pkg2/v25-hongxing.json'),hunanAreas:read('data/pkg2/v25-hunan-areas.json')});
   return '<script>window.__AGRI_PKG2__=' + JSON.stringify(out) + ';</script>';
 })();
 
