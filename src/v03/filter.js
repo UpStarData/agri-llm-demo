@@ -145,6 +145,25 @@ window.V03Filter = (function () {
     return scopeFacts;
   }
 
+  /* 需求 4.2.3：右侧卡片区要承载「没有坐标、无法在地图上显示」的事实。
+     这类事实按 geo.scopeLayer 声明的层级归属视野（L1 全局事实在任何视野的卡片区都出现）；
+     有坐标的仍按地理范围收窄。地图侧不受影响：无坐标本来就不画点。 */
+  const LEVEL_RANK = { L1: 1, L2: 2, L3: 3 };
+  let cardBase = null, cardKey = '', cardFacts = [];
+  function factsForCards(s) {
+    s = s || window.V03Store.state;
+    const base = facts(s), key = JSON.stringify([s.geo.level, s.geo.focus, s.geo.city, s.geo.county]);
+    if (base !== cardBase || key !== cardKey) {
+      cardBase = base; cardKey = key;
+      const want = LEVEL_RANK[s.geo.level || 'L1'] || 1;
+      cardFacts = base.filter(f => {
+        if (Number.isFinite(f.lng) && Number.isFinite(f.lat)) return f.level !== 'hidden' && V03Scope.includes(f, s.geo);
+        return (LEVEL_RANK[f.level] || 3) <= want;
+      });
+    }
+    return cardFacts;
+  }
+
   // Map eligibility is separate from archive/card eligibility: hidden feeds remain searchable.
   function mapEligible(f) {
     const key=leafKeyOf(f)||'';
@@ -266,7 +285,7 @@ window.V03Filter = (function () {
 
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
-    facts, factsAll: facts, factsAtLevel, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
+    facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
     prov: x => (x && x.prov) || 'generated'
