@@ -12,11 +12,14 @@
 window.V03Pkg = (function () {
   const P = window.__AGRI_PKG__ || {};
   const P2 = window.__AGRI_PKG2__ || {};
-  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams].filter(Boolean);
+  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business].filter(Boolean);
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
+  const entitiesRaw=(P.entities || []).concat(...EXPANSIONS.map(p=>p.entities || []));
+  const observationIds=new Set(entitiesRaw.filter(e=>['WeatherArea','WeatherObservation','MetricObservation'].includes(e.type)).map(e=>e.entityId));
   const FACTS_IN = (P.facts || []).concat(...EXPANSIONS.map(p => p.facts || [])),
-    ENTITIES_IN = (P.entities || []).concat(...EXPANSIONS.map(p => p.entities || [])),
-    RELATIONS_IN = (P.relations || []).concat(...EXPANSIONS.map(p => p.relations || []));
+    ENTITIES_IN = entitiesRaw.filter(e=>!observationIds.has(e.entityId)),
+    RELATIONS_IN = (P.relations || []).concat(...EXPANSIONS.map(p => p.relations || []))
+      .filter(r=>!observationIds.has(r.sourceEntityId)&&!observationIds.has(r.targetEntityId));
   const EVIDENCE_IN = P.evidence || [], SOURCES_IN = P.sources || [], OBS_IN = P.observations || [];
   /* D0/D4：第三方补充包（重点农产品补齐事实 + Open-Meteo 天气事实 + OurAirports 大型机场 + 公开直播频道） */
   const EX_FACTS = (P2.extra || []).concat(P2.weather || [], P2.global || []);
@@ -253,6 +256,23 @@ window.V03Pkg = (function () {
     };
   });
 
+  // Compact weather capture: measurements are facts, never synthetic business entities.
+  for(const [x,y,province,country,anchor,gridLng,gridLat,days] of P2.v24Weather?.places || []) {
+    const label=(province || country)+' · 网格 '+y.toFixed(2)+', '+x.toFixed(2);
+    const path=[{level:'country',code:country==='中国'?'CHN':country,name:country}];
+    if(province)path.push({level:'province',code:province,name:province});
+    const sourceUrl='https://archive-api.open-meteo.com/v1/archive?'+new URLSearchParams({latitude:y,longitude:x,start_date:days[0][0],end_date:days.at(-1)[0],daily:'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max',timezone:'UTC'});
+    for(const [date,lo,hi,rain,wind] of days) FACTS.push({
+      id:'v24-weather:'+x+':'+y+':'+date,prov:'real',title:label+' · '+date+' 农业天气：'+lo+'–'+hi+'℃',
+      summary:'公开气象模型再分析，降水 '+rain+'mm、最大风速 '+wind+'km/h。参考坐标不是农场或气象站；不代表灾害或运输中断。',
+      cat:'natural',cardType:'weather',card:{regionName:label,weatherIconCode:rain>0?'rain':'clear',temperatureMin:lo,temperatureMax:hi,precipitationMm:rain,windMaxKmh:wind,impactText:'农业作业、道路与冷链天气参考'},
+      level:country==='中国'?'L3':'L1',region:label,regionPath:path,province:province || null,provinceCode:province || null,
+      lng:x,lat:y,geoPrecision:'approx',date,occurredAt:date+'T12:00:00Z',ingestedAt:'2026-10-15T11:00:00Z',cred:'high',credScore:.82,impact:'mid',radius:0,radiusEstimated:false,objects:[],relations:[],sourceUrl,sourcePlugin:'Open-Meteo',
+      evidence:[{k:'气象再分析',t:'Open-Meteo',q:date+'：'+lo+'–'+hi+'℃；降水 '+rain+'mm；风速 '+wind+'km/h',url:sourceUrl}],
+      provenanceMeta:{dataMode:'real',dataOrigin:'public-reanalysis',sourceDate:date,geoAnchorPlace:anchor,modelGrid:[gridLng,gridLat],coordinateMeaning:'请求参考坐标；模型实际网格见来源',sourceUrl}
+    });
+  }
+
   /* ============================================================
      生成记录展示再平衡（口径修正 · LLM-291）
      指令要求：M7/M8/M9 默认必须为「近 7 天 / 高可信 / 高影响」；同时全球视野在默认口径下要有
@@ -352,6 +372,7 @@ window.V03Pkg = (function () {
     if (cleanProp(a.role)) props.push(['角色', cleanProp(a.role)]);
     if (cleanProp(a.adminArea)) props.push(['行政区', cleanProp(a.adminArea)]);
     if (cleanProp(a.anchorPlace)) props.push(['地理锚点', cleanProp(a.anchorPlace)]);
+    for(const k of ['设施类型','地址','营业时间','品牌','经营者','作物','IATA','ICAO','城市','网站'])if(cleanProp(a[k]))props.push([k,cleanProp(a[k])]);
     if (a.metricUnit) props.push(['单位', a.metricUnit]);
     if (a.priceUnit) props.push(['计价单位', a.priceUnit]);
     if (approx) props.push(['坐标精度', '行政区代表点（近似）']);

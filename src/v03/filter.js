@@ -27,7 +27,7 @@ window.V03Filter = (function () {
 
   /* PRD 关联层 V1.3：四个一级类、十七个二级类。旧数据保留原始类型，只做可核对的映射。 */
   const REL_TREE = [
-    { n:'地理与设施', subs:[{n:'类型',items:['产区与基地','市场','港口','机场','地缘风险区','行政区划'].map(mkRel)}] },
+    { n:'地理与设施', subs:[{n:'类型',items:['产区与基地','市场','港口','机场','仓储与物流','地缘风险区','行政区划'].map(mkRel)}] },
     { n:'主体与组织', subs:[{n:'类型',items:['企业与贸易主体','政府与机构','政策与法规'].map(mkRel)}] },
     { n:'农作物', subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
     { n:'事件', subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
@@ -37,7 +37,7 @@ window.V03Filter = (function () {
     if(o.domain==='resource')return '产区与基地';
     if(o.domain==='channel')return '市场';
     if(o.domain==='admin')return '行政区划';
-    if(o.domain==='logistics')return /air|airport|机场/i.test(o.id+' '+o.name)?'机场':'港口';
+    if(o.domain==='logistics')return /仓储|warehouse|grain_storage/i.test(o.sub+' '+o.name)?'仓储与物流':/air|airport|机场/i.test(o.id+' '+o.name)?'机场':'港口';
     if(o.domain==='operator')return '企业与贸易主体';
     if(o.domain==='institution')return '政府与机构';
     if(o.domain==='environment')return '自然与生态';
@@ -97,13 +97,17 @@ window.V03Filter = (function () {
   const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region)) ||
     (region === '湖南' && f.lng >= 108 && f.lng <= 115 && f.lat >= 24 && f.lat <= 31);
 
+  let factCacheKey='',factCache=[];
   function facts(s) {
     s = s || window.V03Store.state;
+    const key=JSON.stringify([D.revision,window.V03Feed?.revision,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q]);
+    if(key===factCacheKey)return factCache;
     const set = selected(s, 'catKeys', FACT_ITEMS);
-    return D.FACTS.filter(f =>
+    factCacheKey=key;
+    return factCache = D.FACTS.filter(f =>
       (f.persistent || D.inWindow(f.date, s.time)) &&
       (!window.V03Feed || V03Feed.isFactVisible(f.id)) &&
-      matched(f, set) &&
+      (set.size===FACT_ITEMS.length || matched(f, set)) &&
       varietyOk(f, s.varieties) &&
       regionOk(f, s.region) &&
       (s.sourceMode !== 'real' || f.prov === 'real') &&
@@ -122,6 +126,7 @@ window.V03Filter = (function () {
     const c = (D.PROV_CENTER || {})[focus];
     if (prov.code && f.provinceCode === prov.code) return true;
     if (shortProv(f.province) === focus) return true;
+    if(f.province)return false;
     return !!(c && Math.abs(f.lng - c[0]) <= 2.8 && Math.abs(f.lat - c[1]) <= 2.4);
   };
   function factsAtLevel(s) {
@@ -143,14 +148,17 @@ window.V03Filter = (function () {
   }
 
   /* ---------- 关联层对象 / 关系 ---------- */
+  let objectCacheKey='',objectCache=[];
   function objects(s) {
     s = s || window.V03Store.state;
     const rel = s.rel || {};
+    const cacheKey=JSON.stringify([D.revision,window.V03Feed?.revision,s.relKeys,s.varieties,s.carry,rel.domain,rel.search,rel.focusFact]);
+    if(cacheKey===objectCacheKey)return objectCache;
     const set = selected(s, 'relKeys', REL_ITEMS);
     const carried = new Set();
     (s.carry || []).forEach(id => { const f = D.factById(id); if (f) (f.objects || []).forEach(o => carried.add(o)); });
 
-    let list = D.OBJECTS.filter(o => set.has(relKind(o)) && (!window.V03Feed || V03Feed.isObjectVisible(o.id)));
+    let list = D.OBJECTS.filter(o => isBusinessObject(o) && set.has(relKind(o)) && (!window.V03Feed || V03Feed.isObjectVisible(o.id)));
     if (rel.domain && rel.domain !== 'all') list = list.filter(o => o.domain === rel.domain);
     if (rel.search) {
       const q = rel.search.toLowerCase();
@@ -167,10 +175,16 @@ window.V03Filter = (function () {
       const focus = new Set(f ? f.objects : []);
       list = list.sort((a, b) => (focus.has(b.id) ? 1 : 0) - (focus.has(a.id) ? 1 : 0));
     }
-    return list.map(o => Object.assign({}, o, { _carried: carried.has(o.id) }));
+    objectCacheKey=cacheKey;
+    return objectCache=list.map(o => Object.assign({}, o, { _carried: carried.has(o.id) }));
   }
 
   const MIN_CONF = { high: .75, mid: .6, low: 0, all: 0 };
+  // Measurements belong to fact details. They are not separate business ontologies.
+  function isBusinessObject(o) {
+    return !!o && !['WeatherArea','WeatherObservation','MetricObservation'].includes(o.entityType) &&
+      !o.id.startsWith('e:observation:') && !/气象记录|气象参考点/.test(o.typeName || '');
+  }
   function relations(s) {
     s = s || window.V03Store.state;
     const ids = new Set(objects(s).map(o => o.id));
@@ -186,7 +200,8 @@ window.V03Filter = (function () {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
       const today = D.TODAY || new Date().toISOString().slice(0,10);
-      return { rows:[['当前本体',D.OBJECTS.length],['当前关系',D.RELATIONS.length]],note:'' };
+      const ids=new Set(D.OBJECTS.filter(isBusinessObject).map(o=>o.id));
+      return { rows:[['当前本体',ids.size],['当前关系',D.RELATIONS.filter(r=>ids.has(r.from)&&ids.has(r.to)).length]],note:'' };
     }
     const list = D.FACTS;
     const raw = list.length;
@@ -226,7 +241,7 @@ window.V03Filter = (function () {
 
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, itemBy, selected, toggleLeaf, factLeafOn,
-    facts, factsAll: facts, factsAtLevel, mappable, levelMixed, objects, relations, overview, seeds, toggleSeed,
+    facts, factsAll: facts, factsAtLevel, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
     prov: x => (x && x.prov) || 'generated'

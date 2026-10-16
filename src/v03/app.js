@@ -678,6 +678,12 @@
     S.on((st, changed) => {
       document.documentElement.dataset.theme = 'color';   /* 本轮只保留一套地图配色，主题色后续接入 */
       markDirty();
+      if(changed.length && changed.every(k=>['dataRevision','newFacts'].includes(k))){
+        // Keep an open search popover, pointer targets and drawer DOM stable during batches.
+        if(st.menu)F.overview(st).rows.forEach((row,i)=>{const b=document.querySelector('#menuBody [data-ov="'+i+'"]');if(b)b.textContent=row[1];});
+        refreshLayers(false);
+        return;
+      }
       renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); syncStream(); renderSettings(); syncDrawers();
       refreshLayers(false);
       if (changed.some(k => ['time', 'q', 'catKeys', 'varieties', 'region', 'relKeys', 'geo', 'tab', 'rel', 'sk', 'carry', 'factObj'].includes(k))) shakeLogo();

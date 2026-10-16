@@ -24,13 +24,18 @@ window.V03Media = (() => {
     }
     return topic(item);
   }
+  let cardPhotos = new Set();
+  function beginCards(){cardPhotos = new Set();}
   function figure(item,kind='fact',detail=false) {
     const image=photo(item,kind), fallback=topic(item);
     if(!image?.url || !safe(image.url))return '';
     const hash=[...String(item.id)].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0);
     if(!detail && kind==='fact' && item.cardType==='video')return '';
     const explicit=!!(catalog.articles?.[item.sourceUrl]?.url || item.image?.url || catalog.objects?.[item.id]?.url);
+    // Cards use a photo once per panel, never a repeated generic weather thumbnail.
+    if(!detail && (!explicit && kind==='fact' || cardPhotos.has(image.url)))return '';
     if(!detail && !explicit && item.domain!=='commodity' && hash%4!==0)return '';
+    if(!detail)cardPhotos.add(image.url);
     const caption=image.caption || '主题资料图';
     const credit=[image.credit,image.license].filter(Boolean).join(' · ');
     return '<figure class="media-figure '+(detail?'detail':'card')+'"><img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="'+esc(safe(image.url))+'" data-fallback="'+esc(safe(fallback?.url))+'" alt="'+esc(image.alt || item.title || item.name)+'">'+
@@ -41,10 +46,11 @@ window.V03Media = (() => {
     scope.querySelectorAll('.media-figure img').forEach(img => {
       if(img.dataset.bound)return;img.dataset.bound='1';
       img.addEventListener('error',()=>{
-        if(img.dataset.fallback && img.src!==img.dataset.fallback){img.src=img.dataset.fallback;img.dataset.fallback='';const cap=img.closest('figure').querySelector('figcaption');cap.textContent='主题资料图 · Wikimedia Commons';}
+        if(img.closest('figure').classList.contains('card')){img.closest('figure').hidden=true;}
+        else if(img.dataset.fallback && img.src!==img.dataset.fallback){img.src=img.dataset.fallback;img.dataset.fallback='';const cap=img.closest('figure').querySelector('figcaption');cap.textContent='主题资料图 · Wikimedia Commons';}
         else {img.hidden=true;img.closest('figure').classList.add('unavailable');}
       });
     });
   }
-  return { photo, figure, mount };
+  return { photo, figure, mount, beginCards };
 })();

@@ -220,14 +220,16 @@ window.V03DictF3 = (function () {
   const ITEMS = flat(TREE);
   const byKey = {}; ITEMS.forEach(it => { byKey[it.key] = it; });
 
+  const leafCache = new WeakMap();
   function leafOf(fact) {
+    if(fact && leafCache.has(fact))return leafCache.get(fact);
     const text = String(fact && fact.title || '');
     for (let i = 0; i < ITEMS.length; i++) {
       const it = ITEMS[i];
-      for (let j = 0; j < it.kw.length; j++) if (text.indexOf(it.kw[j]) >= 0) return it;
+      for (let j = 0; j < it.kw.length; j++) if (text.indexOf(it.kw[j]) >= 0) {if(fact)leafCache.set(fact,it);return it;}
     }
     const fb = CAT_FALLBACK[(fact && fact.cat) || ''];
-    return byKey[fb] || ITEMS[0];
+    const result=byKey[fb] || ITEMS[0];if(fact)leafCache.set(fact,result);return result;
   }
 
   return { GROUPS, GROUP_META, TREE, CAT_FALLBACK, ITEMS, byKey, leafOf };
