@@ -21,9 +21,11 @@ window.V03Fact = (function () {
      L2 中国：缩小到 outAt 回到全球；放大到 inAt 且视野在中国某省附近 → 切省区视角
      L3 省区：还能再放大 5 档（1.28^5 ≈ 3.4×），到顶后禁用放大 */
   const LEVEL = {
-    L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, fit: 1.36, bounds: [[-25, 72], [335, -56]], zoomBox: [1.26, 2.4], inAt: 2.2, divisor: 9 },
-    L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, fit: 1.59, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [0.86, 3.2], inAt: 2.9, outAt: 0.9, divisor: 15 },
-    L3: { map: 'china', center: [111.73, 27.54], zoom: 9.08, fit: 3.4, bounds: [[73, 54.5], [136, 17.5]], zoomBox: [3.4, 14.3], outAt: 3.2, divisor: 7 }
+    L1: { map: 'worldChina', center: [107.98, 26.65], zoom: 1.36, fit: 1.36, bounds: [[-25, 72], [335, -56]], zoomBox: [1.1, 2.6], inAt: 2.15, divisor: 9 },
+    // Historical maplab (2026-10-10): use the registered China geometry's extent.
+    // A hand-written boundingCoords changes scale even when center/zoom match.
+    L2: { map: 'china', center: [108.05, 36.15], zoom: 1.59, fit: 1.59, zoomBox: [0.85, 4], inAt: 2.6, outAt: 0.95, divisor: 15 },
+    L3: { map: 'china', center: [111.73, 27.54], zoom: 9.08, fit: 9.08, zoomBox: [3.4, 16], outAt: 3.5, divisor: 7 }
   };
 
   /* ---------- 实验页确认过的手感：阻尼缩放 + 缓动 + 跨层中心接续 ---------- */
@@ -140,6 +142,7 @@ window.V03Fact = (function () {
     <div class="fact-mapbox" id="factMapBox">
       <div id="factMap"></div>
       <canvas id="factGlobe" width="1120" height="820" style="display:none"></canvas>
+      <div class="catalog-credit">目录：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> · <a href="https://ourairports.com/data/" target="_blank" rel="noopener">OurAirports</a></div>
     </div>
     <button class="fact-search-status" id="factSearchStatus" type="button" hidden></button>
     <div class="fact-overlay-info" id="factOverlayInfo" hidden></div>
@@ -543,6 +546,11 @@ window.V03Fact = (function () {
     const gk = ensureGrow(st);
     if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
     const lv = LEVEL[st.geo.level], p = palette();
+    // Bound canvas work by independent coordinates; retain full fact groups and
+    // all three world copies, so dragging never reveals an empty culled region.
+    const coordinates=new Map();facts.forEach(f=>{const key=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(key))coordinates.set(key,f);});
+    const cap=st.geo.level==='L1'?2600:st.geo.level==='L2'?2200:1600;
+    const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set(freshOrder)).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
     const halos = [], pts = [], ripples = [];
     const pointGroups = new Map();
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
@@ -553,6 +561,7 @@ window.V03Fact = (function () {
       return usedHalo.some(p2 => Math.hypot(p2[0] - q[0], p2[1] - q[1]) < 40);
     };
     facts.forEach((f, index) => {
+      if(!selected.has(f.lng.toFixed(4)+'|'+f.lat.toFixed(4)))return;
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
@@ -590,7 +599,10 @@ window.V03Fact = (function () {
       /* 高影响事实的涟漪（V0.8 同款）：静默、周期性扩散 */
       { id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo', data: st.sk.influence ? ripples : [], silent: true, z: 3,
         showEffectOn: 'render', rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 }, itemStyle: { opacity: .55 } },
-      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer' },
+      { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer',
+        symbolSize:DOT_SIZE,
+        large: true, largeThreshold: 1500, progressive: 0,
+        itemStyle:{color:'#fffdf8',borderColor:p.dot,borderWidth:1.2} },
       flashSeries()
     ].filter(Boolean);
     if (st.sk.regions) markerSeries('regions', regionsAtLevel(), '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
@@ -725,9 +737,7 @@ window.V03Fact = (function () {
     /* 共同规则：2D 全球点任一区域 → 中国；中国点任一区域 → 湖南（与关联层同一套） */
     if (st.geo.level === 'L1') { S.set({ geo: { level: 'L2', focus: null } }); return; }
     if (st.geo.level === 'L2') {
-      const c = PROV[DEFAULT_FOCUS];
-      S.set({ geo: { level: 'L3', focus: DEFAULT_FOCUS }, factId: null });
-      if (c) { camera.center = [c[0], c[1]]; flyTo([c[0], c[1]], c[2], 800); }
+      enterLevel('L3', DEFAULT_FOCUS);
     }
   }
 
@@ -908,6 +918,7 @@ window.V03Fact = (function () {
     if(dom.sideBody.dataset.cards===stableKey){VIS.sync();return;}
     dom.sideBody.dataset.cards=stableKey;
     VIS.dispose(dom.sideBody);
+    V03Media.beginCards('fact');
     dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
     dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh'); });
@@ -936,7 +947,7 @@ window.V03Fact = (function () {
     if (!box) return;
     if (!f) { box.innerHTML = ''; return; }
     const c = f.card || {}, cat = catOf(f), leaf = leafOf(f);
-    const objs = (f.objects || []).map(id => D.objById(id)).filter(Boolean);
+    const objs = (f.objects || []).map(id => D.objById(id)).filter(F.isBusinessObject);
     const path = (f.regionPath || []).map(x => x.name).filter(Boolean).join(' › ') || f.region;
     const logs = (D.STREAM_SEQ || []).filter(e => e.factId === f.id).slice(0, 20);
     const evidence = f.evidence || [];
@@ -1067,13 +1078,13 @@ window.V03Fact = (function () {
         else if (st.geo.level !== 'L3' && target) { camera.center = target.slice(); camera.zoom = zoom; }
       }
       const nextMapSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.geo.level, st.geo.focus,
-        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme, D.revision, st.dataRevision]);
+        st.sk.mass, st.sk.influence, st.sk.regions, st.sk.gates, st.sk.airports, st.sk.markets, st.sk.risks, st.theme, D.revision, window.V03Feed?.revision]);
       if (nextMapSig !== mapSig) {
         applyMap();
         mapSig = nextMapSig;
-      } else c.resize();
+      }
     }
-    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live, st.newFacts, D.revision, st.dataRevision]);
+    const nextCardSig = JSON.stringify([st.time, st.q, st.catKeys, st.varieties, st.region, st.sourceMode, st.panels.cards, st.sk.live, st.newFacts, D.revision, window.V03Feed?.revision]);
     if (nextCardSig !== cardSig) { visibleCardCount = 20; renderCards(); cardSig = nextCardSig; }
   }
 

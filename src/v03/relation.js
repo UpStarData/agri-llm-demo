@@ -111,6 +111,7 @@ window.V03Relation = (function () {
   <div class="rel-wrap">
     <div class="rel-main" id="relMain">
       <div class="rel-canvas" id="relCanvas"></div>
+      <div class="catalog-credit">目录：<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> · <a href="https://ourairports.com/data/" target="_blank" rel="noopener">OurAirports</a></div>
       <canvas class="rel-globe" id="relGlobe" aria-label="关联层三维地球：可拖动旋转、滚轮缩放、点击本体"></canvas>
       <div class="rel-tip" id="relTip" role="tooltip" hidden></div>
       <div class="rel-hint" id="relHint" role="status" aria-live="polite"></div>
@@ -175,7 +176,8 @@ window.V03Relation = (function () {
       const fact = p.fact;
       if (streamFacts.has(fact.id)) return;
       streamFacts.add(fact.id);
-      const objects = (fact.objects || []).map(id => D.objById(id)).filter(Boolean);
+      const objects = (fact.objects || []).map(id => D.objById(id)).filter(F.isBusinessObject);
+      if(!objects.length)return;
       const ids = new Set(objects.map(o => o.id));
       const relations = D.RELATIONS.filter(r => ids.has(r.from) || ids.has(r.to)).slice(0, 6);
       /* 没有本体对象时（例如事件型事实）只按坐标亮一颗星 */
@@ -184,10 +186,10 @@ window.V03Relation = (function () {
       receiveObjects(objects);
     });
     S.onEvent('data:ingested', p => {
-      (p.facts || []).forEach(relFlashStar);
-      receiveObjects(p.objects || []);
+      if(!(p.objects||[]).length)(p.facts || []).forEach(relFlashStar);
+      receiveObjects(p.objects || [],false,false,true);
     });
-    S.onEvent('feed:arrival', p=>{if(S.state.tab==='relation'){relFlashStar(p.fact);receiveObjects(p.objects||[],true,p.mode==='snapshot-replay');}});
+    S.onEvent('feed:arrival', p=>{if(S.state.tab==='relation')receiveObjects(p.objects||[],true,true);});
   }
 
   function toast(msg) { if (window.V03Shell) window.V03Shell.toast(msg); }
@@ -610,10 +612,10 @@ window.V03Relation = (function () {
   function nodesData(objs, focus, reveal) {
     let peripheral = 0;
     const candidates = objs.filter(o => o.geo !== false && o.lat != null && inLevel(o.lng, o.lat)).filter(o => {
-      if (focus === o.id || freshOrder.includes(o.id) || D.relationsOf(o.id).length) return true;
+      if (focus === o.id || freshOrder.includes(o.id) || D.relationsOf(o.id).length || o.id.startsWith('e:v24:')) return true;
       return peripheral++ % 3 === 0;
     });
-    const list = window.V03Feed ? V03Feed.sampleGeo(candidates,relLevel()==='L1'?420:380,new Set([focus,...freshOrder])) : candidates.slice(0,380);
+    const list = window.V03Feed ? V03Feed.sampleGeo(candidates,relLevel()==='L1'?1500:relLevel()==='L2'?1800:1200,new Set([focus,...freshOrder])) : candidates.slice(0,1200);
     return list.flatMap((o, i) => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
       const isFocus = focus === o.id;
@@ -627,7 +629,7 @@ window.V03Relation = (function () {
       }
       return mapPoints(o.lng, o.lat).map(value => ({
         id: o.id, objId: o.id, name: o.name, domain: o.domain, value,
-        symbolSize: 8 * (.55 + .45 * easeOut(pop)),
+        symbolSize: (relLevel()==='L1'?4.5:6) * (.55 + .45 * easeOut(pop)),
         itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1, opacity: .35 + .65 * pop },
         label: {
           show: (isFocus || degree >= 8) && pop > .9, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
@@ -891,8 +893,8 @@ window.V03Relation = (function () {
     }
     return V03Intake.star(dom.main, px, o.id);
   }
-  function receiveObjects(objects, force = false, replay = false) {
-    const list = objects.filter(o => o && D.objById(o.id) && CARD_KINDS.includes(o.domain) && (force || !seenArrivals.has(o.id)));
+  function receiveObjects(objects, force = false, replay = false, deferView = false) {
+    const list = objects.filter(o => F.isBusinessObject(o) && D.objById(o.id) && CARD_KINDS.includes(o.domain) && (force || !seenArrivals.has(o.id)));
     list.forEach(o => {
       seenArrivals.add(o.id);
       const at = freshOrder.indexOf(o.id); if (at >= 0) freshOrder.splice(at, 1);
@@ -900,16 +902,20 @@ window.V03Relation = (function () {
     });
     freshOrder.length = Math.min(20, freshOrder.length);
     if (!list.length || S.state.tab !== 'relation') return;
-    renderPanel(S.state, F.objects(S.state));
-    if(S.state.rel.view==='geo')paintFocus();
+    // data:ingested commits the final store revision after listeners finish;
+    // let that update paint once, with freshOrder already populated.
+    if(!deferView){
+      renderPanel(S.state, F.objects(S.state));
+      if(S.state.rel.view==='geo')paintFocus();
+    }
     V03Intake.note(dom.side, replay?'本体接入回放':'新本体', list[0].name);
-    objects.forEach(relFlashStar);
+    list.forEach(relFlashStar);
     dom.body.scrollTop = 0;
     if (dom.body.__auto) dom.body.__auto.paused = Date.now() + 4500;
   }
   function notifyNewest() {
     const objs = F.objects(S.state);
-    const mapped = objs.filter(o => o.geo !== false && inLevel(o.lng, o.lat));
+    const mapped = objs.filter(o => CARD_KINDS.includes(o.domain) && o.geo !== false && inLevel(o.lng, o.lat));
     const visible = mapped.find(o => {
       if (S.state.rel.view === 'globe') return globe.screenPoint(o.lng, o.lat);
       const q = chart && chart.convertToPixel({ geoIndex: 0 }, mapPoints(o.lng, o.lat)[relLevel() === 'L1' ? 1 : 0]);
@@ -928,9 +934,17 @@ window.V03Relation = (function () {
       const t = String(F.relKind(o) || '');
       return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t);
     });
-    const nogeo = kept.slice().sort((a,b)=>Number(b.priority==='high')-Number(a.priority==='high') || Number(b.domain==='commodity')-Number(a.domain==='commodity') || String(recentOf(b)).localeCompare(String(recentOf(a))));
-    const ordered = nogeo.sort((a, b) => (freshOrder.indexOf(a.id) < 0 ? 1e9 : freshOrder.indexOf(a.id)) - (freshOrder.indexOf(b.id) < 0 ? 1e9 : freshOrder.indexOf(b.id)));
+    const scoped = kept.filter(o => o.geo === false || o.lng == null || relLevel()==='L1' ||
+      (o.lng>=73&&o.lng<=136&&o.lat>=17.5&&o.lat<=54.5 && (relLevel()!=='L3' ||
+      ((o.regionPath||[]).some(p=>p.level==='province'&&shortProv(p.name)===shortProv(relFocus()||'湖南')) || Math.abs(o.lng-111.73)<2.8&&Math.abs(o.lat-27.54)<2.4))));
+    const nogeo = scoped.slice().sort((a,b)=>Number(b.priority==='high')-Number(a.priority==='high') || Number(b.domain==='commodity')-Number(a.domain==='commodity') || String(recentOf(b)).localeCompare(String(recentOf(a))));
+    const pinned=nogeo.filter(o=>freshOrder.includes(o.id)||o.priority==='high');
+    const buckets=new Map();nogeo.filter(o=>!pinned.includes(o)).forEach(o=>{const key=F.relKind(o);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(o);});
+    const arrivalRank=o=>freshOrder.includes(o.id)?freshOrder.indexOf(o.id):1e9;
+    const ordered=pinned.sort((a,b)=>arrivalRank(a)-arrivalRank(b));
+    for(let i=0;ordered.length<nogeo.length;i++)for(const bucket of buckets.values())if(bucket[i])ordered.push(bucket[i]);
     const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
+    V03Media.beginCards('relation');
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
       const kind = F.relKind(o) || dm.n;
@@ -1107,16 +1121,17 @@ window.V03Relation = (function () {
       [dom.globe, dom.canvas].forEach(el => { el.classList.remove('view-fade'); void el.offsetWidth; el.classList.add('view-fade'); });
     }
     if (st.rel.view === 'globe') {
-      const keep = new Set([focusId(), ...(st.carry || []).flatMap(id => (D.factById(id) || {}).objects || [])].filter(Boolean));
+      const keep = new Set([focusId(), ...freshOrder, ...(st.carry || []).flatMap(id => (D.factById(id) || {}).objects || [])].filter(Boolean));
       globe.update({ mode: 'relation', objects: objs, relations: rels, colorOf: typeColor, keep: [...keep] });
     } else {
       const c = ensureChart(); if (!c) return;
       /* 进图时把相机对准当前层级（切层时由 enterLevel 设定） */
       if (st.rel.view === 'geo') { camera.zoom = Math.max(levelCfg().box[0], Math.min(levelCfg().box[1], camera.zoom)); }
       /* 图层不可见时容器是 0 尺寸，此时 resize 会让 ECharts 在空画布上 drawImage 报错 */
-      if (dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0) c.resize();
+      if (dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0 &&
+        (c.getWidth()!==dom.canvas.clientWidth || c.getHeight()!==dom.canvas.clientHeight)) c.resize();
       const nextGeometry = JSON.stringify([st.rel.view, relLevel(), relFocus(), st.rel.search, st.varieties,
-        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme, D.revision, st.dataRevision]);
+        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme, D.revision, window.V03Feed?.revision]);
       if (geometrySig !== nextGeometry) {
         const frame=[st.rel.view,relLevel(),relFocus(),st.theme].join('|'),freshFrame=frame!==mapFrame;
         if (st.rel.view === 'geo' && freshFrame) {
@@ -1155,12 +1170,14 @@ window.V03Relation = (function () {
       mapAnimationPaused = paused;
     }
   };
+  function visiblePosition(o){
+    if(!Number.isFinite(o.lng)||!inLevel(o.lng,o.lat))return false;
+    if(S.state.rel.view==='globe')return !!globe.screenPoint(o.lng,o.lat);
+    return !!(chart && mapPoints(o.lng,o.lat).some(v=>{const p=chart.convertToPixel({geoIndex:0},v);return p&&p[0]>25&&p[0]<dom.canvas.clientWidth-25&&p[1]>25&&p[1]<dom.canvas.clientHeight-25;}));
+  }
   function arrivalCandidates(){
     const list=F.objects(S.state).filter(o=>o.geo!==false&&Number.isFinite(o.lng)&&inLevel(o.lng,o.lat));
-    return list.filter(o=>{
-      if(S.state.rel.view==='globe')return globe.screenPoint(o.lng,o.lat);
-      return chart && mapPoints(o.lng,o.lat).some(v=>{const p=chart.convertToPixel({geoIndex:0},v);return p&&p[0]>25&&p[0]<dom.canvas.clientWidth-25&&p[1]>25&&p[1]<dom.canvas.clientHeight-25;});
-    });
+    return list.filter(visiblePosition);
   }
-  return { notifyNewest, receiveObjects, arrivalCandidates, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
+  return { notifyNewest, receiveObjects, arrivalCandidates, visiblePosition, mount, update, setVisible, renderDrawer, renderDetail: renderDrawer, debug, zoomBy, zoomByFactor, zoomState };
 })();
