@@ -27,8 +27,10 @@ try {
   if (rel.controls.join(',') !== 'zoomIn,zoomOut,view3d,view2d,viewGraph,search,gates,fullscreen') throw Error('关联层快捷键数量或顺序失效: ' + rel.controls);
   if (rel.view !== 'globe' || !rel.controls.includes('viewGraph') || !rel.total.includes(String(rel.expected))) throw Error('关联层默认视图、控制或概览失效');
   if ((await page.locator('#menuBody').textContent()).includes('暂无记录')) throw Error('图例仍包含无数据提示');
+  const gatesBefore=await page.evaluate(() => V03Store.state.sk.gates);
   await page.locator('#mapSk button[data-k=gates]').click();
-  if (!await page.evaluate(() => V03Store.state.sk.gates)) throw Error('港口锚点开关失效');
+  if (await page.evaluate(() => V03Store.state.sk.gates) === gatesBefore) throw Error('港口锚点开关失效');
+  if(gatesBefore)await page.locator('#mapSk button[data-k=gates]').click();
   await page.locator('#mapSk button[data-k=view2d]').click();
   if (!await page.evaluate(() => echarts.getInstanceByDom(document.querySelector('#relCanvas')).getOption().series.find(x => x.id === 'relPorts').data.length > 0)) throw Error('二维港口锚点未绘制');
   if (await page.evaluate(() => V03Relation.debug().view) !== 'geo') throw Error('快捷视图切换失效');
