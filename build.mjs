@@ -49,6 +49,7 @@ const JS = [
   'src/v03/data-sim.js',    // 推演层场景与轮次
   'src/v03/dict-f3.js',     // V2 指令 F3 事实三级分类字典（7/26/125）
   'src/v03/store.js',       // 唯一状态源
+  'src/v03/theme.js',       // 一级分类主题色（CSS 变量为唯一来源）
   'src/v03/scope.js',
   'src/v03/filter.js',      // 三层共用的唯一过滤实现 + 三级分类字典
   'src/v03/globe.js',       // 三维地球（事实层 / 关联层共用同一套渲染）

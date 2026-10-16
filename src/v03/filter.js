@@ -20,18 +20,25 @@ window.V03Filter = (function () {
     { n: '宏观与公共事件', key: 'macro', color: '#b45309', subs: [{ n: '地缘与安全', items: [{ key: 'macro|地缘与安全|公共安全', n: '公共安全', e: '⚠️', kw: ['安全'] }] }] }
   ];
   const FACT_TREE_RAW = (D3 && D3.TREE && D3.TREE.length) ? D3.TREE : FALLBACK_TREE;
-  /* L2：一级分类改用低饱和配色（与整体明亮风格一致） */
-  const MUTED = { nature: '#5b8ea6', supply: '#6f9a6a', chain: '#5f9a94', market: '#b0736b', consume: '#8b7fa8', policy: '#6f86b8', macro: '#a08a63' };
-  const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: MUTED[g.key] || g.color }));
+  /* 一级分类色统一由主题变量提供（V2.8.4）：菜单图例、地图点填充、地球、详情同一份色值 */
+  const T = window.V03Theme;
+  const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: T.fact(g.key) }));
   const leafOf = f => (D3 && D3.leafOf) ? D3.leafOf(f) : null;
 
   /* PRD 关联层 V1.3：四个一级类、十七个二级类。旧数据保留原始类型，只做可核对的映射。 */
   const REL_TREE = [
-    { n:'地理与设施', subs:[{n:'类型',items:['产区与基地','市场','港口','机场','仓储与物流','地缘风险区','行政区划'].map(mkRel)}] },
-    { n:'主体与组织', subs:[{n:'类型',items:['企业与贸易主体','政府与机构','政策与法规'].map(mkRel)}] },
-    { n:'农作物', subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
-    { n:'事件', subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
+    { n:'地理与设施', color: window.V03Theme.obj('地理与设施'), subs:[{n:'类型',items:['产区与基地','市场','港口','机场','仓储与物流','地缘风险区','行政区划'].map(mkRel)}] },
+    { n:'主体与组织', color: window.V03Theme.obj('主体与组织'), subs:[{n:'类型',items:['企业与贸易主体','政府与机构','政策与法规'].map(mkRel)}] },
+    { n:'农作物', color: window.V03Theme.obj('农作物'), subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
+    { n:'事件', color: window.V03Theme.obj('事件'), subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
   ];
+  /* 本体一级分类：relKind(o) 给二级名，这里回到它所属的一级类（PRD 四类） */
+  const REL_CLASS_OF_KIND = (() => {
+    const out = {};
+    REL_TREE.forEach(g => g.subs.forEach(sb => sb.items.forEach(it => { out[it.key] = g.n; })));
+    return out;
+  })();
+  const relClass = o => REL_CLASS_OF_KIND[relKind(o)] || (o && o.domain === 'commodity' ? '农作物' : '事件');
   function mkRel(name){const emoji={'产区与基地':'🌾','市场':'🏪','港口':'⚓','机场':'✈️','地缘风险区':'⚠️','行政区划':'🗺️','企业与贸易主体':'🏢','政府与机构':'🏛️','政策与法规':'📜','水果':'🍉','蔬菜':'🥬','粮油与油料':'🌽','经济作物':'🍃','自然与生态':'🌦️','政策与贸易':'📋','地缘与安全':'🛡️','公共事件':'📡'};return {key:name,n:name,e:emoji[name]||'◇'};}
   function relKind(o){
     if(o.domain==='resource')return '产区与基地';
@@ -60,7 +67,30 @@ window.V03Filter = (function () {
     '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba','依赖':'#8a6dba','替代':'#8a6dba',
     '影响':'#cf5f6a','价格传导':'#cf5f6a'
   };
-  const relationTypeColor = type => RELATION_COLORS[type] || '#7ea0cf';
+  /* 关系线按「一级本体分类」着色：每种关系类型的一级类由该类型自身的两端本体统计得出
+     （取多数；平票时取起点侧），因此地图、地球、图谱、菜单图例必然同色（V2.8.4 要求 4）。 */
+  let typeClassCache = null;
+  function relationTypeClass(type) {
+    if (!typeClassCache) {
+      const tally = new Map();
+      const cls = id => { const o = D.objById(id); return o ? relClass(o) : null; };
+      D.RELATIONS.forEach(r => {
+        const a = cls(r.from), b = cls(r.to);
+        if (!tally.has(r.type)) tally.set(r.type, { from: new Map(), any: new Map() });
+        const t = tally.get(r.type);
+        if (a) t.from.set(a, (t.from.get(a) || 0) + 1);
+        [a, b].filter(Boolean).forEach(c => t.any.set(c, (t.any.get(c) || 0) + 1));
+      });
+      typeClassCache = new Map();
+      tally.forEach((t, type) => {
+        const rank = m => [...m.entries()].sort((x, y) => y[1] - x[1] || String(x[0]).localeCompare(String(y[0]), 'zh-CN'))[0];
+        const top = rank(t.any) || rank(t.from);
+        typeClassCache.set(type, top ? top[0] : '事件');
+      });
+    }
+    return typeClassCache.get(type) || '事件';
+  }
+  const relationTypeColor = type => window.V03Theme.obj(relationTypeClass(type));
   const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   function relationTypeOptions(s) {
     const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
@@ -284,7 +314,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,

@@ -89,6 +89,8 @@ window.V03Relation = (function () {
   };
   const palette = () => MAP_PALETTE;
   const domOf = o => D.domain(o.domain);
+  /* 一级本体分类色（V2.8.4）：地图本体点、图谱节点、图例统一取这一份 */
+  const objColor = o => window.V03Theme.obj(F.relClass(o));
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const TPL = `
@@ -636,7 +638,7 @@ window.V03Relation = (function () {
       return mapPoints(o.lng, o.lat).map((value,copy) => ({
         id: o.id+'@'+copy, objId: o.id, name: o.name, domain: o.domain, value,
         symbolSize: (relLevel()==='L1'?4.5:6) * (.55 + .45 * easeOut(pop)),
-        itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1, opacity: .35 + .65 * pop },
+        itemStyle: { color: objColor(o), borderColor: isFocus ? '#e91e63' : 'rgba(255,255,255,.92)', borderWidth: isFocus ? 2 : .9, opacity: .35 + .65 * pop },
         label: {
           show: (isFocus || o.id==='e:ent-hongxing-group' || !nearHQ&&(o.id==='e:v23:hongxing-huayuan' || o.id==='e:v23:hongxing-jinpen' || degree >= 8)) && pop > .9, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
           backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3,
@@ -743,7 +745,7 @@ window.V03Relation = (function () {
       id: o.id, name: o.name, value: (degrees.get(o.id) || 0),
       ...place(o),
       symbolSize: V03Scope.priority(o)?23:12,
-      itemStyle: { color: domOf(o).c, borderColor: o.id === focus ? '#e91e63' : '#fff', borderWidth: o.id === focus ? 4 : 2.5 },
+      itemStyle: { color: objColor(o), borderColor: o.id === focus ? '#e91e63' : '#fff', borderWidth: o.id === focus ? 4 : 2.5 },
       label: { show: V03Scope.priority(o)||o.id===focus, color: p.ink, fontSize: 11, fontWeight: 500,
         formatter: o.name.length > 9 ? o.name.slice(0, 8) + '…' : o.name }
     }));
