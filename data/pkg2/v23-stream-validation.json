@@ -1,276 +1,287 @@
 [
-  {
-    "country": "CL",
-    "name": "Agricultura TV",
+ {
+  "country": "CL",
+  "name": "Agricultura TV",
+  "url": "https://redirector.rudo.video/hls-video/ey6283je82983je9823je8jowowiekldk9838274/921tv/921tv.smil/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://redirector.rudo.video/hls-video/ey6283je82983je9823je8jowowiekldk9838274/921tv/921tv.smil/playlist.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "IQ",
-    "name": "FarmodaTV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "https://jireh-7-hls-video-us-isp.dps.live/hls-video/ey6283je82983je9823je8jowowiekldk9838274/921tv/921tv.smil/921tv/livestream0/chunks.m3u8?dpssid=b212333549606ad1ca3c97026&sid=ba5t1l1xb28433993446ad1ca3c97024&ndvc=1"
+ },
+ {
+  "country": "IQ",
+  "name": "FarmodaTV",
+  "url": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:54:53.208779+00:00",
-    "trace": [
-      {
-        "url": "https://avr.host247.net/live/FarmodaTV/playlist.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://avr.host247.net/live/FarmodaTV/tracks-v1a1/mono.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://avr.host247.net/live/FarmodaTV/tracks-v1a1/2026/10/15/11/54/23-06001.ts",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/MP2T"
-    }
-  },
-  {
-    "country": "MM",
-    "name": "MRTV Farmer",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "tracks-v1a1/mono.m3u8"
+ },
+ {
+  "country": "MM",
+  "name": "MRTV Farmer",
+  "url": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:55:02.157969+00:00",
-    "trace": [
-      {
-        "url": "https://mrtvott.com/cache/MRTV-FARMER/master.m3u8",
-        "status": 200,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://mrtvott.com/cache/MRTV-FARMER/m3u8/cache_MRTV-FARMER_m3u8_hls_m3u8_MRTV-FARMER-TS-H.m3u8",
-        "status": 200,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://mrtvott.com/cache/MRTV-FARMER/ts/cache_MRTV-FARMER_ts_hls_ts_MRTV-FARMER-TS-H-00044888.ts",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/mp2t"
-    }
-  },
-  {
-    "country": "CA",
-    "name": "NatureTime",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "m3u8/cache_MRTV-FARMER_m3u8_hls_m3u8_MRTV-FARMER-TS-H.m3u8"
+ },
+ {
+  "country": "CA",
+  "name": "NatureTime",
+  "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:54:47.075518+00:00",
-    "trace": [
-      {
-        "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/playlist/amg00090-blueantllc-lovenature-au-samsungau/playlist.m3u8",
-        "status": 200,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/ts-eu-w1-n2/playlist/amg00090-blueantllc-lovenature-au-samsungau/cb543d16786c678f9ed43a6fcef343a4f93d1fde1d6988693eb5518975d30b5a80eaf6c7bf1ebb750f9717887c0b6c075c7a9a1adc7d1cc6d873a107607d12769dcae61985a32d314d0b510018c0040c648d564c8e74711db38b3b3bf5f631e467698c287d5f33f7cd6101c60fe7ba63d4217ed1f48c2668234860a78ecfbb826cdb81cb683d9d32f0ef0678973c7dc3a3851d858d5d94d92bb72c9f8dd1e3ebfe8091ee61c1dfc07cca0fe33a0e502374a3f113f8e452acd3966538d32466166c359cc3999d1f6fdfa722bf665d7dd91440176d40da17981c3861987492db89/139/426x240_511680/index.m3u8",
-        "status": 200,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/ts-eu-w1-n2/beacon/amg00090-blueantllc-lovenature-au-samsungau/cb543d16786c678f9ed43a6fcef343a4f93d1fde1d6988693eb5518975d30b5a80eaf6c7bf1ebb750f9717887c0b6c075c7a9a1adc7d1cc6d873a107607d12769dcae61985a32d314d0b510018c0040c648d564c8e74711db38b3b3bf5f631e467698c287d5f33f7cd6101c60fe7ba63d4217ed1f48c2668234860a78ecfbb826cdb81cb683d9d32f0ef0678973c7dc3a3851d858d5d94d92bb72c9f8dd1e3ebfe8091ee61c1dfc07cca0fe33a0e502374a3f113f8e452acd3966538d32466166c359cc3999d1f6fdfa722bf665d7dd91440176d40da17981c3861987492db89/426x240_511680?bcn=1&ca=0&cid=HF_A01049447&dur=6.000000&media_type=C&redirect_url=https%3A%2F%2Famg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv%2F240p-vtt%2Fseg_1887257.ts&seen-ad=1&seg_id=1887257&user_id=35f74bed-c88f-11f1-a321-1699fd1527bd",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/mp2t"
-    }
-  },
-  {
-    "country": "BG",
-    "name": "Agro TV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "https://amg00090-blueantllc-lovenature-au-samsungau-wggcn.amagi.tv/ts-eu-w1-n2/playlist/amg00090-blueantllc-lovenature-au-samsungau/cb543d16786c678f9ed43a6fcef343a4f93d1fde1d6988693eb5518975d30b5186bfa5c5e44bee750f961d8b7c0b6c075c7a994f8d7a1ccfdc7afa076574127ccb9ae71985a32d314d0b510018c0040c648d564c8e74711db38b3b3bf5f631e467698c287d5f33f7cd6101c60fe7ba63d4217ed1f48c2668234860a78ecfbb826cdb81cb683d9d32f0ef0678973c7dc3a3851d858d5d94d92bb72c9f8dd1e3ebfe8091ee61c1dfc07cca0fe33a0e502374a3f113f8e452acd3966538d32466166c359cc3999d1f6bdfa722fb0c587dd92083110d88d4c0d7dc1f720253908def/179/426x240_511680/index.m3u8"
+ },
+ {
+  "country": "BG",
+  "name": "Agro TV",
+  "url": "https://restr2.bgtv.bg/agro/hls/agro.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://restr2.bgtv.bg/agro/hls/agro.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "CA",
-    "name": "Stingray Naturescape",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ]
+ },
+ {
+  "country": "CA",
+  "name": "Stingray Naturescape",
+  "url": "https://d39g1vxj2ef6in.cloudfront.net/v1/master/3fec3e5cac39a52b2132f9c66c83dae043dc17d4/prod-rakuten-stitched/master.m3u8?ads.xumo_channelId=88883056",
+  "playable": false,
+  "error": "TypeError: fetch failed",
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "none",
+  "contentType": "",
+  "trace": [
+   {
     "url": "https://d39g1vxj2ef6in.cloudfront.net/v1/master/3fec3e5cac39a52b2132f9c66c83dae043dc17d4/prod-rakuten-stitched/master.m3u8?ads.xumo_channelId=88883056",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:54:51.237769+00:00",
-    "trace": [
-      {
-        "url": "https://d39g1vxj2ef6in.cloudfront.net/v1/master/3fec3e5cac39a52b2132f9c66c83dae043dc17d4/prod-rakuten-stitched/master.m3u8?ads.xumo_channelId=88883056",
-        "status": 200,
-        "cors": "https://upstardata.github.io",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://d39g1vxj2ef6in.cloudfront.net/v1/manifest/3fec3e5cac39a52b2132f9c66c83dae043dc17d4/prod-rakuten-stitched/ab60536f-8eca-40bf-941c-a24514142580/0.m3u8",
-        "status": 200,
-        "cors": "https://upstardata.github.io",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://lotus.stingray.com/segment-cache/naturescape-a003-paris/xumo-rakuten/8ff4b645-3a1e-4aea-b50d-f2314d4417a0/segment.ts?lotus-session-id=323a6065-889f-3886-ab22-525cb678f735",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/mp2t"
-    }
-  },
-  {
-    "country": "CR",
-    "name": "Agrotendencia TV",
+    "cors": "none",
+    "contentType": ""
+   }
+  ]
+ },
+ {
+  "country": "CR",
+  "name": "Agrotendencia TV",
+  "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:54:52.860453+00:00",
-    "trace": [
-      {
-        "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/playlist.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/chunklist_w815635377.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://5fc584f3f19c9.streamlock.net/agrotendencia/videoagrotendencia_hls1/media_w815635377_11029.ts",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/MP2T"
-    }
-  },
-  {
-    "country": "DE",
-    "name": "Terra Mater WILD",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "chunklist_w572933135.m3u8"
+ },
+ {
+  "country": "DE",
+  "name": "Terra Mater WILD",
+  "url": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/playlist/amg01775-amg01775c1-amgplt0343/playlist.m3u8",
-    "playable": false,
-    "error": "media CORS unavailable"
-  },
-  {
-    "country": "HN",
-    "name": "Radio Fiesta de Milagros TV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "https://amg01775-amg01775c1-amgplt0343.playout.now3.amagi.tv/ts-eu-w1-n2/playlist/amg01775-amg01775c1-amgplt0343/cb543d1b7c6c678b9ed43c6ecef043a9f93d1fde1d6988693eb5518975d30b518dbbf5c1eb43ef750f961d8b7c0b6c075c7a994f8d7a1ccfdc7afa076574127ccb9ae71989a33a316323c21800811f7d43c36b4b8961067699da0e099138a60b7d798a274f26ff09206b874b2c9ac24ed36f58d6f89f386a2c706f856d5ff3988694de32c8ee2c7c71c36c615d4c96722906a1240684f1890edc1ad527ee67c5cba3da844fe8a7ab58d408f83d05542332ccce29e1a927d6d0f9386fc89149f6eaf250c52d7744951785785df55418589a72d6e6/164/426x240_350000/index.m3u8"
+ },
+ {
+  "country": "HN",
+  "name": "Radio Fiesta de Milagros TV",
+  "url": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://tv.webmedialive.com/fiestatv/live/playlist.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "IQ",
-    "name": "Zagros TV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "chunks.m3u8"
+ },
+ {
+  "country": "IQ",
+  "name": "Zagros TV",
+  "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:54:59.591381+00:00",
-    "trace": [
-      {
-        "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/playlist.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/chunklist_w1180580710_b1700000_sleng_t64MTA4MHA=.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://5a3ed7a72ed4b.streamlock.net/zagrostv/SMIL:myStream.smil/media_w1180580710_b1700000_sleng_t64MTA4MHA=_1741.ts",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/MP2T"
-    }
-  },
-  {
-    "country": "IR",
-    "name": "Zagros TV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "chunklist_w1615002972_b1700000_sleng_t64MTA4MHA=.m3u8"
+ },
+ {
+  "country": "IR",
+  "name": "Zagros TV",
+  "url": "https://ncdn.telewebion.ir/zagros/live/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://ncdn.telewebion.ir/zagros/live/playlist.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "PE",
-    "name": "Agro TV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "240p/index.m3u8"
+ },
+ {
+  "country": "PE",
+  "name": "Agro TV",
+  "url": "https://live-evg8.tv360.bitel.com.pe/bitel/agroSRT/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://live-evg8.tv360.bitel.com.pe/bitel/agroSRT/playlist.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "RO",
-    "name": "Agro TV",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "chunks.m3u8"
+ },
+ {
+  "country": "RO",
+  "name": "Agro TV",
+  "url": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "*",
+  "contentType": "application/x-mpegURL",
+  "trace": [
+   {
     "url": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:55:04.277952+00:00",
-    "trace": [
-      {
-        "url": "https://agrotv.streamnet.ro/mobile_tv/agrotv.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/x-mpegURL"
-      }
-    ],
-    "segment": {
-      "url": "https://agrotv.streamnet.ro/mobile_tv/agrotv5.ts",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/MP2T"
-    }
-  },
-  {
-    "country": "UK",
-    "name": "Real Wild",
+    "status": 200,
+    "cors": "*",
+    "contentType": "application/x-mpegURL"
+   }
+  ]
+ },
+ {
+  "country": "UK",
+  "name": "Real Wild",
+  "url": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "none",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://lds-realwild-samsungau.amagi.tv/playlist.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "US",
-    "name": "PBS Nature",
+    "status": 200,
+    "cors": "none",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "360p-vtt/index.m3u8"
+ },
+ {
+  "country": "US",
+  "name": "PBS Nature",
+  "url": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "none",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://amg02333-pbs-amg02333c11-firetv-us-4242.playouts.now.amagi.tv/playlist.m3u8",
-    "playable": false,
-    "error": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)>"
-  },
-  {
-    "country": "ZA",
-    "name": "WildEarth",
+    "status": 200,
+    "cors": "none",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "240p-cc/index.m3u8"
+ },
+ {
+  "country": "ZA",
+  "name": "WildEarth",
+  "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
+  "playable": true,
+  "checkedAt": "2026-10-16T06:54:50.800Z",
+  "cors": "none",
+  "contentType": "application/vnd.apple.mpegurl",
+  "trace": [
+   {
     "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
-    "playable": true,
-    "checkedAt": "2026-10-15T11:55:08.912518+00:00",
-    "trace": [
-      {
-        "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      },
-      {
-        "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth360.m3u8",
-        "status": 206,
-        "cors": "*",
-        "contentType": "application/vnd.apple.mpegurl"
-      }
-    ],
-    "segment": {
-      "url": "https://dqga3jatxofgx.cloudfront.net/WildEarth360_10804172.ts",
-      "bytes": 4096,
-      "status": 206,
-      "cors": "*",
-      "contentType": "video/MP2T"
-    }
-  }
+    "status": 200,
+    "cors": "none",
+    "contentType": "application/vnd.apple.mpegurl"
+   }
+  ],
+  "variant": "WildEarth360.m3u8"
+ }
 ]
