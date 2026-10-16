@@ -542,18 +542,29 @@ window.V03Fact = (function () {
       .map(displayName => ({ name: displayName, itemStyle: { areaColor: regionFill(name, p, level) } })));
   };
 
-  function mapOption(withInfluence = true) {
-    const st = S.state, all = F.mapFacts(st);
-    let facts = F.mappable(all).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
-    /* 生长：切换时间范围后，点按非线性速度逐步出现（最新的先出，老的随透明度衰减消失） */
-    const gk = ensureGrow(st);
-    if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
-    const lv = LEVEL[st.geo.level], p = palette();
-    // Bound canvas work by independent coordinates; retain full fact groups and
-    // all three world copies, so dragging never reveals an empty culled region.
-    const coordinates=new Map();facts.forEach(f=>{const key=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(key))coordinates.set(key,f);});
+  /* 一次地图重建会用到两份 option（先画点、再按新的地理变换补光晕），采样与去重的前缀
+     完全相同，因此按同一批输入缓存，避免对 4 万+ 条事实重复采样。 */
+  let planKey='',planCache=null;
+  function mapPlan(st, gk) {
+    const key=[st.geo.level,st.geo.focus,st.geo.city,st.geo.county,gk,D.revision,window.V03Feed?.revision,
+      st.time,st.catKeys,st.varieties,st.region,st.sourceMode,st.q,freshOrder.length].join('|');
+    if(key===planKey&&planCache)return planCache;
+    const facts = F.mappable(F.mapFacts(st)).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
+    const coordinates=new Map();facts.forEach(f=>{const k=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(k))coordinates.set(k,f);});
     const cap=st.geo.level==='L1'?2600:st.geo.level==='L2'?2200:1600;
     const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set([...freshOrder,...facts.filter(V03Scope.priority).map(f=>f.id)])).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
+    planCache={facts,selected};planKey=key;return planCache;
+  }
+
+  function mapOption(withInfluence = true) {
+    const st = S.state;
+    /* 生长：切换时间范围后，点按非线性速度逐步出现（最新的先出，老的随透明度衰减消失） */
+    const gk = ensureGrow(st);
+    const plan = mapPlan(st, gk < 1 ? gk : 1);
+    let facts = plan.facts;
+    if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
+    const lv = LEVEL[st.geo.level], p = palette();
+    const selected = plan.selected;
     const halos = [], pts = [], ripples = [];
     const pointGroups = new Map();
     const usedHalo = [];                       /* 已经在这些位置画过光晕，太近就不再画，避免叠成一大块 */
