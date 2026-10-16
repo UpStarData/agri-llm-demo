@@ -21,6 +21,11 @@
   --accent:#236bad;--accent-soft:#e6f2fb;--green:#368b6f;--orange:#ae7650;--purple:#74658f;--red:#b65c5d;
   --warn:#b45309;--warn-bg:#fef3c7;
   --ocean:#b8cee0;--land:#f1efe8;--land-2:#dce8df;--map-line:rgba(79,108,123,.67);--map-label:#344f60;
+  /* 一级分类主题色（V2.8.4，色值先自动生成）：事实层 7 类 + 关联层 4 类。
+     两层地图、地球、图谱与菜单图例都从这里取色；改这几行即可整体换色。 */
+  --fact-l1-1:#4f8fa8;--fact-l1-2:#6aa35c;--fact-l1-3:#43a09a;--fact-l1-4:#c9705f;
+  --fact-l1-5:#8d7fbe;--fact-l1-6:#5d80c4;--fact-l1-7:#b08a3c;
+  --obj-l1-1:#2f6f9e;--obj-l1-2:#a86a2c;--obj-l1-3:#5b9c46;--obj-l1-4:#b04a6a;
   /* 三维地球：深空底色 + 海面渐变 + 大气层光圈（与配色 1 同一套冷蓝） */
   --globe-space-1:#0b1f30;--globe-space-2:#050f19;--globe-nebula:#236bad;
   --globe-sea-1:#7fb4c8;--globe-sea-2:#336c8b;--globe-sea-3:#102f47;
@@ -891,7 +896,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.8.3</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.8.4</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -955,7 +960,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"515bb368bf2c","git":"3eed38b","builtAt":"2026-10-16T07:42:31.190Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"3b3bb1517a4e","git":"6215e7d","builtAt":"2026-10-16T09:37:10.671Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5647,6 +5652,63 @@ window.V03Store = (function () {
 
 </script>
 <script>
+/* ============================================================
+   一级分类主题色（V2.8.4）
+   · 事实层按 F3 一级分类 7 类着色；关联层按 PRD 本体一级分类 4 类着色
+   · 色值先自动生成；**唯一来源是 CSS 变量**，改主题变量两层同时生效，
+     避免颜色散落在各处（此前事实点、本体点、关系线各写各的）
+   ============================================================ */
+window.V03Theme = (() => {
+  const FACT_L1 = [
+    ['nature', '--fact-l1-1', '#4f8fa8'],   // 自然与生态
+    ['supply', '--fact-l1-2', '#6aa35c'],   // 生产与供给
+    ['chain',  '--fact-l1-3', '#43a09a'],   // 流通与供应链
+    ['market', '--fact-l1-4', '#c9705f'],   // 市场与交易
+    ['consume','--fact-l1-5', '#8d7fbe'],   // 消费与舆情
+    ['policy', '--fact-l1-6', '#5d80c4'],   // 政策与治理
+    ['macro',  '--fact-l1-7', '#b08a3c']    // 宏观与公共事件
+  ];
+  const OBJ_L1 = [
+    ['地理与设施', '--obj-l1-1', '#2f6f9e'],
+    ['主体与组织', '--obj-l1-2', '#a86a2c'],
+    ['农作物',     '--obj-l1-3', '#5b9c46'],
+    ['事件',       '--obj-l1-4', '#b04a6a']
+  ];
+  const FALLBACK = {
+    facts: Object.fromEntries(FACT_L1.map(([k, , f]) => [k, f])),
+    objs: Object.fromEntries(OBJ_L1.map(([k, , f]) => [k, f]))
+  };
+  let cache = null;
+  function read() {
+    if (cache) return cache;
+    let css = null;
+    try { css = getComputedStyle(document.documentElement); } catch (e) { css = null; }
+    const v = n => (css ? css.getPropertyValue(n).trim() : '');
+    const facts = {}, objs = {};
+    FACT_L1.forEach(([k, varName, fb]) => { facts[k] = v(varName) || fb; });
+    OBJ_L1.forEach(([k, varName, fb]) => { objs[k] = v(varName) || fb; });
+    cache = {
+      facts, objs,
+      factOrder: FACT_L1.map(x => x[0]), objOrder: OBJ_L1.map(x => x[0]),
+      factList: FACT_L1.map(x => facts[x[0]]), objList: OBJ_L1.map(x => objs[x[0]])
+    };
+    return cache;
+  }
+  return {
+    read,
+    fact: key => read().facts[key] || read().facts.nature,
+    obj: name => read().objs[name] || read().objs['地理与设施'],
+    reset: () => { cache = null; },
+    fallbacks: FALLBACK,
+    get factOrder() { return read().factOrder; },
+    get objOrder() { return read().objOrder; },
+    get factList() { return read().factList; },
+    get objList() { return read().objList; }
+  };
+})();
+
+</script>
+<script>
 /* Shared geographic scope for facts, business ontologies, cards and counts. */
 window.V03Scope=(()=>{
  const areas=window.__AGRI_PKG2__?.hunanAreas?.areas||[],byCode=new Map(areas.map(a=>[a.code,a])),cache=new Map();
@@ -5704,18 +5766,25 @@ window.V03Filter = (function () {
     { n: '宏观与公共事件', key: 'macro', color: '#b45309', subs: [{ n: '地缘与安全', items: [{ key: 'macro|地缘与安全|公共安全', n: '公共安全', e: '⚠️', kw: ['安全'] }] }] }
   ];
   const FACT_TREE_RAW = (D3 && D3.TREE && D3.TREE.length) ? D3.TREE : FALLBACK_TREE;
-  /* L2：一级分类改用低饱和配色（与整体明亮风格一致） */
-  const MUTED = { nature: '#5b8ea6', supply: '#6f9a6a', chain: '#5f9a94', market: '#b0736b', consume: '#8b7fa8', policy: '#6f86b8', macro: '#a08a63' };
-  const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: MUTED[g.key] || g.color }));
+  /* 一级分类色统一由主题变量提供（V2.8.4）：菜单图例、地图点填充、地球、详情同一份色值 */
+  const T = window.V03Theme;
+  const FACT_TREE = FACT_TREE_RAW.map(g => Object.assign({}, g, { color: T.fact(g.key) }));
   const leafOf = f => (D3 && D3.leafOf) ? D3.leafOf(f) : null;
 
   /* PRD 关联层 V1.3：四个一级类、十七个二级类。旧数据保留原始类型，只做可核对的映射。 */
   const REL_TREE = [
-    { n:'地理与设施', subs:[{n:'类型',items:['产区与基地','市场','港口','机场','仓储与物流','地缘风险区','行政区划'].map(mkRel)}] },
-    { n:'主体与组织', subs:[{n:'类型',items:['企业与贸易主体','政府与机构','政策与法规'].map(mkRel)}] },
-    { n:'农作物', subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
-    { n:'事件', subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
+    { n:'地理与设施', color: window.V03Theme.obj('地理与设施'), subs:[{n:'类型',items:['产区与基地','市场','港口','机场','仓储与物流','地缘风险区','行政区划'].map(mkRel)}] },
+    { n:'主体与组织', color: window.V03Theme.obj('主体与组织'), subs:[{n:'类型',items:['企业与贸易主体','政府与机构','政策与法规'].map(mkRel)}] },
+    { n:'农作物', color: window.V03Theme.obj('农作物'), subs:[{n:'类型',items:['水果','蔬菜','粮油与油料','经济作物'].map(mkRel)}] },
+    { n:'事件', color: window.V03Theme.obj('事件'), subs:[{n:'类型',items:['自然与生态','政策与贸易','地缘与安全','公共事件'].map(mkRel)}] }
   ];
+  /* 本体一级分类：relKind(o) 给二级名，这里回到它所属的一级类（PRD 四类） */
+  const REL_CLASS_OF_KIND = (() => {
+    const out = {};
+    REL_TREE.forEach(g => g.subs.forEach(sb => sb.items.forEach(it => { out[it.key] = g.n; })));
+    return out;
+  })();
+  const relClass = o => REL_CLASS_OF_KIND[relKind(o)] || (o && o.domain === 'commodity' ? '农作物' : '事件');
   function mkRel(name){const emoji={'产区与基地':'🌾','市场':'🏪','港口':'⚓','机场':'✈️','地缘风险区':'⚠️','行政区划':'🗺️','企业与贸易主体':'🏢','政府与机构':'🏛️','政策与法规':'📜','水果':'🍉','蔬菜':'🥬','粮油与油料':'🌽','经济作物':'🍃','自然与生态':'🌦️','政策与贸易':'📋','地缘与安全':'🛡️','公共事件':'📡'};return {key:name,n:name,e:emoji[name]||'◇'};}
   function relKind(o){
     if(o.domain==='resource')return '产区与基地';
@@ -5744,7 +5813,30 @@ window.V03Filter = (function () {
     '发布':'#8a6dba','适用于':'#8a6dba','监管':'#8a6dba','覆盖':'#8a6dba','依赖':'#8a6dba','替代':'#8a6dba',
     '影响':'#cf5f6a','价格传导':'#cf5f6a'
   };
-  const relationTypeColor = type => RELATION_COLORS[type] || '#7ea0cf';
+  /* 关系线按「一级本体分类」着色：每种关系类型的一级类由该类型自身的两端本体统计得出
+     （取多数；平票时取起点侧），因此地图、地球、图谱、菜单图例必然同色（V2.8.4 要求 4）。 */
+  let typeClassCache = null;
+  function relationTypeClass(type) {
+    if (!typeClassCache) {
+      const tally = new Map();
+      const cls = id => { const o = D.objById(id); return o ? relClass(o) : null; };
+      D.RELATIONS.forEach(r => {
+        const a = cls(r.from), b = cls(r.to);
+        if (!tally.has(r.type)) tally.set(r.type, { from: new Map(), any: new Map() });
+        const t = tally.get(r.type);
+        if (a) t.from.set(a, (t.from.get(a) || 0) + 1);
+        [a, b].filter(Boolean).forEach(c => t.any.set(c, (t.any.get(c) || 0) + 1));
+      });
+      typeClassCache = new Map();
+      tally.forEach((t, type) => {
+        const rank = m => [...m.entries()].sort((x, y) => y[1] - x[1] || String(x[0]).localeCompare(String(y[0]), 'zh-CN'))[0];
+        const top = rank(t.any) || rank(t.from);
+        typeClassCache.set(type, top ? top[0] : '事件');
+      });
+    }
+    return typeClassCache.get(type) || '事件';
+  }
+  const relationTypeColor = type => window.V03Theme.obj(relationTypeClass(type));
   const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   function relationTypeOptions(s) {
     const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
@@ -5968,7 +6060,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
@@ -6752,7 +6844,9 @@ window.V03Fact = (function () {
     const g = (F.FACT_TREE || []).find(x => (x.subs || []).some(sb => (sb.items || []).some(it => it.key === leafOf(f).key)));
     return g || null;
   };
-  const dotColor = f => (groupOf(f) || {}).color || catOf(f).c;
+  /* 一级事实分类色（V2.8.4）：地图点填充、地球、光晕、详情统一取这一份 */
+  const l1Color = f => (window.V03Theme ? window.V03Theme.fact((groupOf(f) || {}).key) : '') || (groupOf(f) || {}).color || catOf(f).c;
+  const dotColor = f => l1Color(f);
   const emojiOf = f => leafOf(f).e || catOf(f).e;
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -7264,8 +7358,8 @@ window.V03Fact = (function () {
           const a0 = ageAlpha(f, st.time);
           halos.push({ id: f.id, value, symbolSize: Math.min(88, Math.max(16, diameter * 1.2)),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
-              { offset: 0, color: hexA(p.dot, .10 * a0) }, { offset: .55, color: hexA(p.dot, .04 * a0) },
-              { offset: 1, color: hexA(p.dot, 0) }] } } });
+              { offset: 0, color: hexA(l1Color(f), .10 * a0) }, { offset: .55, color: hexA(l1Color(f), .04 * a0) },
+              { offset: 1, color: hexA(l1Color(f), 0) }] } } });
           usedHalo.push(toPx(value[0], value[1]));
           if (ripples.length < 8) ripples.push({ id: f.id, name: f.title, value });
         }
@@ -7276,7 +7370,7 @@ window.V03Fact = (function () {
             const target = ageAlpha(f, st.time);
             /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
             return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
-          })(), color: '#fffdf8', borderColor: p.dot, borderWidth: 1.2 } };
+          })(), color: l1Color(f), borderColor: 'rgba(255,255,255,.92)', borderWidth: .9 } };
         pointGroups.set(pointKey,point);pts.push(point);
       });
     });
@@ -7295,7 +7389,7 @@ window.V03Fact = (function () {
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer',
         symbolSize:DOT_SIZE,
         large: true, largeThreshold: 1500, progressive: 0,
-        itemStyle:{color:'#fffdf8',borderColor:p.dot,borderWidth:1.2} },
+        itemStyle:{borderColor:'rgba(255,255,255,.92)',borderWidth:.9} },
       flashSeries()
     ].filter(Boolean);
     // Explicit empty data clears an independently disabled layer under ECharts
@@ -7719,7 +7813,7 @@ window.V03Fact = (function () {
     const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()]
       .filter(f => plan.selected.has(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)));
     const points = unique.map(f => ({
-      id: f.id, lng: f.lng, lat: f.lat, color: catOf(f).c, big: f.impact === 'high',
+      id: f.id, lng: f.lng, lat: f.lat, color: l1Color(f), big: f.impact === 'high',
       halo: (st.sk.influence && !f.radiusEstimated && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
       haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
@@ -7941,6 +8035,8 @@ window.V03Relation = (function () {
   };
   const palette = () => MAP_PALETTE;
   const domOf = o => D.domain(o.domain);
+  /* 一级本体分类色（V2.8.4）：地图本体点、图谱节点、图例统一取这一份 */
+  const objColor = o => window.V03Theme.obj(F.relClass(o));
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const TPL = `
@@ -8488,7 +8584,7 @@ window.V03Relation = (function () {
       return mapPoints(o.lng, o.lat).map((value,copy) => ({
         id: o.id+'@'+copy, objId: o.id, name: o.name, domain: o.domain, value,
         symbolSize: (relLevel()==='L1'?4.5:6) * (.55 + .45 * easeOut(pop)),
-        itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1, opacity: .35 + .65 * pop },
+        itemStyle: { color: objColor(o), borderColor: isFocus ? '#e91e63' : 'rgba(255,255,255,.92)', borderWidth: isFocus ? 2 : .9, opacity: .35 + .65 * pop },
         label: {
           show: (isFocus || o.id==='e:ent-hongxing-group' || !nearHQ&&(o.id==='e:v23:hongxing-huayuan' || o.id==='e:v23:hongxing-jinpen' || degree >= 8)) && pop > .9, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
           backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3,
@@ -8595,7 +8691,7 @@ window.V03Relation = (function () {
       id: o.id, name: o.name, value: (degrees.get(o.id) || 0),
       ...place(o),
       symbolSize: V03Scope.priority(o)?23:12,
-      itemStyle: { color: domOf(o).c, borderColor: o.id === focus ? '#e91e63' : '#fff', borderWidth: o.id === focus ? 4 : 2.5 },
+      itemStyle: { color: objColor(o), borderColor: o.id === focus ? '#e91e63' : '#fff', borderWidth: o.id === focus ? 4 : 2.5 },
       label: { show: V03Scope.priority(o)||o.id===focus, color: p.ink, fontSize: 11, fontWeight: 500,
         formatter: o.name.length > 9 ? o.name.slice(0, 8) + '…' : o.name }
     }));
