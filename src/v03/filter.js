@@ -125,6 +125,14 @@ window.V03Filter = (function () {
     return facts(s).filter(f => f.level !== 'hidden' && V03Scope.includes(f,s.geo));
   }
 
+  // Map eligibility is separate from archive/card eligibility: hidden feeds remain searchable.
+  function mapEligible(f) {
+    const key=leafKeyOf(f)||'';
+    return f.cardType!=='weather' && !key.startsWith('nature|天气|') &&
+      f.provenanceMeta?.dataOrigin!=='public-facility-catalogue' &&
+      !/^v24-catalog:/.test(f.id) && !/进货目录|到货目录|目录记录|到货台账|(?:到货|进货).*(?:吨|公斤|kg)/i.test(f.title||'');
+  }
+  const mapFacts = s => factsAtLevel(s).filter(mapEligible);
   const mappable = list => list.filter(f => f.lng != null && f.lat != null);
 
   function levelMixed(s) {
@@ -234,7 +242,7 @@ window.V03Filter = (function () {
 
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, PRD_REL_TYPES, legacyTypes, itemBy, selected, toggleLeaf, factLeafOn,
-    facts, factsAll: facts, factsAtLevel, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
+    facts, factsAll: facts, factsAtLevel, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
     prov: x => (x && x.prov) || 'generated'

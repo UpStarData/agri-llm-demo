@@ -1,7 +1,8 @@
-/* Bounded first paint, geographic batches, then real current-weather arrivals. */
+/* Bounded first paint, geographic batches, then verified report/business arrivals. */
 window.V03Feed = (() => {
   const D=V03Data,S=V03Store, loaded=new Set(), objects=new Set(), history=[];
   const LOAD_MS=32000;
+  const reportQueue=(D.PKG?.ARRIVALS||[]).slice();
   const businessQueue=(window.__AGRI_PKG2__?.v24Business?.arrivals || []).slice();
   let started=false,done=false,loadTimer=0,arrivalTimer=0,t0=0,cursor=0,revision=0,seq=0;
   function sampleGeo(list,cap,priority=new Set()) {
@@ -14,7 +15,7 @@ window.V03Feed = (() => {
   }
   const plan=sampleGeo(D.FACTS.slice().sort((a,b)=>String(b.ingestedAt||b.date).localeCompare(String(a.ingestedAt||a.date))),D.FACTS.length);
   function expose(list) {list.forEach(f=>{loaded.add(f.id);(f.objects||[]).forEach(id=>objects.add(id));});}
-  expose(D.FACTS.filter(f=>f.persistent&&!f.id.startsWith('v24-')));
+  expose(D.FACTS.filter(f=>f.persistent&&!/^v2[46]-/.test(f.id)));
   expose(sampleGeo(D.FACTS.filter(f=>f.impact==='high'),72));
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
@@ -30,8 +31,20 @@ window.V03Feed = (() => {
   async function arrive(){
     if(document.hidden || !['fact','relation'].includes(S.state.tab))return;
     const layer=S.state.tab==='fact'?window.V03Fact:window.V03Relation;
+    if(S.state.tab==='fact') {
+      const at=reportQueue.findIndex(f=>V03Filter.mapEligible(f) && V03Scope.includes(f,S.state.geo) && layer.visiblePosition(f));
+      if(at>=0){
+        const fact=reportQueue.splice(at,1)[0];fact.ingestedAt=new Date().toISOString();
+        D.ingest({facts:[fact]});history.push({at:Math.round(performance.now()),view:viewKey(),mode:'public-report-ingest'});
+        if(history.length>40)history.shift();return;
+      }
+      // Once the finite verified report queue is exhausted, identify replays explicitly.
+      const fact=(layer.arrivalCandidates?.()||[])[seq++%(layer.arrivalCandidates?.().length||1)];
+      if(fact){S.emit('feed:arrival',{fact,objects:(fact.objects||[]).map(D.objById).filter(Boolean),mode:'snapshot-replay'});history.push({at:Math.round(performance.now()),view:viewKey(),mode:'snapshot-replay'});if(history.length>40)history.shift();}
+      return;
+    }
     if(S.state.tab==='relation') {
-      const at=businessQueue.findIndex(batch=>layer.visiblePosition(batch.objects[0]));
+      const at=businessQueue.findIndex(batch=>layer.cardEligible(batch.objects[0],batch.relations) && layer.visiblePosition(batch.objects[0]));
       if(at>=0){
         const batch=businessQueue.splice(at,1)[0];
         batch.facts.forEach(f=>f.ingestedAt=new Date().toISOString());
