@@ -13,7 +13,7 @@
    ============================================================ */
 window.V03Relation = (function () {
   const D = window.V03Data, S = window.V03Store, F = window.V03Filter;
-  let root, chart, dom = {}, sig = '', shownView = '', geometrySig = '';
+  let root, chart, dom = {}, sig = '', shownView = '', geometrySig = '', paintedFocus = '';
   const globe = window.V03Globe.create();   /* 与事实层共用同一套三维渲染 */
   const camera = { zoom: 1.26, graphZoom: 1, center: [105, 35], raf: null, roamTimer: null, level: null };
   /* 与事实层一致的三级视角：L1 全球 → L2 中国 → L3 省区。
@@ -615,10 +615,11 @@ window.V03Relation = (function () {
       if (focus === o.id || freshOrder.includes(o.id) || D.relationsOf(o.id).length || o.id.startsWith('e:v24:')) return true;
       return peripheral++ % 3 === 0;
     });
-    const list = window.V03Feed ? V03Feed.sampleGeo(candidates,relLevel()==='L1'?1500:relLevel()==='L2'?1800:1200,new Set([focus,...freshOrder])) : candidates.slice(0,1200);
+    const list = window.V03Feed ? V03Feed.sampleGeo(candidates,relLevel()==='L1'?1500:relLevel()==='L2'?1800:1200,new Set([focus,...freshOrder,...candidates.filter(V03Scope.priority).map(o=>o.id)])) : candidates.slice(0,1200);
     return list.flatMap((o, i) => {
       const dm = domOf(o), degree = D.relationsOf(o.id).length;
       const isFocus = focus === o.id;
+      const nearHQ=Math.abs(o.lng-113.071332)<.002&&Math.abs(o.lat-28.0992042)<.002;
       /* 入场时按顺序缓慢点亮：还没轮到的先不画 */
       let pop = 1;
       if (reveal && reveal.on && reveal.t < 1) {
@@ -627,12 +628,12 @@ window.V03Relation = (function () {
         if (p <= 0) return [];
         pop = Math.min(1, p);
       }
-      return mapPoints(o.lng, o.lat).map(value => ({
-        id: o.id, objId: o.id, name: o.name, domain: o.domain, value,
+      return mapPoints(o.lng, o.lat).map((value,copy) => ({
+        id: o.id+'@'+copy, objId: o.id, name: o.name, domain: o.domain, value,
         symbolSize: (relLevel()==='L1'?4.5:6) * (.55 + .45 * easeOut(pop)),
         itemStyle: { color: '#ffffff', borderColor: dm.c, borderWidth: isFocus ? 2 : 1.1, opacity: .35 + .65 * pop },
         label: {
-          show: (isFocus || degree >= 8) && pop > .9, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
+          show: (isFocus || o.id==='e:ent-hongxing-group' || !nearHQ&&(o.id==='e:v23:hongxing-huayuan' || o.id==='e:v23:hongxing-jinpen' || degree >= 8)) && pop > .9, position: 'right', distance: 3, fontSize: 9, color: palette().ink,
           backgroundColor: palette().labelBg, padding: [1, 3], borderRadius: 3,
           formatter: p => { const n = String(p.name || ''); return n.length > 10 ? n.slice(0, 9) + '…' : n; }
         }
@@ -697,7 +698,7 @@ window.V03Relation = (function () {
           data: focusLines, animation: false, cursor: 'pointer' },
         ...flowSeries(flowLines, p, 90),
         { id: 'relLineLabel', type: 'lines', coordinateSystem: 'geo', silent: true, z: 4, polyline: false, data: labels, animation: false },
-        { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer', animation: false },
+        { id: 'relNode', type: 'scatter', coordinateSystem: 'geo', data: nodes, z: 5, cursor: 'pointer', labelLayout:{hideOverlap:true}, animation: false },
         { id: 'relPorts', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 6,
           data: st.sk.gates ? D.GATES.filter(g => g.kind === 'port').flatMap(g => mapPoints(g.lng, g.lat).map(value => ({ value, name: g.name, symbolSize: 11, label: { show: true, formatter: '⚓', position: 'inside', fontSize: 10 }, itemStyle: { color: '#e1a653' } }))) : [] },
 
@@ -713,6 +714,7 @@ window.V03Relation = (function () {
     const carried = new Set((st.carry || []).flatMap(id => (D.factById(id) || {}).objects || []));
     const ranked = objs.slice().sort((a, b) =>
       Number(b.id === focus || carried.has(b.id)) - Number(a.id === focus || carried.has(a.id)) ||
+      Number(V03Scope.priority(b))-Number(V03Scope.priority(a)) ||
       (degrees.get(b.id) || 0) - (degrees.get(a.id) || 0) ||
       (b.factCount || 0) - (a.factCount || 0) || a.id.localeCompare(b.id));
     const selected = [], ids = new Set();
@@ -721,12 +723,18 @@ window.V03Relation = (function () {
       const o = ranked.find(x => x.domain === d.id);
       if (o && !ids.has(o.id)) { selected.push(o); ids.add(o.id); }
     });
-    ranked.forEach(o => { if (selected.length < 20 && !ids.has(o.id)) { selected.push(o); ids.add(o.id); } });
+    ranked.forEach(o => { if (selected.length < 160 && !ids.has(o.id)) { selected.push(o); ids.add(o.id); } });
+    // Keep evidenced adjacency of priority subjects instead of disconnected type exemplars.
+    ranked.filter(V03Scope.priority).forEach(o=>{if(!ids.has(o.id)){selected.push(o);ids.add(o.id);}});
+    for(const r of rels)if(ids.has(r.from)||ids.has(r.to))for(const id of [r.from,r.to]){const o=objs.find(x=>x.id===id);if(o&&!ids.has(id)&&selected.length<220){selected.push(o);ids.add(id);}}
+    selected.sort((a,b)=>a.id.localeCompare(b.id)); // deterministic layout across batch updates
+    const place=o=>{let h=2166136261;for(const c of o.id)h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;const a=(h%360)*Math.PI/180,r=70+Math.sqrt((h>>>8)%10000)*4;return {x:Math.cos(a)*r,y:Math.sin(a)*r};};
     const nodes = selected.map(o => ({
       id: o.id, name: o.name, value: (degrees.get(o.id) || 0),
-      symbolSize: 20,
+      ...place(o),
+      symbolSize: V03Scope.priority(o)?23:12,
       itemStyle: { color: domOf(o).c, borderColor: o.id === focus ? '#e91e63' : '#fff', borderWidth: o.id === focus ? 4 : 2.5 },
-      label: { show: true, color: p.ink, fontSize: 11, fontWeight: 500,
+      label: { show: V03Scope.priority(o)||o.id===focus, color: p.ink, fontSize: 11, fontWeight: 500,
         formatter: o.name.length > 9 ? o.name.slice(0, 8) + '…' : o.name }
     }));
     const links = rels.filter(r => ids.has(r.from) && ids.has(r.to)).map(r => ({
@@ -737,11 +745,10 @@ window.V03Relation = (function () {
     return {
       backgroundColor: 'transparent',
       tooltip: { show: false },
-      series: [{ id: 'relGraph', type: 'graph', layout: 'force', roam: true, zoom: camera.graphZoom,
+      series: [{ id: 'relGraph', type: 'graph', layout: 'none', roam: true, zoom: camera.graphZoom,
         data: nodes, links, edgeSymbol: ['none', 'none'],
         edgeLabel: { show: true, color: p.ink, fontSize: 9, formatter: item => item.data.name,
           backgroundColor: p.labelBg, padding: [2, 4], borderRadius: 3 },
-        force: { repulsion: 400, edgeLength: 150, gravity: .04, friction: .65 },
         emphasis: { focus: 'adjacency', itemStyle: { borderColor: '#333', borderWidth: 3 }, lineStyle: { color: '#e91e63', width: 2.5 } },
         label: { position: 'right', distance: 4 }, labelLayout: { hideOverlap: true }, animationDurationUpdate: 350 }]
     };
@@ -934,16 +941,17 @@ window.V03Relation = (function () {
       const t = String(F.relKind(o) || '');
       return CARD_KINDS.indexOf(d) >= 0 && !/行政|区域|国家|地区/.test(t);
     });
-    const scoped = kept.filter(o => o.geo === false || o.lng == null || relLevel()==='L1' ||
-      (o.lng>=73&&o.lng<=136&&o.lat>=17.5&&o.lat<=54.5 && (relLevel()!=='L3' ||
-      ((o.regionPath||[]).some(p=>p.level==='province'&&shortProv(p.name)===shortProv(relFocus()||'湖南')) || Math.abs(o.lng-111.73)<2.8&&Math.abs(o.lat-27.54)<2.4))));
-    const nogeo = scoped.slice().sort((a,b)=>Number(b.priority==='high')-Number(a.priority==='high') || Number(b.domain==='commodity')-Number(a.domain==='commodity') || String(recentOf(b)).localeCompare(String(recentOf(a))));
-    const pinned=nogeo.filter(o=>freshOrder.includes(o.id)||o.priority==='high');
+    const scoped = kept; // F.objects already applies the same geographic scope as map and counts.
+    const nogeo = scoped.slice().sort((a,b)=>Number(V03Scope.priority(b))-Number(V03Scope.priority(a)) || Number(b.priority==='high')-Number(a.priority==='high') || Number(b.domain==='commodity')-Number(a.domain==='commodity') || String(recentOf(b)).localeCompare(String(recentOf(a))));
+    const pinned=nogeo.filter(o=>freshOrder.includes(o.id)||V03Scope.priority(o)||o.priority==='high');
     const buckets=new Map();nogeo.filter(o=>!pinned.includes(o)).forEach(o=>{const key=F.relKind(o);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(o);});
     const arrivalRank=o=>freshOrder.includes(o.id)?freshOrder.indexOf(o.id):1e9;
-    const ordered=pinned.sort((a,b)=>arrivalRank(a)-arrivalRank(b));
+    const keyRank=o=>{const i=['e:ent-hongxing-group','e:cmd:durian','e:cmd:cherry','e:cmd:chili'].indexOf(o.id);return i<0?100:i;};
+    const ordered=pinned.sort((a,b)=>arrivalRank(a)-arrivalRank(b)||keyRank(a)-keyRank(b));
     for(let i=0;ordered.length<nogeo.length;i++)for(const bucket of buckets.values())if(bucket[i])ordered.push(bucket[i]);
     const capped = st.rel.allCards ? ordered.slice(0, 120) : ordered.slice(0, 24);
+    const panelKey=JSON.stringify([ordered.length,st.theme,capped.map(o=>[o.id,o.factCount,recentOf(o),freshOrder.includes(o.id)])]);
+    if(dom.body.dataset.cards===panelKey)return;dom.body.dataset.cards=panelKey;
     V03Media.beginCards('relation');
     dom.body.innerHTML = (capped.length ? '<div class="rel-grid">' + capped.map(o => {
       const dm = domOf(o);
@@ -962,7 +970,7 @@ window.V03Relation = (function () {
       if (nb.length) extra.push(['关联主体', nb.slice(0, 2).join('、')]);
       extra.push(['所在层级', lvlName]);
       if (Number.isFinite(o.lng) && Number.isFinite(o.lat)) extra.push(['坐标', o.lng.toFixed(1) + ', ' + o.lat.toFixed(1)]);
-      const LABEL_FIX = { '对象域': '分类', '坐标精度': '', '状态': '状态' };
+      const LABEL_FIX = { '对象域': '分类', '坐标精度': '', '状态': '状态',function:'功能',adminArea:'行政区',anchorPlace:'定位' };
       const kv = picked.concat(rest, extra)
         .filter(([k]) => LABEL_FIX[k] !== '')
         .map(([k, v]) => [LABEL_FIX[k] || k, v])
@@ -974,7 +982,7 @@ window.V03Relation = (function () {
       return '<button class="rel-card" data-obj="' + o.id + '" style="--rc:' + dm.c + '">' +
         '<span class="rc-top"><span class="rc-dot"></span><span class="rc-dom">' + esc(kind) + '</span></span>' +
         '<b>' + esc(o.name) + '</b>' +
-        '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' + thumb +
+        '<span class="rc-sub">' + esc([o.region, (o.commodityTags || []).map(id=>D.objById(id)?.name||id).filter(n=>!String(n).startsWith('e:')).join('、')].filter(Boolean).join(' / ') || o.sub || '') + '</span>' + thumb +
         (kv ? '<span class="rc-attrs">' + kv + '</span>' : '') +
         '<span class="rc-m">' + relCount + ' 条关系' + (update ? ' · ' + esc(String(update).slice(0, 16)) : '') + ' · 查看详情 →</span></button>';
     }).join('') + '</div>' : '<div class="rel-empty">暂无符合条件的本体</div>')
@@ -1014,7 +1022,7 @@ window.V03Relation = (function () {
           <div class="kv"><span>分类</span><b>${esc(F.relKind(o)||dm.n)}</b></div>
           <div class="kv"><span>所在地</span><b>${esc(o.region || o.location || (o.geo === false ? '暂无位置' : (o.lat.toFixed(2) + '°N / ' + o.lng.toFixed(2) + '°E')))}</b></div>
         </div>
-        ${(o.commodityTags || []).length ? '<div class="fd-sec"><h4>涉及品种</h4><p>' + esc(o.commodityTags.join('、')) + '</p></div>' : ''}
+        ${(o.commodityTags || []).length ? '<div class="fd-sec"><h4>涉及品种</h4><p>' + esc(o.commodityTags.map(id=>D.objById(id)?.name||id).filter(n=>!String(n).startsWith('e:')).join('、')) + '</p></div>' : ''}
         ${o.note ? '<div class="fd-sec"><h4>简介</h4><p>' + esc(o.note) + '</p></div>' : ''}
         ${(o.props || []).some(([k]) => (DETAIL_FIELDS[F.relKind(o)] || []).includes(k)) ? '<div class="fd-sec"><h4>分类字段</h4><div class="kv-grid">' + (o.props || []).filter(([k]) => (DETAIL_FIELDS[F.relKind(o)] || []).includes(k)).map(([k,v])=>'<div class="kv"><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>').join('') + '</div></div>' : ''}
 
@@ -1086,9 +1094,10 @@ window.V03Relation = (function () {
     const st = S.state;
     globe.setVisible(st.tab === 'relation' && st.rel.view === 'globe');
     const key = JSON.stringify([st.rel.search, st.varieties, st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.view, st.rel.domain, st.rel.sel, st.rel.kind,
-      st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.carry, st.panels.cards, st.sk.gates, st.theme, D.revision, st.dataRevision, (st.rel.stack || []).map(x => x.id)]);
+      st.rel.allCards, st.rel.focusFact, st.rel.level, st.rel.focus, st.rel.city, st.rel.county, st.carry, st.panels.cards, st.sk.gates, st.theme, D.revision, st.dataRevision, (st.rel.stack || []).map(x => x.id)]);
     if (key === sig) return; sig = key;
     const objs = F.objects(st), rels = F.relations(st);
+    V03Scope.mount(dom.main,{...st.rel,level:relLevel(),focus:relFocus()},patch=>S.set({rel:patch}));
     if (camera.level !== relLevel() + '|' + (relFocus() || '')) fitLevel();
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
@@ -1130,8 +1139,9 @@ window.V03Relation = (function () {
       /* 图层不可见时容器是 0 尺寸，此时 resize 会让 ECharts 在空画布上 drawImage 报错 */
       if (dom.canvas.clientWidth > 0 && dom.canvas.clientHeight > 0 &&
         (c.getWidth()!==dom.canvas.clientWidth || c.getHeight()!==dom.canvas.clientHeight)) c.resize();
-      const nextGeometry = JSON.stringify([st.rel.view, relLevel(), relFocus(), st.rel.search, st.varieties,
-        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme, D.revision, window.V03Feed?.revision]);
+      const nextGeometry = JSON.stringify([st.rel.view, relLevel(), relFocus(), st.rel.city, st.rel.county, st.rel.search, st.varieties,
+        st.relTypes, st.relKeys, st.rel.crossRegion, st.rel.domain, st.rel.focusFact, st.sk.gates, st.theme,
+        objs.map(o=>[o.id,o.name,o.lng,o.lat,o.domain]),rels.map(r=>[r.id,r.from,r.to,r.type])]);
       if (geometrySig !== nextGeometry) {
         const frame=[st.rel.view,relLevel(),relFocus(),st.theme].join('|'),freshFrame=frame!==mapFrame;
         if (st.rel.view === 'geo' && freshFrame) {
@@ -1140,10 +1150,16 @@ window.V03Relation = (function () {
           c.setOption({ geo: { map: cfg.map, center: camera.center.slice(), zoom: camera.zoom,
             boundingCoords: cfg.bounds, itemStyle: { areaColor: palette().land } }, series: [] }, { notMerge: true });
         }
-        c.setOption(st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st), { notMerge: freshFrame || st.rel.view==='graph' });
+        const next=st.rel.view === 'geo' ? option(objs, rels, st) : graphOption(objs, rels, st);
+        // Incremental ingestion must not rebuild the geographic component or its roam transform.
+        if(!freshFrame && st.rel.view==='geo') { delete next.geo; delete next.backgroundColor; }
+        c.setOption(next, { notMerge: freshFrame });
         mapFrame=frame;
         geometrySig = nextGeometry;
-      } else if (st.rel.view === 'geo') paintFocus();
+        paintedFocus=focusId()||'';
+      } else if (st.rel.view === 'geo' && paintedFocus!==(focusId()||'')) {
+        paintFocus();paintedFocus=focusId()||'';
+      }
     }
 
     renderPanel(st, objs);

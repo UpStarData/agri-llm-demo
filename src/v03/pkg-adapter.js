@@ -12,7 +12,7 @@
 window.V03Pkg = (function () {
   const P = window.__AGRI_PKG__ || {};
   const P2 = window.__AGRI_PKG2__ || {};
-  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business].filter(Boolean);
+  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing].filter(Boolean);
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
   const entitiesRaw=(P.entities || []).concat(...EXPANSIONS.map(p=>p.entities || []));
   const observationIds=new Set(entitiesRaw.filter(e=>['WeatherArea','WeatherObservation','MetricObservation'].includes(e.type)).map(e=>e.entityId));
@@ -49,7 +49,7 @@ window.V03Pkg = (function () {
     SUPPLIES_TO: '供应流向', FLOWS_INTO: '流入', FLOWS_OUT_OF: '流出', SHIPS_THROUGH: '运输经由',
     PRODUCES: '生产', LOCATED_IN: '行政归属', AFFECTS: '影响', DEPENDS_ON: '依赖',
     COVERS: '覆盖', TRADES: '贸易', SUBSTITUTES: '替代', PRICE_TRANSMITS_TO: '价格传导',
-     CO_BUILDS:'共建', OPERATES:'运营', COOPERATES_WITH:'产销合作', TRADES_IN:'经营'
+     STRATEGIC_COOP:'战略合作', PARTICIPATES_WITH:'共同参与', HANDLES:'经营品类', REPORTED_WITH:'公开资料关联', CO_BUILDS:'共建', OPERATES:'运营', COOPERATES_WITH:'产销合作', TRADES_IN:'经营'
   };
   const STAGE_LABEL = {
     ingest: '接入', extract: '抽取', resolve: '归并', geo: '定位', score: '评分', link: '关联', graph: '图谱', warn: '告警'
@@ -100,6 +100,10 @@ window.V03Pkg = (function () {
   OBS_IN.forEach(o => { obsById[o.observationId] = o; });
   const entityById = {};
   ENTITIES_IN.forEach(e => { entityById[e.entityId] = e; });
+  // New reports also belong in the details of existing subjects and commodities.
+  for(const f of P2.v25Hongxing?.facts||[])for(const id of f.entityIds||[]) {
+    const e=entityById[id];if(e)e.supportingFactIds=[...new Set([...(e.supportingFactIds||[]),f.factId])];
+  }
   /* D2：OurAirports 大型机场（真实公开数据，约 900 个） */
   const AIRPORT_FEATURES = (P2.airports && P2.airports.features) || [];
 
@@ -256,22 +260,8 @@ window.V03Pkg = (function () {
     };
   });
 
-  // Compact weather capture: measurements are facts, never synthetic business entities.
-  for(const [x,y,province,country,anchor,gridLng,gridLat,days] of P2.v24Weather?.places || []) {
-    const label=(province || country)+' · 网格 '+y.toFixed(2)+', '+x.toFixed(2);
-    const path=[{level:'country',code:country==='中国'?'CHN':country,name:country}];
-    if(province)path.push({level:'province',code:province,name:province});
-    const sourceUrl='https://archive-api.open-meteo.com/v1/archive?'+new URLSearchParams({latitude:y,longitude:x,start_date:days[0][0],end_date:days.at(-1)[0],daily:'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max',timezone:'UTC'});
-    for(const [date,lo,hi,rain,wind] of days) FACTS.push({
-      id:'v24-weather:'+x+':'+y+':'+date,prov:'real',title:label+' · '+date+' 农业天气：'+lo+'–'+hi+'℃',
-      summary:'公开气象模型再分析，降水 '+rain+'mm、最大风速 '+wind+'km/h。参考坐标不是农场或气象站；不代表灾害或运输中断。',
-      cat:'natural',cardType:'weather',card:{regionName:label,weatherIconCode:rain>0?'rain':'clear',temperatureMin:lo,temperatureMax:hi,precipitationMm:rain,windMaxKmh:wind,impactText:'农业作业、道路与冷链天气参考'},
-      level:country==='中国'?'L3':'L1',region:label,regionPath:path,province:province || null,provinceCode:province || null,
-      lng:x,lat:y,geoPrecision:'approx',date,occurredAt:date+'T12:00:00Z',ingestedAt:'2026-10-15T11:00:00Z',cred:'high',credScore:.82,impact:'mid',radius:0,radiusEstimated:false,objects:[],relations:[],sourceUrl,sourcePlugin:'Open-Meteo',
-      evidence:[{k:'气象再分析',t:'Open-Meteo',q:date+'：'+lo+'–'+hi+'℃；降水 '+rain+'mm；风速 '+wind+'km/h',url:sourceUrl}],
-      provenanceMeta:{dataMode:'real',dataOrigin:'public-reanalysis',sourceDate:date,geoAnchorPlace:anchor,modelGrid:[gridLng,gridLat],coordinateMeaning:'请求参考坐标；模型实际网格见来源',sourceUrl}
-    });
-  }
+  // V2.5: regular reanalysis grids remain in the source archive, not business points.
+  // Do not jitter their coordinates or count daily grid samples as distinct facilities.
 
   /* ============================================================
      生成记录展示再平衡（口径修正 · LLM-291）

@@ -540,6 +540,10 @@ window.V03Data = (function () {
       }
     }
     if (Object.values(added).some(x => x.length)) {
+      for(const f of added.facts)for(const id of f.objects||[]) {
+        const o=O[id];if(!o)continue;
+        o.factIds=[...new Set([...(o.factIds||[]),f.id])];o.factCount=o.factIds.length;
+      }
       revision++; indexRelations();
       if (window.V03Store) V03Store.emit('data:ingested', added);
     }
