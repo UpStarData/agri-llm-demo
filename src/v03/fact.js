@@ -921,7 +921,8 @@ window.V03Fact = (function () {
   let visibleCardCount = 20;
   function renderCards() {
     const st = S.state;
-    const facts = F.factsAtLevel(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
+    /* 卡片区用 factsForCards：无坐标事实（如直播源）只在这里出现，地图侧不画。 */
+    const facts = F.factsForCards(st).filter(f => st.sk.live || f.cardType !== 'video').sort((a, b) => {
       const ai = freshOrder.indexOf(a.id), bi = freshOrder.indexOf(b.id);
       return (ai < 0 ? 1e9 : ai) - (bi < 0 ? 1e9 : bi) || Number(V03Scope.priority(b))-Number(V03Scope.priority(a));
     });
