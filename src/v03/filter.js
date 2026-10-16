@@ -134,9 +134,15 @@ window.V03Filter = (function () {
   const DEFAULT_FOCUS = '湖南';
 
   /* Geographic membership is shared by map, cards and overview. */
+  let scopeBase=null,scopeKey='',scopeFacts=[],mapBase=null,mapRecords=[];
   function factsAtLevel(s) {
     s = s || window.V03Store.state;
-    return facts(s).filter(f => f.level !== 'hidden' && V03Scope.includes(f,s.geo));
+    const base=facts(s),key=JSON.stringify([s.geo.level,s.geo.focus,s.geo.city,s.geo.county]);
+    if(base!==scopeBase||key!==scopeKey){
+      scopeBase=base;scopeKey=key;
+      scopeFacts=base.filter(f => f.level !== 'hidden' && V03Scope.includes(f,s.geo));
+    }
+    return scopeFacts;
   }
 
   // Map eligibility is separate from archive/card eligibility: hidden feeds remain searchable.
@@ -146,7 +152,11 @@ window.V03Filter = (function () {
       f.provenanceMeta?.dataOrigin!=='public-facility-catalogue' &&
       !/^v24-catalog:/.test(f.id) && !/进货目录|到货目录|目录记录|到货台账|(?:到货|进货).*(?:吨|公斤|kg)/i.test(f.title||'');
   }
-  const mapFacts = s => factsAtLevel(s).filter(mapEligible);
+  const mapFacts = s => {
+    const base=factsAtLevel(s);
+    if(base!==mapBase){mapBase=base;mapRecords=base.filter(mapEligible);}
+    return mapRecords;
+  };
   const mappable = list => list.filter(f => f.lng != null && f.lat != null);
 
   function levelMixed(s) {

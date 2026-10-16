@@ -12,7 +12,7 @@
 window.V03Pkg = (function () {
   const P = window.__AGRI_PKG__ || {};
   const P2 = window.__AGRI_PKG2__ || {};
-  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing, P2.v26Reports].filter(Boolean);
+  const EXPANSIONS = [P2.v23Weather, P2.v23Projects, P2.v23Streams, P2.v24Business, P2.v25Hongxing, P2.v26Reports, P2.v27Global, P2.v27Hongxing].filter(Boolean);
   const ONT = P.ontology || { types: [], displayDomains: [], taxonomy: {}, lookup: {} };
   const entitiesRaw=(P.entities || []).concat(...EXPANSIONS.map(p=>p.entities || []));
   const observationIds=new Set(entitiesRaw.filter(e=>['WeatherArea','WeatherObservation','MetricObservation'].includes(e.type)).map(e=>e.entityId));
@@ -101,7 +101,7 @@ window.V03Pkg = (function () {
   const entityById = {};
   ENTITIES_IN.forEach(e => { entityById[e.entityId] = e; });
   // New reports also belong in the details of existing subjects and commodities.
-  for(const f of P2.v25Hongxing?.facts||[])for(const id of f.entityIds||[]) {
+  for(const f of [...(P2.v25Hongxing?.facts||[]),...(P2.v27Hongxing?.facts||[])])for(const id of f.entityIds||[]) {
     const e=entityById[id];if(e)e.supportingFactIds=[...new Set([...(e.supportingFactIds||[]),f.factId])];
   }
   /* D2：OurAirports 大型机场（真实公开数据，约 900 个） */

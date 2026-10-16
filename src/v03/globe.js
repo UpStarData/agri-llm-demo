@@ -12,7 +12,8 @@ window.V03Globe = (function () {
   let mode = 'relation';
   let points = [], marks = [], nodes = [], routes = [], hits = [], geoIndex = new Map();
   let onPick = () => {}, onZoomEdge = () => {}, colorOf = () => '#4d966a';
-  let pointer = null, pauseUntil = 0, reduced = false;
+  let pointer = null, pauseUntil = 0, reduced = false, animateView = true;
+  let nodeScope='', nodeSlots=[];
 
   /* ---------- 星野（固定种子） ---------- */
   let seed = 7301; const random = () => ((seed = seed * 16807 % 2147483647) - 1) / 2147483646;
@@ -89,6 +90,7 @@ window.V03Globe = (function () {
   function mount(el, opts) {
     canvas = el; ctx = canvas.getContext('2d');
     onPick = (opts && opts.pick) || (() => {});
+    animateView = !opts || opts.animateView !== false;
     onZoomEdge = (opts && opts.zoomEdge) || (() => {});
     reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     canvas.addEventListener('pointerdown', e => { pointer = { x: e.clientX, y: e.clientY, moved: false }; canvas.setPointerCapture(e.pointerId); });
@@ -153,6 +155,8 @@ window.V03Globe = (function () {
      relation：{ nodes, relations, colorOf, keep } */
   function update(data) {
     const d = data || {};
+    const oldNodeDelay=new Map(nodes.map((o,i)=>[o.id,nodeDelay[i]]));
+    const oldRouteDelay=new Map(routes.map((r,i)=>[r.id,routeDelay[i]]));
     mode = d.mode || mode;
     colorOf = d.colorOf || colorOf;
     if (mode === 'fact') {
@@ -166,7 +170,15 @@ window.V03Globe = (function () {
       relations.forEach(r => { degree.set(r.from, (degree.get(r.from) || 0) + 1); degree.set(r.to, (degree.get(r.to) || 0) + 1); });
       const ranked = [...geoIndex.values()].sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
       const keep = new Set(d.keep || []);
-      nodes = window.V03Feed ? V03Feed.sampleGeo(ranked,600,keep) : ranked.slice(0,600);
+      if(nodeScope!==d.scopeKey){nodeSlots=[];nodeScope=d.scopeKey;}
+      nodeSlots=nodeSlots.filter(id=>geoIndex.has(id));
+      const selected=new Set(nodeSlots);
+      V03Feed.sampleGeo(ranked.filter(o=>!selected.has(o.id)),Math.max(0,600-nodeSlots.length),keep).forEach(o=>{nodeSlots.push(o.id);selected.add(o.id);});
+      for(const id of keep)if(geoIndex.has(id)&&!selected.has(id)){
+        const at=nodeSlots.findLastIndex(id=>!keep.has(id));
+        if(at>=0){selected.delete(nodeSlots[at]);nodeSlots[at]=id;selected.add(id);}
+      }
+      nodes=nodeSlots.map(id=>geoIndex.get(id));
       const limit = d.limit || 44;
       const oldRoutes = new Map(routes.map(r => [r.id, r]));
       routes = relations.map(r => ({ r, a: geoIndex.get(r.from), b: geoIndex.get(r.to) })).filter(x => x.a && x.b &&
@@ -182,8 +194,8 @@ window.V03Globe = (function () {
       nodes = nodes.slice().sort((a, b) => Number(keep.has(b.id)) - Number(keep.has(a.id)));
       points = []; marks = [];
     }
-    nodeDelay = nodes.map((o, i) => (i / Math.max(1, nodes.length - 1)) * NODE_SPAN);
-    routeDelay = routes.map((route, i) => LINE_BASE + (i / Math.max(1, routes.length - 1)) * LINE_SPAN);
+    nodeDelay = nodes.map((o, i) => oldNodeDelay.get(o.id) ?? (i / Math.max(1, nodes.length - 1)) * NODE_SPAN);
+    routeDelay = routes.map((route, i) => oldRouteDelay.get(route.id) ?? LINE_BASE + (i / Math.max(1, routes.length - 1)) * LINE_SPAN);
     resize();
   }
 
@@ -456,7 +468,14 @@ window.V03Globe = (function () {
     if (!was) canvas.classList.remove('view-fade');
     if (!next) { if (raf) cancelAnimationFrame(raf); raf = 0; return; }
     resize();
-    if (!was) { if (!introStarted) { beginIntro(); introStarted = true; } radiusScale = .38; canvas.classList.add('view-fade'); void canvas.offsetWidth; }   /* 每次回到三维都从舒适半径开始，留出放大余量 */
+    if (!was) {
+      if (!introStarted) { beginIntro(); introStarted = true; }
+      radiusScale = .38;
+      if(animateView){canvas.classList.add('view-fade');void canvas.offsetWidth;}
+      // Paint the opaque globe before the next browser composite, avoiding an
+      // ocean/blank flash when the hidden canvas first becomes visible.
+      draw(performance.now());
+    }
     if (!raf) raf = requestAnimationFrame(loop);
   }
 
