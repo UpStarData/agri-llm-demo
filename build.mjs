@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* AgriLink V2.3 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
+/* AgriLink V2.4 构建：把 src/v03/* + vendor + data + fonts 内联为单文件 index.html
    —— 事实、关联层可离线加载；推演工作台依赖线上 iframe
    node build.mjs            正常构建（缺文件即失败）
    node build.mjs --partial  允许缺文件（并行开发自测用） */
@@ -76,12 +76,14 @@ const PKG_INPUTS = Object.keys(PKG_FILES).map(k => 'data/pkg/' + PKG_FILES[k]);
 const PKG2_FILES = [
   'data/pkg2/weather-facts.json', 'data/pkg2/airports-large.geojson',
   'data/pkg2/live-channels.json', 'data/pkg2/extra-facts.json', 'data/pkg2/global-facts.json',
-  'data/pkg2/v23-weather.json','data/pkg2/v23-projects.json','data/pkg2/v23-streams.json','data/pkg2/v23-media.json'
+  'data/pkg2/v23-weather.json','data/pkg2/v23-projects.json','data/pkg2/v23-streams.json','data/pkg2/v23-media.json',
+  'data/pkg2/v24-weather.json','data/pkg2/v24-business.json'
 ];
 const pkg2Data = (() => {
   const read = f => { try { return JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch (e) { return null; } };
   const out = { weather: read('data/pkg2/weather-facts.json') || [], airports: read('data/pkg2/airports-large.geojson'), channels: read('data/pkg2/live-channels.json') || [], extra: read('data/pkg2/extra-facts.json') || [], global: read('data/pkg2/global-facts.json') || [] };
   Object.assign(out,{v23Weather:read('data/pkg2/v23-weather.json'),v23Projects:read('data/pkg2/v23-projects.json'),v23Streams:read('data/pkg2/v23-streams.json'),media:read('data/pkg2/v23-media.json')});
+  Object.assign(out,{v24Weather:read('data/pkg2/v24-weather.json'),v24Business:read('data/pkg2/v24-business.json')});
   return '<script>window.__AGRI_PKG2__=' + JSON.stringify(out) + ';</script>';
 })();
 

@@ -166,7 +166,7 @@ window.V03Globe = (function () {
       relations.forEach(r => { degree.set(r.from, (degree.get(r.from) || 0) + 1); degree.set(r.to, (degree.get(r.to) || 0) + 1); });
       const ranked = [...geoIndex.values()].sort((a, b) => (degree.get(b.id) || 0) - (degree.get(a.id) || 0));
       const keep = new Set(d.keep || []);
-      nodes = window.V03Feed ? V03Feed.sampleGeo(ranked,220,keep) : ranked.slice(0,170);
+      nodes = window.V03Feed ? V03Feed.sampleGeo(ranked,600,keep) : ranked.slice(0,600);
       const limit = d.limit || 44;
       const oldRoutes = new Map(routes.map(r => [r.id, r]));
       routes = relations.map(r => ({ r, a: geoIndex.get(r.from), b: geoIndex.get(r.to) })).filter(x => x.a && x.b &&
