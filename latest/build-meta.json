@@ -1,7 +1,7 @@
 {
-  "hash": "ba23e708a923",
-  "git": "0a3f338",
-  "builtAt": "2026-10-15T12:37:14.150Z",
+  "hash": "a3f22a5c999d",
+  "git": "b707bda",
+  "builtAt": "2026-10-16T00:39:53.266Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -52,6 +52,8 @@
     "data/pkg2/v23-projects.json",
     "data/pkg2/v23-streams.json",
     "data/pkg2/v23-media.json",
+    "data/pkg2/v24-weather.json",
+    "data/pkg2/v24-business.json",
     "build.mjs",
     "vendor/echarts.min.js",
     "vendor/hls.min.js",
@@ -61,5 +63,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 13419829
+  "bytes": 22990662
 }
