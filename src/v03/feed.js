@@ -19,7 +19,7 @@ window.V03Feed = (() => {
   }
   const plan=sampleGeo(D.FACTS.slice().sort((a,b)=>String(b.ingestedAt||b.date).localeCompare(String(a.ingestedAt||a.date))),D.FACTS.length);
   function expose(list) {list.forEach(f=>{loaded.add(f.id);(f.objects||[]).forEach(id=>objects.add(id));});}
-  expose(D.FACTS.filter(f=>f.persistent&&!/^v2[4678]-/.test(f.id)));
+  expose(D.FACTS.filter(f=>f.persistent&&!/^v2[46789]-/.test(f.id)));
   expose(sampleGeo(D.FACTS.filter(f=>f.impact==='high'),72));
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
