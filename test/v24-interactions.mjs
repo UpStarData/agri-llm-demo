@@ -7,7 +7,7 @@ try {
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>report.errors.push(e.message));
  await page.addInitScript(()=>{window.__tasks=[];new PerformanceObserver(l=>window.__tasks.push(...l.getEntries().map(t=>({at:t.startTime,ms:t.duration})))).observe({type:'longtask',buffered:true});});
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.__AGRI_READY);
- await page.evaluate(()=>{V03Feed.complete();V03Feed.stop();});await page.waitForTimeout(500);
+ await page.evaluate(()=>{V03Feed.complete();V03Fact.finishAnimation();V03Feed.stop();});await page.waitForTimeout(500);
  for(const tab of ['fact','relation'])for(const level of ['L1','L2','L3']){
   const start=await page.evaluate(({tab,level})=>{const t=performance.now();V03Store.set({tab,geo:{level,focus:level==='L3'?'湖南':null},rel:{view:'geo',level,focus:level==='L3'?'湖南':null,sel:null,kind:null,stack:[]}});return t;},{tab,level});
   await page.waitForTimeout(3600);
