@@ -97,29 +97,47 @@ try {
   assert(withExit[0].points > 100, '退场点数太少: ' + withExit[0].points);
   assert(withExit.at(-1).opacity < withExit[0].opacity + 1e-9, '退场图层透明度应随时间下降');
 
-  // ③ 叠加图层图标：内联 SVG
-  report.icons = await page.evaluate(() => {
-    V03Store.set({time: 'all', sk: {regions: true, gates: true, airports: true, markets: true, risks: true}, menu: true});
-    return null;
+  // ③ 叠加图层图标：纯 emoji 字形 + 完全透明背景（不画圆底、label 无底色）
+  await page.evaluate(() => { window.__probeLayerMarkers = true; });
+  await page.evaluate(() => {
+    V03Store.set({time: 'all', geo: {level: 'L2', focus: null}, sk: {regions: true, gates: true, airports: true, markets: true, risks: true}, menu: true});
   });
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(900);
   report.icons = await page.evaluate(() => {
-    const opt = echarts.getInstanceByDom(document.querySelector('#factMap')).getOption();
+    const chart = echarts.getInstanceByDom(document.querySelector('#factMap'));
+    const opt = chart.getOption();
     const ids = ['regions', 'gatesP', 'gatesA', 'markets', 'risks'];
-    const symbols = ids.map(id => {
+    const rows = ids.map(id => {
       const s = opt.series.find(x => x.id === id);
-      return {id, has: !!s, symbol: s ? String(s.symbol || '').slice(0, 40) : '', points: s ? (s.data || []).length : 0};
+      let emoji = '';
+      try { emoji = typeof s.label.formatter === 'function' ? String(s.label.formatter({})) : ''; } catch (e) { emoji = 'ERR'; }
+      return {
+        id, has: !!s, points: s ? (s.data || []).length : 0,
+        symbol: s ? String(s.symbol || '') : '', symbolOpacity: s ? (s.itemStyle || {}).opacity : null,
+        symbolColor: s ? (s.itemStyle || {}).color : null,
+        labelShow: s ? (s.label || {}).show : null, labelBg: s ? (s.label || {}).backgroundColor : null, emoji
+      };
     });
-    const legend = [...document.querySelectorAll('.mn-overlay .mn-ov-ic svg')].length;
-    const emojiLabels = [...document.querySelectorAll('.mn-overlay span')].filter(sp => /[\u{1F300}-\u{1FAFF}\u2693\u26A0]/u.test(sp.textContent || '')).length;
-    return {symbols, legendSvgs: legend, emojiLabels};
+    // 渲染层：显示列表里应当是「文字字形」，不应有白色圆点符号
+    const list = chart.getZr().storage.getDisplayList();
+    const emojiGlyph = /[\u{1F300}-\u{1FAFF}\u2693\u26A0\u2708]/u;
+    // 文本在 zrender 里可能是 text，也可能被拆成 tspan（富文本/带 emoji 时如此）
+    const textItems = list.filter(it => (it.type === 'text' || it.type === 'tspan') && emojiGlyph.test(String((it.style || {}).text || '')));
+    const chartTexts = [...new Set(textItems.map(it => String(it.style.text).trim()))];
+    const legendEmoji = [...document.querySelectorAll('.mn-overlay .mn-ov-em')].map(e => e.textContent.trim());
+    return {rows, renderedEmojiGlyphs: textItems.length, renderedEmojiSet: chartTexts, legendEmoji,
+      legendSvgs: document.querySelectorAll('.mn-overlay svg').length};
   });
-  assert(report.icons.symbols.every(x => x.symbol.startsWith('image://data:image/svg+xml')), JSON.stringify(report.icons.symbols));
-  assert(report.icons.legendSvgs === 5, '菜单图例应有 5 个 SVG 图标: ' + report.icons.legendSvgs);
-  assert.equal(report.icons.emojiLabels, 0, '菜单图例不应再用 emoji 字形');
+  assert(report.icons.rows.every(r => r.has && r.symbol === 'circle'), JSON.stringify(report.icons.rows));
+  assert(report.icons.rows.every(r => String(r.symbolColor).replace(/\s/g, '') === 'transparent'), '圆底必须是全透明（不能画白色圆点）: ' + JSON.stringify(report.icons.rows.map(r => r.symbolColor)));
+  assert(report.icons.rows.every(r => r.labelShow === true && r.labelBg === 'transparent'), '图标标签不得带底色: ' + JSON.stringify(report.icons.rows.map(r => r.labelBg)));
+  assert(report.icons.rows.every(r => /[\u{1F300}-\u{1FAFF}\u2693\u26A0\u2708]/u.test(r.emoji)), '必须是真的 emoji 字形: ' + JSON.stringify(report.icons.rows.map(r => r.emoji)));
+  assert(report.icons.renderedEmojiGlyphs > 0, '画布上应渲染出 emoji 字形');
+  assert.equal(report.icons.legendSvgs, 0, '菜单图例不应再有 SVG 图标');
+  assert(report.icons.legendEmoji.length === 5 && report.icons.legendEmoji.every(t => /[\u{1F300}-\u{1FAFF}\u2693\u26A0\u2708]/u.test(t)), JSON.stringify(report.icons.legendEmoji));
   await page.screenshot({path: 'test/artifacts/v285/overlay-icons.png'});
 
-  assert.deepEqual(report.errors, []);
+  assert.deepEqual(report.errors, []);  assert.deepEqual(report.errors, []);
   console.log(JSON.stringify(report, null, 1));
 } finally {
   fs.writeFileSync('test/artifacts/v285/factlayer.json', JSON.stringify(report, null, 1));

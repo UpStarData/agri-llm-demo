@@ -535,6 +535,5 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .area-scope label{display:flex;align-items:center;gap:4px}.area-scope select{font:inherit;color:var(--ink);max-width:135px;background:transparent;border:0}.area-scope:has(select:focus){z-index:15}
 
 /* 叠加图层图标（内联 SVG，透明底） */
-.mn-overlay .mn-ov-ic{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-right:6px;flex:0 0 15px}
-.mn-overlay .mn-ov-ic svg{width:15px;height:15px;display:block}
+.mn-overlay .mn-ov-em{font-style:normal;margin-right:6px;font-size:14px;line-height:1;background:transparent}
 .mn-overlay span{display:inline-flex;align-items:center}
