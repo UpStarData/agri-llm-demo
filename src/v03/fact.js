@@ -636,11 +636,11 @@ window.V03Fact = (function () {
     ].filter(Boolean);
     // Explicit empty data clears an independently disabled layer under ECharts
     // merging; omitting the series would leave its previous markers on screen.
-    markerSeries('regions', st.sk.regions ? regionsAtLevel() : [], '#4d7c0f', '🌾', 13, st.geo.level !== 'L1').forEach(x => series.push(x));
-    markerSeries('gatesP', st.sk.gates ? gatesAtLevel('port') : [], '#0369a1', '⚓', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-    markerSeries('gatesA', st.sk.airports ? gatesAtLevel('airport') : [], '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
-    markerSeries('markets', st.sk.markets ? v12Overlay('market') : [], '#a16207', '🛒', 13, true).forEach(x => series.push(x));
-    markerSeries('risks', st.sk.risks && st.geo.level === 'L1' ? v12Overlay('risk') : [], '#b91c1c', '⚠️', 13, false).forEach(x => series.push(x));
+    markerSeries('regions', st.sk.regions ? regionsAtLevel() : [], '#4d7c0f', LAYER_EMOJI.region, 13, st.geo.level !== 'L1').forEach(x => series.push(x));
+    markerSeries('gatesP', st.sk.gates ? gatesAtLevel('port') : [], '#0369a1', LAYER_EMOJI.port, 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+    markerSeries('gatesA', st.sk.airports ? gatesAtLevel('airport') : [], '#0f766e', LAYER_EMOJI.airport, 11, st.geo.level !== 'L1').forEach(x => series.push(x));
+    markerSeries('markets', st.sk.markets ? v12Overlay('market') : [], '#a16207', LAYER_EMOJI.market, 13, true).forEach(x => series.push(x));
+    markerSeries('risks', st.sk.risks && st.geo.level === 'L1' ? v12Overlay('risk') : [], '#b91c1c', LAYER_EMOJI.risk, 13, false).forEach(x => series.push(x));
     lastPaint = { level: st.geo.level, points: pts.map(pt => ({ value: pt.value, color: pt.itemStyle.color })) };
     if (growK < 1 && exitPoints.length) {
       series.push({
@@ -686,22 +686,11 @@ window.V03Fact = (function () {
     };
   }
 
-  /* ---------- 叠加图层图标：内联 SVG（矢量、透明底、随图层色） ----------
-     原来用 emoji 字形画在 label 上，不同系统字体渲染不一致、且不是矢量；
-     改成 image://data:image/svg+xml，白底圆 + 图层色的实心图标，缩放不糊。 */
-  const LAYER_ICON_COLOR = { region: '#4d7c0f', port: '#0369a1', airport: '#0f766e', market: '#a16207', risk: '#b91c1c' };
-  const ICON_PATHS = {
-    region: 'M12 2c3.6 3.6 5.4 7.2 5.4 10.8A5.4 5.4 0 0 1 12 18.2a5.4 5.4 0 0 1-5.4-5.4C6.6 9.2 8.4 5.6 12 2Z M11 18.5h2V22h-2z',
-    port: 'M11 2h2v3h2.6l-1.1 1.8H13v8.6c2.4-.4 4.3-2.2 4.9-4.4h-1.9l2.5-3.6 2.5 3.6h-1.8A7.2 7.2 0 0 1 13 19.2V21h-2v-1.8A7.2 7.2 0 0 1 4.8 11H3l2.5-3.6L8 11H6.1c.6 2.2 2.5 4 4.9 4.4V6.8H9.5L8.4 5H11z',
-    airport: 'M21 15.5v-2l-8.5-5V3.2a1.5 1.5 0 0 0-3 0V8.5l-8.5 5v2l8.5-2.6V18l-2.2 1.6V21l3.7-1 3.7 1v-1.4L13 18v-5.1z',
-    market: 'M3 4h18v2.6H3z M4 7.8h16V20h-5.2v-5.6H10V20H4z',
-    risk: 'M12 2l10 18H2z M11 8.5h2v6h-2z M11 16h2v2h-2z'
-  };
-  const layerIconSVG = kind => {
-    const color = LAYER_ICON_COLOR[kind] || '#0369a1', d = ICON_PATHS[kind] || ICON_PATHS.market;
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11.4" fill="#ffffff" fill-opacity="0.92"/><path fill="' + color + '" d="' + d + '"/></svg>';
-  };
-  const layerIconSymbol = kind => 'image://data:image/svg+xml;charset=utf-8,' + encodeURIComponent(layerIconSVG(kind));
+  /* ---------- 叠加图层图标：纯 emoji 字形 ----------
+     用户 2026-10-17 明确要求：不要手画的 SVG 图形，要「纯 emoji 表情」并且支持透明格式。
+     做法：只把 emoji 字形画在 label 上，**不画圆底、不加底色块、不填任何背景**，
+     所以图标区域除字形像素外全部透明，底图直接透上来。 */
+  const LAYER_EMOJI = { region: '🌾', port: '⚓', airport: '✈️', market: '🏪', risk: '⚠️' };
   const KIND_OF_SERIES = { regions: 'region', gatesP: 'port', gatesA: 'airport', markets: 'market', risks: 'risk' };
   function markerSeries(id, list, color, emoji, size, showLabel) {
     // Airports are an independent reference overlay, not fact records. At
@@ -711,12 +700,16 @@ window.V03Fact = (function () {
     if(id==='gatesA'&&S.state.geo.level==='L1')list=V03Feed.sampleGeo(list,180);
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
-      data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: size + 3 }))),
-      symbol: layerIconSymbol(KIND_OF_SERIES[id] || 'market'),
-      symbolSize: size + 3,
-      itemStyle: { borderWidth: 0, opacity: 1 },
-      label: { show: false },
-      zlevel: 1
+      data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: size }))),
+      /* 只有 emoji 字形：符号本身完全透明（不画白圆底），label 也不带 backgroundColor */
+      symbol: 'circle', symbolSize: size,
+      /* 不设 opacity:0 —— 那会让 label 一起被隐藏；用全透明填充让圆底不可见即可 */
+      itemStyle: { color: 'transparent', borderWidth: 0, opacity: 1 },
+      label: {
+        show: true, position: 'inside', fontSize: size, formatter: () => emoji,
+        backgroundColor: 'transparent', padding: 0, textBorderWidth: 0
+      },
+      labelLayout: { hideOverlap: true }
     }, showLabel ? {
       id: id + 'Label', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 5,
       data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: 1 }))),
@@ -1206,6 +1199,6 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { layerIcon: layerIconSVG, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
+  return { layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
     viewConfig, receiveFact, visiblePosition:visiblePixel, arrivalCandidates:()=>F.mappable(F.mapFacts(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
