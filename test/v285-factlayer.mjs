@@ -16,7 +16,7 @@ try {
   page.on('pageerror', e => report.errors.push(e.message));
   await page.goto(pathToFileURL(path.resolve(process.env.AGRI_TEST_HTML || 'index.html')).href);
   await page.waitForFunction(() => window.__AGRI_READY);
-  await page.evaluate(() => { V03Feed.complete(); V03Feed.stop(); V03Store.set({tab: 'fact', time: 'all', geo: {level: 'L1', focus: null}}); });
+  await page.evaluate(() => { V03Feed.complete();V03Fact.finishAnimation(); V03Feed.stop(); V03Store.set({tab: 'fact', time: 'all', geo: {level: 'L1', focus: null}}); });
   await page.waitForTimeout(700);
 
   // ② 全球视角按分类上色
@@ -54,48 +54,7 @@ try {
   }
   assert(report.windows.today.facts >= 500, '今天窗口不应为空: ' + report.windows.today.facts);
 
-  // 会话内「第一次」切时间也必须有退场层（验收发现的边界：exitLevel 初始 null 时为瞬时消失）
-  report.firstSwitch = await page.evaluate(async () => {
-    const opt0 = () => echarts.getInstanceByDom(document.querySelector('#factMap')).getOption();
-    V03Store.set({time: 'all'});
-    await new Promise(r => setTimeout(r, 3600));
-    const before = (opt0().series.find(x => x.id === 'facts').data || []).length;
-    V03Store.set({time: '30d'});           // 本次会话第一次切窗
-    const seen = [];
-    for (let i = 0; i < 6; i++) {
-      await new Promise(r => setTimeout(r, 200));
-      const ser = opt0().series.find(x => x.id === 'factExit');
-      seen.push({present: !!ser, points: ser ? (ser.data || []).length : 0, opacity: ser ? Number((ser.itemStyle || {}).opacity) : null});
-    }
-    return {before, seen};
-  });
-  assert(report.firstSwitch.seen.some(s => s.present && s.points > 100),
-    '第一次切换时间窗也应有退场层: ' + JSON.stringify(report.firstSwitch.seen));
-
-  // 退场动画：切回 all 再切到 today，采样 factExit 的不透明度轨迹
-  report.exit = await page.evaluate(async () => {
-    V03Store.set({time: 'all'});
-    await new Promise(r => setTimeout(r, 3600));
-    const before = (() => {
-      const opt = echarts.getInstanceByDom(document.querySelector('#factMap')).getOption();
-      return (opt.series.find(x => x.id === 'facts').data || []).length;
-    })();
-    V03Store.set({time: 'today'});
-    const samples = [];
-    for (let i = 0; i < 12; i++) {
-      await new Promise(r => setTimeout(r, 260));
-      const opt = echarts.getInstanceByDom(document.querySelector('#factMap')).getOption();
-      const ser = opt.series.find(x => x.id === 'factExit');
-      samples.push({t: i * 260, present: !!ser, points: ser ? (ser.data || []).length : 0,
-        opacity: ser ? Number((ser.itemStyle || {}).opacity) : null,
-        drawn: (opt.series.find(x => x.id === 'facts').data || []).length});
-    }
-    return {beforeDrawn: before, samples};
-  });
-  const withExit = report.exit.samples.filter(s => s.present);
-  assert(withExit.length > 0, '切换时间范围时应出现退场图层: ' + JSON.stringify(report.exit.samples.slice(0, 4)));
-  assert(withExit[0].points > 100, '退场点数太少: ' + withExit[0].points);
-  assert(withExit.at(-1).opacity < withExit[0].opacity + 1e-9, '退场图层透明度应随时间下降');
+  // 注：切换时间/视野后的进出场动画已由 40 秒编排统一接管，动画回归见 test/v288-choreo.mjs
 
   // ③ 叠加图层图标：纯 emoji 字形 + 完全透明背景（不画圆底、label 无底色）
   await page.evaluate(() => { window.__probeLayerMarkers = true; });

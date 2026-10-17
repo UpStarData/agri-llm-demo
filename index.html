@@ -900,7 +900,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.8.7</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.8.8</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -964,7 +964,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"9c0ce6d7a5bc","git":"da76178","builtAt":"2026-10-17T03:58:41.548Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"8774c2f9624a","git":"6abcb84","builtAt":"2026-10-17T04:43:45.887Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -6482,20 +6482,23 @@ window.V03Globe = (function () {
     points.forEach(f => {
       const pt = project(f.lng, f.lat, cx, cy, R);
       if (pt.z <= 0) return;
+      /* 编排进度 a：0 表示还没进场，1 表示完全显示；3D 与 2D 用同一份系数 */
+      const a = f.a == null ? 1 : f.a;
+      if (a <= .02) return;
       if (f.halo > 0) {
         const rr = R * f.halo;
         const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
-        g.addColorStop(0, hexA(f.color, f.haloAlpha || .14));
+        g.addColorStop(0, hexA(f.color, (f.haloAlpha || .14) * a));
         g.addColorStop(1, hexA(f.color, 0));
         ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
       }
       const halo = f.big ? 8 : 6;
       const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.4);
-      haloG.addColorStop(0, hexA(f.color, f.big ? .3 : .22));
+      haloG.addColorStop(0, hexA(f.color, (f.big ? .3 : .22) * a));
       haloG.addColorStop(1, hexA(f.color, 0));
       ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.4, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
       ctx.beginPath(); ctx.arc(pt.x, pt.y, f.big ? 3 : 2.4, 0, TAU);
-      ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.fillStyle = hexA('#ffffff', Math.min(1, a + .25)); ctx.fill();
       ctx.strokeStyle = f.color; ctx.lineWidth = 1.2; ctx.stroke();
       hits.push({ x: pt.x, y: pt.y, kind: 'fact', id: f.id });
     });
@@ -7129,40 +7132,123 @@ window.V03Fact = (function () {
   };
 
   const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
-  /* 切换时间范围时的事实点"持续生长"：只长点，不画线；非线性速度，约 3 秒长满 */
-  let growK = 1, growRaf = 0, growKey = null;
-  /* 切换时间范围时，被排除的点不能凭空消失：把上一帧的点留作「退场」图层淡出。
-     不同时间窗的铺点节奏也不同（窗口越窄越快），用户能看出换的是哪个范围。 */
-  let exitPoints = [], exitLevel = null;
-  const GROW_MS = { today: 1500, '7d': 1800, '30d': 2200, '180d': 2700, '365d': 2900, all: 3200 };
-  function ensureGrow(st) {
-    if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
-    if (growKey !== st.time) {
-      /* exitLevel 初始为 null 时也要取退场点：否则「会话内第一次切时间」没有淡出，
-         旧点是瞬时消失的（验收 2026-10-17 发现的边界）。 */
+  /* ============================================================
+     点击时间范围（或切换视野）后的「40 秒编排」
+     用户 2026-10-17：全屏先没有点 → 缓慢出现少量 → 集中出现一批 → 部分消失、部分新增 →
+     趋于稳定 → 最后几个慢慢消失、几个慢慢点亮，约 40 秒结束；各视角数据量不同但效果一致。
+     做法是给每个事实按「确定性洗牌」分配进场时刻与进出场窗口，逐帧算可见度系数；
+     洗牌用视角+时间窗的哈希做种子，所以同一个视角反复点同一个按钮，节奏一致。
+     ============================================================ */
+  const CHOREO_MS = 40000;
+  let choreo = null, growRaf = 0, growK = 1, choreoSuppressed = false;
+  let exitPoints = [], exitLevel = null, exitT0 = 0;
+  const EXIT_FADE_MS = 6000;
+  const choreoKeyOf = st => [st.time, st.geo.level, st.geo.focus || '', st.geo.city || '', st.geo.county || ''].join('|');
+  const hashKey = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
+  const choreoRng = seed => { let x = (seed >>> 0) || 1; return () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; }; };
+  function buildChoreo(key, n) {
+    const rnd = choreoRng(hashKey(key));
+    const order = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
+    const tIn = new Float32Array(n).fill(-1), fadeIn = new Float32Array(n).fill(700);
+    const out1 = new Float32Array(n), back1 = new Float32Array(n), out2 = new Float32Array(n), back2 = new Float32Array(n);
+    const at = f => Math.round(f * CHOREO_MS);
+    order.forEach((idx, rank) => {
+      const r = n > 1 ? rank / (n - 1) : 0;
+      if (r < 0.06) { tIn[idx] = at(0.01 + (r / 0.06) * 0.16); fadeIn[idx] = 1800; }              /* 缓慢出现少量 */
+      else if (r < 0.55) { tIn[idx] = at(0.19 + ((r - 0.06) / 0.49) * 0.13); fadeIn[idx] = 520; }   /* 集中出现 */
+      else if (r < 0.67) { tIn[idx] = at(0.34 + ((r - 0.55) / 0.12) * 0.20); fadeIn[idx] = 900; }   /* 消失后的新增 */
+      else if (r < 0.97) { tIn[idx] = at(0.57 + ((r - 0.67) / 0.30) * 0.25); fadeIn[idx] = 700; }   /* 趋于稳定补齐 */
+      else { tIn[idx] = at(0.86 + ((r - 0.97) / 0.03) * 0.12); fadeIn[idx] = 1600; }                /* 最后慢慢点亮 */
+    });
+    const early = order.filter((_, rank) => rank < Math.max(2, Math.round(n * 0.55)));
+    const churnN = Math.max(1, Math.round(n * 0.08)), finalN = Math.max(1, Math.round(n * 0.015));
+    for (let i = 0; i < churnN && early.length; i++) {                                            /* 中途有一批消失后再回来 */
+      const idx = early[Math.floor((i / churnN) * early.length)];
+      out1[idx] = at(0.34 + (i / churnN) * 0.07); back1[idx] = at(0.60 + (i / churnN) * 0.07);
+    }
+    const late = order.filter((_, rank) => rank >= Math.round(n * 0.67) && rank < Math.round(n * 0.97));
+    for (let i = 0; i < finalN && late.length; i++) {                                             /* 最后几个慢慢消失再点亮 */
+      const idx = late[Math.floor((i / finalN) * late.length)];
+      out2[idx] = at(0.85 + (i / finalN) * 0.05); back2[idx] = at(0.94 + (i / finalN) * 0.03);
+    }
+    return { n, tIn, fadeIn, out1, back1, out2, back2 };
+  }
+  function choreoAlpha(i, t) {
+    /* 未开始编排（首屏）或还没轮到这一批时返回 1/0 */
+    if (!choreo || !choreo.armed || !choreo.tIn) return 1;
+    if (i >= choreo.n) return 1;
+    const a = choreo.tIn[i];
+    if (t < a) return 0;
+    let v = Math.min(1, (t - a) / Math.max(120, choreo.fadeIn[i]));
+    const o1 = choreo.out1[i];
+    if (o1 && t > o1) {
+      if (choreo.back1[i] && t > choreo.back1[i]) v = Math.min(1, (t - choreo.back1[i]) / 900);
+      else v *= Math.max(0, 1 - (t - o1) / 2600);
+    }
+    const o2 = choreo.out2[i];
+    if (o2 && t > o2) {
+      if (choreo.back2[i] && t > choreo.back2[i]) v = Math.min(v, Math.min(1, (t - choreo.back2[i]) / 1300));
+      else v *= Math.max(0, 1 - (t - o2) / 3000);
+    }
+    return v;
+  }
+  /* 返回当前编排已走的毫秒数；首次进入不播编排（首屏仍走 ≤10s 的分批揭示） */
+  /* 退场层的淡出需要持续重绘；编排被落定（测试/验收）时也要单独驱动一下 */
+  function driveExitFade() {
+    if (growRaf) return;
+    let paintedAt = 0;
+    const tick = () => {
+      growRaf = 0;
+      const now = performance.now();
+      if (S.state.tab === 'fact' && now - paintedAt >= 120) {
+        paintedAt = now;
+        if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap();
+      }
+      if (performance.now() - exitT0 < EXIT_FADE_MS) growRaf = requestAnimationFrame(tick);
+    };
+    growRaf = requestAnimationFrame(tick);
+  }
+  function captureExit(st) {
+    const sameView = exitLevel === null || exitLevel === st.geo.level;
+    exitPoints = sameView && lastPaint ? lastPaint.points.slice(0, 1200) : [];   /* 退场层是虚影，1200 点足够表达、不拖慢每帧 */
+    exitT0 = performance.now();
+    exitLevel = st.geo.level;
+  }
+  function ensureGrow(st, n) {
+    const key = choreoKeyOf(st);
+    if (choreoSuppressed) {
+      choreo = { key, n };
+      exitPoints = [];
+      return CHOREO_MS;
+    }
+    if (!choreo || choreo.key !== key || choreo.n !== n) {
       const sameView = exitLevel === null || exitLevel === st.geo.level;
-      exitPoints = sameView && lastPaint ? lastPaint.points.slice(0, 4000) : [];
+      exitPoints = sameView && lastPaint ? lastPaint.points.slice(0, 1200) : [];   /* 退场层是虚影，1200 点足够表达、不拖慢每帧 */
+      exitT0 = performance.now();
       exitLevel = st.geo.level;
-      growKey = st.time;
+      choreo = Object.assign({ key, t0: performance.now(), armed: true }, buildChoreo(key, n));
       growK = 0;
-      const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
-        const t0 = performance.now(); let paintedAt = 0;
+        let paintedAt = 0;
+        const gap = n > 20000 ? 150 : n > 6000 ? 110 : 80;   /* 点越多、重绘间隔越大，避免打满主线程 */
         const tick = () => {
           growRaf = 0;
-          const p = (performance.now() - t0) / dur;
-          growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
+          if (!choreo) return;                       /* 动画已被落定/取消 */
+          const t = performance.now() - choreo.t0;
+          growK = Math.min(1, t / CHOREO_MS);
           const now = performance.now();
-          if (S.state.tab === 'fact' && (now - paintedAt >= 80 || growK === 1)) {
+          if (S.state.tab === 'fact' && (now - paintedAt >= gap || growK >= 1)) {
             paintedAt = now;
             if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap();
           }
-          if (growK < 1) growRaf = requestAnimationFrame(tick);
+          if (growK < 1 && choreo) growRaf = requestAnimationFrame(tick);
         };
         growRaf = requestAnimationFrame(tick);
       }
+      return 0;
     }
-    return growK;
+    return Math.min(CHOREO_MS, performance.now() - choreo.t0);
   }
   /* 时间透明度：近 1 个月不透明 → 1~2 个月 90% → 之后线性衰减到 0（窗口边界处消失） */
   const ageAlpha = (f, win) => {
@@ -7334,24 +7420,27 @@ window.V03Fact = (function () {
   /* 一次地图重建会用到两份 option（先画点、再按新的地理变换补光晕），采样与去重的前缀
      完全相同，因此按同一批输入缓存，避免对 4 万+ 条事实重复采样。 */
   let planKey='',planCache=null;
-  function mapPlan(st, gk) {
-    const key=[st.geo.level,st.geo.focus,st.geo.city,st.geo.county,gk,D.revision,window.V03Feed?.revision,
+  function mapPlan(st) {
+    const key=[st.geo.level,st.geo.focus,st.geo.city,st.geo.county,D.revision,window.V03Feed?.revision,
       st.time,st.catKeys,st.varieties,st.region,st.sourceMode,st.q,freshOrder.length].join('|');
     if(key===planKey&&planCache)return planCache;
     const facts = F.mappable(F.mapFacts(st)).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
-    const coordinates=new Map();facts.forEach(f=>{const k=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(k))coordinates.set(k,f);});
     const cap=st.geo.level==='L1'?2600:st.geo.level==='L2'?2200:1600;
-    const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set([...freshOrder,...facts.filter(V03Scope.priority).map(f=>f.id)])).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
-    planCache={facts,selected};planKey=key;return planCache;
+    /* 一次遍历同时建「坐标组」和采样输入：逐帧绘制只需要被选中的组，
+       编排动画每帧遍历 2.6k 组而不是 45k 条事实（此前 L1 每帧 80ms+、主线程打满）。 */
+    const byKey=new Map(),groups=[];
+    facts.forEach((f,idx)=>{const k=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);const g=byKey.get(k);if(g){g.factIds.push(f.id);return;}const ng={key:k,f,idx,factIds:[f.id]};byKey.set(k,ng);groups.push(ng);});
+    const selected=new Set(V03Feed.sampleGeo(groups.map(g=>g.f),cap,new Set([...freshOrder,...facts.filter(V03Scope.priority).map(f=>f.id)])).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
+    const selGroups=groups.filter(g=>selected.has(g.key));
+    planCache={facts,selected,groups:selGroups,allGroups:groups.length};planKey=key;return planCache;
   }
 
   function mapOption(withInfluence = true) {
     const st = S.state;
     /* 生长：切换时间范围后，点按非线性速度逐步出现（最新的先出，老的随透明度衰减消失） */
-    const gk = ensureGrow(st);
-    const plan = mapPlan(st, gk < 1 ? gk : 1);
-    let facts = plan.facts;
-    if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
+    const plan = mapPlan(st);
+    const tNow = ensureGrow(st, plan.facts.length);
+    const facts = plan.facts;
     const lv = LEVEL[st.geo.level], p = palette();
     const selected = plan.selected;
     const halos = [], pts = [], ripples = [];
@@ -7363,15 +7452,16 @@ window.V03Fact = (function () {
       const q = toPx(lng, lat); if (!q) return false;
       return usedHalo.some(p2 => Math.hypot(p2[0] - q[0], p2[1] - q[1]) < 40);
     };
-    facts.forEach((f, index) => {
-      if(!selected.has(f.lng.toFixed(4)+'|'+f.lat.toFixed(4)))return;
+    plan.groups.forEach(g => {
+      const f = g.f, index = g.idx;
+      if (!f || !Number.isFinite(f.lng)) return;
       const diameter = radiusPx(f);
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
         /* 影响圆 = V0.8 的径向渐变光晕；只给"有真实半径"的事实画，避免整片叠成圆晕 */
         if (withInfluence && diameter > 0 && f.impact === 'high' && halos.length < 24 && toPx(value[0], value[1]) && !tooClose(value[0], value[1])) {   /* 只给高影响、限量、且屏幕间距足够 */
-          const a0 = ageAlpha(f, st.time);
+          const a0 = ageAlpha(f, st.time) * choreoAlpha(index, tNow);
           halos.push({ id: f.id, value, symbolSize: Math.min(88, Math.max(16, diameter * 1.2)),
             itemStyle: { color: { type: 'radial', x: .5, y: .5, r: .5, colorStops: [
               { offset: 0, color: hexA(l1Color(f), .10 * a0) }, { offset: .55, color: hexA(l1Color(f), .04 * a0) },
@@ -7379,14 +7469,12 @@ window.V03Fact = (function () {
           usedHalo.push(toPx(value[0], value[1]));
           if (ripples.length < 8) ripples.push({ id: f.id, name: f.title, value });
         }
+        const ca = choreoAlpha(index, tNow);
+        if (ca <= 0.02) return;                                   /* 还没到进场时刻：不画 */
         const pointKey=value.map(v=>v.toFixed(4)).join('|'), existing=pointGroups.get(pointKey);
-        if(existing){existing.factIds.push(f.id);return;}
-        const point={ id: f.id, factIds:[f.id], name: f.title, value, symbolSize: DOT_SIZE,
-          itemStyle: { opacity: (() => {
-            const target = ageAlpha(f, st.time);
-            /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
-            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
-          })(), color: l1Color(f), borderColor: 'rgba(255,255,255,.92)', borderWidth: .9 } };
+        if(existing){return;}
+        const point={ id: f.id, factIds:g.factIds.slice(), name: f.title, value, symbolSize: DOT_SIZE,
+          itemStyle: { opacity: Math.max(.02, Math.min(.95, ageAlpha(f, st.time) * ca)), color: l1Color(f), borderColor: 'rgba(255,255,255,.92)', borderWidth: .9 } };
         pointGroups.set(pointKey,point);pts.push(point);
       });
     });
@@ -7419,14 +7507,15 @@ window.V03Fact = (function () {
     markerSeries('markets', st.sk.markets ? v12Overlay('market') : [], '#a16207', LAYER_EMOJI.market, 13, true).forEach(x => series.push(x));
     markerSeries('risks', st.sk.risks && st.geo.level === 'L1' ? v12Overlay('risk') : [], '#b91c1c', LAYER_EMOJI.risk, 13, false).forEach(x => series.push(x));
     lastPaint = { level: st.geo.level, points: pts.map(pt => ({ value: pt.value, color: pt.itemStyle.color })) };
-    if (growK < 1 && exitPoints.length) {
-      series.push({
-        id: 'factExit', type: 'scatter', coordinateSystem: 'geo', z: 4, silent: true, animation: false,
-        data: exitPoints.map(pt => ({ value: pt.value })),
-        symbolSize: DOT_SIZE,
-        itemStyle: { color: 'rgba(120,132,148,.55)', opacity: Math.max(0, .95 * (1 - growK)) }
-      });
-    }
+    /* 旧点退场：切换时间/视野后，上一帧的点保留 6 秒并淡出，屏幕上不会"瞬间空掉" */
+    /* 每次都下发 factExit：淡出结束后用空 data 覆盖，否则 ECharts 会保留上一帧的残影 */
+    const exitK = exitPoints.length ? Math.min(1, (performance.now() - exitT0) / EXIT_FADE_MS) : 1;
+    series.push({
+      id: 'factExit', type: 'scatter', coordinateSystem: 'geo', z: 4, silent: true, animation: false,
+      data: exitK < 1 ? exitPoints.map(pt => ({ value: pt.value })) : [],
+      symbolSize: DOT_SIZE,
+      itemStyle: { color: 'rgba(120,132,148,.55)', opacity: exitK < 1 ? Math.max(0, .95 * (1 - exitK)) : 0 }
+    });
     return {
       backgroundColor: 'transparent',
       /* Full map rebuilds (including level changes) must not tween independently of geo points. */
@@ -7844,14 +7933,11 @@ window.V03Fact = (function () {
     const st = S.state;
     /* 2D 与 3D 必须画同一批点：3D 之前不做任何采样，同一个世界里 3D 比 2D 多出一批点，
        两个视角看起来是不同的数据。现在两者共用同一份采样方案（同一份缓存，不重复计算）。 */
-    const gk = ensureGrow(st);
-    const plan = mapPlan(st, gk < 1 ? gk : 1);
-    let facts = plan.facts;
-    if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
-    const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()]
-      .filter(f => plan.selected.has(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)));
-    const points = unique.map(f => ({
-      id: f.id, lng: f.lng, lat: f.lat, color: l1Color(f), big: f.impact === 'high',
+    const plan = mapPlan(st);
+    const tNow = ensureGrow(st, plan.facts.length);
+    const unique = plan.groups.map(g => ({ f: g.f, a: choreoAlpha(g.idx, tNow) })).filter(x => x.a > 0.02);
+    const points = unique.map(({f, a}) => ({
+      id: f.id, lng: f.lng, lat: f.lat, color: l1Color(f), big: f.impact === 'high', a,
       halo: (st.sk.influence && !f.radiusEstimated && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
       haloAlpha: IMPACT_ALPHA[f.impact] || .12
     }));
@@ -7976,7 +8062,22 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
+  /* 一键落定编排（测试/验收探针用）：把编排时间推到终点并立刻重绘，
+     避免探针为了拿全量数据等 40 秒。用户路径不调用它。 */
+  function finishAnimation() {
+    /* 一旦落定就持续生效：后续切视野/切时间也不再重播编排、也不再画退场虚影
+       （测试与验收探针用，避免每条断言前都要重新等 40 秒）。 */
+    choreoSuppressed = true;
+    exitPoints = [];
+    if (growRaf) { cancelAnimationFrame(growRaf); growRaf = 0; }
+    if (choreo) { choreo.t0 = performance.now() - CHOREO_MS - 1; choreo.armed = false; }
+    if (choreo && choreo.tIn) { /* 保持 tIn 存在，alpha 全部按 t 计算为 1 */ }
+    if (S.state.tab === 'fact') { if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap(); }
+    return { done: true };
+  }
+  return { finishAnimation, layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market,
+    choreo: () => ({ lastPaint: lastPaint ? lastPaint.points.length : 0, exit: exitPoints.length, suppressed: choreoSuppressed, armed: !!(choreo && choreo.armed), key: choreo ? choreo.key : null, running: !!(choreo && choreo.armed), n: choreo ? choreo.n : 0, t: choreo && choreo.armed ? Math.round(performance.now() - choreo.t0) : null, dur: CHOREO_MS }),
+    mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
     viewConfig, receiveFact, visiblePosition:visiblePixel, arrivalCandidates:()=>F.mappable(F.mapFacts(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
 

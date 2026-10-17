@@ -4,7 +4,7 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>report.errors.push(e.message));
  await page.addInitScript(()=>{window.__longtasks=[];new PerformanceObserver(l=>__longtasks.push(...l.getEntries().map(e=>({at:e.startTime,ms:e.duration})))).observe({type:'longtask',buffered:true});});
  await page.goto(pathToFileURL(path.resolve(process.env.AGRI_TEST_HTML||'index.html')).href);await page.waitForFunction(()=>window.__AGRI_READY);
- await page.evaluate(()=>{V03Feed.complete();V03Feed.stop();});
+ await page.evaluate(()=>{V03Feed.complete();V03Fact.finishAnimation();V03Feed.stop();});
  // Exercise the original first-entry sequence. Empty/reset counts alone missed
  // this bug: a running particle's destination changed on every intro tick.
  for(const level of ['L1','L2','L3']){
@@ -31,7 +31,9 @@ try{
   for(const k of ['regions','gates','airports','markets','risks']){await page.evaluate(k=>V03Store.set({sk:{[k]:false}}),k);const off=await page.evaluate(k=>{const ids={regions:'regions',gates:'gatesP',airports:'gatesA',markets:'markets',risks:'risks'},s=echarts.getInstanceByDom(document.querySelector('#factMap')).getOption().series;return{off:s.filter(x=>x.id.startsWith(ids[k])).every(x=>!x.data.length),others:['regions','gates','airports','markets','risks'].filter(x=>x!==k).every(x=>V03Store.state.sk[x])};},k);assert(off.off&&off.others,k+' not independent');await page.evaluate(k=>V03Store.set({sk:{[k]:true}}),k);}
   await page.evaluate(()=>V03Store.set({menu:false}));await page.screenshot({path:'test/artifacts/v27/fact-world.png'});
   for(const level of ['L2','L3']){await page.evaluate(level=>V03Store.set({geo:{level,focus:level==='L3'?'湖南':null,city:null,county:null}}),level);const d=await page.evaluate(()=>({facts:V03Filter.mapFacts().length,hongxing:V03Filter.mapFacts().filter(f=>/红星/.test(f.title)).length}));assert(d.hongxing>=60);report.scope.push({level,...d});}
-  await page.evaluate(()=>V03Store.set({geo:{level:'L1',focus:null},sk:{mode3d:true}}));report.globe=await page.evaluate(()=>V03Fact.debug().globe);assert.equal(report.globe.points,report.data.pointGroups);assert(report.globe.marks>0);
+  await page.evaluate(()=>V03Store.set({geo:{level:'L1',focus:null},sk:{mode3d:true}}));
+ // 切视野会重新播放 40 秒编排，比对点数前先落定动画
+ await page.evaluate(()=>V03Fact.finishAnimation());report.globe=await page.evaluate(()=>V03Fact.debug().globe);assert.equal(report.globe.points,report.data.pointGroups);assert(report.globe.marks>0);
  }
  assert.deepEqual(report.errors,[]);console.log(JSON.stringify(report,null,2));
 }finally{fs.writeFileSync('test/artifacts/v27/global-motion.json',JSON.stringify(report,null,2));await browser.close();}
