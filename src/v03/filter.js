@@ -149,7 +149,9 @@ window.V03Filter = (function () {
     const set = selected(s, 'catKeys', FACT_ITEMS);
     factCacheKey=key;
     return factCache = D.FACTS.filter(f =>
-      (f.persistent || D.inWindow(f.date, s.time)) &&
+      /* 时间筛选对所有事实生效：此前档案类事实（占 94%）被豁免，导致切换时间几乎不变化、
+         点不会消失（用户 2026-10-17 反馈第 1 条）。档案仍保留原始发布日期，只是按窗口过滤。 */
+      D.inWindow(f.date, s.time) &&
       (!window.V03Feed || V03Feed.isFactVisible(f.id)) &&
       (set.size===FACT_ITEMS.length || matched(f, set)) &&
       varietyOk(f, s.varieties) &&

@@ -192,7 +192,10 @@ try {
   });
   // Budgets raised for V2.8: the mappable fact base grew 2.6x (19k -> 45k), and the remaining cost
  // is ECharts' own notMerge rebuild of the world layer. Per-frame cost (p95) keeps the old budget.
- assert(report.frames.p95 < 100 && report.frames.max < 420 && report.frames.switchMax < 320, JSON.stringify(report.frames));
+ // 预算再调一次的依据：V2.8.5 要求 2D 全球也按一级分类逐点上色，而 ECharts 的 large 模式
+ // 会忽略逐点样式，只能关闭 large（9,600 → 7,800 点逐一绘制）。多出的约 90ms 只在切换视野
+ // 时发生一次（用户主动操作），帧间 p95 仍是 50ms，因此按"切换 ≤420ms、单帧 ≤460ms"记账。
+ assert(report.frames.p95 < 100 && report.frames.max < 460 && report.frames.switchMax < 420, JSON.stringify(report.frames));
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   assert.deepEqual(errors, []);
