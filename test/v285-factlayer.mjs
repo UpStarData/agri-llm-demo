@@ -54,6 +54,24 @@ try {
   }
   assert(report.windows.today.facts >= 500, '今天窗口不应为空: ' + report.windows.today.facts);
 
+  // 会话内「第一次」切时间也必须有退场层（验收发现的边界：exitLevel 初始 null 时为瞬时消失）
+  report.firstSwitch = await page.evaluate(async () => {
+    const opt0 = () => echarts.getInstanceByDom(document.querySelector('#factMap')).getOption();
+    V03Store.set({time: 'all'});
+    await new Promise(r => setTimeout(r, 3600));
+    const before = (opt0().series.find(x => x.id === 'facts').data || []).length;
+    V03Store.set({time: '30d'});           // 本次会话第一次切窗
+    const seen = [];
+    for (let i = 0; i < 6; i++) {
+      await new Promise(r => setTimeout(r, 200));
+      const ser = opt0().series.find(x => x.id === 'factExit');
+      seen.push({present: !!ser, points: ser ? (ser.data || []).length : 0, opacity: ser ? Number((ser.itemStyle || {}).opacity) : null});
+    }
+    return {before, seen};
+  });
+  assert(report.firstSwitch.seen.some(s => s.present && s.points > 100),
+    '第一次切换时间窗也应有退场层: ' + JSON.stringify(report.firstSwitch.seen));
+
   // 退场动画：切回 all 再切到 today，采样 factExit 的不透明度轨迹
   report.exit = await page.evaluate(async () => {
     V03Store.set({time: 'all'});

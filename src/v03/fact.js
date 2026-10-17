@@ -361,7 +361,9 @@ window.V03Fact = (function () {
   function ensureGrow(st) {
     if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
     if (growKey !== st.time) {
-      const sameView = exitLevel === st.geo.level;
+      /* exitLevel 初始为 null 时也要取退场点：否则「会话内第一次切时间」没有淡出，
+         旧点是瞬时消失的（验收 2026-10-17 发现的边界）。 */
+      const sameView = exitLevel === null || exitLevel === st.geo.level;
       exitPoints = sameView && lastPaint ? lastPaint.points.slice(0, 4000) : [];
       exitLevel = st.geo.level;
       growKey = st.time;
