@@ -404,20 +404,23 @@ window.V03Globe = (function () {
     points.forEach(f => {
       const pt = project(f.lng, f.lat, cx, cy, R);
       if (pt.z <= 0) return;
+      /* 编排进度 a：0 表示还没进场，1 表示完全显示；3D 与 2D 用同一份系数 */
+      const a = f.a == null ? 1 : f.a;
+      if (a <= .02) return;
       if (f.halo > 0) {
         const rr = R * f.halo;
         const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
-        g.addColorStop(0, hexA(f.color, f.haloAlpha || .14));
+        g.addColorStop(0, hexA(f.color, (f.haloAlpha || .14) * a));
         g.addColorStop(1, hexA(f.color, 0));
         ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
       }
       const halo = f.big ? 8 : 6;
       const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.4);
-      haloG.addColorStop(0, hexA(f.color, f.big ? .3 : .22));
+      haloG.addColorStop(0, hexA(f.color, (f.big ? .3 : .22) * a));
       haloG.addColorStop(1, hexA(f.color, 0));
       ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.4, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
       ctx.beginPath(); ctx.arc(pt.x, pt.y, f.big ? 3 : 2.4, 0, TAU);
-      ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.fillStyle = hexA('#ffffff', Math.min(1, a + .25)); ctx.fill();
       ctx.strokeStyle = f.color; ctx.lineWidth = 1.2; ctx.stroke();
       hits.push({ x: pt.x, y: pt.y, kind: 'fact', id: f.id });
     });
