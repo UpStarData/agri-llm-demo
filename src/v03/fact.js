@@ -354,16 +354,24 @@ window.V03Fact = (function () {
   const IMPACT_ALPHA = { high: .18, mid: .13, low: .09 };
   /* 切换时间范围时的事实点"持续生长"：只长点，不画线；非线性速度，约 3 秒长满 */
   let growK = 1, growRaf = 0, growKey = null;
+  /* 切换时间范围时，被排除的点不能凭空消失：把上一帧的点留作「退场」图层淡出。
+     不同时间窗的铺点节奏也不同（窗口越窄越快），用户能看出换的是哪个范围。 */
+  let exitPoints = [], exitLevel = null;
+  const GROW_MS = { today: 1500, '7d': 1800, '30d': 2200, '180d': 2700, '365d': 2900, all: 3200 };
   function ensureGrow(st) {
     if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
     if (growKey !== st.time) {
+      const sameView = exitLevel === st.geo.level;
+      exitPoints = sameView && lastPaint ? lastPaint.points.slice(0, 4000) : [];
+      exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
+      const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
         const t0 = performance.now(); let paintedAt = 0;
         const tick = () => {
           growRaf = 0;
-          const p = (performance.now() - t0) / 3200;
+          const p = (performance.now() - t0) / dur;
           growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
           const now = performance.now();
           if (S.state.tab === 'fact' && (now - paintedAt >= 80 || growK === 1)) {
@@ -527,7 +535,7 @@ window.V03Fact = (function () {
     });
     return colors;
   }
-  let countryColors, provinceColors;
+  let lastPaint = null, countryColors, provinceColors;
   const regionIndex = (name, level) => {
     if (level === 'L1') {
       if (!countryColors) countryColors = regionColors((window.__WORLD110 || []).map(x => ({ name: x.n, coordinates: x.c })));
@@ -553,7 +561,7 @@ window.V03Fact = (function () {
     if(key===planKey&&planCache)return planCache;
     const facts = F.mappable(F.mapFacts(st)).filter(f => !window.V03Mass || V03Mass.insideMap(st.geo.level, f.lng, f.lat));
     const coordinates=new Map();facts.forEach(f=>{const k=f.lng.toFixed(4)+'|'+f.lat.toFixed(4);if(!coordinates.has(k))coordinates.set(k,f);});
-    const cap=st.geo.level==='L1'?3200:st.geo.level==='L2'?2200:1600;
+    const cap=st.geo.level==='L1'?2600:st.geo.level==='L2'?2200:1600;
     const selected=new Set(V03Feed.sampleGeo([...coordinates.values()],cap,new Set([...freshOrder,...facts.filter(V03Scope.priority).map(f=>f.id)])).map(f=>f.lng.toFixed(4)+'|'+f.lat.toFixed(4)));
     planCache={facts,selected};planKey=key;return planCache;
   }
@@ -617,7 +625,10 @@ window.V03Fact = (function () {
         showEffectOn: 'render', rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 }, itemStyle: { opacity: .55 } },
       { id: 'facts', type: 'scatter', coordinateSystem: 'geo', data: pts, z: 5, cursor: 'pointer',
         symbolSize:DOT_SIZE,
-        large: true, largeThreshold: 1500, progressive: 0,
+        /* large 模式会忽略逐点样式：全球视角 9,600 点时所有点被画成同一个默认色，
+           分类填充在 2D 全球看不到（用户 2026-10-17 反馈第 2 条）。点量已按坐标组限流，
+           关闭 large 后逐点填充色才真正生效。 */
+        large: false, progressive: 0,
         itemStyle:{borderColor:'rgba(255,255,255,.92)',borderWidth:.9} },
       flashSeries()
     ].filter(Boolean);
@@ -628,6 +639,15 @@ window.V03Fact = (function () {
     markerSeries('gatesA', st.sk.airports ? gatesAtLevel('airport') : [], '#0f766e', '✈️', 11, st.geo.level !== 'L1').forEach(x => series.push(x));
     markerSeries('markets', st.sk.markets ? v12Overlay('market') : [], '#a16207', '🛒', 13, true).forEach(x => series.push(x));
     markerSeries('risks', st.sk.risks && st.geo.level === 'L1' ? v12Overlay('risk') : [], '#b91c1c', '⚠️', 13, false).forEach(x => series.push(x));
+    lastPaint = { level: st.geo.level, points: pts.map(pt => ({ value: pt.value, color: pt.itemStyle.color })) };
+    if (growK < 1 && exitPoints.length) {
+      series.push({
+        id: 'factExit', type: 'scatter', coordinateSystem: 'geo', z: 4, silent: true, animation: false,
+        data: exitPoints.map(pt => ({ value: pt.value })),
+        symbolSize: DOT_SIZE,
+        itemStyle: { color: 'rgba(120,132,148,.55)', opacity: Math.max(0, .95 * (1 - growK)) }
+      });
+    }
     return {
       backgroundColor: 'transparent',
       /* Full map rebuilds (including level changes) must not tween independently of geo points. */
@@ -664,6 +684,23 @@ window.V03Fact = (function () {
     };
   }
 
+  /* ---------- 叠加图层图标：内联 SVG（矢量、透明底、随图层色） ----------
+     原来用 emoji 字形画在 label 上，不同系统字体渲染不一致、且不是矢量；
+     改成 image://data:image/svg+xml，白底圆 + 图层色的实心图标，缩放不糊。 */
+  const LAYER_ICON_COLOR = { region: '#4d7c0f', port: '#0369a1', airport: '#0f766e', market: '#a16207', risk: '#b91c1c' };
+  const ICON_PATHS = {
+    region: 'M12 2c3.6 3.6 5.4 7.2 5.4 10.8A5.4 5.4 0 0 1 12 18.2a5.4 5.4 0 0 1-5.4-5.4C6.6 9.2 8.4 5.6 12 2Z M11 18.5h2V22h-2z',
+    port: 'M11 2h2v3h2.6l-1.1 1.8H13v8.6c2.4-.4 4.3-2.2 4.9-4.4h-1.9l2.5-3.6 2.5 3.6h-1.8A7.2 7.2 0 0 1 13 19.2V21h-2v-1.8A7.2 7.2 0 0 1 4.8 11H3l2.5-3.6L8 11H6.1c.6 2.2 2.5 4 4.9 4.4V6.8H9.5L8.4 5H11z',
+    airport: 'M21 15.5v-2l-8.5-5V3.2a1.5 1.5 0 0 0-3 0V8.5l-8.5 5v2l8.5-2.6V18l-2.2 1.6V21l3.7-1 3.7 1v-1.4L13 18v-5.1z',
+    market: 'M3 4h18v2.6H3z M4 7.8h16V20h-5.2v-5.6H10V20H4z',
+    risk: 'M12 2l10 18H2z M11 8.5h2v6h-2z M11 16h2v2h-2z'
+  };
+  const layerIconSVG = kind => {
+    const color = LAYER_ICON_COLOR[kind] || '#0369a1', d = ICON_PATHS[kind] || ICON_PATHS.market;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11.4" fill="#ffffff" fill-opacity="0.92"/><path fill="' + color + '" d="' + d + '"/></svg>';
+  };
+  const layerIconSymbol = kind => 'image://data:image/svg+xml;charset=utf-8,' + encodeURIComponent(layerIconSVG(kind));
+  const KIND_OF_SERIES = { regions: 'region', gatesP: 'port', gatesA: 'airport', markets: 'market', risks: 'risk' };
   function markerSeries(id, list, color, emoji, size, showLabel) {
     // Airports are an independent reference overlay, not fact records. At
     // world scale, thousands of emoji labels (including seam copies) obscure
@@ -672,12 +709,12 @@ window.V03Fact = (function () {
     if(id==='gatesA'&&S.state.geo.level==='L1')list=V03Feed.sampleGeo(list,180);
     return [{
       id, type: 'scatter', coordinateSystem: 'geo', z: 5, cursor: 'pointer',
-      data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: size }))),
-      symbol: 'circle', itemStyle: { color: 'rgba(255,255,255,.6)', borderColor: 'transparent', borderWidth: 0 },
-      label: {
-        show: true, fontSize: size, color: color, formatter: () => emoji, position: 'inside'
-      },
-      labelLayout: { hideOverlap: true }
+      data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: size + 3 }))),
+      symbol: layerIconSymbol(KIND_OF_SERIES[id] || 'market'),
+      symbolSize: size + 3,
+      itemStyle: { borderWidth: 0, opacity: 1 },
+      label: { show: false },
+      zlevel: 1
     }, showLabel ? {
       id: id + 'Label', type: 'scatter', coordinateSystem: 'geo', silent: true, z: 5,
       data: list.flatMap(r => mapPoints(r.lng, r.lat).map(value => ({ id: r.id, name: r.name, value, symbolSize: 1 }))),
@@ -1167,6 +1204,6 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
+  return { layerIcon: layerIconSVG, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
     viewConfig, receiveFact, visiblePosition:visiblePixel, arrivalCandidates:()=>F.mappable(F.mapFacts(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
