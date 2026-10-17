@@ -431,8 +431,8 @@
       overlay.appendChild(el('div', 'mn-h', '叠加数据图层（独立开关）'));
       [['regions','农作物主要产区','region'],['gates','港口','port'],['airports','机场','airport'],['markets','农贸市场','market'],['risks','地缘风险区（仅世界）','risk']].forEach(([key,label,kind]) => {
         const item = el('label', 'mn-overlay');
-        const icon = (window.V03Fact && window.V03Fact.layerIcon) ? window.V03Fact.layerIcon(kind) : '';
-        item.innerHTML = '<input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><i class="mn-ov-ic">' + icon + '</i><span>' + label + '</span>';
+        const emoji = (window.V03Fact && window.V03Fact.layerEmoji) ? window.V03Fact.layerEmoji(kind) : '';
+        item.innerHTML = '<input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><span><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>';
         item.querySelector('input').onchange = e => S.set({ sk: { [key]: e.target.checked } });
         overlay.appendChild(item);
       });
