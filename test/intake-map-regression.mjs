@@ -14,7 +14,7 @@ try {
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(pathToFileURL(path.resolve('index.html')).href);
   await page.waitForFunction(() => window.__AGRI_READY);
-  await page.evaluate(() => { V03Feed.complete();V03Fact.finishAnimation(); V03Feed.stop(); V03Store.set({ time:'all', panels: { stream: false }, geo: { level: 'L3', focus: '湖南' } }); });
+  await page.evaluate(() => { V03Feed.complete();V03Fact.finishAnimation?.(); V03Feed.stop(); V03Store.set({ time:'all', panels: { stream: false }, geo: { level: 'L3', focus: '湖南' } }); });
   const inspectHalos = () => page.evaluate(() => {
     const c = echarts.getInstanceByDom(document.querySelector('#factMap'));
     const data = c.getOption().series.find(s => s.id === 'halo').data;
