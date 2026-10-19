@@ -7,7 +7,7 @@ const report={views:[],errors:[]};
 try {
  const page=await browser.newPage({viewport:{width:1440,height:900}});page.on('pageerror',e=>report.errors.push(e.message));
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>window.__AGRI_READY);
- await page.evaluate(()=>{V03Feed.complete();V03Feed.stop();});
+ await page.evaluate(()=>{V03Feed.complete();V03Fact.finishAnimation();V03Feed.stop();});
  if(!baseline)assert(await page.evaluate(()=>V03Data.FACTS.filter(f=>f.id.startsWith('v25-hongxing')).every(f=>f.objects.every(id=>V03Data.objById(id)?.factIds.includes(f.id)))),'Hongxing fact links must be bidirectional');
  for(const level of ['L1','L2','L3']){
   await page.evaluate(level=>V03Store.set({tab:'fact',sk:{mode3d:false},geo:{level,focus:level==='L3'?'湖南':null}}),level);
