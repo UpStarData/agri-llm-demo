@@ -363,25 +363,38 @@ window.V03Fact = (function () {
      点击不同筛选，数据总量不一样」（数据量本来就随窗口变化，这里只加"退场 5%"）。
      选点用 (坐标 + 视角 + 时间窗) 的哈希取模 20，所以：同一个筛选每次消失的是同一批点（不会乱跳），
      不同筛选消失的批次不同；首屏不触发，只有点了时间范围才触发。 */
-  const PRUNE_MOD = 20, PRUNE_FADE_MS = 1600;
-  let pruneSet = null, pruneT0 = 0, pruneArmed = false;
-  const pruneKeyOf = st => [st.time, st.geo.level, st.geo.focus || '', st.geo.city || '', st.geo.county || ''].join('|');
-  function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
-  /* 取「按哈希排序后的前 n/20 个」而不是取模：取模在点位少时比例波动大（比如 207 个点只掉 8 个），
-     排序取前 1/20 则严格约等于 1/20，且同一个筛选每次命中同一批（确定性）。 */
-  function pickPrune(selected, viewKey) {
+  /* 用户 2026-10-19 第 2 条：消失要发生在「铺点动画过程中」，而不是动画结束之后——
+     先把点从无到有铺出来，过程中缓慢随机掉掉约 1/20（每个点有自己的淡出窗口），
+     同时新点继续铺；**动画一结束就冻结**，不再新增也不再消失。
+     选点：随机取 n/20 个（他明确要"随机的"），每个点的淡出起点落在动画 45%–85% 之间，
+     淡出时长 = 动画时长的 18%，因此最晚在 100% 处收干净。 */
+  const PRUNE_MOD = 20;
+  let pruneMap = null, pruneStats = null;
+  /* 随机取 n/20 个点，每个点分配一个落在动画窗口内的淡出时段（结束时全部归零） */
+  function pickPrune(selected, dur) {
     const list = [...selected];
     const want = Math.max(1, Math.round(list.length / PRUNE_MOD));
-    const ranked = list
-      .map(k => ({ k, h: hash32(k + '|' + viewKey) }))
-      .sort((a, b) => a.h - b.h)
-      .slice(0, want);
-    return new Set(ranked.map(x => x.k));
+    for (let i = list.length - 1; i > 0; i--) {          /* Fisher–Yates 洗牌后取前 want 个 */
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = list[i]; list[i] = list[j]; list[j] = t;
+    }
+    const out = new Map();
+    const now = performance.now();
+    list.slice(0, want).forEach(k => {
+      const len = dur * 0.18;                                 /* 淡出占动画时长 18% */
+      /* 起点限制在 45%–82%，且必须留满淡出时间，保证**动画结束那一刻全部收干净**（之后冻结） */
+      const startAt = Math.min(dur * (0.45 + Math.random() * 0.37), dur - len);
+      out.set(k, { t0: now + startAt, len });
+    });
+    return out;
   }
-  /* 淡出期间的透明度：1 → 0；为 0 时该点不再绘制 */
+  /* 淡出透明度：1 → 0；到动画结束时应为 0（不再绘制）。不是退场点则恒为 1 */
   function pruneAlpha(coordKey) {
-    if (!pruneSet || !pruneSet.keys.has(coordKey)) return 1;
-    return Math.max(0, 1 - (performance.now() - pruneT0) / PRUNE_FADE_MS);
+    if (!pruneMap) return 1;
+    const w = pruneMap.get(coordKey);
+    if (!w) return 1;
+    const k = (performance.now() - w.t0) / w.len;
+    return k <= 0 ? 1 : k >= 1 ? 0 : 1 - k;
   }
   function ensureGrow(st) {
     if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
@@ -393,42 +406,27 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
-      pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
+      /* 这次铺点过程中要随机退场的 1/20：动画一开始就分配好各自的淡出时段（都在 dur 内结束） */
+      const sel = mapPlan(st).selected;
+      pruneMap = pickPrune(sel, dur);
+      pruneStats = { selected: sel.size, pruned: pruneMap.size };   /* 给验收/测试核对 1/20 用 */
       if (!growRaf) {
         const t0 = performance.now(); let paintedAt = 0;
         const tick = () => {
           growRaf = 0;
           const p = (performance.now() - t0) / dur;
-          growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
+          const finished = p >= 1;
+          growK = finished ? 1 : 1 - Math.pow(1 - p, 2.2);   /* 先快后慢，不是线性 */
           const now = performance.now();
-          const painting = now - paintedAt >= 80;
-          const pruning = pruneSet && now - pruneT0 < PRUNE_FADE_MS;
-          if (S.state.tab === 'fact' && (painting || (growK >= 1 && !pruning))) {
+          /* 过程中不断重绘（铺新点 + 退场点淡出）；最后一帧正好落在动画结束处，之后冻结 */
+          if (S.state.tab === 'fact' && (now - paintedAt >= 80 || finished)) {
             paintedAt = now;
             if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap();
           }
-          /* 铺点结束后还要继续重绘，把退场 5% 的淡出画完 */
-          const stillPruning = pruneSet && performance.now() - pruneT0 < PRUNE_FADE_MS;
-          if (growK < 1 || stillPruning) growRaf = requestAnimationFrame(tick);
+          if (!finished) growRaf = requestAnimationFrame(tick);
         };
         growRaf = requestAnimationFrame(tick);
-      }
-    }
-    /* 动画结束时（growK 到 1）算出这次要退场的 5%，并开始淡出计时 */
-    if (pruneArmed && growK >= 1) {
-      const vk = pruneKeyOf(st);
-      if (!pruneSet || pruneSet.viewKey !== vk) {
-        pruneSet = { viewKey: vk, keys: pickPrune(mapPlan(st).selected, vk) };
-        pruneT0 = performance.now();
-        if (!growRaf) {
-          const keep = () => {
-            growRaf = 0;
-            if (S.state.tab === 'fact') { if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap(); }
-            if (pruneSet && performance.now() - pruneT0 < PRUNE_FADE_MS) growRaf = requestAnimationFrame(keep);
-          };
-          growRaf = requestAnimationFrame(keep);
-        }
       }
     }
     return growK;
@@ -1252,6 +1250,7 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
+  return { layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market,
+    pruneInfo: () => pruneStats, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
     viewConfig, receiveFact, visiblePosition:visiblePixel, arrivalCandidates:()=>F.mappable(F.mapFacts(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();

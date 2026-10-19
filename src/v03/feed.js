@@ -6,9 +6,12 @@ window.V03Feed = (() => {
   const LOAD_MS=6500,TICK_MS=1000;
   /* 亮星节奏：按 3/8/6/2/8/1 秒循环（2026-10-16 反馈第 4 项），不再用随机区间。 */
   const STAR_CYCLE=[3000,8000,6000,2000,8000,1000];
+  /* 首次加载动画结束后：每 10s / 20s / 15s 退场一个点（循环），新增仍走上面的亮星接入，
+     一进一出保持数据量；退场按坐标登记在 V03Filter 里，切中国/湖南视角一样看不到。 */
+  const RETIRE_CYCLE=[10000,20000,15000];
   const reportQueue=(D.PKG?.ARRIVALS||[]).slice();
   const businessQueue=(window.__AGRI_PKG2__?.v24Business?.arrivals || []).slice();
-  let started=false,done=false,loadTimer=0,arrivalTimer=0,t0=0,cursor=0,revision=0,seq=0,starStep=0;
+  let started=false,done=false,retireOn=false,loadTimer=0,arrivalTimer=0,retireTimer=0,retireStep=0,t0=0,cursor=0,revision=0,seq=0,starStep=0;
   function sampleGeo(list,cap,priority=new Set()) {
     const chosen=[],ids=new Set(),buckets=new Map();
     const add=o=>{if(chosen.length<cap&&!ids.has(o.id)){chosen.push(o);ids.add(o.id);}};
@@ -24,7 +27,7 @@ window.V03Feed = (() => {
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
   function changed(){revision++;S.emit('data:revealed',status());const meta=document.getElementById('streamMeta');if(meta)meta.textContent='事实 '+loaded.size.toLocaleString()+' / '+D.FACTS.length.toLocaleString();}
-  function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();}
+  function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();startRetire();}
   function step(){
     const fraction=Math.min(1,(performance.now()-t0)/LOAD_MS), want=Math.ceil(600+(plan.length-600)*fraction);
     while(cursor<plan.length&&loaded.size<want)expose([plan[cursor++]]);
@@ -85,8 +88,25 @@ window.V03Feed = (() => {
     history.push({at:Math.round(performance.now()),view:key,mode:accepted?'live':'snapshot-replay'});if(history.length>40)history.shift();
   }
   function nextStarDelay(){return STAR_CYCLE[starStep++ % STAR_CYCLE.length];}
+  /* 挑当前视角下一个可见的点退场（随机），记到共享登记里 */
+  function retireOnce(){
+    const st=S.state;
+    const pool=V03Filter.mappable(V03Filter.factsAtLevel(st)).filter(f=>V03Filter.mapEligible(f));
+    if(!pool.length)return null;
+    const pick=pool[Math.floor(Math.random()*pool.length)];
+    const key=V03Filter.coordKeyOf(pick);
+    if(!V03Filter.retireCoord(key))return null;
+    revision++;
+    S.emit('data:revealed',status());
+    S.emit('feed:log',{text:'退场 · '+(pick.title||pick.region||'事实点')+' · '+new Date().toLocaleTimeString('zh-CN')});
+    return {key,title:pick.title};
+  }
+  function nextRetireDelay(){return RETIRE_CYCLE[retireStep++ % RETIRE_CYCLE.length];}
+  function scheduleRetire(){if(!retireOn)return;clearTimeout(retireTimer);retireTimer=setTimeout(()=>{retireOnce();scheduleRetire();},nextRetireDelay());}
+  function startRetire(){if(retireOn)return;retireOn=true;scheduleRetire();}
+  function stopRetire(){retireOn=false;clearTimeout(retireTimer);}
   function schedule(){if(!started)return;clearTimeout(arrivalTimer);arrivalTimer=setTimeout(async()=>{await arrive();schedule();},nextStarDelay());}
-  function stop(){started=false;clearInterval(loadTimer);clearTimeout(arrivalTimer);}
+  function stop(){started=false;clearInterval(loadTimer);clearTimeout(arrivalTimer);stopRetire();}
   function start(){if(started)return;started=true;t0=performance.now();loadTimer=setInterval(step,TICK_MS);schedule();changed();}
-  return {start,stop,status,complete,sampleGeo,LOAD_MS,STAR_CYCLE,nextStarDelay,starStep:()=>starStep,arrive,isFactVisible:id=>loaded.has(id),isObjectVisible:id=>!id.startsWith('e:v23:weather:')&&!id.startsWith('e:v24:')||objects.has(id),get revision(){return revision;}};
+  return {start,stop,status,complete,sampleGeo,LOAD_MS,STAR_CYCLE,nextStarDelay,starStep:()=>starStep,RETIRE_CYCLE,nextRetireDelay,retireOnce,startRetire,stopRetire,retireOn:()=>retireOn,retireStep:()=>retireStep,arrive,isFactVisible:id=>loaded.has(id),isObjectVisible:id=>!id.startsWith('e:v23:weather:')&&!id.startsWith('e:v24:')||objects.has(id),get revision(){return revision;}};
 })();
