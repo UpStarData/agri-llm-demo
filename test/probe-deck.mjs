@@ -1,0 +1,10 @@
+import {chromium} from 'playwright';import {pathToFileURL} from 'node:url';
+const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader']});
+const p=await b.newPage({viewport:{width:900,height:520}});
+const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push('console:'+m.text().slice(0,120));});
+await p.goto(pathToFileURL('/tmp/deck-test.html').href);
+await p.waitForTimeout(3000);
+const rep=await p.evaluate(()=>({report:window.__report, log:document.getElementById('log')?.textContent, webgl:!!document.createElement('canvas').getContext('webgl2')}));
+await p.screenshot({path:'/tmp/deck-render.png'});
+console.log(JSON.stringify({...rep, errs},null,1));
+await b.close();

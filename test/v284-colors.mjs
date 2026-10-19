@@ -17,7 +17,7 @@ try {
   page.on('pageerror', e => report.errors.push(e.message));
   await page.goto(pathToFileURL(path.resolve(process.env.AGRI_TEST_HTML || 'index.html')).href);
   await page.waitForFunction(() => window.__AGRI_READY);
-  await page.evaluate(() => { V03Feed.complete(); V03Feed.stop(); V03Store.set({tab: 'fact', time: 'all', geo: {level: 'L1', focus: null}}); });
+  await page.evaluate(() => { V03Feed.complete();V03Fact.finishAnimation(); V03Feed.stop(); V03Store.set({tab: 'fact', time: 'all', geo: {level: 'L1', focus: null}}); });
   await page.waitForTimeout(600);
 
   report.factLayer = await page.evaluate(() => {
