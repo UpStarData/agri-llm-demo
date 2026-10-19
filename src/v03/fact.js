@@ -358,6 +358,31 @@ window.V03Fact = (function () {
      不同时间窗的铺点节奏也不同（窗口越窄越快），用户能看出换的是哪个范围。 */
   let exitPoints = [], exitLevel = null;
   const GROW_MS = { today: 1500, '7d': 1800, '30d': 2200, '180d': 2700, '365d': 2900, all: 3200 };
+  /* ---------- 点击时间范围后：动画结束时让约 1/20 的事实点淡出消失 ----------
+     用户 2026-10-19：只改这一处——「点击时间范围筛选后，在动画结束后，消失大概 1/20 的事实点；
+     点击不同筛选，数据总量不一样」（数据量本来就随窗口变化，这里只加"退场 5%"）。
+     选点用 (坐标 + 视角 + 时间窗) 的哈希取模 20，所以：同一个筛选每次消失的是同一批点（不会乱跳），
+     不同筛选消失的批次不同；首屏不触发，只有点了时间范围才触发。 */
+  const PRUNE_MOD = 20, PRUNE_FADE_MS = 1600;
+  let pruneSet = null, pruneT0 = 0, pruneArmed = false;
+  const pruneKeyOf = st => [st.time, st.geo.level, st.geo.focus || '', st.geo.city || '', st.geo.county || ''].join('|');
+  function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
+  /* 取「按哈希排序后的前 n/20 个」而不是取模：取模在点位少时比例波动大（比如 207 个点只掉 8 个），
+     排序取前 1/20 则严格约等于 1/20，且同一个筛选每次命中同一批（确定性）。 */
+  function pickPrune(selected, viewKey) {
+    const list = [...selected];
+    const want = Math.max(1, Math.round(list.length / PRUNE_MOD));
+    const ranked = list
+      .map(k => ({ k, h: hash32(k + '|' + viewKey) }))
+      .sort((a, b) => a.h - b.h)
+      .slice(0, want);
+    return new Set(ranked.map(x => x.k));
+  }
+  /* 淡出期间的透明度：1 → 0；为 0 时该点不再绘制 */
+  function pruneAlpha(coordKey) {
+    if (!pruneSet || !pruneSet.keys.has(coordKey)) return 1;
+    return Math.max(0, 1 - (performance.now() - pruneT0) / PRUNE_FADE_MS);
+  }
   function ensureGrow(st) {
     if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
     if (growKey !== st.time) {
@@ -368,6 +393,7 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
+      pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
         const t0 = performance.now(); let paintedAt = 0;
@@ -376,13 +402,33 @@ window.V03Fact = (function () {
           const p = (performance.now() - t0) / dur;
           growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
           const now = performance.now();
-          if (S.state.tab === 'fact' && (now - paintedAt >= 80 || growK === 1)) {
+          const painting = now - paintedAt >= 80;
+          const pruning = pruneSet && now - pruneT0 < PRUNE_FADE_MS;
+          if (S.state.tab === 'fact' && (painting || (growK >= 1 && !pruning))) {
             paintedAt = now;
             if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap();
           }
-          if (growK < 1) growRaf = requestAnimationFrame(tick);
+          /* 铺点结束后还要继续重绘，把退场 5% 的淡出画完 */
+          const stillPruning = pruneSet && performance.now() - pruneT0 < PRUNE_FADE_MS;
+          if (growK < 1 || stillPruning) growRaf = requestAnimationFrame(tick);
         };
         growRaf = requestAnimationFrame(tick);
+      }
+    }
+    /* 动画结束时（growK 到 1）算出这次要退场的 5%，并开始淡出计时 */
+    if (pruneArmed && growK >= 1) {
+      const vk = pruneKeyOf(st);
+      if (!pruneSet || pruneSet.viewKey !== vk) {
+        pruneSet = { viewKey: vk, keys: pickPrune(mapPlan(st).selected, vk) };
+        pruneT0 = performance.now();
+        if (!growRaf) {
+          const keep = () => {
+            growRaf = 0;
+            if (S.state.tab === 'fact') { if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap(); }
+            if (pruneSet && performance.now() - pruneT0 < PRUNE_FADE_MS) growRaf = requestAnimationFrame(keep);
+          };
+          growRaf = requestAnimationFrame(keep);
+        }
       }
     }
     return growK;
@@ -589,6 +635,9 @@ window.V03Fact = (function () {
     facts.forEach((f, index) => {
       if(!selected.has(f.lng.toFixed(4)+'|'+f.lat.toFixed(4)))return;
       const diameter = radiusPx(f);
+      const coordKey = f.lng.toFixed(4) + '|' + f.lat.toFixed(4);
+      const pA = pruneAlpha(coordKey);
+      if (pA <= 0.02) return;                                  /* 退场已经结束：这个点不再画 */
       mapPoints(f.lng, f.lat).forEach(value => {
         /* 影响圆：只给"有影响半径"的事实画（既有产品规则，回归测试也在守）；
            之前看不到是因为数据侧大多缺半径 —— 改为在数据侧补默认半径 */
@@ -608,7 +657,8 @@ window.V03Fact = (function () {
           itemStyle: { opacity: (() => {
             const target = ageAlpha(f, st.time);
             /* 生长过程中：老的点边出现边淡出，看起来是"随时间流动消失"；结束时停在目标值不再变 */
-            return growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
+            const grow = growK < 1 ? Math.max(0.02, target * (0.25 + 0.75 * growK) * (target < 0.9 ? growK : 1)) : target;   /* 窗口内最老的点降到 0%，等于淡出消失 */
+            return grow * pA;                              /* 动画结束后退场的那 1/20 在这里淡出 */
           })(), color: l1Color(f), borderColor: 'rgba(255,255,255,.92)', borderWidth: .9 } };
         pointGroups.set(pointKey,point);pts.push(point);
       });
@@ -1072,11 +1122,14 @@ window.V03Fact = (function () {
     let facts = plan.facts;
     if (gk < 1) facts = facts.filter((f, i) => i < Math.ceil(facts.length * gk));
     const unique=[...new Map(facts.slice().reverse().map(f=>[[f.lng.toFixed(4),f.lat.toFixed(4)].join('|'),f])).values()]
-      .filter(f => plan.selected.has(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)));
-    const points = unique.map(f => ({
+      .filter(f => plan.selected.has(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)))
+      .map(f => ({ f, a: pruneAlpha(f.lng.toFixed(4) + '|' + f.lat.toFixed(4)) }))
+      .filter(x => x.a > 0.02);
+    const points = unique.map(({ f, a }) => ({
       id: f.id, lng: f.lng, lat: f.lat, color: l1Color(f), big: f.impact === 'high',
       halo: (st.sk.influence && !f.radiusEstimated && Number.isFinite(f.radius) && f.radius > 0) ? f.radius / 5200 : 0,
-      haloAlpha: IMPACT_ALPHA[f.impact] || .12
+      haloAlpha: IMPACT_ALPHA[f.impact] || .12,
+      a,                                   /* 退场 1/20 的逐点透明度，3D 与 2D 一致 */
     }));
     const overlay = (st.sk.regions ? regionsAtLevel() : [])
       .concat(st.sk.gates ? gatesAtLevel('port') : [], st.sk.airports ? gatesAtLevel('airport') : [],
