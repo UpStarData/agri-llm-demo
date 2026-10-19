@@ -1,0 +1,22 @@
+<!-- 事实层「新事实亮星」的矢量版本（与页面上的 CSS 实现视觉等价）
+     页面实现：.star-flash > i，14px 圆，径向渐变 + 外发光，动画 starFlash .9s
+     用法建议：作为 <img>/<use> 贴在点的屏幕坐标上，再用 CSS transform/opacity 播下面这段动画 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="-32 -32 64 64" role="img" aria-label="新事实亮星">
+  <defs>
+    <radialGradient id="starCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="38%"  stop-color="#ffec96" stop-opacity="0.85"/>
+      <stop offset="62%"  stop-color="#ffd666" stop-opacity="0.25"/>
+      <stop offset="78%"  stop-color="#ffd666" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 外发光：对应 CSS box-shadow 0 0 10px rgba(255,220,120,.75) -->
+    <filter id="starGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#ffdc78" flood-opacity="0.75"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- 7px 半径 = 页面上的 14px 直径 -->
+  <circle cx="0" cy="0" r="7" fill="url(#starCore)" filter="url(#starGlow)"/>
+</svg>
