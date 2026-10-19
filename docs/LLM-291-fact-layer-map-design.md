@@ -58,7 +58,12 @@ for (const f of facts) {
   const key = f.lng.toFixed(4) + '|' + f.lat.toFixed(4);
   const g = groups.get(key);
   if (g) { g.factIds.push(f.id); continue; }
-  groups.set(key, { id: f.id, factIds: [f.id], value: [f.lng, f.lat], l1: f.l1, date: f.date, archive: f.archive });
+  // 第四节的选点要用到 impact / severity / radiusKm / title，一并带过去
+  groups.set(key, {
+    id: f.id, factIds: [f.id], value: [f.lng, f.lat],
+    l1: f.l1, date: f.date, persistent: f.persistent,
+    impact: f.impact, severity: f.severity, radiusKm: f.radius, title: f.title,
+  });
 }
 
 // 点数据
