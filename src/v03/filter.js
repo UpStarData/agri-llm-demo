@@ -141,10 +141,27 @@ window.V03Filter = (function () {
   const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region)) ||
     (region === '湖南' && f.lng >= 108 && f.lng <= 115 && f.lat >= 24 && f.lat <= 31);
 
+  /* ---------- 跨视角共享的「点退场」登记 ----------
+     用户 2026-10-19 第 1 条：首次加载动画结束后，每隔 10s / 20s / 15s 消失一个点，
+     并且这些消失的点在切到中国、湖南视角后同样看不到（新增的点同理，走正常入库即各视角可见）。
+     这里按「坐标」登记，所以世界/中国/湖南三个视角的口径一致。 */
+  /* 注意：无坐标事实（直播源等 11 条 lng=null）必须返回 null，否则 toFixed 会抛错 */
+  const coordKeyOf = f => (f && Number.isFinite(f.lng) && Number.isFinite(f.lat)) ? f.lng.toFixed(4) + '|' + f.lat.toFixed(4) : null;
+  const retiredCoords = new Set();
+  let retiredRev = 0;
+  function retireCoord(key) {
+    if (!key || retiredCoords.has(key)) return false;
+    retiredCoords.add(key);
+    retiredRev++;
+    factCacheKey = '';                 /* 让 facts() 缓存失效 */
+    return true;
+  }
+  const isRetired = f => { const k = coordKeyOf(f); return !!k && retiredCoords.has(k); };
+
   let factCacheKey='',factCache=[];
   function facts(s) {
     s = s || window.V03Store.state;
-    const key=JSON.stringify([D.revision,window.V03Feed?.revision,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q]);
+    const key=JSON.stringify([D.revision,window.V03Feed?.revision,retiredRev,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q]);
     if(key===factCacheKey)return factCache;
     const set = selected(s, 'catKeys', FACT_ITEMS);
     factCacheKey=key;
@@ -153,6 +170,7 @@ window.V03Filter = (function () {
          点不会消失（用户 2026-10-17 反馈第 1 条）。档案仍保留原始发布日期，只是按窗口过滤。 */
       D.inWindow(f.date, s.time) &&
       (!window.V03Feed || V03Feed.isFactVisible(f.id)) &&
+      !isRetired(f) &&                             /* 已退场的坐标点：三个视角一致地不显示 */
       (set.size===FACT_ITEMS.length || matched(f, set)) &&
       varietyOk(f, s.varieties) &&
       regionOk(f, s.region) &&
@@ -318,6 +336,7 @@ window.V03Filter = (function () {
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
+    retireCoord, coordKeyOf, retiredCoords, retiredRevision: () => retiredRev,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
     prov: x => (x && x.prov) || 'generated'
