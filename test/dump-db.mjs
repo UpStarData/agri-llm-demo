@@ -12,7 +12,7 @@ const errors = [];
 page.on('pageerror', e => errors.push(e.message));
 await page.goto(pathToFileURL(path.resolve('index.html')).href);
 await page.waitForFunction(() => window.__AGRI_READY);
-await page.evaluate(() => { V03Feed.complete();V03Fact.finishAnimation(); V03Feed.stop(); });
+await page.evaluate(() => { V03Feed.complete();V03Fact.finishAnimation?.(); V03Feed.stop(); });
 
 const dump = await page.evaluate(() => {
   const D = V03Data, F = V03Filter;
