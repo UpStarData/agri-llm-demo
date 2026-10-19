@@ -28,13 +28,59 @@ Tooltip              底 rgba(255,255,255,.98)   描边 rgba(30,58,92,.22)
 
 ## 二、事实点（点本身）
 
-```text
-形状/尺寸   圆点，直径 6px（屏幕像素，不随 zoom 变）
-填充        该事实的一级分类色
-外圈        rgba(255,255,255,.92)，线宽 0.9
-透明度      ageAlpha × 动画系数
-            ageAlpha：全部时间/档案类 0.9；≤30 天 1.0；30–60 天 0.9；>60 天线性降到 0
-同坐标      多条记录合并成一个点（点开选“该位置共 N 条”）
+方案：一个事实一个点，按一级分类上色，白色描边防止密集处粘连，透明度按时间窗衰减；同坐标的多条记录合并成一个点。
+
+```js
+// 一级分类色（见三）
+const L1 = {
+  nature:'#4f8fa8', supply:'#6aa35c', chain:'#43a09a', market:'#c9705f',
+  consume:'#8d7fbe', policy:'#5d80c4', macro:'#b08a3c',
+};
+
+// 时间窗透明度：≤30 天 1.0，30–60 天 0.9，之后线性降到 0（窗口边界处正好消失）
+const WINDOW = { today: 1, '7d': 7, '30d': 30, '180d': 180, '365d': 365 };
+function ageAlpha(f, win) {
+  if (f.persistent || win === 'all') return 0.9;          // 档案类/全部时间：恒定 0.9
+  const span = WINDOW[win] || 30;
+  const t = Date.parse(String(f.date || '').slice(0, 10) + 'T00:00:00Z');
+  const now = Date.parse(TODAY + 'T00:00:00Z');            // TODAY = 'YYYY-MM-DD'
+  if (!Number.isFinite(t)) return 1;
+  const days = Math.max(0, (now - t) / 86400000);
+  if (days <= 30) return 1;
+  if (days <= 60) return 0.9;
+  const k = (days - 60) / Math.max(1, span - 60);
+  return Math.max(0, 0.9 * (1 - k));
+}
+
+// 同坐标合并：lng,lat 保留 4 位做 key，一个 key 一个点，其余记录挂在 factIds
+const groups = new Map();
+for (const f of facts) {
+  const key = f.lng.toFixed(4) + '|' + f.lat.toFixed(4);
+  const g = groups.get(key);
+  if (g) { g.factIds.push(f.id); continue; }
+  groups.set(key, { id: f.id, factIds: [f.id], value: [f.lng, f.lat], l1: f.l1, date: f.date, archive: f.archive });
+}
+
+// 点数据
+const pts = [...groups.values()].map(g => ({
+  id: g.id,
+  value: g.value,
+  symbolSize: 6,                                    // 直径 6px（屏幕像素，不随 zoom 变）
+  itemStyle: {
+    color: L1[g.l1],                                // 填充 = 一级分类色
+    opacity: ageAlpha(g, TIME) * anim,              // anim = 铺点/退场系数，稳定后为 1
+    borderColor: 'rgba(255,255,255,.92)',           // 白色描边
+    borderWidth: 0.9,
+  },
+}));
+
+// series
+const series = {
+  id: 'facts', type: 'scatter', coordinateSystem: 'geo',
+  data: pts, z: 5, cursor: 'pointer', animation: false,
+  symbolSize: 6,
+  large: false,                                     // 必须 false：large=true 会忽略逐点 color
+};
 ```
 
 ## 三、7 个一级事实分类色（点填充色）
@@ -51,34 +97,83 @@ Tooltip              底 rgba(255,255,255,.98)   描边 rgba(30,58,92,.22)
 
 ## 四、地理影响圆（光晕）
 
-**实现方式：代码画的，不是 SVG 文件。** ECharts `scatter` 系列 + 径向渐变（canvas），没有图片资源。
+方案：高影响事实（severity ≥ 70）按半径换算出像素直径，画一个很淡的径向渐变圆（静态，无关键帧）；同一批点再用 `effectScatter` 的描边环做"呼吸"。半径取值：数据给了 `geo.impactRadiusKm` 就用，没给就按 severity 折算成 `80 + severity × 3.2` 公里。
 
-```text
-谁能画        仅 impact === 'high'（severity ≥ 70）
-半径          80 + severity × 3.2  km      // 当前数据没有真实半径，全部按严重度折算
-像素换算      kmPerPixel = (全球 ? 40075 : 6900) / (画布宽 × zoom)
-              直径px = 2 × radiusKm / kmPerPixel
-              绘制尺寸 = min(88, max(16, 直径px × 1.2))
-数量/间距     最多 24 个；相邻光晕圆心屏幕间距 ≥ 40px；圆心必须在可视区
-渐变          径向：0% → 分类色 10% 不透明；55% → 4%；100% → 0
-              （实际 alpha 再乘 ageAlpha）
-```
+```js
+// hex → rgba
+const hexA = (hex, a) => {
+  const n = (h => h.length === 3 ? h.split('').map(c => c + c).join('') : h)(hex.replace('#', ''));
+  return `rgba(${parseInt(n.slice(0,2),16)},${parseInt(n.slice(2,4),16)},${parseInt(n.slice(4,6),16)},${a})`;
+};
 
-**动效怎么做的**：光晕本身是静态渐变，没有关键帧动画；"呼吸"由同点的涟漪承担：
+// 半径（km）→ 像素直径：地球周长按视角取值，再按画布宽 × zoom 换算
+function radiusToPx(km, level, width, zoom) {
+  if (!Number.isFinite(km) || km <= 0) return 0;
+  const kmPerPixel = (level === 'L1' ? 40075 : 6900) / Math.max(1, width * zoom);
+  return (2 * km) / kmPerPixel;                     // 返回直径
+}
+// 光晕尺寸：直径 × 1.2，上下限 16–88px
+const haloSize = diameter => Math.min(88, Math.max(16, diameter * 1.2));
 
-```text
-涟漪   effectScatter
-       period 7（秒）     每 7 秒扩散一次
-       scale 4.2          扩散到 4.2 倍
-       brushType 'stroke' 只画描边环
-       number 2           同时 2 个环
-       opacity .55        整体透明度
-       最多 8 个          showEffectOn 'render'（进入即播）
+// 圆心能否落屏（落屏外不画）
+const toPx = (lng, lat) => {
+  try {
+    const q = chart.convertToPixel({ geoIndex: 0 }, [lng, lat]);
+    return Array.isArray(q) && q.every(Number.isFinite)
+      && q[0] >= 0 && q[0] <= mapEl.clientWidth
+      && q[1] >= 0 && q[1] <= mapEl.clientHeight ? q : null;
+  } catch (e) { return null; }
+};
+
+const halos = [], ripples = [], usedHalo = [];
+
+for (const g of groups.values()) {
+  const diameter = radiusToPx(g.radiusKm, LEVEL, mapEl.clientWidth, zoom);
+  // 条件：仅高影响 + 半径 > 0 + 最多 24 个 + 圆心在屏内 + 与已画的圆心间距 ≥ 40px
+  if (!(g.impact === 'high' && diameter > 0 && halos.length < 24
+        && toPx(g.value[0], g.value[1])
+        && !usedHalo.some(q => {
+             const p = toPx(g.value[0], g.value[1]);
+             return Math.hypot(q[0] - p[0], q[1] - p[1]) < 40;
+           }))) continue;
+
+  const a0 = ageAlpha(g, WIN) * anim;              // anim = 铺点/退场系数
+  halos.push({
+    id: g.id,
+    value: g.value,
+    symbolSize: haloSize(diameter),
+    itemStyle: {
+      color: {
+        type: 'radial', x: .5, y: .5, r: .5,
+        colorStops: [
+          { offset: 0,    color: hexA(L1[g.l1], 0.10 * a0) },   // 圆心只有 10% 不透明
+          { offset: 0.55, color: hexA(L1[g.l1], 0.04 * a0) },
+          { offset: 1,    color: hexA(L1[g.l1], 0) },
+        ],
+      },
+    },
+  });
+  usedHalo.push(toPx(g.value[0], g.value[1]));
+
+  if (ripples.length < 8) ripples.push({ id: g.id, name: g.title, value: g.value });
+}
+
+// series：光晕 + 涟漪
+const haloSeries = {
+  id: 'halo', type: 'scatter', coordinateSystem: 'geo',
+  data: halos, silent: true, z: 2, symbol: 'circle',
+};
+
+const rippleSeries = {
+  id: 'ripple', type: 'effectScatter', coordinateSystem: 'geo',
+  data: ripples, silent: true, z: 3,
+  showEffectOn: 'render',
+  rippleEffect: { period: 7, scale: 4.2, brushType: 'stroke', number: 2 },
+  itemStyle: { opacity: 0.55 },
+};
 ```
 
 ## 五、新事实“亮起来”怎么做的
-
-**DOM 插一个元素 + CSS 关键帧，不是图片也不是 canvas。**
 
 ```js
 // 1) 经纬度 → 屏幕像素
