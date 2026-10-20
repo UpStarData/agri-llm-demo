@@ -34,6 +34,16 @@ window.V03Globe = (function () {
   }));
 
   const rad = Math.PI / 180, TAU = Math.PI * 2;
+
+  /* V3.0：3D 海洋取 2D 地图的海面色（--ocean），仅用明暗差保留球体立体感 */
+  function oceanHex(v) { return (v('--ocean') || '#5fbdf2').trim() || '#5fbdf2'; }
+  function shade(hex, k) {
+    const h = String(hex).replace('#', '');
+    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const to = k >= 0 ? 255 : 0, a = Math.abs(k);
+    const mix = i => Math.round(parseInt(n.slice(i, i + 2), 16) * (1 - a) + to * a);
+    return 'rgb(' + mix(0) + ',' + mix(2) + ',' + mix(4) + ')';
+  }
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
@@ -70,7 +80,7 @@ window.V03Globe = (function () {
     return {
       space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
       nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
-      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
+      sea1: shade(oceanHex(v), .3), sea2: oceanHex(v), sea3: shade(oceanHex(v), -.34),
       atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62,
       line: v('--map-line') || 'rgba(79,108,123,.67)', accent: v('--accent') || '#236bad'
     };
@@ -407,7 +417,7 @@ window.V03Globe = (function () {
       /* 逐点透明度（0 = 已退场不画）：与 2D 的退场 1/20 保持一致 */
       const pa = f.a == null ? 1 : f.a;
       if (pa <= .02) return;
-      if (f.halo > 0) {
+      if (false && f.halo > 0) {   /* V3.0：事实点不再画影响圆外发光 */
         const rr = R * f.halo;
         const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
         g.addColorStop(0, hexA(f.color, (f.haloAlpha || .14) * pa));
@@ -415,10 +425,12 @@ window.V03Globe = (function () {
         ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
       }
       const halo = f.big ? 8 : 6;
+      if (false) {   /* V3.0：去掉事实点第二层辉光 */
       const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.4);
       haloG.addColorStop(0, hexA(f.color, (f.big ? .3 : .22) * pa));
       haloG.addColorStop(1, hexA(f.color, 0));
       ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.4, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
+      }
       ctx.beginPath(); ctx.arc(pt.x, pt.y, f.big ? 3 : 2.4, 0, TAU);
       ctx.fillStyle = hexA('#ffffff', Math.min(1, pa + .25)); ctx.fill();
       ctx.strokeStyle = f.color; ctx.lineWidth = 1.2; ctx.stroke();
@@ -427,10 +439,7 @@ window.V03Globe = (function () {
     marks.forEach(m => {
       const pt = project(m.lng, m.lat, cx, cy, R);
       if (pt.z <= 0) return;
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, 6.5, 0, TAU);
-      ctx.fillStyle = hexA('#ffffff', .82); ctx.fill();
-      ctx.strokeStyle = m.color; ctx.lineWidth = 1.2; ctx.stroke();
-      if (m.glyph) {
+      if (m.glyph) {   /* V3.0：与 2D 一致，只画 emoji，不加底盘与描边 */
         ctx.font = '9px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
         ctx.textAlign = 'center'; ctx.fillText(m.glyph, pt.x, pt.y + 3.2);
       }

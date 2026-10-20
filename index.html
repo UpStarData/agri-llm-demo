@@ -272,7 +272,8 @@ svg{display:block}
 .fact-wrap{position:absolute;inset:0 0 0 0}
 .fact-mapbox{position:absolute;inset:0;background:var(--ocean)}   /* v07：地图铺满整屏，面板浮在上面 */
 .fact-mapbox #factMap{position:absolute;inset:0}
-@media (min-width:821px){.fact-mapbox #factMap{right:var(--side-w)}}
+/* V3.0：地图铺满整个背景，右侧面板浮在上层，不再裁掉地图（关联层本来就是浮层） */
+@media (min-width:821px){.fact-mapbox #factMap{right:0}}
 .fact-mapbox #factGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
 .data-snapshot{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(255,255,255,.87);color:var(--ink);font-size:11px;letter-spacing:.03em;backdrop-filter:blur(12px);pointer-events:none}
 .fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:54px}
@@ -547,6 +548,63 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 /* 叠加图层图标（内联 SVG，透明底） */
 .mn-overlay .mn-ov-em{font-style:normal;margin-right:6px;font-size:14px;line-height:1;background:transparent}
 .mn-overlay span{display:inline-flex;align-items:center}
+
+/* ================= V3.0 ================= */
+:root{--diff-add:#3fb950;--diff-del:#f85149;--diff-mod:#58a6ff}
+
+/* 系统级通知：灵动岛（居中顶部，2D / 3D / 两层共用） */
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;
+  gap:6px;align-items:center;pointer-events:none;max-width:min(560px,84vw)}
+.isl{pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:100%;padding:8px 15px;border-radius:999px;
+  background:rgba(9,13,19,.9);color:#f6f8fb;font-size:.75rem;line-height:1.35;letter-spacing:.01em;
+  box-shadow:0 12px 30px -14px rgba(0,0,0,.6);backdrop-filter:blur(22px) saturate(165%);-webkit-backdrop-filter:blur(22px) saturate(165%);
+  opacity:0;transform:translateY(-10px) scale(.9);white-space:nowrap;overflow:hidden;
+  transition:opacity .26s var(--ease),transform .36s cubic-bezier(.22,1,.36,1)}
+.isl.on{opacity:1;transform:none}
+.isl b{font-weight:var(--f-semi);color:#7dd3fc;flex:0 0 auto}
+.isl span{overflow:hidden;text-overflow:ellipsis}
+.isl.click{cursor:pointer}
+.isl.click:hover{background:rgba(17,25,36,.95)}
+
+/* 左侧菜单：左文字 / 右开关 */
+.mn-overlay{justify-content:space-between}
+.mn-ov-label{display:flex;align-items:center;gap:6px;min-width:0}
+.mn-master{justify-content:space-between;align-items:center}
+.sw{position:relative;display:inline-flex;flex:0 0 auto;width:30px;height:17px}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.sw i{position:absolute;inset:0;border-radius:999px;background:rgba(100,116,139,.35);transition:background .2s}
+.sw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
+.sw input:checked + i{background:var(--accent)}
+.sw input:checked + i::after{transform:translateX(13px)}
+
+/* 区域筛选：输入即出候选，回车进入视角 */
+.mn-region-box{position:relative}
+.mn-region-pop{position:absolute;left:0;right:0;top:100%;z-index:6;margin-top:4px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);overflow:hidden}
+.mn-region-pop[hidden]{display:none}
+.mn-region-opt{display:block;width:100%;text-align:left;padding:6px 8px;border:0;background:none;color:var(--ink);
+  font-size:.6875rem;cursor:pointer}
+.mn-region-opt:hover{background:rgba(47,111,208,.10)}
+.mn-region-none{padding:6px 8px;font-size:.6875rem;color:var(--dim)}
+
+/* 底部日志：按类型着色（新增 / 更新 / 告警） */
+.st-line[data-kind="add"] .tx{color:var(--diff-add)}
+.st-line[data-kind="mod"] .tx{color:var(--diff-mod)}
+.st-line[data-kind="del"] .tx{color:var(--diff-del)}
+
+/* V3.0：新接入只用亮光点，不用标签、不外发光 */
+.fcard.is-fresh{box-shadow:none}
+.fcard.is-fresh::after{content:none}
+.fcard-v12-meta{display:flex;align-items:center;gap:6px}
+.new-dot{width:6px;height:6px;border-radius:50%;background:#38bdf8;flex:0 0 auto}
+.fresh-tag{display:none}
+.fcard-detail{display:none}
+
+/* V3.0：详情底部文字按钮 */
+.link-btn{border:0;background:none;padding:6px 0;color:var(--accent);font:inherit;font-size:.6875rem;cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px}
+.fd-actions-end{justify-content:flex-end}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -565,7 +623,7 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
 .rel-main.globe-view .rel-globe{display:block}
 .rel-main.globe-view .rel-canvas{visibility:hidden}
 .rel-main.graph-view .rel-canvas{right:var(--side-w);bottom:var(--stream-h)}
-@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:var(--side-w)}}
+@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:0}}
 .rel-viewbar{position:absolute;right:calc(var(--side-w) + 10px);bottom:calc(var(--stream-h) + 86px);z-index:42;display:flex;gap:4px;padding:4px;
   border:1px solid var(--line);border-radius:var(--r-md);background:var(--glass);backdrop-filter:var(--blur)}
 .rel-viewbar button{border:0;border-radius:var(--r-sm);background:transparent;color:var(--mut);padding:6px 10px;
@@ -900,7 +958,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V3.0</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -922,6 +980,9 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
 
       <!-- 快捷键组（地图右下角，两排；含放大 / 缩小） -->
+      <!-- V3.0：系统级通知（灵动岛，两层共用，居中顶部） -->
+      <div class="island" id="island" role="status" aria-live="polite"></div>
+
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
@@ -931,8 +992,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
       <div class="stream" id="streamBox">
         <div class="st-bar">
-          <span class="st-tab" id="stTabName">接入流</span>
-          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
+          <span class="st-tab" id="stTabName">底部日志</span>
           <span class="st-meta" id="streamMeta"></span>
         </div>
         <div class="st-body" id="streamBody"></div>
@@ -964,7 +1024,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"71d4df335a54","git":"17c14b1","builtAt":"2026-10-19T06:03:07.187Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"4c066df3b6c5","git":"76017c7","builtAt":"2026-10-20T13:28:32.920Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -6044,16 +6104,26 @@ window.V03Filter = (function () {
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
-      const ids=new Set(objects(s).map(o=>o.id));
-      return { rows:[['当前本体',ids.size],['当前关系',relations(s).length]],note:'' };
+      /* V3.0：三组数据 · 第一排当前本体，第二排今日新增本体 / 今日新增关系；均按全库真实值 ×20，不随筛选变化 */
+      const objs = D.OBJECTS || [], rels = D.RELATIONS || [], day = f => D.inWindow(f.ingestedAt || f.date, 'today');
+      return {
+        rows: [
+          ['当前本体', (objs.length * 20).toLocaleString('en-US'), objs.length * 20],
+          ['今日新增本体', (objs.filter(day).length * 20).toLocaleString('en-US'), objs.filter(day).length * 20],
+          ['今日新增关系', (rels.filter(day).length * 20).toLocaleString('en-US'), rels.filter(day).length * 20]
+        ],
+        note: ''
+      };
     }
+    /* V3.0：概览用全库真实总量 ×20，且不随筛选条件变化（用户口径） */
+    const ALL = D.FACTS || [];
+    const raw = ALL.length * 20;
+    const today = ALL.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length * 20;
     const list = factsAtLevel(s);
-    const raw = list.length;
-    const today = list.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length;
     return {
       rows: [
-        ['当前事实', String(raw), raw],
-        ['今日新增', String(today), today]
+        ['当前事实', raw.toLocaleString('en-US'), raw],
+        ['今日新增事实', today.toLocaleString('en-US'), today]
       ],
       note: '',
       real: list.length,
@@ -6131,6 +6201,16 @@ window.V03Globe = (function () {
   }));
 
   const rad = Math.PI / 180, TAU = Math.PI * 2;
+
+  /* V3.0：3D 海洋取 2D 地图的海面色（--ocean），仅用明暗差保留球体立体感 */
+  function oceanHex(v) { return (v('--ocean') || '#5fbdf2').trim() || '#5fbdf2'; }
+  function shade(hex, k) {
+    const h = String(hex).replace('#', '');
+    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const to = k >= 0 ? 255 : 0, a = Math.abs(k);
+    const mix = i => Math.round(parseInt(n.slice(i, i + 2), 16) * (1 - a) + to * a);
+    return 'rgb(' + mix(0) + ',' + mix(2) + ',' + mix(4) + ')';
+  }
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
@@ -6167,7 +6247,7 @@ window.V03Globe = (function () {
     return {
       space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
       nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
-      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
+      sea1: shade(oceanHex(v), .3), sea2: oceanHex(v), sea3: shade(oceanHex(v), -.34),
       atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62,
       line: v('--map-line') || 'rgba(79,108,123,.67)', accent: v('--accent') || '#236bad'
     };
@@ -6504,7 +6584,7 @@ window.V03Globe = (function () {
       /* 逐点透明度（0 = 已退场不画）：与 2D 的退场 1/20 保持一致 */
       const pa = f.a == null ? 1 : f.a;
       if (pa <= .02) return;
-      if (f.halo > 0) {
+      if (false && f.halo > 0) {   /* V3.0：事实点不再画影响圆外发光 */
         const rr = R * f.halo;
         const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
         g.addColorStop(0, hexA(f.color, (f.haloAlpha || .14) * pa));
@@ -6512,10 +6592,12 @@ window.V03Globe = (function () {
         ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
       }
       const halo = f.big ? 8 : 6;
+      if (false) {   /* V3.0：去掉事实点第二层辉光 */
       const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.4);
       haloG.addColorStop(0, hexA(f.color, (f.big ? .3 : .22) * pa));
       haloG.addColorStop(1, hexA(f.color, 0));
       ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.4, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
+      }
       ctx.beginPath(); ctx.arc(pt.x, pt.y, f.big ? 3 : 2.4, 0, TAU);
       ctx.fillStyle = hexA('#ffffff', Math.min(1, pa + .25)); ctx.fill();
       ctx.strokeStyle = f.color; ctx.lineWidth = 1.2; ctx.stroke();
@@ -6524,10 +6606,7 @@ window.V03Globe = (function () {
     marks.forEach(m => {
       const pt = project(m.lng, m.lat, cx, cy, R);
       if (pt.z <= 0) return;
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, 6.5, 0, TAU);
-      ctx.fillStyle = hexA('#ffffff', .82); ctx.fill();
-      ctx.strokeStyle = m.color; ctx.lineWidth = 1.2; ctx.stroke();
-      if (m.glyph) {
+      if (m.glyph) {   /* V3.0：与 2D 一致，只画 emoji，不加底盘与描边 */
         ctx.font = '9px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
         ctx.textAlign = 'center'; ctx.fillText(m.glyph, pt.x, pt.y + 3.2);
       }
@@ -6611,18 +6690,29 @@ window.V03Globe = (function () {
 /* Shared arrival presentation. Replay and real ingestion use the same event path. */
 window.V03Intake = (() => {
   const timers = new WeakMap();
-  function note(host, kind, title) {
-    if (!host) return;
-    const previous = timers.get(host);
-    if (previous) { clearTimeout(previous.hide); clearTimeout(previous.remove); previous.node.remove(); }
+  /* V3.0：系统级通知 —— 苹果灵动岛样式，居中顶部，两层共用（2D / 3D 都显示）。
+     host 参数保留兼容旧调用，实际挂载点固定为 #island。 */
+  function note(host, kind, title, factId) {
+    const dock = document.getElementById('island');
+    if (!dock) return;
     const node = document.createElement('div');
-    node.className = 'fresh-note'; node.setAttribute('role', 'status');
-    const badge = document.createElement('b'); badge.textContent = kind;
-    const text = document.createElement('span'); text.textContent = title;
-    node.append(badge, text); host.prepend(node);
-    const state = { node, hide: 0, remove: 0 }; timers.set(host, state);
+    node.className = 'isl'; node.setAttribute('role', 'status');
+    const cat = String(kind || '通知') + ' ' + String(title || '');
+    node.innerHTML = '<b># ' + String(kind || '通知') + '</b><span>' + String(title || '') + '</span>';
+    if (factId) {
+      node.classList.add('click');
+      node.onclick = () => {
+        const st = window.V03Store && window.V03Store.state || {};
+        if (st.tab === 'fact') window.V03Store.set({ factId, panels: { cards: true } });
+        else if (window.V03App && window.V03App.openRelationFact) window.V03App.openRelationFact(factId);
+      };
+    }
+    dock.appendChild(node);
+    while (dock.children.length > 2) dock.firstChild.remove();
     requestAnimationFrame(() => node.classList.add('on'));
-    state.hide = setTimeout(() => { node.classList.remove('on'); state.remove = setTimeout(() => { node.remove(); if (timers.get(host) === state) timers.delete(host); }, 350); }, 3800);
+    const hide = setTimeout(() => { node.classList.remove('on'); setTimeout(() => node.remove(), 380); }, 4200);
+    node.addEventListener('pointerenter', () => clearTimeout(hide));
+    return cat;
   }
   function star(host, point, id, bright = true) {
     if (!host || !point || !point.every(Number.isFinite)) return false;
@@ -6730,7 +6820,7 @@ window.V03Feed = (() => {
   expose(sampleGeo(D.FACTS.filter(f=>f.impact==='high'),72));
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
-  function changed(){revision++;S.emit('data:revealed',status());const meta=document.getElementById('streamMeta');if(meta)meta.textContent='事实 '+loaded.size.toLocaleString()+' / '+D.FACTS.length.toLocaleString();}
+  function changed(){revision++;S.emit('data:revealed',status());}
   function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();startRetire();}
   function step(){
     const fraction=Math.min(1,(performance.now()-t0)/LOAD_MS), want=Math.ceil(600+(plan.length-600)*fraction);
@@ -6996,8 +7086,9 @@ window.V03Fact = (function () {
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.sk.mode3d && S.state.tab === 'fact') {
-          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('三维地球已放到最大 · 切换到二维全球'); }
-          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('进入 2D 全球视角'); }
+          /* V3.0：切换视角不再弹提示文案 */
+          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); }
+          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); }
         }
         if (edge === 'in' || edge === 'surface') { S.set({ sk: { mode3d: false } }); }
       }
@@ -7009,7 +7100,6 @@ window.V03Fact = (function () {
       if (camera.zoom > box[0] + .004) return;
       e.preventDefault(); e.stopImmediatePropagation();
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
     }, { capture: true, passive: false });
     const seen = new Set();
     S.onEvent('stream:line', p => {
@@ -7098,7 +7188,6 @@ window.V03Fact = (function () {
     if (st.geo.level === 'L1' && camera.zoom < box[0] - .02) {
       camera.zoom = box[0];
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     if (camera.zoom < box[0]) camera.zoom = box[0];
@@ -7138,7 +7227,6 @@ window.V03Fact = (function () {
     /* 全球视角在最小比例尺继续缩小：与滚轮 / 按钮一致，切回三维地球 */
     if (factor < 1 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * factor));
@@ -7155,7 +7243,6 @@ window.V03Fact = (function () {
     /* 全球视角缩到最小再缩：切回三维地球 */
     if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.14 : 1 / 1.14)));
@@ -7279,7 +7366,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, options.replay?'事实接入回放':'新事实', f.title);
+      V03Intake.note(dom.side, (f.l1Label || f.cat || '事实'), f.title, f.id);
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -7319,6 +7406,8 @@ window.V03Fact = (function () {
       if (S.state.tab !== 'fact' || !S.state.panels.cards || document.hidden) return;
       if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
       if (Date.now() < a.paused) return;
+      /* V3.0：鼠标在卡片区悬停时不自动滚动 */
+      if (el.matches(':hover')) { a.lastTop = el.scrollTop; return; }
       if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { a.t += 0.016; if (a.t > 6) { a.t = 0; el.scrollTop = 0 }    /* 到底停一下再回到顶部 */
         if (a.t > 0 && a.t < 0.02) { a.paused = Date.now() + 1800 } return }
@@ -7773,7 +7862,7 @@ window.V03Fact = (function () {
     const c = f.card || {}, cat = catOf(f);
     const foot = '<div class="fcard-foot"><span>' + esc(f.region || '') + '</span>' +
       (f.date ? '<span>·</span><span>' + esc(f.date) + '</span>' : '') +
-      '<span class="sp"></span><span class="fcard-mark">' + sourceCount(f) + ' 个来源</span></div>';
+      '</div>';
     let body = '';
     switch (f.cardType) {
       case 'price': {
@@ -7814,9 +7903,10 @@ window.V03Fact = (function () {
         body = '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
-    return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
-      V03Media.figure(f) + body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
+    return '<article class="fcard" data-fid="' + esc(f.id) + '" tabindex="0">' +
+      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span>' +
+      (fresh ? '<i class="new-dot" aria-label="新接入"></i>' : '') + '</div>' +
+      V03Media.figure(f) + body + foot + '</article>';
   }
 
   let visibleCardCount = 20;
@@ -7842,7 +7932,12 @@ window.V03Fact = (function () {
     V03Media.beginCards('fact');
     dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
-    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh'); });
+    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => {
+      if (!freshIds.has(el.dataset.fid)) return;
+      el.classList.add('is-fresh');
+      const meta = el.querySelector('.fcard-v12-meta');
+      if (meta && !meta.querySelector('.new-dot')) meta.insertAdjacentHTML('beforeend', '<i class="new-dot" aria-label="新接入"></i>');
+    });
     dom.sideBody.scrollTop = scroll;
     autoScrollCards(dom.sideBody);
     dom.sideBody.onscroll = () => {
@@ -7892,17 +7987,14 @@ window.V03Fact = (function () {
           ${row('分类', [leaf.group, leaf.sub, leaf.n].filter(Boolean).join(' › '))}
           ${row('发生时间', f.occurredAt || f.date || '来源材料未提供发生时间')}
           ${row('地理范围', path || '来源材料未提供可靠位置')}
+          ${row('涉及品种', (f.variety || (f.card && f.card.variety) || (f.commodityName) || '来源材料未提供涉及品种'))}
         </div>
         <div class="fd-sec"><h4>涉及本体 <small>点击进入关联层</small></h4>
           <div>${objs.map(o => { const dm = D.domain(o.domain); return '<span class="objchip" data-obj="' + esc(o.id) + '"><span class="d" style="background:' + dm.c + '"></span><b>' + esc(o.name) + '</b>' + esc(dm.n) + '</span>'; }).join('') || '<p>暂无已确认本体；Jev 候选尚未接入。</p>'}</div>
         </div>
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
-        <div class="fd-sec"><h4>显示层级与地理影响</h4>
-          ${row('显示层级', scope)}
-          ${row('地理影响半径', f.radius ? f.radius + ' km' : '未知')}
-        </div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
-        <div class="fd-sec"><h4>证据与来源 <small>${evidence.length} 条</small></h4>
+        <div class="fd-sec">
           ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
@@ -7910,9 +8002,11 @@ window.V03Fact = (function () {
         <div class="fd-actions">
           <button class="btn sec" id="toRel">在关联层查看</button>
           <button class="btn sec" id="toSim">基于该事实发起推演</button>
-          <button class="btn ter" id="toLog">${st.logOpen ? '收起事实形成过程' : '查看事实形成过程'}</button>
         </div>
-        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + '</div>' : ''}
+        <div class="fd-actions fd-actions-end">
+          <button class="link-btn" id="toLog">查看事实形成过程</button>
+        </div>
+        ${st.logOpen ? '<div class="fd-sec">' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + row('当前版本', f.version || 'V0.01') + '</div>' : ''}
       </div>`;
     box.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => S.set({
       tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]),
@@ -8195,8 +8289,8 @@ window.V03Relation = (function () {
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.rel.view !== 'globe') return;
-        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('三维地球已放到最大 · 切换到二维全球'); }
-        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('进入 2D 全球视角'); }
+        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); }
+        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); }
       }
     });
 
@@ -9008,7 +9102,7 @@ window.V03Relation = (function () {
       renderPanel(S.state, F.objects(S.state));
       if(S.state.rel.view==='geo')paintFocus();
     }
-    V03Intake.note(dom.side, replay?'本体接入回放':'新本体', list[0].name);
+    V03Intake.note(dom.side, '本体', list[0].name, null);
     list.forEach(relFlashStar);
     dom.body.scrollTop = 0;
     if (dom.body.__auto) dom.body.__auto.paused = Date.now() + 4500;
@@ -9713,7 +9807,7 @@ window.V03Sim = (function () {
 
     /* ② 图层数据分类筛选（F3 三级字典 / A2 九类对象域） */
     const s2 = el('section', 'mn-sec');
-    s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '图层数据分类筛选'));
+    s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '事实分类筛选'));
     tree.forEach(g => {
       const blk = el('div', 'mn-grp');
       const groupHead = el('button', 'mn-l1 mn-l1-button', (g.color ? '<i style="background:' + g.color + '"></i>' : '') + '<span>' + g.n + '</span>');
@@ -9752,7 +9846,11 @@ window.V03Sim = (function () {
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');
-      selector.innerHTML = '<div class="mn-l2">品种（多选，跨层保留）</div><div class="mn-varieties"></div><label class="mn-l2">区域筛选 <input class="mn-region" type="search" placeholder="国家 / 省 / 市" value="' + String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></label>';
+      selector.innerHTML = '<div class="mn-l2">品种筛选</div><div class="mn-varieties"></div>' +
+        '<div class="mn-l2">区域筛选</div>' +
+        '<div class="mn-region-box"><input class="mn-region" type="search" placeholder="输入中国 / 湖南，回车进入" value="' +
+        String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" autocomplete="off" role="combobox" aria-expanded="false">' +
+        '<div class="mn-region-pop" role="listbox" hidden></div></div>';
       const row = selector.querySelector('.mn-varieties');
       ['榴莲', '车厘子', '辣椒'].forEach(v => {
         const b = el('button', 'l3' + (st.varieties.includes(v) ? ' on' : ''), v);
@@ -9761,44 +9859,68 @@ window.V03Sim = (function () {
         row.appendChild(b);
       });
       const inp = selector.querySelector('.mn-region');
-      inp.onchange = () => S.set({ region: inp.value.trim() });
-      inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
+      const pop = selector.querySelector('.mn-region-pop');
+      const REGIONS = [{ n: '中国', level: 'L2', focus: null }, { n: '湖南', level: 'L3', focus: '湖南' }];
+      const paint = q => {
+        const hit = REGIONS.filter(r => !q || r.n.includes(q));
+        pop.innerHTML = hit.map(r => '<button type="button" class="mn-region-opt" data-i="' + REGIONS.indexOf(r) + '">' + r.n + '</button>').join('') ||
+          '<div class="mn-region-none">无匹配区域</div>';
+        pop.hidden = false; inp.setAttribute('aria-expanded', 'true');
+      };
+      const go = r => {
+        if (!r) return;
+        pop.hidden = true; inp.setAttribute('aria-expanded', 'false');
+        inp.value = r.n;
+        S.set({ region: r.n, geo: { level: r.level, focus: r.focus } });
+      };
+      inp.oninput = () => paint(inp.value.trim());
+      inp.onfocus = () => paint(inp.value.trim());
+      inp.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const q = inp.value.trim();
+          go(REGIONS.find(r => r.n === q) || REGIONS.find(r => r.n.includes(q)) || (!q ? null : null));
+          if (!q) { S.set({ region: '' }); }
+        }
+        if (e.key === 'Escape') { pop.hidden = true; inp.blur(); }
+      };
+      pop.onclick = e => { const b = e.target.closest('.mn-region-opt'); if (b) go(REGIONS[+b.dataset.i]); };
+      document.addEventListener('pointerdown', ev => { if (!selector.querySelector('.mn-region-box').contains(ev.target)) pop.hidden = true; }, { once: true });
       s2.appendChild(selector);
     }
     body.appendChild(s2);
 
     if (isRel) {
-      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选 · 跨层同步'));
+      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选'));
       const row=el('div','mn-varieties');
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
-      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
+      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选'));
       const selected=st.relTypes;
-      relFilter.appendChild(el('div','mn-l2','当前范围内实际存在的关系'));
         const typeRow=el('div','mn-rel-types');
         F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
           const on=!Array.isArray(selected)||selected.includes(t);
           const b=el('button','l3'+(on?' on':''));
           b.dataset.relType=t;
           b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
-          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span><small>'+count+'</small>';
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
           b.setAttribute('aria-pressed',String(on));
           b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
           typeRow.appendChild(b);
         });
         relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
-      const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
-      const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
+
     }
 
     if (!isRel) {
       const overlay = el('section', 'mn-sec');
-      overlay.appendChild(el('div', 'mn-h', '叠加数据图层（独立开关）'));
+      overlay.appendChild(el('div', 'mn-h', '叠加图层'));
       [['regions','农作物主要产区','region'],['gates','港口','port'],['airports','机场','airport'],['markets','农贸市场','market'],['risks','地缘风险区（仅世界）','risk']].forEach(([key,label,kind]) => {
         const item = el('label', 'mn-overlay');
         const emoji = (window.V03Fact && window.V03Fact.layerEmoji) ? window.V03Fact.layerEmoji(kind) : '';
-        item.innerHTML = '<input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><span><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>';
+        item.innerHTML = '<span class="mn-ov-label"><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>' +
+          '<span class="sw"><input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><i></i></span>';
         item.querySelector('input').onchange = e => S.set({ sk: { [key]: e.target.checked } });
         overlay.appendChild(item);
       });
@@ -9809,10 +9931,10 @@ window.V03Sim = (function () {
        时间范围改到地图右下角快捷键里单独一排 */
     /* ④ 地图快捷键总开关（独立一段） */
     const s4 = el('section', 'mn-sec');
-    s4.appendChild(el('div', 'mn-h', '地图快捷键'));
+    s4.appendChild(el('div', 'mn-h', '快捷控制'));
     const master = el('label', 'mn-master');
-    master.innerHTML = '<input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '>' +
-      '<span><b>地图快捷键</b><small>只控制地图右下角整组快捷键；关闭后本面板快捷控制仍可用</small></span>';
+    master.innerHTML = '<span class="mn-ov-label"><b>显示地图快捷键</b></span>' +
+      '<span class="sw"><input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '><i></i></span>';
     master.querySelector('input').onchange = e => S.set({ panels: { shortcuts: e.target.checked } });
     s4.appendChild(master);
     body.appendChild(s4);
@@ -9838,16 +9960,19 @@ window.V03Sim = (function () {
   const pad2 = n => String(n).padStart(2, '0');
   const stamp = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' +
     pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+  /* V3.0：日志类型 → 颜色（新增 / 归并去重 / 更新覆盖 / 告警） */
+  const LOG_KIND = { ingest: 'add', extract: 'add', resolve: 'mod', geo: 'mod', score: 'mod', link: 'mod', graph: 'mod', warn: 'del' };
   function logText(e) {
     const f = e.factId ? D.factById(e.factId) : null;
     const tag = STAGE_TAG[e.stage] || '接入';
-    return '演示记录 · ' + tag + ' · ' + (f ? f.title : '预置处理步骤') + '（非实时任务）';
+    return tag + ' · ' + (f ? f.title : '预置处理步骤');
   }
   /* B3/M7：每条进入流水的事实都向地图发一次「星闪」 */
   function pushStreamLine(e) {
     const body = $('streamBody');
     if (!body || !e) return;
     const row = el('div', 'st-line');
+    row.dataset.kind = LOG_KIND[e.stage] || 'add';
     row.appendChild(el('span', 'tx', logText(e)));
     body.appendChild(row);
     while (body.children.length > 90) body.removeChild(body.firstChild);
@@ -9972,6 +10097,28 @@ window.V03Sim = (function () {
       if (document.activeElement !== inp) setTimeout(() => inp.focus(), 30);
     }
   }
+  /* V3.0：ESC 退回全球 2D 视角（输入框/弹层有各自的 ESC 行为，先让给它们） */
+  function bindEscHome() {
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const st = S.state;
+      if (st.settings && (st.settings.gate || st.settings.authed)) return;
+      if (st.tab === 'fact') {
+        if (st.sk.mode3d || st.geo.level !== 'L1' || st.geo.focus) {
+          S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } });
+          e.preventDefault();
+        }
+      } else if (st.tab === 'relation') {
+        if (st.rel.view === 'graph' || st.rel.level !== 'L1' || st.rel.focus) {
+          S.set({ rel: { view: 'geo', level: 'L1', focus: null } });
+          e.preventDefault();
+        }
+      }
+    });
+  }
+
   function bindSettings() {
     $('pwOk').onclick = () => {
       if ($('pwInput').value.trim() === PW) { $('pwInput').value = ''; S.set({ settings: { gate: false, authed: true } }); }
@@ -10030,6 +10177,7 @@ window.V03Sim = (function () {
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
+  bindEscHome();
     document.addEventListener('keydown', onKey);
     document.addEventListener('fullscreenchange', () => S.set({ sk: { fullscreen: !!document.fullscreenElement } }));
   }

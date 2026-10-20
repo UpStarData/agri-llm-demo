@@ -347,7 +347,7 @@
 
     /* ② 图层数据分类筛选（F3 三级字典 / A2 九类对象域） */
     const s2 = el('section', 'mn-sec');
-    s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '图层数据分类筛选'));
+    s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '事实分类筛选'));
     tree.forEach(g => {
       const blk = el('div', 'mn-grp');
       const groupHead = el('button', 'mn-l1 mn-l1-button', (g.color ? '<i style="background:' + g.color + '"></i>' : '') + '<span>' + g.n + '</span>');
@@ -386,7 +386,11 @@
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');
-      selector.innerHTML = '<div class="mn-l2">品种（多选，跨层保留）</div><div class="mn-varieties"></div><label class="mn-l2">区域筛选 <input class="mn-region" type="search" placeholder="国家 / 省 / 市" value="' + String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></label>';
+      selector.innerHTML = '<div class="mn-l2">品种筛选</div><div class="mn-varieties"></div>' +
+        '<div class="mn-l2">区域筛选</div>' +
+        '<div class="mn-region-box"><input class="mn-region" type="search" placeholder="输入中国 / 湖南，回车进入" value="' +
+        String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" autocomplete="off" role="combobox" aria-expanded="false">' +
+        '<div class="mn-region-pop" role="listbox" hidden></div></div>';
       const row = selector.querySelector('.mn-varieties');
       ['榴莲', '车厘子', '辣椒'].forEach(v => {
         const b = el('button', 'l3' + (st.varieties.includes(v) ? ' on' : ''), v);
@@ -395,44 +399,68 @@
         row.appendChild(b);
       });
       const inp = selector.querySelector('.mn-region');
-      inp.onchange = () => S.set({ region: inp.value.trim() });
-      inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
+      const pop = selector.querySelector('.mn-region-pop');
+      const REGIONS = [{ n: '中国', level: 'L2', focus: null }, { n: '湖南', level: 'L3', focus: '湖南' }];
+      const paint = q => {
+        const hit = REGIONS.filter(r => !q || r.n.includes(q));
+        pop.innerHTML = hit.map(r => '<button type="button" class="mn-region-opt" data-i="' + REGIONS.indexOf(r) + '">' + r.n + '</button>').join('') ||
+          '<div class="mn-region-none">无匹配区域</div>';
+        pop.hidden = false; inp.setAttribute('aria-expanded', 'true');
+      };
+      const go = r => {
+        if (!r) return;
+        pop.hidden = true; inp.setAttribute('aria-expanded', 'false');
+        inp.value = r.n;
+        S.set({ region: r.n, geo: { level: r.level, focus: r.focus } });
+      };
+      inp.oninput = () => paint(inp.value.trim());
+      inp.onfocus = () => paint(inp.value.trim());
+      inp.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const q = inp.value.trim();
+          go(REGIONS.find(r => r.n === q) || REGIONS.find(r => r.n.includes(q)) || (!q ? null : null));
+          if (!q) { S.set({ region: '' }); }
+        }
+        if (e.key === 'Escape') { pop.hidden = true; inp.blur(); }
+      };
+      pop.onclick = e => { const b = e.target.closest('.mn-region-opt'); if (b) go(REGIONS[+b.dataset.i]); };
+      document.addEventListener('pointerdown', ev => { if (!selector.querySelector('.mn-region-box').contains(ev.target)) pop.hidden = true; }, { once: true });
       s2.appendChild(selector);
     }
     body.appendChild(s2);
 
     if (isRel) {
-      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选 · 跨层同步'));
+      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选'));
       const row=el('div','mn-varieties');
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
-      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
+      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选'));
       const selected=st.relTypes;
-      relFilter.appendChild(el('div','mn-l2','当前范围内实际存在的关系'));
         const typeRow=el('div','mn-rel-types');
         F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
           const on=!Array.isArray(selected)||selected.includes(t);
           const b=el('button','l3'+(on?' on':''));
           b.dataset.relType=t;
           b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
-          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span><small>'+count+'</small>';
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
           b.setAttribute('aria-pressed',String(on));
           b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
           typeRow.appendChild(b);
         });
         relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
-      const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
-      const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
+
     }
 
     if (!isRel) {
       const overlay = el('section', 'mn-sec');
-      overlay.appendChild(el('div', 'mn-h', '叠加数据图层（独立开关）'));
+      overlay.appendChild(el('div', 'mn-h', '叠加图层'));
       [['regions','农作物主要产区','region'],['gates','港口','port'],['airports','机场','airport'],['markets','农贸市场','market'],['risks','地缘风险区（仅世界）','risk']].forEach(([key,label,kind]) => {
         const item = el('label', 'mn-overlay');
         const emoji = (window.V03Fact && window.V03Fact.layerEmoji) ? window.V03Fact.layerEmoji(kind) : '';
-        item.innerHTML = '<input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><span><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>';
+        item.innerHTML = '<span class="mn-ov-label"><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>' +
+          '<span class="sw"><input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><i></i></span>';
         item.querySelector('input').onchange = e => S.set({ sk: { [key]: e.target.checked } });
         overlay.appendChild(item);
       });
@@ -443,10 +471,10 @@
        时间范围改到地图右下角快捷键里单独一排 */
     /* ④ 地图快捷键总开关（独立一段） */
     const s4 = el('section', 'mn-sec');
-    s4.appendChild(el('div', 'mn-h', '地图快捷键'));
+    s4.appendChild(el('div', 'mn-h', '快捷控制'));
     const master = el('label', 'mn-master');
-    master.innerHTML = '<input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '>' +
-      '<span><b>地图快捷键</b><small>只控制地图右下角整组快捷键；关闭后本面板快捷控制仍可用</small></span>';
+    master.innerHTML = '<span class="mn-ov-label"><b>显示地图快捷键</b></span>' +
+      '<span class="sw"><input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '><i></i></span>';
     master.querySelector('input').onchange = e => S.set({ panels: { shortcuts: e.target.checked } });
     s4.appendChild(master);
     body.appendChild(s4);
@@ -472,16 +500,19 @@
   const pad2 = n => String(n).padStart(2, '0');
   const stamp = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' +
     pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+  /* V3.0：日志类型 → 颜色（新增 / 归并去重 / 更新覆盖 / 告警） */
+  const LOG_KIND = { ingest: 'add', extract: 'add', resolve: 'mod', geo: 'mod', score: 'mod', link: 'mod', graph: 'mod', warn: 'del' };
   function logText(e) {
     const f = e.factId ? D.factById(e.factId) : null;
     const tag = STAGE_TAG[e.stage] || '接入';
-    return '演示记录 · ' + tag + ' · ' + (f ? f.title : '预置处理步骤') + '（非实时任务）';
+    return tag + ' · ' + (f ? f.title : '预置处理步骤');
   }
   /* B3/M7：每条进入流水的事实都向地图发一次「星闪」 */
   function pushStreamLine(e) {
     const body = $('streamBody');
     if (!body || !e) return;
     const row = el('div', 'st-line');
+    row.dataset.kind = LOG_KIND[e.stage] || 'add';
     row.appendChild(el('span', 'tx', logText(e)));
     body.appendChild(row);
     while (body.children.length > 90) body.removeChild(body.firstChild);
@@ -606,6 +637,28 @@
       if (document.activeElement !== inp) setTimeout(() => inp.focus(), 30);
     }
   }
+  /* V3.0：ESC 退回全球 2D 视角（输入框/弹层有各自的 ESC 行为，先让给它们） */
+  function bindEscHome() {
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const st = S.state;
+      if (st.settings && (st.settings.gate || st.settings.authed)) return;
+      if (st.tab === 'fact') {
+        if (st.sk.mode3d || st.geo.level !== 'L1' || st.geo.focus) {
+          S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } });
+          e.preventDefault();
+        }
+      } else if (st.tab === 'relation') {
+        if (st.rel.view === 'graph' || st.rel.level !== 'L1' || st.rel.focus) {
+          S.set({ rel: { view: 'geo', level: 'L1', focus: null } });
+          e.preventDefault();
+        }
+      }
+    });
+  }
+
   function bindSettings() {
     $('pwOk').onclick = () => {
       if ($('pwInput').value.trim() === PW) { $('pwInput').value = ''; S.set({ settings: { gate: false, authed: true } }); }
@@ -664,6 +717,7 @@
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
+  bindEscHome();
     document.addEventListener('keydown', onKey);
     document.addEventListener('fullscreenchange', () => S.set({ sk: { fullscreen: !!document.fullscreenElement } }));
   }

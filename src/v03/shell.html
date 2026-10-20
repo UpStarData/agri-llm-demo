@@ -37,6 +37,9 @@
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
 
       <!-- 快捷键组（地图右下角，两排；含放大 / 缩小） -->
+      <!-- V3.0：系统级通知（灵动岛，两层共用，居中顶部） -->
+      <div class="island" id="island" role="status" aria-live="polite"></div>
+
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
@@ -46,8 +49,7 @@
       <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
       <div class="stream" id="streamBox">
         <div class="st-bar">
-          <span class="st-tab" id="stTabName">接入流</span>
-          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
+          <span class="st-tab" id="stTabName">底部日志</span>
           <span class="st-meta" id="streamMeta"></span>
         </div>
         <div class="st-body" id="streamBody"></div>

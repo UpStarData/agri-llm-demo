@@ -177,8 +177,9 @@ window.V03Fact = (function () {
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.sk.mode3d && S.state.tab === 'fact') {
-          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('三维地球已放到最大 · 切换到二维全球'); }
-          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('进入 2D 全球视角'); }
+          /* V3.0：切换视角不再弹提示文案 */
+          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); }
+          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); }
         }
         if (edge === 'in' || edge === 'surface') { S.set({ sk: { mode3d: false } }); }
       }
@@ -190,7 +191,6 @@ window.V03Fact = (function () {
       if (camera.zoom > box[0] + .004) return;
       e.preventDefault(); e.stopImmediatePropagation();
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
     }, { capture: true, passive: false });
     const seen = new Set();
     S.onEvent('stream:line', p => {
@@ -279,7 +279,6 @@ window.V03Fact = (function () {
     if (st.geo.level === 'L1' && camera.zoom < box[0] - .02) {
       camera.zoom = box[0];
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     if (camera.zoom < box[0]) camera.zoom = box[0];
@@ -319,7 +318,6 @@ window.V03Fact = (function () {
     /* 全球视角在最小比例尺继续缩小：与滚轮 / 按钮一致，切回三维地球 */
     if (factor < 1 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * factor));
@@ -336,7 +334,6 @@ window.V03Fact = (function () {
     /* 全球视角缩到最小再缩：切回三维地球 */
     if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
-      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.14 : 1 / 1.14)));
@@ -460,7 +457,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, options.replay?'事实接入回放':'新事实', f.title);
+      V03Intake.note(dom.side, (f.l1Label || f.cat || '事实'), f.title, f.id);
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -500,6 +497,8 @@ window.V03Fact = (function () {
       if (S.state.tab !== 'fact' || !S.state.panels.cards || document.hidden) return;
       if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
       if (Date.now() < a.paused) return;
+      /* V3.0：鼠标在卡片区悬停时不自动滚动 */
+      if (el.matches(':hover')) { a.lastTop = el.scrollTop; return; }
       if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { a.t += 0.016; if (a.t > 6) { a.t = 0; el.scrollTop = 0 }    /* 到底停一下再回到顶部 */
         if (a.t > 0 && a.t < 0.02) { a.paused = Date.now() + 1800 } return }
@@ -954,7 +953,7 @@ window.V03Fact = (function () {
     const c = f.card || {}, cat = catOf(f);
     const foot = '<div class="fcard-foot"><span>' + esc(f.region || '') + '</span>' +
       (f.date ? '<span>·</span><span>' + esc(f.date) + '</span>' : '') +
-      '<span class="sp"></span><span class="fcard-mark">' + sourceCount(f) + ' 个来源</span></div>';
+      '</div>';
     let body = '';
     switch (f.cardType) {
       case 'price': {
@@ -995,9 +994,10 @@ window.V03Fact = (function () {
         body = '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
-    return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
-      V03Media.figure(f) + body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
+    return '<article class="fcard" data-fid="' + esc(f.id) + '" tabindex="0">' +
+      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span>' +
+      (fresh ? '<i class="new-dot" aria-label="新接入"></i>' : '') + '</div>' +
+      V03Media.figure(f) + body + foot + '</article>';
   }
 
   let visibleCardCount = 20;
@@ -1023,7 +1023,12 @@ window.V03Fact = (function () {
     V03Media.beginCards('fact');
     dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
-    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh'); });
+    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => {
+      if (!freshIds.has(el.dataset.fid)) return;
+      el.classList.add('is-fresh');
+      const meta = el.querySelector('.fcard-v12-meta');
+      if (meta && !meta.querySelector('.new-dot')) meta.insertAdjacentHTML('beforeend', '<i class="new-dot" aria-label="新接入"></i>');
+    });
     dom.sideBody.scrollTop = scroll;
     autoScrollCards(dom.sideBody);
     dom.sideBody.onscroll = () => {
@@ -1073,17 +1078,14 @@ window.V03Fact = (function () {
           ${row('分类', [leaf.group, leaf.sub, leaf.n].filter(Boolean).join(' › '))}
           ${row('发生时间', f.occurredAt || f.date || '来源材料未提供发生时间')}
           ${row('地理范围', path || '来源材料未提供可靠位置')}
+          ${row('涉及品种', (f.variety || (f.card && f.card.variety) || (f.commodityName) || '来源材料未提供涉及品种'))}
         </div>
         <div class="fd-sec"><h4>涉及本体 <small>点击进入关联层</small></h4>
           <div>${objs.map(o => { const dm = D.domain(o.domain); return '<span class="objchip" data-obj="' + esc(o.id) + '"><span class="d" style="background:' + dm.c + '"></span><b>' + esc(o.name) + '</b>' + esc(dm.n) + '</span>'; }).join('') || '<p>暂无已确认本体；Jev 候选尚未接入。</p>'}</div>
         </div>
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
-        <div class="fd-sec"><h4>显示层级与地理影响</h4>
-          ${row('显示层级', scope)}
-          ${row('地理影响半径', f.radius ? f.radius + ' km' : '未知')}
-        </div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
-        <div class="fd-sec"><h4>证据与来源 <small>${evidence.length} 条</small></h4>
+        <div class="fd-sec">
           ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
@@ -1091,9 +1093,11 @@ window.V03Fact = (function () {
         <div class="fd-actions">
           <button class="btn sec" id="toRel">在关联层查看</button>
           <button class="btn sec" id="toSim">基于该事实发起推演</button>
-          <button class="btn ter" id="toLog">${st.logOpen ? '收起事实形成过程' : '查看事实形成过程'}</button>
         </div>
-        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + '</div>' : ''}
+        <div class="fd-actions fd-actions-end">
+          <button class="link-btn" id="toLog">查看事实形成过程</button>
+        </div>
+        ${st.logOpen ? '<div class="fd-sec">' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + row('当前版本', f.version || 'V0.01') + '</div>' : ''}
       </div>`;
     box.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => S.set({
       tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]),

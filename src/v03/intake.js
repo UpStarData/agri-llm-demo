@@ -1,18 +1,29 @@
 /* Shared arrival presentation. Replay and real ingestion use the same event path. */
 window.V03Intake = (() => {
   const timers = new WeakMap();
-  function note(host, kind, title) {
-    if (!host) return;
-    const previous = timers.get(host);
-    if (previous) { clearTimeout(previous.hide); clearTimeout(previous.remove); previous.node.remove(); }
+  /* V3.0：系统级通知 —— 苹果灵动岛样式，居中顶部，两层共用（2D / 3D 都显示）。
+     host 参数保留兼容旧调用，实际挂载点固定为 #island。 */
+  function note(host, kind, title, factId) {
+    const dock = document.getElementById('island');
+    if (!dock) return;
     const node = document.createElement('div');
-    node.className = 'fresh-note'; node.setAttribute('role', 'status');
-    const badge = document.createElement('b'); badge.textContent = kind;
-    const text = document.createElement('span'); text.textContent = title;
-    node.append(badge, text); host.prepend(node);
-    const state = { node, hide: 0, remove: 0 }; timers.set(host, state);
+    node.className = 'isl'; node.setAttribute('role', 'status');
+    const cat = String(kind || '通知') + ' ' + String(title || '');
+    node.innerHTML = '<b># ' + String(kind || '通知') + '</b><span>' + String(title || '') + '</span>';
+    if (factId) {
+      node.classList.add('click');
+      node.onclick = () => {
+        const st = window.V03Store && window.V03Store.state || {};
+        if (st.tab === 'fact') window.V03Store.set({ factId, panels: { cards: true } });
+        else if (window.V03App && window.V03App.openRelationFact) window.V03App.openRelationFact(factId);
+      };
+    }
+    dock.appendChild(node);
+    while (dock.children.length > 2) dock.firstChild.remove();
     requestAnimationFrame(() => node.classList.add('on'));
-    state.hide = setTimeout(() => { node.classList.remove('on'); state.remove = setTimeout(() => { node.remove(); if (timers.get(host) === state) timers.delete(host); }, 350); }, 3800);
+    const hide = setTimeout(() => { node.classList.remove('on'); setTimeout(() => node.remove(), 380); }, 4200);
+    node.addEventListener('pointerenter', () => clearTimeout(hide));
+    return cat;
   }
   function star(host, point, id, bright = true) {
     if (!host || !point || !point.every(Number.isFinite)) return false;

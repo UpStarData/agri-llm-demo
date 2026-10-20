@@ -117,8 +117,8 @@ window.V03Relation = (function () {
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.rel.view !== 'globe') return;
-        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('三维地球已放到最大 · 切换到二维全球'); }
-        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('进入 2D 全球视角'); }
+        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); }
+        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); }
       }
     });
 
@@ -930,7 +930,7 @@ window.V03Relation = (function () {
       renderPanel(S.state, F.objects(S.state));
       if(S.state.rel.view==='geo')paintFocus();
     }
-    V03Intake.note(dom.side, replay?'本体接入回放':'新本体', list[0].name);
+    V03Intake.note(dom.side, '本体', list[0].name, null);
     list.forEach(relFlashStar);
     dom.body.scrollTop = 0;
     if (dom.body.__auto) dom.body.__auto.paused = Date.now() + 4500;

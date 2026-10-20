@@ -26,7 +26,7 @@ window.V03Feed = (() => {
   expose(sampleGeo(D.FACTS.filter(f=>f.impact==='high'),72));
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
-  function changed(){revision++;S.emit('data:revealed',status());const meta=document.getElementById('streamMeta');if(meta)meta.textContent='事实 '+loaded.size.toLocaleString()+' / '+D.FACTS.length.toLocaleString();}
+  function changed(){revision++;S.emit('data:revealed',status());}
   function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();startRetire();}
   function step(){
     const fraction=Math.min(1,(performance.now()-t0)/LOAD_MS), want=Math.ceil(600+(plan.length-600)*fraction);

@@ -42,7 +42,7 @@ window.V03MapKit = (function () {
         cfg.onView && cfg.onView(next, focus);
         api.render();
       },
-      enter(next, f) { api.setView(next, f); toast('已切到 ' + LABEL[next]); },
+      enter(next, f) { api.setView(next, f); },
       back() { const i = VIEWS.indexOf(view); if (i > 0) api.enter(VIEWS[i - 1], null); },
 
       /* ---------- 缩放 ---------- */
@@ -216,7 +216,7 @@ window.V03MapKit = (function () {
       const i = VIEWS.indexOf(view), next = VIEWS[clamp(i + dir, 0, 3)];
       if (next === view) return;
       const toGlobe = next === 'globe';
-      if (toGlobe) { (cfg.globe || window.V03Globe).zoomBy(cam.z / LEVELS.world.fit >= .5 ? 1 : .9); api.setView('globe', null); toast('已切到 3D 全球'); return; }
+      if (toGlobe) { (cfg.globe || window.V03Globe).zoomBy(cam.z / LEVELS.world.fit >= .5 ? 1 : .9); api.setView('globe', null); return; }
       view = next; focus = next === 'province' ? (focus || '湖南') : null;
       const l = LEVELS[next];
       /* 同一张底图（中国 ↔ 省区）沿用当前屏幕中心；跨底图（全球 ↔ 中国）做经度归一化 */
@@ -227,7 +227,7 @@ window.V03MapKit = (function () {
       cam.tz = clamp(cam.z * (dir > 0 ? 1.1 : .92), l.min * .92, l.max * 1.18);
       cfg.onView && cfg.onView(next, focus, dir);
       api.render();
-      toast('已切到 ' + LABEL[next]);
+
     }
 
     /* ---------- 入场动效（关联层的本体逐个点亮 / 关系线逐条画出） ---------- */

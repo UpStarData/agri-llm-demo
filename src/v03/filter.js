@@ -294,16 +294,26 @@ window.V03Filter = (function () {
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
-      const ids=new Set(objects(s).map(o=>o.id));
-      return { rows:[['当前本体',ids.size],['当前关系',relations(s).length]],note:'' };
+      /* V3.0：三组数据 · 第一排当前本体，第二排今日新增本体 / 今日新增关系；均按全库真实值 ×20，不随筛选变化 */
+      const objs = D.OBJECTS || [], rels = D.RELATIONS || [], day = f => D.inWindow(f.ingestedAt || f.date, 'today');
+      return {
+        rows: [
+          ['当前本体', (objs.length * 20).toLocaleString('en-US'), objs.length * 20],
+          ['今日新增本体', (objs.filter(day).length * 20).toLocaleString('en-US'), objs.filter(day).length * 20],
+          ['今日新增关系', (rels.filter(day).length * 20).toLocaleString('en-US'), rels.filter(day).length * 20]
+        ],
+        note: ''
+      };
     }
+    /* V3.0：概览用全库真实总量 ×20，且不随筛选条件变化（用户口径） */
+    const ALL = D.FACTS || [];
+    const raw = ALL.length * 20;
+    const today = ALL.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length * 20;
     const list = factsAtLevel(s);
-    const raw = list.length;
-    const today = list.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length;
     return {
       rows: [
-        ['当前事实', String(raw), raw],
-        ['今日新增', String(today), today]
+        ['当前事实', raw.toLocaleString('en-US'), raw],
+        ['今日新增事实', today.toLocaleString('en-US'), today]
       ],
       note: '',
       real: list.length,

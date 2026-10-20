@@ -15,7 +15,7 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
 .rel-main.globe-view .rel-globe{display:block}
 .rel-main.globe-view .rel-canvas{visibility:hidden}
 .rel-main.graph-view .rel-canvas{right:var(--side-w);bottom:var(--stream-h)}
-@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:var(--side-w)}}
+@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:0}}
 .rel-viewbar{position:absolute;right:calc(var(--side-w) + 10px);bottom:calc(var(--stream-h) + 86px);z-index:42;display:flex;gap:4px;padding:4px;
   border:1px solid var(--line);border-radius:var(--r-md);background:var(--glass);backdrop-filter:var(--blur)}
 .rel-viewbar button{border:0;border-radius:var(--r-sm);background:transparent;color:var(--mut);padding:6px 10px;
