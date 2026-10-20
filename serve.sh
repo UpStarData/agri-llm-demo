@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 农链 AgriLink 本地演示服务 —— 启停脚本（郭慧电脑上的常驻演示入口）
+# 农链 AgriLink 本地演示服务 —— 启停脚本（演示机上的常驻演示入口）
 #
 #   ./serve.sh start     启动（默认端口 4180，只监听 127.0.0.1）
 #   ./serve.sh stop      停止（只杀本脚本启动的那个 PID）

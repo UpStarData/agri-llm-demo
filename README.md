@@ -136,7 +136,7 @@ curl -s -X POST http://127.0.0.1:4173/api/chat \
 curl -s "$AGRI_LLM_BASE_URL/models" -H "authorization: Bearer $AGRI_LLM_API_KEY" | head -c 400
 ```
 
-### 持久运行（郭慧电脑本机，2026-09-17 实测）
+### 持久运行（演示机，2026-09-17 实测）
 
 ```bash
 ./serve.sh start     # 启动（默认 4180，只监听 127.0.0.1）
