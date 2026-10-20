@@ -1,7 +1,7 @@
 {
-  "hash": "4c066df3b6c5",
-  "git": "7899cd2",
-  "builtAt": "2026-10-20T13:32:07.467Z",
+  "hash": "98164dcdf7a6",
+  "git": "7c23057",
+  "builtAt": "2026-10-20T15:41:08.625Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -73,5 +73,5 @@
   ],
   "missing": [],
   "bytes": 103390314,
-  "version": "V3.0"
+  "version": "V3.1"
 }
