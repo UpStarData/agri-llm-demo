@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AgriEmoji 用法示例（5 个图层图标 · 子集字体）</title>
+<link rel="stylesheet" href="./agri-emoji.css">
+<style>
+  body{margin:0;font-family:'IBM Plex Sans SC','PingFang SC',sans-serif;background:#eef3f6;color:#20384b}
+  .wrap{max-width:1000px;margin:22px auto;padding:0 16px}
+  h2{font-size:14px;margin:24px 0 8px;color:#496476}
+  .card{background:#fff;border:1px solid rgba(58,88,112,.18);border-radius:10px;padding:12px 14px}
+  pre{background:#0f1d2b;color:#d6e6f2;padding:10px 12px;border-radius:8px;overflow:auto;font-size:12px;line-height:1.55;margin:8px 0 0}
+  .note{font-size:12px;color:#496476;margin-top:8px}
+  /* —— 地图式锚点：容器模拟底图，图标绝对定位在经纬度换算出的像素位置 —— */
+  .map{position:relative;height:170px;border-radius:8px;overflow:hidden;
+       background:linear-gradient(160deg,#cfe9bd,#b6dfa4 62%,#a8d8ea)}
+  .map .pin{position:absolute;transform:translate(-50%,-50%)}
+  .row{display:flex;gap:20px;align-items:center;font-size:22px;flex-wrap:wrap}
+  .lbl{font-size:12px;color:#496476;display:flex;flex-direction:column;align-items:center;gap:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 style="font-size:17px">AgriEmoji · 5 个图层图标的子集字体用法</h1>
+
+  <h2>① 最简：把 emoji 字符放进带 <code>agri-ic</code> 类的元素里</h2>
+  <div class="card">
+    <div class="row">
+      <span class="lbl"><span class="agri-ic agri-ic--lg">🌾</span>产区</span>
+      <span class="lbl"><span class="agri-ic agri-ic--lg">⚓</span>港口</span>
+      <span class="lbl"><span class="agri-ic agri-ic--lg">✈️</span>机场</span>
+      <span class="lbl"><span class="agri-ic agri-ic--lg">🏪</span>农贸市场</span>
+      <span class="lbl"><span class="agri-ic agri-ic--lg">⚠️</span>地缘风险区</span>
+    </div>
+    <pre>&lt;span class="agri-ic agri-ic--lg"&gt;✈️&lt;/span&gt;</pre>
+  </div>
+
+  <h2>② 不写字符：只用类名（语法糖，靠 ::before 输出字形）</h2>
+  <div class="card">
+    <div class="row">
+      <span class="lbl"><i class="agri-ic agri-ic--md agri-ic--farm"></i>产区</span>
+      <span class="lbl"><i class="agri-ic agri-ic--md agri-ic--port"></i>港口</span>
+      <span class="lbl"><i class="agri-ic agri-ic--md agri-ic--airport"></i>机场</span>
+      <span class="lbl"><i class="agri-ic agri-ic--md agri-ic--market"></i>农贸市场</span>
+      <span class="lbl"><i class="agri-ic agri-ic--md agri-ic--risk"></i>地缘风险区</span>
+    </div>
+    <pre>&lt;i class="agri-ic agri-ic--md agri-ic--airport"&gt;&lt;/i&gt;</pre>
+  </div>
+
+  <h2>③ 地图锚点式（图标是 DOM 层，位置 = 经纬度换算的像素）</h2>
+  <div class="card map" id="map">
+    <span class="pin agri-ic agri-ic--md agri-ic--farm"   style="left:14%;top:32%"></span>
+    <span class="pin agri-ic agri-ic--md agri-ic--port"   style="left:30%;top:64%"></span>
+    <span class="pin agri-ic agri-ic--md agri-ic--airport"style="left:48%;top:38%"></span>
+    <span class="pin agri-ic agri-ic--md agri-ic--market" style="left:66%;top:66%"></span>
+    <span class="pin agri-ic agri-ic--md agri-ic--risk"   style="left:83%;top:36%"></span>
+    <pre style="position:absolute;left:10px;bottom:6px;opacity:.9">&lt;span class="pin agri-ic agri-ic--md agri-ic--airport" style="left:48%;top:38%"&gt;&lt;/span&gt;</pre>
+  </div>
+
+  <h2>④ ECharts（我们线上就是这么用的：label 指定字体）</h2>
+  <div class="card">
+    <pre>{
+  type: 'scatter', coordinateSystem: 'geo',
+  symbol: 'circle', symbolSize: 13,
+  itemStyle: { color: 'transparent', borderWidth: 0 },   // 不画圆底
+  label: {
+    show: true, position: 'inside',
+    fontFamily: 'AgriEmoji, Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji',
+    fontSize: 13,
+    formatter: () =&gt; '✈️',                                 // 或 '\u2708\uFE0F'
+    backgroundColor: 'transparent', padding: 0, textBorderWidth: 0
+  }
+}</pre>
+    <p class="note">注意：<b>不要</b>用 <code>itemStyle.opacity:0</code> 藏圆点——label 会一起被隐藏，emoji 直接消失；用 <code>color:'transparent'</code>。</p>
+  </div>
+
+  <p class="note" style="margin-top:22px">
+    字体：<code>agri-emoji.woff2</code>（26KB，Noto Color Emoji 子集，OFL-1.1）·
+    样式：<code>agri-emoji.css</code>。透明 = 元素不加 background/border/box-shadow，字形外即底图。
+  </p>
+</div>
+</body>
+</html>

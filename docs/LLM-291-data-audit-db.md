@@ -4,7 +4,7 @@
 
 ## 它是什么
 
-一台本机（127.0.0.1）上的 SQLite 库 + Datasette 网页查询界面，内容是**页面正在使用的同一份数据**：
+一台演示机（`<演示机 IP>`）上的 SQLite 库 + Datasette 网页查询界面，内容是**页面正在使用的同一份数据**：
 
 | 表 | 行数 | 说明 |
 |---|---:|---|
@@ -30,7 +30,7 @@ python3 tools/db/load_db.py ~/agrilink-db/dump.json
 ~/agrilink-db/serve.sh start|stop|status
 ```
 
-访问：http://127.0.0.1:8100/ ・ 日志 `~/agrilink-db/datasette.log` ・ PID 文件 `datasette.pid`。进程由 `nohup` 拉起，独立于任务运行；本机没有进程守护，长期存活属尽力而为。
+访问：`http://<演示机 IP>:8100/` ・ 日志 `~/agrilink-db/datasette.log` ・ PID 文件 `datasette.pid`。进程由 `nohup` 拉起，独立于任务运行；本机没有进程守护，长期存活属尽力而为。
 
 ## 首次核查发现的问题（都可查询）
 

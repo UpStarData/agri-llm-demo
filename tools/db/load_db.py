@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Load the page's own fact/relation dump into SQLite so every row can be audited.
 
-Reads ~/agrilink-db/dump.json (produced by test/dump-db.mjs, which
+Reads $AGRILINK_DB_DIR/dump.json (default ~/agrilink-db; produced by test/dump-db.mjs, which
 reads the live V03Data/V03Filter objects of the built page) and writes
 agrilink.db with audit views.
 """
-import json, sqlite3, sys, datetime
+import json, os, sqlite3, sys, datetime
 from pathlib import Path
 
-BASE = Path('~/agrilink-db')
+BASE = Path(os.environ.get('AGRILINK_DB_DIR') or (Path.home() / 'agrilink-db'))
 DUMP = Path(sys.argv[1]) if len(sys.argv) > 1 else BASE / 'dump.json'
 DB = BASE / 'agrilink.db'
 

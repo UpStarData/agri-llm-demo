@@ -3,7 +3,7 @@
 import { chromium } from 'playwright';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-/* 用法：node test/live-check-v07.mjs [url]（默认局域网 v0.7） */
+/* 用法：node test/live-check-v07.mjs [url]（默认本机 3101 端口的 v0.7） */
 const url = process.argv[2] || 'http://127.0.0.1:3101/v0.7/';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const browser = await chromium.launch();

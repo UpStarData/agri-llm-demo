@@ -3,9 +3,10 @@
 import {chromium} from 'playwright';
 import {pathToFileURL} from 'node:url';
 import path from 'node:path';
+import os from 'node:os';
 import fs from 'node:fs';
 
-const OUT = process.argv[2] || '~/agrilink-db/dump.json';
+const OUT = process.argv[2] || path.join(os.homedir(), 'agrilink-db', 'dump.json');
 const browser = await chromium.launch();
 const page = await browser.newPage({viewport: {width: 1440, height: 900}});
 const errors = [];

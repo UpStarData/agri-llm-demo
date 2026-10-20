@@ -1,4 +1,4 @@
-import {chromium} from 'playwright';import {pathToFileURL} from 'node:url';import path from 'node:path';import fs from 'node:fs';
+import {chromium} from 'playwright';import {pathToFileURL} from 'node:url';import path from 'node:path';import fs from 'node:fs';import os from 'node:os';
 const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900}});
 await p.goto(pathToFileURL(path.resolve('index.html')).href);await p.waitForFunction(()=>window.__AGRI_READY);
 const out = await p.evaluate(()=>{
@@ -14,7 +14,8 @@ const out = await p.evaluate(()=>{
   return {facts:T.factList,objs:T.objList,factGroups,objGroups,relTypes,overlay,
     cssVars:{fact:T.factOrder.map((k,i)=>[`--fact-l1-${i+1}`,T.fact(k)]),obj:T.objOrder.map((k,i)=>[`--obj-l1-${i+1}`,T.obj(k)])}};
 });
-fs.writeFileSync('~/agrilink-db/palette.json', JSON.stringify(out,null,1));
+const DB_DIR = process.env.AGRILINK_DB_DIR || path.join(os.homedir(), 'agrilink-db');
+fs.writeFileSync(path.join(DB_DIR, 'palette.json'), JSON.stringify(out,null,1));
 console.log(JSON.stringify({facts:out.facts,objs:out.objs,relTypes:out.relTypes.length,
   relByHex:out.relTypes.reduce((a,r)=>{a[r.hex]=(a[r.hex]||0)+1;return a;},{}),
   factGroups:out.factGroups.map(g=>[g.n,g.hex]),objGroups:out.objGroups.map(g=>[g.n,g.hex,g.kinds.length])},null,1));
@@ -27,6 +28,6 @@ csv.push(['叠加图层','港口','⚓','#0369a1','emoji 图标']);
 csv.push(['叠加图层','机场','✈️','#0f766e','emoji 图标']);
 csv.push(['叠加图层','农贸市场','🏪','#a16207','emoji 图标']);
 csv.push(['叠加图层','地缘风险区','⚠️','#b91c1c','emoji 图标']);
-fs.writeFileSync('~/agrilink-db/agrilink-color-spec.csv','\ufeff'+csv.map(r=>r.join(',')).join('\n')+'\n');
+fs.writeFileSync(path.join(DB_DIR, 'agrilink-color-spec.csv'),'\ufeff'+csv.map(r=>r.join(',')).join('\n')+'\n');
 console.log('csv rows',csv.length);
 await b.close();

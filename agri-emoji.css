@@ -1,0 +1,63 @@
+/* ============================================================
+   AgriEmoji · 叠加图层图标（5 个彩色 emoji 的子集字体）
+   ------------------------------------------------------------
+   子集码位（只保留这 5 个，别的字一个都不含）：
+     U+1F33E 🌾 农作物主要产区 / 基地
+     U+2693  ⚓ 港口
+     U+2708  ✈️ 机场
+     U+1F3EA  🏪 农贸市场
+     U+26A0  ⚠️ 地缘风险区
+   源字体：Noto Color Emoji（SIL Open Font License 1.1，可商用/可再分发）
+           → 取 5 个码位后重命名为 AgriEmoji（不沿用原字体名）
+   体积：26 KB（woff2；COLR + SVG 彩色字形，矢量/彩色，任意字号都清晰）
+   透明：彩色字形本身无背景框，元素不要加 background / border / box-shadow 即为透明
+   ============================================================ */
+
+/* 两个体积可选，二选一改这一行即可：
+   ./agri-emoji.woff2       26 KB  COLR + SVG，兼容最广（Safari 16 以下也彩色）
+   ./agri-emoji-lean.woff2 4.6 KB  COLR only，Chrome/Edge/Firefox 与新版 Safari 均彩色 */
+@font-face {
+  font-family: 'AgriEmoji';
+  src: url('./agri-emoji.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;                       /* 字体没到时先用系统 emoji 顶上，不闪空 */
+  /* 只让这 5 个码位使用本字体，页面其它文字完全不受影响 */
+  unicode-range: U+1F33E, U+2693, U+2708, U+1F3EA, U+26A0, U+FE0F;
+}
+
+/* ---------- 基础类：套在任何元素上，里面写 emoji 字符 ---------- */
+.agri-ic {
+  font-family: 'AgriEmoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: -0.125em;                 /* 和中文基线对齐，按需微调 */
+  /* 关键：不加任何底色/描边/阴影，字形之外才是透明的 */
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* ---------- 尺寸档（按需取用或直接写 font-size） ---------- */
+.agri-ic--xs { font-size: 11px; }
+.agri-ic--sm { font-size: 13px; }
+.agri-ic--md { font-size: 16px; }
+.agri-ic--lg { font-size: 22px; }
+
+/* ---------- 图标类写法：不写字符，只用类名 ---------- */
+.agri-ic--farm::before    { content: "\1F33E"; }
+.agri-ic--port::before    { content: "\2693\FE0F"; }   /* 带 VS16，确保走彩色 emoji 形态 */
+.agri-ic--airport::before { content: "\2708\FE0F"; }
+.agri-ic--market::before  { content: "\1F3EA"; }
+.agri-ic--risk::before    { content: "\26A0\FE0F"; }
+
+/* ---------- 可选：单文件构建时把字体内联成 base64（省一个请求） ----------
+@font-face {
+  font-family: 'AgriEmoji';
+  src: url('data:font/woff2;base64,<把 agri-emoji.woff2 的 base64 贴这里>') format('woff2');
+  font-display: swap;
+  unicode-range: U+1F33E, U+2693, U+2708, U+1F3EA, U+26A0, U+FE0F;
+}
+------------------------------------------------------------------- */

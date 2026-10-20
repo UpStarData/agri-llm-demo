@@ -13,7 +13,7 @@ case "$1" in
       >> "$LOG" 2>&1 &
     echo $! > "$PIDFILE"
     sleep 3
-    echo "started pid $(cat "$PIDFILE") -> http://127.0.0.1:$PORT/"
+    echo "started pid $(cat "$PIDFILE") -> http://127.0.0.1:$PORT/ (局域网访问请用本机 IP)"
     ;;
   stop)
     if [ -f "$PIDFILE" ]; then kill "$(cat "$PIDFILE")" 2>/dev/null && echo "stopped pid $(cat "$PIDFILE")"; rm -f "$PIDFILE"; else echo "no pidfile"; fi
