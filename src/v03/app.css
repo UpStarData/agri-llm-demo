@@ -18,7 +18,8 @@
   --obj-l1-1:#2f6f9e;--obj-l1-2:#a86a2c;--obj-l1-3:#5b9c46;--obj-l1-4:#b04a6a;
   /* 三维地球：深空底色 + 海面渐变 + 大气层光圈（与配色 1 同一套冷蓝） */
   --globe-space-1:#0b1f30;--globe-space-2:#050f19;--globe-nebula:#236bad;
-  --globe-sea-1:#7fb4c8;--globe-sea-2:#336c8b;--globe-sea-3:#102f47;
+  /* V3.0：3D 海洋取 2D 海面色（--ocean）的同族明暗 */
+  --globe-sea-1:#cddde9;--globe-sea-2:#b8cee0;--globe-sea-3:#798894;
   --globe-atmo:150,214,255;--globe-atmo-a:.62;--globe-star:#e6f4ff;
   /* 面板与阴影（浅色，不用暗色玻璃） */
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.89);--glass-line:rgba(70,105,125,.18);
@@ -46,7 +47,8 @@ html[data-theme="color"]{
   --ocean:#5fbdf2;--land:#cfe9bd;--land-2:#b6dfa4;--map-line:rgba(224,128,118,.55);--map-label:#2b3d52;
   /* 三维地球：近黑深空 + 亮蓝海面 + 浅绿陆块 + 蓝白大气层 */
   --globe-space-1:#0a1c33;--globe-space-2:#040c18;--globe-nebula:#2f6fd0;
-  --globe-sea-1:#6fb6ee;--globe-sea-2:#3a86c8;--globe-sea-3:#0f3c66;
+  /* V3.0：3D 海洋取 2D 海面色（--ocean #5fbdf2）的同族明暗 */
+  --globe-sea-1:#8fd1f6;--globe-sea-2:#5fbdf2;--globe-sea-3:#3f7da0;
   --globe-atmo:150,205,255;--globe-atmo-a:.6;--globe-star:#eaf4ff;
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(30,58,92,.16);
   --shadow:0 12px 32px -20px rgba(16,42,74,.35);--icon:#4a6b8e;--icon-hover:#2f6fd0;--icon-on:rgba(47,111,208,.12);
@@ -595,3 +597,21 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .link-btn{border:0;background:none;padding:6px 0;color:var(--accent);font:inherit;font-size:.6875rem;cursor:pointer;
   text-decoration:underline;text-underline-offset:3px}
 .fd-actions-end{justify-content:flex-end}
+
+/* V3.0：右下角快捷键三排（设计稿） */
+.mapsk{grid-template-columns:repeat(5,auto);grid-auto-flow:row;gap:6px}
+.mapsk .sk-row{display:flex;gap:6px;grid-column:1/-1}
+.mapsk .sk-row-1 .sk{width:28px}
+.mapsk .sk-t{width:auto;padding:0 8px}
+.mapsk .sk-t .sk-v{font-size:.625rem;white-space:nowrap}
+
+/* V3.0：证据弹窗（固定尺寸，纯文字） */
+.ev-q{cursor:pointer;text-decoration:underline;text-decoration-color:rgba(47,111,208,.35);text-underline-offset:3px}
+.ev-pop{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(8,14,22,.32)}
+.ev-pop[hidden]{display:none}
+.ev-pop-box{position:relative;width:min(560px,86vw);height:min(360px,70vh);display:flex;flex-direction:column;
+  background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-line);
+  border-radius:14px;box-shadow:0 24px 60px -30px rgba(0,0,0,.5);padding:16px 18px}
+.ev-pop-t{font-weight:var(--f-semi);font-size:.8125rem;color:var(--ink);padding-right:24px}
+.ev-pop-body{margin-top:10px;flex:1;overflow:auto;white-space:pre-wrap;font-size:.75rem;line-height:1.7;color:var(--ink)}
+.ev-pop-x{position:absolute;top:10px;right:12px;border:0;background:none;font-size:1rem;color:var(--mut);cursor:pointer}

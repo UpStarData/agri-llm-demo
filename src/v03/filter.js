@@ -58,6 +58,30 @@ window.V03Filter = (function () {
     return null; // 价格、库存、天气指标不是本体，不伪装成 PRD 分类
   }
   const PRD_REL_TYPES=['生产','供应','采购','运营','入驻','合作','位于','运输至','储存于','发布','适用于','监管','影响','发生于'];
+
+  /* V3.0：按《问题修复.md》重排关系分类 —— 6 个一级 / 14 个二级，颜色跟一级走 */
+  const REL_L1 = [
+    { n: '生产供应', color: '#2f7d5b', types: ['生产', '供应', '采购'] },
+    { n: '经营组织', color: '#a9702a', types: ['运营', '入驻', '合作'] },
+    { n: '空间',     color: '#3f63a8', types: ['位于', '发生于'] },
+    { n: '物流',     color: '#1f8a9c', types: ['运输至', '储存于'] },
+    { n: '政策',     color: '#6f4fa3', types: ['发布', '适用于', '监管'] },
+    { n: '影响',     color: '#b8435a', types: ['影响'] },
+  ];
+  /* 旧数据里的类型名 → 需求里的二级类型（逐条给定，不做模糊匹配） */
+  const REL_TYPE_MAP = {
+    '生产': '生产', '供应流向': '供应', '依赖': '供应', '贸易': '供应',
+    '流入': '运输至', '流出': '运输至', '运输经由': '运输至',
+    '行政归属': '位于',
+    '覆盖': '适用于',
+    '影响': '影响', '替代': '影响', '价格传导': '影响', '公开资料关联': '影响',
+    '经营品类': '运营', '经营': '运营', '运营': '运营',
+    '共建': '合作', '产销合作': '合作', '战略合作': '合作', '共同参与': '合作',
+  };
+  const relL1Of = type => { const g = REL_L1.find(x => x.types.includes(type)); return g ? g.n : '影响'; };
+  const relL1Color = type => { const g = REL_L1.find(x => x.types.includes(type)); return g ? g.color : '#b8435a'; };
+  /* 一次性归一：把每条关系落到需求里的二级类型上 */
+  (D.RELATIONS || []).forEach(r => { const t = REL_TYPE_MAP[r.type]; if (t) r.type = t; });
   const legacyTypes=()=>[...new Set(D.RELATIONS.map(r=>r.type))].filter(t=>!PRD_REL_TYPES.includes(t));
   const RELATION_COLORS={
     '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
@@ -90,7 +114,7 @@ window.V03Filter = (function () {
     }
     return typeClassCache.get(type) || '事件';
   }
-  const relationTypeColor = type => window.V03Theme.obj(relationTypeClass(type));
+  const relationTypeColor = type => relL1Color(type);
   const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   function relationTypeOptions(s) {
     const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
@@ -344,7 +368,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, REL_L1, relL1Of, relL1Color, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     retireCoord, coordKeyOf, retiredCoords, retiredRevision: () => retiredRev,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),

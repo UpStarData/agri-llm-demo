@@ -1126,7 +1126,7 @@ window.V03Relation = (function () {
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
     if (dom.hint && st.rel.view !== 'graph') {
       const lv = relLevel();
-      dom.hint.hidden = st.rel.view !== 'geo';
+      dom.hint.hidden = true;   /* V3.0：底部层级面包屑与操作提示整条移除 */
       /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
       const trail = ['世界', '中国', relFocus() || '省区'];
       const at = lv === 'L1' ? 0 : lv === 'L2' ? 1 : 2;

@@ -174,8 +174,58 @@
     if (staleTime) staleTime.remove();
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
-    const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
-      : ['time','zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];   /* 时间范围并入快捷键组 */
+    /* V3.0：右下角快捷键按设计稿分三排
+       ① 缩小 / 放大 / 2D·3D / 地理影响圆   ② 搜索 / 视频自动播放 / 全屏   ③ 近 7 天 / 30 天 / 半年 / 1 年 */
+    const FACT_ROWS = [['zoomOut', 'zoomIn', 'mode3d', 'influence'], ['search', 'live', 'fullscreen'], ['T7', 'T30', 'T180', 'T365']];
+    const REL_ROWS = [['zoomOut', 'zoomIn', 'view3d', 'view2d', 'viewGraph'], ['search', 'fullscreen']];
+    const TIME_BTNS = { T7: ['近 7 天', '7d'], T30: ['近 30 天', '30d'], T180: ['近半年', '180d'], T365: ['近 1 年', '365d'] };
+    const order = st.tab === 'relation' ? REL_ROWS.flat() : FACT_ROWS.flat();
+    if (mode === 'map' && st.tab !== 'relation') {
+      FACT_ROWS.forEach((rowKeys, ri) => {
+        const rowEl = el('div', 'sk-row sk-row-' + (ri + 1));
+        rowKeys.forEach(k => {
+          if (TIME_BTNS[k]) {
+            const [label, val] = TIME_BTNS[k];
+            const on = st.time === val;
+            const tb = el('button', 'sk sk-t' + (on ? ' on' : ''), '<span class="sk-v">' + label + '</span>');
+            tb.type = 'button'; tb.dataset.k = k; tb.title = label; tb.setAttribute('aria-pressed', String(on));
+            tb.onclick = () => S.set({ time: st.time === val ? 'all' : val });
+            rowEl.appendChild(tb);
+            return;
+          }
+          const sk = SK.find(x => x.k === k); if (!sk) return;
+          const api = layerApi();
+          const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
+          const on = sk.kind === 'sw' ? !!sk.get(st) : false;
+          const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
+          b.dataset.k = sk.k; b.title = sk.n + '：' + sk.d;
+          b.innerHTML = '<span class="sk-i">' + svg(sk.i, 16) + '</span>';
+          b.setAttribute('aria-pressed', String(on));
+          if (sk.kind === 'zoom') {
+            if (!api || !api.zoomBy) { b.disabled = true; }
+            else if (zs && ((sk.dir > 0 && !zs.canIn) || (sk.dir < 0 && !zs.canOut))) { b.disabled = true; }
+            b.onpointerdown = e => { e.preventDefault(); startZoomHold(sk.dir); };
+            b.oncontextmenu = e => e.preventDefault();
+          } else {
+            b.onclick = () => {
+              if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
+              if (sk.kind === 'sw') S.set(sk.set(!sk.get(st)));
+              else openPop(sk, b, () => renderShortcutBar(mount, opts));
+            };
+          }
+          rowEl.appendChild(b);
+        });
+        mount.appendChild(rowEl);
+      });
+      if (st.q) {
+        const chip = el('div', 'sk-search-term');
+        chip.appendChild(el('span', '', st.q));
+        const clear = el('button', '', '×'); clear.type = 'button'; clear.title = '清空搜索';
+        clear.onclick = () => S.set({ q: '' });
+        chip.appendChild(clear); mount.appendChild(chip);
+      }
+      return;
+    }
     (mode === 'map' ? order.map(k => SK.find(x => x.k === k)) : SK).forEach((sk, idx) => {
       if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen'].includes(sk.k)) return;
       if (mode === 'map' && st.tab !== 'relation' && !['time','zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
@@ -437,18 +487,25 @@
       variety.appendChild(row);body.appendChild(variety);
       const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选'));
       const selected=st.relTypes;
-        const typeRow=el('div','mn-rel-types');
-        F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
-          const on=!Array.isArray(selected)||selected.includes(t);
-          const b=el('button','l3'+(on?' on':''));
-          b.dataset.relType=t;
-          b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
-          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
-          b.setAttribute('aria-pressed',String(on));
-          b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
-          typeRow.appendChild(b);
+        /* V3.0：两级展示（一级分组带色块，二级类型同用一级色） */
+        const opts = new Map(F.relationTypeOptions(st).map(o => [o.type, o.count]));
+        F.REL_L1.forEach(g => {
+          const types = g.types.filter(t => opts.has(t));
+          if (!types.length) return;
+          relFilter.appendChild(el('div', 'mn-l2 mn-rel-l1', '<i style="background:' + g.color + '"></i>' + g.n));
+          const typeRow = el('div', 'mn-rel-types');
+          types.forEach(t => {
+            const on = !Array.isArray(selected) || selected.includes(t);
+            const b = el('button', 'l3' + (on ? ' on' : ''));
+            b.dataset.relType = t;
+            b.title = opts.get(t) + ' 条实际关系；地图仅绘制两端可定位的关系并抽样显示，完整关系可在图谱和详情查看';
+            b.innerHTML = '<i style="background:' + g.color + '"></i><span>' + t + '</span>';
+            b.setAttribute('aria-pressed', String(on));
+            b.onclick = () => { const set = new Set(Array.isArray(S.state.relTypes) ? S.state.relTypes : F.relationTypes()); on ? set.delete(t) : set.add(t); S.set({ relTypes: [...set] }); };
+            typeRow.appendChild(b);
+          });
+          relFilter.appendChild(typeRow);
         });
-        relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
 
     }

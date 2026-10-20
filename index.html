@@ -28,7 +28,8 @@
   --obj-l1-1:#2f6f9e;--obj-l1-2:#a86a2c;--obj-l1-3:#5b9c46;--obj-l1-4:#b04a6a;
   /* 三维地球：深空底色 + 海面渐变 + 大气层光圈（与配色 1 同一套冷蓝） */
   --globe-space-1:#0b1f30;--globe-space-2:#050f19;--globe-nebula:#236bad;
-  --globe-sea-1:#7fb4c8;--globe-sea-2:#336c8b;--globe-sea-3:#102f47;
+  /* V3.0：3D 海洋取 2D 海面色（--ocean）的同族明暗 */
+  --globe-sea-1:#cddde9;--globe-sea-2:#b8cee0;--globe-sea-3:#798894;
   --globe-atmo:150,214,255;--globe-atmo-a:.62;--globe-star:#e6f4ff;
   /* 面板与阴影（浅色，不用暗色玻璃） */
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.89);--glass-line:rgba(70,105,125,.18);
@@ -56,7 +57,8 @@ html[data-theme="color"]{
   --ocean:#5fbdf2;--land:#cfe9bd;--land-2:#b6dfa4;--map-line:rgba(224,128,118,.55);--map-label:#2b3d52;
   /* 三维地球：近黑深空 + 亮蓝海面 + 浅绿陆块 + 蓝白大气层 */
   --globe-space-1:#0a1c33;--globe-space-2:#040c18;--globe-nebula:#2f6fd0;
-  --globe-sea-1:#6fb6ee;--globe-sea-2:#3a86c8;--globe-sea-3:#0f3c66;
+  /* V3.0：3D 海洋取 2D 海面色（--ocean #5fbdf2）的同族明暗 */
+  --globe-sea-1:#8fd1f6;--globe-sea-2:#5fbdf2;--globe-sea-3:#3f7da0;
   --globe-atmo:150,205,255;--globe-atmo-a:.6;--globe-star:#eaf4ff;
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(30,58,92,.16);
   --shadow:0 12px 32px -20px rgba(16,42,74,.35);--icon:#4a6b8e;--icon-hover:#2f6fd0;--icon-on:rgba(47,111,208,.12);
@@ -605,6 +607,24 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .link-btn{border:0;background:none;padding:6px 0;color:var(--accent);font:inherit;font-size:.6875rem;cursor:pointer;
   text-decoration:underline;text-underline-offset:3px}
 .fd-actions-end{justify-content:flex-end}
+
+/* V3.0：右下角快捷键三排（设计稿） */
+.mapsk{grid-template-columns:repeat(5,auto);grid-auto-flow:row;gap:6px}
+.mapsk .sk-row{display:flex;gap:6px;grid-column:1/-1}
+.mapsk .sk-row-1 .sk{width:28px}
+.mapsk .sk-t{width:auto;padding:0 8px}
+.mapsk .sk-t .sk-v{font-size:.625rem;white-space:nowrap}
+
+/* V3.0：证据弹窗（固定尺寸，纯文字） */
+.ev-q{cursor:pointer;text-decoration:underline;text-decoration-color:rgba(47,111,208,.35);text-underline-offset:3px}
+.ev-pop{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(8,14,22,.32)}
+.ev-pop[hidden]{display:none}
+.ev-pop-box{position:relative;width:min(560px,86vw);height:min(360px,70vh);display:flex;flex-direction:column;
+  background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-line);
+  border-radius:14px;box-shadow:0 24px 60px -30px rgba(0,0,0,.5);padding:16px 18px}
+.ev-pop-t{font-weight:var(--f-semi);font-size:.8125rem;color:var(--ink);padding-right:24px}
+.ev-pop-body{margin-top:10px;flex:1;overflow:auto;white-space:pre-wrap;font-size:.75rem;line-height:1.7;color:var(--ink)}
+.ev-pop-x{position:absolute;top:10px;right:12px;border:0;background:none;font-size:1rem;color:var(--mut);cursor:pointer}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -958,7 +978,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V3.0</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V3.1</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -1024,7 +1044,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"4c066df3b6c5","git":"76017c7","builtAt":"2026-10-20T13:28:32.920Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"98164dcdf7a6","git":"7899cd2","builtAt":"2026-10-20T15:40:48.673Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5868,6 +5888,30 @@ window.V03Filter = (function () {
     return null; // 价格、库存、天气指标不是本体，不伪装成 PRD 分类
   }
   const PRD_REL_TYPES=['生产','供应','采购','运营','入驻','合作','位于','运输至','储存于','发布','适用于','监管','影响','发生于'];
+
+  /* V3.0：按《问题修复.md》重排关系分类 —— 6 个一级 / 14 个二级，颜色跟一级走 */
+  const REL_L1 = [
+    { n: '生产供应', color: '#2f7d5b', types: ['生产', '供应', '采购'] },
+    { n: '经营组织', color: '#a9702a', types: ['运营', '入驻', '合作'] },
+    { n: '空间',     color: '#3f63a8', types: ['位于', '发生于'] },
+    { n: '物流',     color: '#1f8a9c', types: ['运输至', '储存于'] },
+    { n: '政策',     color: '#6f4fa3', types: ['发布', '适用于', '监管'] },
+    { n: '影响',     color: '#b8435a', types: ['影响'] },
+  ];
+  /* 旧数据里的类型名 → 需求里的二级类型（逐条给定，不做模糊匹配） */
+  const REL_TYPE_MAP = {
+    '生产': '生产', '供应流向': '供应', '依赖': '供应', '贸易': '供应',
+    '流入': '运输至', '流出': '运输至', '运输经由': '运输至',
+    '行政归属': '位于',
+    '覆盖': '适用于',
+    '影响': '影响', '替代': '影响', '价格传导': '影响', '公开资料关联': '影响',
+    '经营品类': '运营', '经营': '运营', '运营': '运营',
+    '共建': '合作', '产销合作': '合作', '战略合作': '合作', '共同参与': '合作',
+  };
+  const relL1Of = type => { const g = REL_L1.find(x => x.types.includes(type)); return g ? g.n : '影响'; };
+  const relL1Color = type => { const g = REL_L1.find(x => x.types.includes(type)); return g ? g.color : '#b8435a'; };
+  /* 一次性归一：把每条关系落到需求里的二级类型上 */
+  (D.RELATIONS || []).forEach(r => { const t = REL_TYPE_MAP[r.type]; if (t) r.type = t; });
   const legacyTypes=()=>[...new Set(D.RELATIONS.map(r=>r.type))].filter(t=>!PRD_REL_TYPES.includes(t));
   const RELATION_COLORS={
     '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
@@ -5900,7 +5944,7 @@ window.V03Filter = (function () {
     }
     return typeClassCache.get(type) || '事件';
   }
-  const relationTypeColor = type => window.V03Theme.obj(relationTypeClass(type));
+  const relationTypeColor = type => relL1Color(type);
   const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   function relationTypeOptions(s) {
     const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
@@ -6154,7 +6198,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, REL_L1, relL1Of, relL1Color, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     retireCoord, coordKeyOf, retiredCoords, retiredRevision: () => retiredRev,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
@@ -7366,7 +7410,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, (f.l1Label || f.cat || '事实'), f.title, f.id);
+      V03Intake.note(dom.side, ((leafOf(f) || {}).group || f.l1Label || '事实'), f.title, f.id);
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -7995,7 +8039,7 @@ window.V03Fact = (function () {
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
         <div class="fd-sec">
-          ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
+          ${evidence.length ? evidence.map((e, i) => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q class="ev-q" data-ev="${i}" role="button" tabindex="0" title="查看完整来源">${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
         ${typeFields.filter(([, v]) => v != null && v !== '').length ? '<div class="fd-sec"><h4>类型字段</h4>' + typeFields.map(([k, v]) => row(k, v)).join('') + '</div>' : ''}
@@ -8016,8 +8060,28 @@ window.V03Fact = (function () {
     if (toRel) toRel.onclick = () => S.set({ tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]), rel: { focusFact: f.id, sel: null, kind: null, stack: [] } });
     const toSim = box.querySelector('#toSim');
     if (toSim) toSim.onclick = () => S.set({ tab: 'sim', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]) });
+    /* V3.0 证据弹窗：固定尺寸文字容器，证据原文与“事实形成过程”共用 */
+    const pop = document.createElement('div');
+    pop.className = 'ev-pop'; pop.hidden = true;
+    pop.innerHTML = '<div class="ev-pop-box"><div class="ev-pop-t"></div><div class="ev-pop-body"></div><button class="ev-pop-x" type="button" aria-label="关闭">×</button></div>';
+    box.appendChild(pop);
+    const openEvPop = (title, body) => {
+      pop.querySelector('.ev-pop-t').textContent = title;
+      pop.querySelector('.ev-pop-body').textContent = body;
+      pop.hidden = false;
+    };
+    pop.querySelector('.ev-pop-x').onclick = () => { pop.hidden = true; };
+    pop.onclick = e => { if (e.target === pop) pop.hidden = true; };
+    box.querySelectorAll('.ev-q').forEach(q => {
+      const e = evidence[+q.dataset.ev] || {};
+      q.onclick = () => openEvPop(e.t || '来源材料', (e.q || '原文片段缺失') + (e.url ? '\n\n来源链接：' + e.url : ''));
+      q.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); q.click(); } };
+    });
     const toLog = box.querySelector('#toLog');
-    if (toLog) toLog.onclick = () => S.set({ logOpen: !st.logOpen });
+    if (toLog) toLog.onclick = () => openEvPop('事实形成过程',
+      '首次采集时间：' + (f.ingestedAt || '未知') +
+      '\n最近更新时间：' + (f.updatedAt || f.ingestedAt || '未知') +
+      '\n当前版本：' + (f.version || 'V0.01'));
     VIS.sync();
     V03Media.mount(box);
   }
@@ -9298,7 +9362,7 @@ window.V03Relation = (function () {
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
     if (dom.hint && st.rel.view !== 'graph') {
       const lv = relLevel();
-      dom.hint.hidden = st.rel.view !== 'geo';
+      dom.hint.hidden = true;   /* V3.0：底部层级面包屑与操作提示整条移除 */
       /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
       const trail = ['世界', '中国', relFocus() || '省区'];
       const at = lv === 'L1' ? 0 : lv === 'L2' ? 1 : 2;
@@ -9634,8 +9698,58 @@ window.V03Sim = (function () {
     if (staleTime) staleTime.remove();
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
-    const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
-      : ['time','zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];   /* 时间范围并入快捷键组 */
+    /* V3.0：右下角快捷键按设计稿分三排
+       ① 缩小 / 放大 / 2D·3D / 地理影响圆   ② 搜索 / 视频自动播放 / 全屏   ③ 近 7 天 / 30 天 / 半年 / 1 年 */
+    const FACT_ROWS = [['zoomOut', 'zoomIn', 'mode3d', 'influence'], ['search', 'live', 'fullscreen'], ['T7', 'T30', 'T180', 'T365']];
+    const REL_ROWS = [['zoomOut', 'zoomIn', 'view3d', 'view2d', 'viewGraph'], ['search', 'fullscreen']];
+    const TIME_BTNS = { T7: ['近 7 天', '7d'], T30: ['近 30 天', '30d'], T180: ['近半年', '180d'], T365: ['近 1 年', '365d'] };
+    const order = st.tab === 'relation' ? REL_ROWS.flat() : FACT_ROWS.flat();
+    if (mode === 'map' && st.tab !== 'relation') {
+      FACT_ROWS.forEach((rowKeys, ri) => {
+        const rowEl = el('div', 'sk-row sk-row-' + (ri + 1));
+        rowKeys.forEach(k => {
+          if (TIME_BTNS[k]) {
+            const [label, val] = TIME_BTNS[k];
+            const on = st.time === val;
+            const tb = el('button', 'sk sk-t' + (on ? ' on' : ''), '<span class="sk-v">' + label + '</span>');
+            tb.type = 'button'; tb.dataset.k = k; tb.title = label; tb.setAttribute('aria-pressed', String(on));
+            tb.onclick = () => S.set({ time: st.time === val ? 'all' : val });
+            rowEl.appendChild(tb);
+            return;
+          }
+          const sk = SK.find(x => x.k === k); if (!sk) return;
+          const api = layerApi();
+          const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
+          const on = sk.kind === 'sw' ? !!sk.get(st) : false;
+          const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
+          b.dataset.k = sk.k; b.title = sk.n + '：' + sk.d;
+          b.innerHTML = '<span class="sk-i">' + svg(sk.i, 16) + '</span>';
+          b.setAttribute('aria-pressed', String(on));
+          if (sk.kind === 'zoom') {
+            if (!api || !api.zoomBy) { b.disabled = true; }
+            else if (zs && ((sk.dir > 0 && !zs.canIn) || (sk.dir < 0 && !zs.canOut))) { b.disabled = true; }
+            b.onpointerdown = e => { e.preventDefault(); startZoomHold(sk.dir); };
+            b.oncontextmenu = e => e.preventDefault();
+          } else {
+            b.onclick = () => {
+              if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
+              if (sk.kind === 'sw') S.set(sk.set(!sk.get(st)));
+              else openPop(sk, b, () => renderShortcutBar(mount, opts));
+            };
+          }
+          rowEl.appendChild(b);
+        });
+        mount.appendChild(rowEl);
+      });
+      if (st.q) {
+        const chip = el('div', 'sk-search-term');
+        chip.appendChild(el('span', '', st.q));
+        const clear = el('button', '', '×'); clear.type = 'button'; clear.title = '清空搜索';
+        clear.onclick = () => S.set({ q: '' });
+        chip.appendChild(clear); mount.appendChild(chip);
+      }
+      return;
+    }
     (mode === 'map' ? order.map(k => SK.find(x => x.k === k)) : SK).forEach((sk, idx) => {
       if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen'].includes(sk.k)) return;
       if (mode === 'map' && st.tab !== 'relation' && !['time','zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
@@ -9897,18 +10011,25 @@ window.V03Sim = (function () {
       variety.appendChild(row);body.appendChild(variety);
       const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选'));
       const selected=st.relTypes;
-        const typeRow=el('div','mn-rel-types');
-        F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
-          const on=!Array.isArray(selected)||selected.includes(t);
-          const b=el('button','l3'+(on?' on':''));
-          b.dataset.relType=t;
-          b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
-          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span>';
-          b.setAttribute('aria-pressed',String(on));
-          b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
-          typeRow.appendChild(b);
+        /* V3.0：两级展示（一级分组带色块，二级类型同用一级色） */
+        const opts = new Map(F.relationTypeOptions(st).map(o => [o.type, o.count]));
+        F.REL_L1.forEach(g => {
+          const types = g.types.filter(t => opts.has(t));
+          if (!types.length) return;
+          relFilter.appendChild(el('div', 'mn-l2 mn-rel-l1', '<i style="background:' + g.color + '"></i>' + g.n));
+          const typeRow = el('div', 'mn-rel-types');
+          types.forEach(t => {
+            const on = !Array.isArray(selected) || selected.includes(t);
+            const b = el('button', 'l3' + (on ? ' on' : ''));
+            b.dataset.relType = t;
+            b.title = opts.get(t) + ' 条实际关系；地图仅绘制两端可定位的关系并抽样显示，完整关系可在图谱和详情查看';
+            b.innerHTML = '<i style="background:' + g.color + '"></i><span>' + t + '</span>';
+            b.setAttribute('aria-pressed', String(on));
+            b.onclick = () => { const set = new Set(Array.isArray(S.state.relTypes) ? S.state.relTypes : F.relationTypes()); on ? set.delete(t) : set.add(t); S.set({ relTypes: [...set] }); };
+            typeRow.appendChild(b);
+          });
+          relFilter.appendChild(typeRow);
         });
-        relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
 
     }

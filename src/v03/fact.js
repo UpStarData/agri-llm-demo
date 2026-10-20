@@ -457,7 +457,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, (f.l1Label || f.cat || '事实'), f.title, f.id);
+      V03Intake.note(dom.side, ((leafOf(f) || {}).group || f.l1Label || '事实'), f.title, f.id);
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -1086,7 +1086,7 @@ window.V03Fact = (function () {
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
         <div class="fd-sec">
-          ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
+          ${evidence.length ? evidence.map((e, i) => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q class="ev-q" data-ev="${i}" role="button" tabindex="0" title="查看完整来源">${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
         ${typeFields.filter(([, v]) => v != null && v !== '').length ? '<div class="fd-sec"><h4>类型字段</h4>' + typeFields.map(([k, v]) => row(k, v)).join('') + '</div>' : ''}
@@ -1107,8 +1107,28 @@ window.V03Fact = (function () {
     if (toRel) toRel.onclick = () => S.set({ tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]), rel: { focusFact: f.id, sel: null, kind: null, stack: [] } });
     const toSim = box.querySelector('#toSim');
     if (toSim) toSim.onclick = () => S.set({ tab: 'sim', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]) });
+    /* V3.0 证据弹窗：固定尺寸文字容器，证据原文与“事实形成过程”共用 */
+    const pop = document.createElement('div');
+    pop.className = 'ev-pop'; pop.hidden = true;
+    pop.innerHTML = '<div class="ev-pop-box"><div class="ev-pop-t"></div><div class="ev-pop-body"></div><button class="ev-pop-x" type="button" aria-label="关闭">×</button></div>';
+    box.appendChild(pop);
+    const openEvPop = (title, body) => {
+      pop.querySelector('.ev-pop-t').textContent = title;
+      pop.querySelector('.ev-pop-body').textContent = body;
+      pop.hidden = false;
+    };
+    pop.querySelector('.ev-pop-x').onclick = () => { pop.hidden = true; };
+    pop.onclick = e => { if (e.target === pop) pop.hidden = true; };
+    box.querySelectorAll('.ev-q').forEach(q => {
+      const e = evidence[+q.dataset.ev] || {};
+      q.onclick = () => openEvPop(e.t || '来源材料', (e.q || '原文片段缺失') + (e.url ? '\n\n来源链接：' + e.url : ''));
+      q.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); q.click(); } };
+    });
     const toLog = box.querySelector('#toLog');
-    if (toLog) toLog.onclick = () => S.set({ logOpen: !st.logOpen });
+    if (toLog) toLog.onclick = () => openEvPop('事实形成过程',
+      '首次采集时间：' + (f.ingestedAt || '未知') +
+      '\n最近更新时间：' + (f.updatedAt || f.ingestedAt || '未知') +
+      '\n当前版本：' + (f.version || 'V0.01'));
     VIS.sync();
     V03Media.mount(box);
   }
