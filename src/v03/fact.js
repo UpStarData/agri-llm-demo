@@ -214,6 +214,9 @@ window.V03Fact = (function () {
       if (!g) return;
       camera.zoom = g.zoom != null ? g.zoom : camera.zoom;
       if (g.center) camera.center = g.center.slice();
+      /* V3.2：临界 zoom 之内 2D 地图只允许左右移动 —— 纬度被夹在默认纬度附近一个窄带，
+         超过临界点（要进入下一级视野）才放开纵向拖动。不能在事件里 setOption，交回 afterZoom 落地。 */
+      clampLat();
       /* ECharts 已在当前交互帧完成 geo roam；不要在事件内重入 setOption。
          只在用户停手后提交层级 / 状态，避免 2 万点被每帧重复布局。 */
       if (camera.roamTimer) clearTimeout(camera.roamTimer);
@@ -271,7 +274,26 @@ window.V03Fact = (function () {
     });
   }
   /* 缩放后决策（滚轮与 +/− 按钮共用）：到阈值切层、到边界收敛 */
+  /* V3.2：纵向拖动夹紧（level 的临界 zoom 之前只留一条窄带） */
+  const LAT_LOCK = { L1: { maxZoom: 2.15, band: 8 }, L2: { maxZoom: 2.6, band: 6 }, L3: { maxZoom: Infinity, band: 4 } };
+  function clampLat() {
+    const st = S.state;
+    if (st.sk.mode3d) return;
+    const rule = LAT_LOCK[st.geo.level]; if (!rule) return;
+    const def = (LEVEL[st.geo.level] || {}).center; if (!def) return;
+    if (camera.zoom > rule.maxZoom) return;
+    const lat = Math.max(def[1] - rule.band, Math.min(def[1] + rule.band, camera.center[1]));
+    if (Math.abs(lat - camera.center[1]) > 0.01) {
+      camera.center = [camera.center[0], lat];
+      camera.latPending = true;
+    }
+  }
+
   function afterZoom() {
+    if (camera.latPending && chart) {
+      camera.latPending = false;
+      chart.setOption({ geo: { center: camera.center.slice() } }, { lazyUpdate: true, silent: true });
+    }
     const st = S.state, lv = LEVEL[st.geo.level], box = lv.zoomBox;
     /* 三份相同的世界互相接续；停手后按 360° 回到中央副本，视觉位置不跳变。 */
     if (st.geo.level === 'L1' && Math.abs(camera.center[0] - 105) > 180) camera.center = wrappedCenter(camera.center);
