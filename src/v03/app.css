@@ -646,3 +646,39 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .mapsk .sk.zoom .sk-i.sk-fig svg{opacity:1}
 .st-bar .st-logo{display:inline-flex;align-items:center;margin-right:6px}
 .st-bar .st-logo svg{width:16px;height:13px;display:block}
+
+/* ================= V3.5 左侧菜单设计规范 ================= */
+:root{
+  --ds-ink:#161616;          /* 三级主标题 */
+  --ds-desc:#8d8d8d;         /* 文案/描述 */
+  --ds-h3:18px;--ds-h4:16px;--ds-body:14px;--ds-num:16px;
+  --ds-gap:20px;
+  --font-ui:'IBM Plex Sans SC','PingFang SC',-apple-system,'Helvetica Neue',sans-serif;
+  --font-num:'IBM Plex Mono','SF Mono',ui-monospace,monospace;
+  --accent:var(--ocean);--accent-soft:rgba(95,189,242,.16);   /* 主题蓝 = 海洋蓝 */
+}
+/* 全站字体统一为 IBM Plex Sans SC（推演层是 iframe，不受影响）；数字用等宽字体单独覆盖 */
+body,body *:not(.ov-i b):not(.st-line):not(.st-line *):not(code):not(pre):not(.mono){font-family:var(--font-ui)!important}
+.ov-i b,.mono{font-family:var(--font-num)!important}
+/* 面板表面：按附件 SVG（356 宽、白 62%、1px #E5E7EB 描边） */
+.menu{background:linear-gradient(rgba(255,255,255,.62),rgba(255,255,255,.62));border-right:1px solid #E5E7EB}
+/* 六个块之间 20px 分隔 */
+.menu-body{display:flex;flex-direction:column;gap:var(--ds-gap)}
+.mn-sec{gap:8px;padding-bottom:0}
+.mn-sec+.mn-sec{border-top:1px solid #EDEDED;padding-top:var(--ds-gap)}
+/* 三级主标题：18 / Regular / #161616 */
+.mn-h{font-size:var(--ds-h3);font-weight:400;color:var(--ds-ink);letter-spacing:0}
+/* 文案与描述：14 / #8d8d8d */
+.ov-i span,.mn-master .mn-ov-label b,.ov-note{font-size:var(--ds-body);font-weight:400;color:var(--ds-desc)}
+.mn-master .mn-ov-label b{color:var(--ds-desc);font-weight:400}
+/* 概览数字：IBM Plex Mono 16 Bold */
+.ov-i b,.ov-i b[data-ov]{font-family:var(--font-num);font-size:var(--ds-num);font-weight:700;color:var(--ds-ink);letter-spacing:0}
+.mn-ov.hero .ov-i b{font-size:var(--ds-num)}
+/* 四级主标题（自然与生态等）：16 / Regular，去掉色块，文字本身着色 */
+.mn-l1{font-size:var(--ds-h4);font-weight:400;color:var(--ds-ink)}
+.mn-l1 i,.mn-grp .mn-l1 i{display:none}
+.mn-l1[data-c]{color:attr(data-c)}
+/* 正文/按钮：14 */
+.mn-l2,.mn-l3 .l3,.mn-overlay,.mn-region,.mn-region-opt,.mn-varieties .l3{font-size:var(--ds-body)}
+.mn-region{height:32px;line-height:30px;padding:0 10px}
+.mn-region::placeholder{color:var(--ds-desc)}

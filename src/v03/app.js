@@ -341,6 +341,15 @@
     { delay: 520, scale: 2.2 }, { delay: 1280, scale: 1.08 },
     { delay: 3400, scale: 0, skip: true }, { delay: 760, scale: 1.7 }
   ];
+  /* V3.5：新事实到达时「今日新增事实」+1；「当前事实」本次加载后不变 */
+  function bumpToday() {
+    const nodes = document.querySelectorAll('#menuBody .ov-i b');
+    const today = nodes[1];
+    if (!today) return;
+    const cur = Number(String(today.textContent).replace(/[^0-9]/g, '')) || 0;
+    today.textContent = (cur + 1).toLocaleString('en-US');
+  }
+
   function ovPaint() {
     const M = window.V03Mass;
     if (OV.node && M) OV.node.textContent = M.digits(OV.base + OV.extra);
@@ -408,7 +417,8 @@
     s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '事实分类筛选'));
     tree.forEach(g => {
       const blk = el('div', 'mn-grp');
-      const groupHead = el('button', 'mn-l1 mn-l1-button', (g.color ? '<i style="background:' + g.color + '"></i>' : '') + '<span>' + g.n + '</span>');
+      /* V3.5：四级主标题不再带色块，直接给文字上色 */
+      const groupHead = el('button', 'mn-l1 mn-l1-button', '<span' + (g.color ? ' style="color:' + g.color + '"' : '') + '>' + g.n + '</span>');
       groupHead.type = 'button';
       groupHead.onclick = () => {
         const keys = g.subs.flatMap(sub => sub.items.map(it => it.key));
@@ -446,7 +456,7 @@
       const selector = el('div', 'mn-v12-filters');
       selector.innerHTML = '<div class="mn-l2">品种筛选</div><div class="mn-varieties"></div>' +
         '<div class="mn-l2">区域筛选</div>' +
-        '<div class="mn-region-box"><input class="mn-region" type="search" placeholder="输入中国 / 湖南，回车进入" value="' +
+        '<div class="mn-region-box"><input class="mn-region" type="search" placeholder="请输入地区" value="' +
         String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" autocomplete="off" role="combobox" aria-expanded="false">' +
         '<div class="mn-region-pop" role="listbox" hidden></div></div>';
       const row = selector.querySelector('.mn-varieties');
@@ -471,7 +481,12 @@
         inp.value = r.n;
         S.set({ region: r.n, geo: { level: r.level, focus: r.focus } });
       };
-      inp.oninput = () => paint(inp.value.trim());
+      inp.oninput = () => {
+        const q = inp.value.trim();
+        /* V3.5：清空输入 = 回到全球 2D 默认视角 */
+        if (!q) { pop.hidden = true; S.set({ region: '', geo: { level: 'L1', focus: null }, sk: { mode3d: false } }); return; }
+        paint(q);
+      };
       inp.onfocus = () => paint(inp.value.trim());
       inp.onkeydown = e => {
         if (e.key === 'Enter') {
@@ -853,6 +868,8 @@
       drawers: drawerStackApi,
       toast
     };
+    /* V3.5：供 intake 调用 —— 新事实到达时让「今日新增事实」+1 */
+    window.V03App = { bumpToday };
     renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); renderSettings();
     syncStream(); refreshLayers(true); syncDrawers();
     window.V03_DEBUG = {

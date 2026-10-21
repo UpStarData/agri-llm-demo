@@ -1,29 +1,10 @@
 /* Shared arrival presentation. Replay and real ingestion use the same event path. */
 window.V03Intake = (() => {
   const timers = new WeakMap();
-  /* V3.0：系统级通知 —— 苹果灵动岛样式，居中顶部，两层共用（2D / 3D 都显示）。
-     host 参数保留兼容旧调用，实际挂载点固定为 #island。 */
+  /* V3.5：按要求去掉顶部中间的灵动岛通知；新事实只做地图亮星 + 「今日新增事实」+1 */
   function note(host, kind, title, factId) {
-    const dock = document.getElementById('island');
-    if (!dock) return;
-    const node = document.createElement('div');
-    node.className = 'isl'; node.setAttribute('role', 'status');
-    const cat = String(kind || '通知') + ' ' + String(title || '');
-    node.innerHTML = '<b># ' + String(kind || '通知') + '</b><span>' + String(title || '') + '</span>';
-    if (factId) {
-      node.classList.add('click');
-      node.onclick = () => {
-        const st = window.V03Store && window.V03Store.state || {};
-        if (st.tab === 'fact') window.V03Store.set({ factId, panels: { cards: true } });
-        else if (window.V03App && window.V03App.openRelationFact) window.V03App.openRelationFact(factId);
-      };
-    }
-    dock.appendChild(node);
-    while (dock.children.length > 2) dock.firstChild.remove();
-    requestAnimationFrame(() => node.classList.add('on'));
-    const hide = setTimeout(() => { node.classList.remove('on'); setTimeout(() => node.remove(), 380); }, 4200);
-    node.addEventListener('pointerenter', () => clearTimeout(hide));
-    return cat;
+    if (window.V03App && V03App.bumpToday) V03App.bumpToday();
+    return null;
   }
   function star(host, point, id, bright = true) {
     if (!host || !point || !point.every(Number.isFinite)) return false;
