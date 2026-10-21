@@ -2,8 +2,10 @@
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;
-  /* V2.9.1：推演层工作台改为仓库内自带（../mirofish/），不再依赖已停用的外部 Pages 站 */
+  /* V2.9.2：推演层工作台改为仓库内自带（../mirofish/），不再依赖已停用的外部 Pages 站。
+     postMessage 的目标 origin 必须跟着改，否则发送时会 ReferenceError。 */
   const MIROFISH_URL = '../mirofish/index.html?embed=agrilink#/';
+  const MIROFISH_ORIGIN = window.location.origin;
   let root, frame, promptInput, lastSelection = '', loaded = false;
 
   function context() {

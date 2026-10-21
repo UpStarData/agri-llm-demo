@@ -900,7 +900,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.1</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.2</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -964,7 +964,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"2c11732df91f","git":"17c14b1","builtAt":"2026-10-21T01:04:52.470Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"9d8a0a268e38","git":"b3f89bb","builtAt":"2026-10-21T03:24:31.889Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -9264,8 +9264,10 @@ window.V03Relation = (function () {
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;
-  /* V2.9.1：推演层工作台改为仓库内自带（../mirofish/），不再依赖已停用的外部 Pages 站 */
+  /* V2.9.2：推演层工作台改为仓库内自带（../mirofish/），不再依赖已停用的外部 Pages 站。
+     postMessage 的目标 origin 必须跟着改，否则发送时会 ReferenceError。 */
   const MIROFISH_URL = '../mirofish/index.html?embed=agrilink#/';
+  const MIROFISH_ORIGIN = window.location.origin;
   let root, frame, promptInput, lastSelection = '', loaded = false;
 
   function context() {
