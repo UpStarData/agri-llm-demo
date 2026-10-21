@@ -1125,28 +1125,9 @@ window.V03Relation = (function () {
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
     if (dom.hint && st.rel.view !== 'graph') {
-      const lv = relLevel();
-      dom.hint.hidden = true;   /* V3.0：底部层级面包屑与操作提示整条移除 */
-      /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
-      const trail = ['世界', '中国', relFocus() || '省区'];
-      const at = lv === 'L1' ? 0 : lv === 'L2' ? 1 : 2;
-      dom.hint.innerHTML = trail.slice(0, at + 1).map((t, i) =>
-        '<span class="jump' + (i === at ? ' on' : '') + '" role="button" tabindex="0" title="跳到' + t + '">' + t + '</span>').join('<i>›</i>')
-        + '<em>' + (lv === 'L1' ? '点击地图进中国（点本体/关系看详情）· 双指缩放 · Esc 返回'
-          : lv === 'L2' ? '点击省份进省区 · 点本体/关系看详情 · 滚轮缩小返回世界 · Esc 返回'
-          : '滚轮缩小或 Esc 返回全国') + '</em>'
-        + '<b class="drill" role="button" tabindex="0">' + (lv === 'L1' ? '进入中国 →' : lv === 'L2' ? '进入' + (relFocus() || '湖南') + ' →' : '返回全国') + '</b>';
-      dom.hint.querySelectorAll('span.jump').forEach((el, i) => {
-        const go = () => { const want = i === 0 ? 'L1' : i === 1 ? 'L2' : 'L3'; if (relLevel() !== want) enterLevel(want, want === 'L3' ? (relFocus() || '湖南') : null); };
-        el.onclick = go;
-        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-      });
-      const drillBtn = dom.hint.querySelector('b.drill');
-      if (drillBtn) {
-        const go = () => { if (!drillIn()) enterLevel('L2', null); };
-        drillBtn.onclick = go;
-        drillBtn.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-      }
+      /* V3.1/3.3：底部层级面包屑与交互提示整条移除，且不再写入文本（DOM 里也不留“世界/点击地图进入中国”） */
+      dom.hint.hidden = true;
+      dom.hint.textContent = '';
     }
     shownView = st.rel.view;
     if (st.rel.view === 'globe') {

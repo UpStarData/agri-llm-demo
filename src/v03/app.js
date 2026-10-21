@@ -649,6 +649,40 @@
     const box = $('drawerStack');
     box.style.right = S.state.panels.cards && (S.state.tab === 'relation' || stack.some(d => d.kind === 'fact'))
       ? 'var(--side-w)' : '0px';
+    /* V3.3：事实详情是单例 —— 框、标题、X 不动，只让内容「旧的向右收、新的从右进」 */
+    if (stack.length === 1 && stack[0].kind === 'fact' && window.V03Fact && V03Fact.renderDetail) {
+      const key = stack[0].id + '|' + (S.state.logOpen ? 'L' : '');
+      let frame = box.querySelector('.drawer.drawer-single');
+      if (!frame) {
+        box.innerHTML = '';
+        frame = el('div', 'drawer drawer-single');
+        const head = el('div', 'drawer-head');
+        head.innerHTML = '<b>事实详情</b><span class="sp"></span>';
+        const x = el('button', 'drawer-x', '×');
+        x.onclick = () => S.set({ factId: null, logOpen: false });
+        head.appendChild(x);
+        frame.appendChild(head);
+        frame.appendChild(el('div', 'drawer-stage'));
+        box.appendChild(frame);
+        frame.dataset.key = '';
+      }
+      box.style.pointerEvents = 'auto';
+      if (frame.dataset.key === key) return;
+      const stage = frame.querySelector('.drawer-stage');
+      const next = el('div', 'drawer-slide in');
+      try { V03Fact.renderDetail(next); } catch (e) { console.error('drawer', e); }
+      const prev = stage.querySelector('.drawer-slide');
+      stage.appendChild(next);
+      requestAnimationFrame(() => {
+        next.classList.remove('in');
+        if (prev) {
+          prev.classList.add('out');
+          setTimeout(() => prev.remove(), 320);
+        }
+      });
+      frame.dataset.key = key;
+      return;
+    }
     const sig = JSON.stringify([S.state.tab, stack, S.state.logOpen, S.state.sk.live]);
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;

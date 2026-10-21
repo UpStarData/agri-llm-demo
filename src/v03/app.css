@@ -109,7 +109,7 @@ svg{display:block}
 #layer-sim{background:var(--bg)}
 
 /* ---------------- 左侧菜单（从左侧滑出，固定四段） ---------------- */
-.menu{position:absolute;left:0;top:0;bottom:0;width:336px;z-index:55;transform:translateX(-102%);
+.menu{position:absolute;left:0;top:0;bottom:var(--stream-h);width:336px;z-index:55;transform:translateX(-102%);
   background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
   border-right:1px solid var(--glass-line);box-shadow:var(--shadow);
   transition:transform .26s var(--ease);display:flex;flex-direction:column;overflow:hidden}
@@ -615,3 +615,17 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .ev-pop-t{font-weight:var(--f-semi);font-size:.8125rem;color:var(--ink);padding-right:24px}
 .ev-pop-body{margin-top:10px;flex:1;overflow:auto;white-space:pre-wrap;font-size:.75rem;line-height:1.7;color:var(--ink)}
 .ev-pop-x{position:absolute;top:10px;right:12px;border:0;background:none;font-size:1rem;color:var(--mut);cursor:pointer}
+
+/* V3.3：事实详情单例容器 + 内容滑动替换（框与标题不动） */
+.drawer-single{position:relative;display:flex;flex-direction:column}
+.drawer-stage{position:relative;flex:1;min-height:0;overflow:hidden}
+.drawer-slide{position:absolute;inset:0;overflow:auto;padding:0 2px;
+  transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .3s ease}
+.drawer-slide.in{transform:translateX(38px);opacity:0}
+.drawer-slide.out{transform:translateX(64px);opacity:0}
+
+/* V3.3：卡片核心摘要（按二级分类 3 行） */
+.fcard-core{display:flex;flex-direction:column;gap:2px;margin:6px 0 2px}
+.fc-line{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:.6875rem;line-height:1.5}
+.fc-line span{color:var(--dim)}
+.fc-line b{font-weight:var(--f-reg);color:var(--ink);overflow-wrap:anywhere}
