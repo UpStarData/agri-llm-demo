@@ -900,7 +900,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.1</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -964,7 +964,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"71d4df335a54","git":"17c14b1","builtAt":"2026-10-19T06:03:07.187Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"2c11732df91f","git":"17c14b1","builtAt":"2026-10-21T01:04:52.470Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5891,27 +5891,10 @@ window.V03Filter = (function () {
   const regionOk = (f, region) => !region || [f.region, f.province, f.city, ...(f.regionPath || []).map(x => x.name)].some(x => String(x || '').includes(region)) ||
     (region === '湖南' && f.lng >= 108 && f.lng <= 115 && f.lat >= 24 && f.lat <= 31);
 
-  /* ---------- 跨视角共享的「点退场」登记 ----------
-     用户 2026-10-19 第 1 条：首次加载动画结束后，每隔 10s / 20s / 15s 消失一个点，
-     并且这些消失的点在切到中国、湖南视角后同样看不到（新增的点同理，走正常入库即各视角可见）。
-     这里按「坐标」登记，所以世界/中国/湖南三个视角的口径一致。 */
-  /* 注意：无坐标事实（直播源等 11 条 lng=null）必须返回 null，否则 toFixed 会抛错 */
-  const coordKeyOf = f => (f && Number.isFinite(f.lng) && Number.isFinite(f.lat)) ? f.lng.toFixed(4) + '|' + f.lat.toFixed(4) : null;
-  const retiredCoords = new Set();
-  let retiredRev = 0;
-  function retireCoord(key) {
-    if (!key || retiredCoords.has(key)) return false;
-    retiredCoords.add(key);
-    retiredRev++;
-    factCacheKey = '';                 /* 让 facts() 缓存失效 */
-    return true;
-  }
-  const isRetired = f => { const k = coordKeyOf(f); return !!k && retiredCoords.has(k); };
-
   let factCacheKey='',factCache=[];
   function facts(s) {
     s = s || window.V03Store.state;
-    const key=JSON.stringify([D.revision,window.V03Feed?.revision,retiredRev,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q]);
+    const key=JSON.stringify([D.revision,window.V03Feed?.revision,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q]);
     if(key===factCacheKey)return factCache;
     const set = selected(s, 'catKeys', FACT_ITEMS);
     factCacheKey=key;
@@ -5920,7 +5903,6 @@ window.V03Filter = (function () {
          点不会消失（用户 2026-10-17 反馈第 1 条）。档案仍保留原始发布日期，只是按窗口过滤。 */
       D.inWindow(f.date, s.time) &&
       (!window.V03Feed || V03Feed.isFactVisible(f.id)) &&
-      !isRetired(f) &&                             /* 已退场的坐标点：三个视角一致地不显示 */
       (set.size===FACT_ITEMS.length || matched(f, set)) &&
       varietyOk(f, s.varieties) &&
       regionOk(f, s.region) &&
@@ -6086,7 +6068,6 @@ window.V03Filter = (function () {
   return {
     FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
-    retireCoord, coordKeyOf, retiredCoords, retiredRevision: () => retiredRev,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
     totalFacts: () => D.FACTS.length,
     prov: x => (x && x.prov) || 'generated'
@@ -6710,12 +6691,9 @@ window.V03Feed = (() => {
   const LOAD_MS=6500,TICK_MS=1000;
   /* 亮星节奏：按 3/8/6/2/8/1 秒循环（2026-10-16 反馈第 4 项），不再用随机区间。 */
   const STAR_CYCLE=[3000,8000,6000,2000,8000,1000];
-  /* 首次加载动画结束后：每 10s / 20s / 15s 退场一个点（循环），新增仍走上面的亮星接入，
-     一进一出保持数据量；退场按坐标登记在 V03Filter 里，切中国/湖南视角一样看不到。 */
-  const RETIRE_CYCLE=[10000,20000,15000];
   const reportQueue=(D.PKG?.ARRIVALS||[]).slice();
   const businessQueue=(window.__AGRI_PKG2__?.v24Business?.arrivals || []).slice();
-  let started=false,done=false,retireOn=false,loadTimer=0,arrivalTimer=0,retireTimer=0,retireStep=0,t0=0,cursor=0,revision=0,seq=0,starStep=0;
+  let started=false,done=false,loadTimer=0,arrivalTimer=0,t0=0,cursor=0,revision=0,seq=0,starStep=0;
   function sampleGeo(list,cap,priority=new Set()) {
     const chosen=[],ids=new Set(),buckets=new Map();
     const add=o=>{if(chosen.length<cap&&!ids.has(o.id)){chosen.push(o);ids.add(o.id);}};
@@ -6731,7 +6709,7 @@ window.V03Feed = (() => {
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
   function changed(){revision++;S.emit('data:revealed',status());const meta=document.getElementById('streamMeta');if(meta)meta.textContent='事实 '+loaded.size.toLocaleString()+' / '+D.FACTS.length.toLocaleString();}
-  function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();startRetire();}
+  function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();}
   function step(){
     const fraction=Math.min(1,(performance.now()-t0)/LOAD_MS), want=Math.ceil(600+(plan.length-600)*fraction);
     while(cursor<plan.length&&loaded.size<want)expose([plan[cursor++]]);
@@ -6792,27 +6770,10 @@ window.V03Feed = (() => {
     history.push({at:Math.round(performance.now()),view:key,mode:accepted?'live':'snapshot-replay'});if(history.length>40)history.shift();
   }
   function nextStarDelay(){return STAR_CYCLE[starStep++ % STAR_CYCLE.length];}
-  /* 挑当前视角下一个可见的点退场（随机），记到共享登记里 */
-  function retireOnce(){
-    const st=S.state;
-    const pool=V03Filter.mappable(V03Filter.factsAtLevel(st)).filter(f=>V03Filter.mapEligible(f));
-    if(!pool.length)return null;
-    const pick=pool[Math.floor(Math.random()*pool.length)];
-    const key=V03Filter.coordKeyOf(pick);
-    if(!V03Filter.retireCoord(key))return null;
-    revision++;
-    S.emit('data:revealed',status());
-    S.emit('feed:log',{text:'退场 · '+(pick.title||pick.region||'事实点')+' · '+new Date().toLocaleTimeString('zh-CN')});
-    return {key,title:pick.title};
-  }
-  function nextRetireDelay(){return RETIRE_CYCLE[retireStep++ % RETIRE_CYCLE.length];}
-  function scheduleRetire(){if(!retireOn)return;clearTimeout(retireTimer);retireTimer=setTimeout(()=>{retireOnce();scheduleRetire();},nextRetireDelay());}
-  function startRetire(){if(retireOn)return;retireOn=true;scheduleRetire();}
-  function stopRetire(){retireOn=false;clearTimeout(retireTimer);}
   function schedule(){if(!started)return;clearTimeout(arrivalTimer);arrivalTimer=setTimeout(async()=>{await arrive();schedule();},nextStarDelay());}
-  function stop(){started=false;clearInterval(loadTimer);clearTimeout(arrivalTimer);stopRetire();}
+  function stop(){started=false;clearInterval(loadTimer);clearTimeout(arrivalTimer);}
   function start(){if(started)return;started=true;t0=performance.now();loadTimer=setInterval(step,TICK_MS);schedule();changed();}
-  return {start,stop,status,complete,sampleGeo,LOAD_MS,STAR_CYCLE,nextStarDelay,starStep:()=>starStep,RETIRE_CYCLE,nextRetireDelay,retireOnce,startRetire,stopRetire,retireOn:()=>retireOn,retireStep:()=>retireStep,arrive,isFactVisible:id=>loaded.has(id),isObjectVisible:id=>!id.startsWith('e:v23:weather:')&&!id.startsWith('e:v24:')||objects.has(id),get revision(){return revision;}};
+  return {start,stop,status,complete,sampleGeo,LOAD_MS,STAR_CYCLE,nextStarDelay,starStep:()=>starStep,arrive,isFactVisible:id=>loaded.has(id),isObjectVisible:id=>!id.startsWith('e:v23:weather:')&&!id.startsWith('e:v24:')||objects.has(id),get revision(){return revision;}};
 })();
 
 </script>
@@ -7182,38 +7143,25 @@ window.V03Fact = (function () {
      点击不同筛选，数据总量不一样」（数据量本来就随窗口变化，这里只加"退场 5%"）。
      选点用 (坐标 + 视角 + 时间窗) 的哈希取模 20，所以：同一个筛选每次消失的是同一批点（不会乱跳），
      不同筛选消失的批次不同；首屏不触发，只有点了时间范围才触发。 */
-  /* 用户 2026-10-19 第 2 条：消失要发生在「铺点动画过程中」，而不是动画结束之后——
-     先把点从无到有铺出来，过程中缓慢随机掉掉约 1/20（每个点有自己的淡出窗口），
-     同时新点继续铺；**动画一结束就冻结**，不再新增也不再消失。
-     选点：随机取 n/20 个（他明确要"随机的"），每个点的淡出起点落在动画 45%–85% 之间，
-     淡出时长 = 动画时长的 18%，因此最晚在 100% 处收干净。 */
-  const PRUNE_MOD = 20;
-  let pruneMap = null, pruneStats = null;
-  /* 随机取 n/20 个点，每个点分配一个落在动画窗口内的淡出时段（结束时全部归零） */
-  function pickPrune(selected, dur) {
+  const PRUNE_MOD = 20, PRUNE_FADE_MS = 1600;
+  let pruneSet = null, pruneT0 = 0, pruneArmed = false;
+  const pruneKeyOf = st => [st.time, st.geo.level, st.geo.focus || '', st.geo.city || '', st.geo.county || ''].join('|');
+  function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
+  /* 取「按哈希排序后的前 n/20 个」而不是取模：取模在点位少时比例波动大（比如 207 个点只掉 8 个），
+     排序取前 1/20 则严格约等于 1/20，且同一个筛选每次命中同一批（确定性）。 */
+  function pickPrune(selected, viewKey) {
     const list = [...selected];
     const want = Math.max(1, Math.round(list.length / PRUNE_MOD));
-    for (let i = list.length - 1; i > 0; i--) {          /* Fisher–Yates 洗牌后取前 want 个 */
-      const j = Math.floor(Math.random() * (i + 1));
-      const t = list[i]; list[i] = list[j]; list[j] = t;
-    }
-    const out = new Map();
-    const now = performance.now();
-    list.slice(0, want).forEach(k => {
-      const len = dur * 0.18;                                 /* 淡出占动画时长 18% */
-      /* 起点限制在 45%–82%，且必须留满淡出时间，保证**动画结束那一刻全部收干净**（之后冻结） */
-      const startAt = Math.min(dur * (0.45 + Math.random() * 0.37), dur - len);
-      out.set(k, { t0: now + startAt, len });
-    });
-    return out;
+    const ranked = list
+      .map(k => ({ k, h: hash32(k + '|' + viewKey) }))
+      .sort((a, b) => a.h - b.h)
+      .slice(0, want);
+    return new Set(ranked.map(x => x.k));
   }
-  /* 淡出透明度：1 → 0；到动画结束时应为 0（不再绘制）。不是退场点则恒为 1 */
+  /* 淡出期间的透明度：1 → 0；为 0 时该点不再绘制 */
   function pruneAlpha(coordKey) {
-    if (!pruneMap) return 1;
-    const w = pruneMap.get(coordKey);
-    if (!w) return 1;
-    const k = (performance.now() - w.t0) / w.len;
-    return k <= 0 ? 1 : k >= 1 ? 0 : 1 - k;
+    if (!pruneSet || !pruneSet.keys.has(coordKey)) return 1;
+    return Math.max(0, 1 - (performance.now() - pruneT0) / PRUNE_FADE_MS);
   }
   function ensureGrow(st) {
     if (growKey === null) { growKey = st.time; return growK; }   /* 首次进入不生长 */
@@ -7225,27 +7173,42 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
+      pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
-      /* 这次铺点过程中要随机退场的 1/20：动画一开始就分配好各自的淡出时段（都在 dur 内结束） */
-      const sel = mapPlan(st).selected;
-      pruneMap = pickPrune(sel, dur);
-      pruneStats = { selected: sel.size, pruned: pruneMap.size };   /* 给验收/测试核对 1/20 用 */
       if (!growRaf) {
         const t0 = performance.now(); let paintedAt = 0;
         const tick = () => {
           growRaf = 0;
           const p = (performance.now() - t0) / dur;
-          const finished = p >= 1;
-          growK = finished ? 1 : 1 - Math.pow(1 - p, 2.2);   /* 先快后慢，不是线性 */
+          growK = p >= 1 ? 1 : 1 - Math.pow(1 - p, 2.2);     /* 先快后慢，不是线性 */
           const now = performance.now();
-          /* 过程中不断重绘（铺新点 + 退场点淡出）；最后一帧正好落在动画结束处，之后冻结 */
-          if (S.state.tab === 'fact' && (now - paintedAt >= 80 || finished)) {
+          const painting = now - paintedAt >= 80;
+          const pruning = pruneSet && now - pruneT0 < PRUNE_FADE_MS;
+          if (S.state.tab === 'fact' && (painting || (growK >= 1 && !pruning))) {
             paintedAt = now;
             if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap();
           }
-          if (!finished) growRaf = requestAnimationFrame(tick);
+          /* 铺点结束后还要继续重绘，把退场 5% 的淡出画完 */
+          const stillPruning = pruneSet && performance.now() - pruneT0 < PRUNE_FADE_MS;
+          if (growK < 1 || stillPruning) growRaf = requestAnimationFrame(tick);
         };
         growRaf = requestAnimationFrame(tick);
+      }
+    }
+    /* 动画结束时（growK 到 1）算出这次要退场的 5%，并开始淡出计时 */
+    if (pruneArmed && growK >= 1) {
+      const vk = pruneKeyOf(st);
+      if (!pruneSet || pruneSet.viewKey !== vk) {
+        pruneSet = { viewKey: vk, keys: pickPrune(mapPlan(st).selected, vk) };
+        pruneT0 = performance.now();
+        if (!growRaf) {
+          const keep = () => {
+            growRaf = 0;
+            if (S.state.tab === 'fact') { if (S.state.sk.mode3d) globe.update(globePayload()); else if (chart) applyMap(); }
+            if (pruneSet && performance.now() - pruneT0 < PRUNE_FADE_MS) growRaf = requestAnimationFrame(keep);
+          };
+          growRaf = requestAnimationFrame(keep);
+        }
       }
     }
     return growK;
@@ -8069,8 +8032,7 @@ window.V03Fact = (function () {
     const f = D.factById(id);
     if (f && f.card) { f.card.embeddable = 'yes'; f.card.embedUrl = f.card.embedUrl || 'about:blank#verified'; sig = ''; cardSig = ''; update(); }
   };
-  return { layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market,
-    pruneInfo: () => pruneStats, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
+  return { layerEmoji: kind => LAYER_EMOJI[kind] || LAYER_EMOJI.market, mount, update, setVisible, renderDetail, debug, flyTo, zoomBy, zoomByFactor, zoomState, flashIds, worldGeoJSON, pick, forceEmbeddable, isPlayable, flashStar, notifyNewest, worldLongitude, worldCopies,
     viewConfig, receiveFact, visiblePosition:visiblePixel, arrivalCandidates:()=>F.mappable(F.mapFacts(S.state)).filter(f=>visiblePixel(f)), mapRegionColor: (name, level) => regionFill(name, palette(), level || 'L1') };
 })();
 
@@ -9302,8 +9264,8 @@ window.V03Relation = (function () {
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;
-  const MIROFISH_ORIGIN = 'https://upstardata.github.io';
-  const MIROFISH_URL = MIROFISH_ORIGIN + '/mirofish-frontend-preview/?embed=agrilink#/';
+  /* V2.9.1：推演层工作台改为仓库内自带（../mirofish/），不再依赖已停用的外部 Pages 站 */
+  const MIROFISH_URL = '../mirofish/index.html?embed=agrilink#/';
   let root, frame, promptInput, lastSelection = '', loaded = false;
 
   function context() {

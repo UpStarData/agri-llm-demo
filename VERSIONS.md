@@ -159,3 +159,11 @@ agri-llm-demo/
 按刘洋要求，`latest/` 回到 **V2.9**（`71d4df335a54` / `4cb3086`）。V3.0–V3.4 目录保留可直接访问，但不再作为最新版。
 
 原因：V3.x 的页面改动未获认可；另经排查，**推演层打不开与 V3.x 无关**——`推演层` 内嵌的 `https://upstardata.github.io/mirofish-frontend-preview/` 已 404（该仓库于 2026-10-13 改为 private，GitHub Pages 随之停用），V2.9 的制品里用的是同一个地址，所以回滚到 V2.9 后推演层同样打不开。
+
+## V2.9.1（2026-10-21）
+
+地址：https://upstardata.github.io/agri-llm-demo/v2.9.1/ ・ 构建指纹 `2c11732df91f` ・ 源码 `17c14b1`（= V2.9 源码）
+
+- 界面、交互、数据与 V2.9 完全一致；
+- 唯一改动：推演层 iframe 由 `https://upstardata.github.io/mirofish-frontend-preview/` 改成仓库内 `../mirofish/`（自带 1.1 MB 静态构建），修复推演层打不开；
+- 根因：`UpStarData/mirofish-frontend-preview` 于 2026-10-13 转为 private，GitHub Pages 随之停用，原地址 404；V2.9 与 V3.x 用的是同一个外部地址，所以两者都打不开，与 V3 改动无关。
