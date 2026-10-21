@@ -175,3 +175,17 @@ agri-llm-demo/
 - 界面/交互/数据与 V2.9 一致；
 - 修 V2.9.1 的回归：iframe 指向自带工作台后 `MIROFISH_ORIGIN` 未定义（postMessage 处 ReferenceError），现取 `window.location.origin`；
 - 实测：推演层 iframe 加载 `../mirofish/`，内部渲染「历史推演记录 / 发起新推演 / 热门推演」，控制台 0 错误。
+
+## V3.5（2026-10-21，非最新版）
+
+地址：https://upstardata.github.io/agri-llm-demo/v3.5/ ・ 构建指纹 `e73d2662a34f` ・ 源码 `e15310a`
+（`latest/` 仍指向 V2.9.2，本版按刘洋要求不作为最新版）
+
+- 字体：IBM Plex Sans SC 官方包经 jsDelivr CDN 引入（`font-display: swap`），全站统一，推演层 iframe 不受影响；数字用 IBM Plex Mono
+- 左侧菜单字号体系：三级标题 18/Regular/#161616；文案 14//#8d8d8d；四级标题 16/Regular 且去掉色块、文字着色；按钮/正文 14
+- 概览数字：IBM Plex Mono 16 Bold
+- 主题蓝 = 海洋蓝 `--ocean`
+- 六个块用 20px 间距 + 细分割线
+- 区域筛选：高 32px、占位「请输入地区」、清空输入回到全球 2D
+- 今日新增事实：新事实到达 +1；当前事实本次加载后不变
+- 移除顶部中间的灵动岛通知
