@@ -28,8 +28,7 @@
   --obj-l1-1:#2f6f9e;--obj-l1-2:#a86a2c;--obj-l1-3:#5b9c46;--obj-l1-4:#b04a6a;
   /* 三维地球：深空底色 + 海面渐变 + 大气层光圈（与配色 1 同一套冷蓝） */
   --globe-space-1:#0b1f30;--globe-space-2:#050f19;--globe-nebula:#236bad;
-  /* V3.0：3D 海洋取 2D 海面色（--ocean）的同族明暗 */
-  --globe-sea-1:#cddde9;--globe-sea-2:#b8cee0;--globe-sea-3:#798894;
+  --globe-sea-1:#7fb4c8;--globe-sea-2:#336c8b;--globe-sea-3:#102f47;
   --globe-atmo:150,214,255;--globe-atmo-a:.62;--globe-star:#e6f4ff;
   /* 面板与阴影（浅色，不用暗色玻璃） */
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.89);--glass-line:rgba(70,105,125,.18);
@@ -57,8 +56,7 @@ html[data-theme="color"]{
   --ocean:#5fbdf2;--land:#cfe9bd;--land-2:#b6dfa4;--map-line:rgba(224,128,118,.55);--map-label:#2b3d52;
   /* 三维地球：近黑深空 + 亮蓝海面 + 浅绿陆块 + 蓝白大气层 */
   --globe-space-1:#0a1c33;--globe-space-2:#040c18;--globe-nebula:#2f6fd0;
-  /* V3.0：3D 海洋取 2D 海面色（--ocean #5fbdf2）的同族明暗 */
-  --globe-sea-1:#8fd1f6;--globe-sea-2:#5fbdf2;--globe-sea-3:#3f7da0;
+  --globe-sea-1:#6fb6ee;--globe-sea-2:#3a86c8;--globe-sea-3:#0f3c66;
   --globe-atmo:150,205,255;--globe-atmo-a:.6;--globe-star:#eaf4ff;
   --glass:rgba(255,255,255,.96);--glass-2:rgba(255,255,255,.9);--glass-line:rgba(30,58,92,.16);
   --shadow:0 12px 32px -20px rgba(16,42,74,.35);--icon:#4a6b8e;--icon-hover:#2f6fd0;--icon-on:rgba(47,111,208,.12);
@@ -119,7 +117,7 @@ svg{display:block}
 #layer-sim{background:var(--bg)}
 
 /* ---------------- 左侧菜单（从左侧滑出，固定四段） ---------------- */
-.menu{position:absolute;left:0;top:0;bottom:var(--stream-h);width:336px;z-index:55;transform:translateX(-102%);
+.menu{position:absolute;left:0;top:0;bottom:0;width:336px;z-index:55;transform:translateX(-102%);
   background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
   border-right:1px solid var(--glass-line);box-shadow:var(--shadow);
   transition:transform .26s var(--ease);display:flex;flex-direction:column;overflow:hidden}
@@ -274,8 +272,7 @@ svg{display:block}
 .fact-wrap{position:absolute;inset:0 0 0 0}
 .fact-mapbox{position:absolute;inset:0;background:var(--ocean)}   /* v07：地图铺满整屏，面板浮在上面 */
 .fact-mapbox #factMap{position:absolute;inset:0}
-/* V3.0：地图铺满整个背景，右侧面板浮在上层，不再裁掉地图（关联层本来就是浮层） */
-@media (min-width:821px){.fact-mapbox #factMap{right:0}}
+@media (min-width:821px){.fact-mapbox #factMap{right:var(--side-w)}}
 .fact-mapbox #factGlobe{position:absolute;inset:0;width:100%;height:100%;display:block}
 .data-snapshot{position:absolute;left:18px;top:18px;z-index:2;padding:7px 11px;border:1px solid rgba(149,205,210,.25);border-radius:6px;background:rgba(255,255,255,.87);color:var(--ink);font-size:11px;letter-spacing:.03em;backdrop-filter:blur(12px);pointer-events:none}
 .fact-mapbox:has(#factGlobe[style*="display: block"]) .data-snapshot{top:54px}
@@ -550,112 +547,6 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 /* 叠加图层图标（内联 SVG，透明底） */
 .mn-overlay .mn-ov-em{font-style:normal;margin-right:6px;font-size:14px;line-height:1;background:transparent}
 .mn-overlay span{display:inline-flex;align-items:center}
-
-/* ================= V3.0 ================= */
-:root{--diff-add:#3fb950;--diff-del:#f85149;--diff-mod:#58a6ff}
-
-/* 系统级通知：灵动岛（居中顶部，2D / 3D / 两层共用） */
-.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;
-  gap:6px;align-items:center;pointer-events:none;max-width:min(560px,84vw)}
-.isl{pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:100%;padding:8px 15px;border-radius:999px;
-  background:rgba(9,13,19,.9);color:#f6f8fb;font-size:.75rem;line-height:1.35;letter-spacing:.01em;
-  box-shadow:0 12px 30px -14px rgba(0,0,0,.6);backdrop-filter:blur(22px) saturate(165%);-webkit-backdrop-filter:blur(22px) saturate(165%);
-  opacity:0;transform:translateY(-10px) scale(.9);white-space:nowrap;overflow:hidden;
-  transition:opacity .26s var(--ease),transform .36s cubic-bezier(.22,1,.36,1)}
-.isl.on{opacity:1;transform:none}
-.isl b{font-weight:var(--f-semi);color:#7dd3fc;flex:0 0 auto}
-.isl span{overflow:hidden;text-overflow:ellipsis}
-.isl.click{cursor:pointer}
-.isl.click:hover{background:rgba(17,25,36,.95)}
-
-/* 左侧菜单：左文字 / 右开关 */
-.mn-overlay{justify-content:space-between}
-.mn-ov-label{display:flex;align-items:center;gap:6px;min-width:0}
-.mn-master{justify-content:space-between;align-items:center}
-.sw{position:relative;display:inline-flex;flex:0 0 auto;width:30px;height:17px}
-.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.sw i{position:absolute;inset:0;border-radius:999px;background:rgba(100,116,139,.35);transition:background .2s}
-.sw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;
-  box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .2s}
-.sw input:checked + i{background:var(--accent)}
-.sw input:checked + i::after{transform:translateX(13px)}
-
-/* 区域筛选：输入即出候选，回车进入视角 */
-.mn-region-box{position:relative}
-.mn-region-pop{position:absolute;left:0;right:0;top:100%;z-index:6;margin-top:4px;background:var(--panel);
-  border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow);overflow:hidden}
-.mn-region-pop[hidden]{display:none}
-.mn-region-opt{display:block;width:100%;text-align:left;padding:6px 8px;border:0;background:none;color:var(--ink);
-  font-size:.6875rem;cursor:pointer}
-.mn-region-opt:hover{background:rgba(47,111,208,.10)}
-.mn-region-none{padding:6px 8px;font-size:.6875rem;color:var(--dim)}
-
-/* 底部日志：按类型着色（新增 / 更新 / 告警） */
-.st-line[data-kind="add"] .tx{color:var(--diff-add)}
-.st-line[data-kind="mod"] .tx{color:var(--diff-mod)}
-.st-line[data-kind="del"] .tx{color:var(--diff-del)}
-
-/* V3.0：新接入只用亮光点，不用标签、不外发光 */
-.fcard.is-fresh{box-shadow:none}
-.fcard.is-fresh::after{content:none}
-.fcard-v12-meta{display:flex;align-items:center;gap:6px}
-.new-dot{width:6px;height:6px;border-radius:50%;background:#38bdf8;flex:0 0 auto}
-.fresh-tag{display:none}
-.fcard-detail{display:none}
-
-/* V3.0：详情底部文字按钮 */
-.link-btn{border:0;background:none;padding:6px 0;color:var(--accent);font:inherit;font-size:.6875rem;cursor:pointer;
-  text-decoration:underline;text-underline-offset:3px}
-.fd-actions-end{justify-content:flex-end}
-
-/* V3.0：右下角快捷键三排（设计稿） */
-.mapsk{grid-template-columns:repeat(5,auto);grid-auto-flow:row;gap:6px}
-.mapsk .sk-row{display:flex;gap:6px;grid-column:1/-1}
-.mapsk .sk-row-1 .sk{width:28px}
-.mapsk .sk-t{width:auto;padding:0 8px}
-.mapsk .sk-t .sk-v{font-size:.625rem;white-space:nowrap}
-
-/* V3.0：证据弹窗（固定尺寸，纯文字） */
-.ev-q{cursor:pointer;text-decoration:underline;text-decoration-color:rgba(47,111,208,.35);text-underline-offset:3px}
-.ev-pop{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(8,14,22,.32)}
-.ev-pop[hidden]{display:none}
-.ev-pop-box{position:relative;width:min(560px,86vw);height:min(360px,70vh);display:flex;flex-direction:column;
-  background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:1px solid var(--glass-line);
-  border-radius:14px;box-shadow:0 24px 60px -30px rgba(0,0,0,.5);padding:16px 18px}
-.ev-pop-t{font-weight:var(--f-semi);font-size:.8125rem;color:var(--ink);padding-right:24px}
-.ev-pop-body{margin-top:10px;flex:1;overflow:auto;white-space:pre-wrap;font-size:.75rem;line-height:1.7;color:var(--ink)}
-.ev-pop-x{position:absolute;top:10px;right:12px;border:0;background:none;font-size:1rem;color:var(--mut);cursor:pointer}
-
-/* V3.3：事实详情单例容器 + 内容滑动替换（框与标题不动） */
-.drawer-single{position:relative;display:flex;flex-direction:column}
-.drawer-stage{position:relative;flex:1;min-height:0;overflow:hidden}
-.drawer-slide{position:absolute;inset:0;overflow:auto;padding:0 2px;
-  transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .3s ease}
-.drawer-slide.in{transform:translateX(38px);opacity:0}
-.drawer-slide.out{transform:translateX(64px);opacity:0}
-
-/* V3.3：卡片核心摘要（按二级分类 3 行） */
-.fcard-core{display:flex;flex-direction:column;gap:2px;margin:6px 0 2px}
-.fc-line{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:.6875rem;line-height:1.5}
-.fc-line span{color:var(--dim)}
-.fc-line b{font-weight:var(--f-reg);color:var(--ink);overflow-wrap:anywhere}
-
-/* V3.4：设计稿图标尺寸（Figma 导出 49×41），按钮随之放大到 32×27 */
-.mapsk{width:max-content}
-.mapsk .sk{width:32px;height:27px}
-/* 搜索在设计稿里是宽条（105×41），按原比例显示，别压成方块 */
-.mapsk .sk[data-k="search"]{width:auto}
-.mapsk .sk[data-k="search"] .sk-i.sk-fig{width:66px}
-.mapsk .sk[data-k="search"] .sk-i.sk-fig svg{width:66px}
-/* 第三排时间档：按文字撑开，不要挤成 32px */
-.mapsk .sk-t{width:auto;min-width:52px;padding:0 8px;white-space:nowrap;
-  background:rgba(255,255,255,.94);border:1px solid #E5E7EB;border-radius:9px}
-.mapsk .sk-t .sk-tl{display:block;font-size:.625rem;line-height:1;letter-spacing:0;color:#20242B;white-space:nowrap}
-.mapsk .sk-i.sk-fig{display:block;width:32px;height:26px}
-.mapsk .sk-i.sk-fig svg{width:32px;height:26px;display:block}
-.mapsk .sk.zoom .sk-i.sk-fig svg{opacity:1}
-.st-bar .st-logo{display:inline-flex;align-items:center;margin-right:6px}
-.st-bar .st-logo svg{width:16px;height:13px;display:block}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -674,7 +565,7 @@ html[data-theme="color"] .rel-main.graph-view{background-color:#f5f6ee;
 .rel-main.globe-view .rel-globe{display:block}
 .rel-main.globe-view .rel-canvas{visibility:hidden}
 .rel-main.graph-view .rel-canvas{right:var(--side-w);bottom:var(--stream-h)}
-@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:0}}
+@media (min-width:821px){.rel-main:not(.graph-view) .rel-canvas{right:var(--side-w)}}
 .rel-viewbar{position:absolute;right:calc(var(--side-w) + 10px);bottom:calc(var(--stream-h) + 86px);z-index:42;display:flex;gap:4px;padding:4px;
   border:1px solid var(--line);border-radius:var(--r-md);background:var(--glass);backdrop-filter:var(--blur)}
 .rel-viewbar button{border:0;border-radius:var(--r-sm);background:transparent;color:var(--mut);padding:6px 10px;
@@ -1009,7 +900,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V3.4</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -1031,9 +922,6 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <section class="layer" id="layer-sim" role="tabpanel" aria-label="推演层"></section>
 
       <!-- 快捷键组（地图右下角，两排；含放大 / 缩小） -->
-      <!-- V3.0：系统级通知（灵动岛，两层共用，居中顶部） -->
-      <div class="island" id="island" role="status" aria-live="polite"></div>
-
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
@@ -1043,7 +931,8 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <!-- F8：底部处理流水（窄条 · 一行一行向上滚动 · 可关闭 · 无标题） -->
       <div class="stream" id="streamBox">
         <div class="st-bar">
-          <span class="st-logo" id="stLogo" aria-hidden="true"></span><span class="st-tab" id="stTabName">底部日志</span>
+          <span class="st-tab" id="stTabName">接入流</span>
+          <span class="st-tab add" title="多 Tab 为本期预留">＋</span>
           <span class="st-meta" id="streamMeta"></span>
         </div>
         <div class="st-body" id="streamBody"></div>
@@ -1075,7 +964,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"cd41c7c90ed9","git":"a7b5589","builtAt":"2026-10-21T00:54:29.555Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"71d4df335a54","git":"17c14b1","builtAt":"2026-10-19T06:03:07.187Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5919,30 +5808,6 @@ window.V03Filter = (function () {
     return null; // 价格、库存、天气指标不是本体，不伪装成 PRD 分类
   }
   const PRD_REL_TYPES=['生产','供应','采购','运营','入驻','合作','位于','运输至','储存于','发布','适用于','监管','影响','发生于'];
-
-  /* V3.0：按《问题修复.md》重排关系分类 —— 6 个一级 / 14 个二级，颜色跟一级走 */
-  const REL_L1 = [
-    { n: '生产供应', color: '#2f7d5b', types: ['生产', '供应', '采购'] },
-    { n: '经营组织', color: '#a9702a', types: ['运营', '入驻', '合作'] },
-    { n: '空间',     color: '#3f63a8', types: ['位于', '发生于'] },
-    { n: '物流',     color: '#1f8a9c', types: ['运输至', '储存于'] },
-    { n: '政策',     color: '#6f4fa3', types: ['发布', '适用于', '监管'] },
-    { n: '影响',     color: '#b8435a', types: ['影响'] },
-  ];
-  /* 旧数据里的类型名 → 需求里的二级类型（逐条给定，不做模糊匹配） */
-  const REL_TYPE_MAP = {
-    '生产': '生产', '供应流向': '供应', '依赖': '供应', '贸易': '供应',
-    '流入': '运输至', '流出': '运输至', '运输经由': '运输至',
-    '行政归属': '位于',
-    '覆盖': '适用于',
-    '影响': '影响', '替代': '影响', '价格传导': '影响', '公开资料关联': '影响',
-    '经营品类': '运营', '经营': '运营', '运营': '运营',
-    '共建': '合作', '产销合作': '合作', '战略合作': '合作', '共同参与': '合作',
-  };
-  const relL1Of = type => { const g = REL_L1.find(x => x.types.includes(type)); return g ? g.n : '影响'; };
-  const relL1Color = type => { const g = REL_L1.find(x => x.types.includes(type)); return g ? g.color : '#b8435a'; };
-  /* 一次性归一：把每条关系落到需求里的二级类型上 */
-  (D.RELATIONS || []).forEach(r => { const t = REL_TYPE_MAP[r.type]; if (t) r.type = t; });
   const legacyTypes=()=>[...new Set(D.RELATIONS.map(r=>r.type))].filter(t=>!PRD_REL_TYPES.includes(t));
   const RELATION_COLORS={
     '生产':'#4a9a68','贸易':'#4a9a68','采购':'#4a9a68',
@@ -5975,7 +5840,7 @@ window.V03Filter = (function () {
     }
     return typeClassCache.get(type) || '事件';
   }
-  const relationTypeColor = type => relL1Color(type);
+  const relationTypeColor = type => window.V03Theme.obj(relationTypeClass(type));
   const relationTypes = () => [...new Set(D.RELATIONS.map(r=>r.type))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
   function relationTypeOptions(s) {
     const counts=new Map();relations({...s,relTypes:null}).forEach(r=>counts.set(r.type,(counts.get(r.type)||0)+1));
@@ -6179,26 +6044,16 @@ window.V03Filter = (function () {
   function overview(s) {
     s = s || window.V03Store.state;
     if (s.tab === 'relation') {
-      /* V3.0：三组数据 · 第一排当前本体，第二排今日新增本体 / 今日新增关系；均按全库真实值 ×20，不随筛选变化 */
-      const objs = D.OBJECTS || [], rels = D.RELATIONS || [], day = f => D.inWindow(f.ingestedAt || f.date, 'today');
-      return {
-        rows: [
-          ['当前本体', (objs.length * 20).toLocaleString('en-US'), objs.length * 20],
-          ['今日新增本体', (objs.filter(day).length * 20).toLocaleString('en-US'), objs.filter(day).length * 20],
-          ['今日新增关系', (rels.filter(day).length * 20).toLocaleString('en-US'), rels.filter(day).length * 20]
-        ],
-        note: ''
-      };
+      const ids=new Set(objects(s).map(o=>o.id));
+      return { rows:[['当前本体',ids.size],['当前关系',relations(s).length]],note:'' };
     }
-    /* V3.0：概览用全库真实总量 ×20，且不随筛选条件变化（用户口径） */
-    const ALL = D.FACTS || [];
-    const raw = ALL.length * 20;
-    const today = ALL.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length * 20;
     const list = factsAtLevel(s);
+    const raw = list.length;
+    const today = list.filter(f => D.inWindow(f.ingestedAt || f.date, 'today')).length;
     return {
       rows: [
-        ['当前事实', raw.toLocaleString('en-US'), raw],
-        ['今日新增事实', today.toLocaleString('en-US'), today]
+        ['当前事实', String(raw), raw],
+        ['今日新增', String(today), today]
       ],
       note: '',
       real: list.length,
@@ -6229,7 +6084,7 @@ window.V03Filter = (function () {
   }
 
   return {
-    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, REL_L1, relL1Of, relL1Color, itemBy, selected, toggleLeaf, factLeafOn,
+    FACT_TREE, REL_TREE, FACT_ITEMS, REL_ITEMS, relKind, relClass, relationTypeClass, PRD_REL_TYPES, legacyTypes, relationTypes, relationTypeOptions, relationTypeColor, itemBy, selected, toggleLeaf, factLeafOn,
     facts, factsAll: facts, factsAtLevel, factsForCards, mapFacts, mapEligible, mappable, levelMixed, objects, isBusinessObject, relations, overview, seeds, toggleSeed,
     retireCoord, coordKeyOf, retiredCoords, retiredRevision: () => retiredRev,
     leafKeyOf, leafOf, dictReady: !!(D3 && D3.TREE),
@@ -6276,16 +6131,6 @@ window.V03Globe = (function () {
   }));
 
   const rad = Math.PI / 180, TAU = Math.PI * 2;
-
-  /* V3.0：3D 海洋取 2D 地图的海面色（--ocean），仅用明暗差保留球体立体感 */
-  function oceanHex(v) { return (v('--ocean') || '#5fbdf2').trim() || '#5fbdf2'; }
-  function shade(hex, k) {
-    const h = String(hex).replace('#', '');
-    const n = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-    const to = k >= 0 ? 255 : 0, a = Math.abs(k);
-    const mix = i => Math.round(parseInt(n.slice(i, i + 2), 16) * (1 - a) + to * a);
-    return 'rgb(' + mix(0) + ',' + mix(2) + ',' + mix(4) + ')';
-  }
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
@@ -6322,7 +6167,7 @@ window.V03Globe = (function () {
     return {
       space1: v('--globe-space-1') || '#0b1f30', space2: v('--globe-space-2') || '#050f19',
       nebula: v('--globe-nebula') || '#236bad', star: v('--globe-star') || '#e6f4ff',
-      sea1: shade(oceanHex(v), .3), sea2: oceanHex(v), sea3: shade(oceanHex(v), -.34),
+      sea1: v('--globe-sea-1') || '#7fb4c8', sea2: v('--globe-sea-2') || '#336c8b', sea3: v('--globe-sea-3') || '#102f47',
       atmo: v('--globe-atmo') || '150,214,255', atmA: Number(v('--globe-atmo-a')) || .62,
       line: v('--map-line') || 'rgba(79,108,123,.67)', accent: v('--accent') || '#236bad'
     };
@@ -6659,7 +6504,7 @@ window.V03Globe = (function () {
       /* 逐点透明度（0 = 已退场不画）：与 2D 的退场 1/20 保持一致 */
       const pa = f.a == null ? 1 : f.a;
       if (pa <= .02) return;
-      if (false && f.halo > 0) {   /* V3.0：事实点不再画影响圆外发光 */
+      if (f.halo > 0) {
         const rr = R * f.halo;
         const g = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, rr);
         g.addColorStop(0, hexA(f.color, (f.haloAlpha || .14) * pa));
@@ -6667,12 +6512,10 @@ window.V03Globe = (function () {
         ctx.beginPath(); ctx.arc(pt.x, pt.y, rr, 0, TAU); ctx.fillStyle = g; ctx.fill();
       }
       const halo = f.big ? 8 : 6;
-      if (false) {   /* V3.0：去掉事实点第二层辉光 */
       const haloG = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, halo * 2.4);
       haloG.addColorStop(0, hexA(f.color, (f.big ? .3 : .22) * pa));
       haloG.addColorStop(1, hexA(f.color, 0));
       ctx.beginPath(); ctx.arc(pt.x, pt.y, halo * 2.4, 0, TAU); ctx.fillStyle = haloG; ctx.fill();
-      }
       ctx.beginPath(); ctx.arc(pt.x, pt.y, f.big ? 3 : 2.4, 0, TAU);
       ctx.fillStyle = hexA('#ffffff', Math.min(1, pa + .25)); ctx.fill();
       ctx.strokeStyle = f.color; ctx.lineWidth = 1.2; ctx.stroke();
@@ -6681,7 +6524,10 @@ window.V03Globe = (function () {
     marks.forEach(m => {
       const pt = project(m.lng, m.lat, cx, cy, R);
       if (pt.z <= 0) return;
-      if (m.glyph) {   /* V3.0：与 2D 一致，只画 emoji，不加底盘与描边 */
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 6.5, 0, TAU);
+      ctx.fillStyle = hexA('#ffffff', .82); ctx.fill();
+      ctx.strokeStyle = m.color; ctx.lineWidth = 1.2; ctx.stroke();
+      if (m.glyph) {
         ctx.font = '9px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
         ctx.textAlign = 'center'; ctx.fillText(m.glyph, pt.x, pt.y + 3.2);
       }
@@ -6765,29 +6611,18 @@ window.V03Globe = (function () {
 /* Shared arrival presentation. Replay and real ingestion use the same event path. */
 window.V03Intake = (() => {
   const timers = new WeakMap();
-  /* V3.0：系统级通知 —— 苹果灵动岛样式，居中顶部，两层共用（2D / 3D 都显示）。
-     host 参数保留兼容旧调用，实际挂载点固定为 #island。 */
-  function note(host, kind, title, factId) {
-    const dock = document.getElementById('island');
-    if (!dock) return;
+  function note(host, kind, title) {
+    if (!host) return;
+    const previous = timers.get(host);
+    if (previous) { clearTimeout(previous.hide); clearTimeout(previous.remove); previous.node.remove(); }
     const node = document.createElement('div');
-    node.className = 'isl'; node.setAttribute('role', 'status');
-    const cat = String(kind || '通知') + ' ' + String(title || '');
-    node.innerHTML = '<b># ' + String(kind || '通知') + '</b><span>' + String(title || '') + '</span>';
-    if (factId) {
-      node.classList.add('click');
-      node.onclick = () => {
-        const st = window.V03Store && window.V03Store.state || {};
-        if (st.tab === 'fact') window.V03Store.set({ factId, panels: { cards: true } });
-        else if (window.V03App && window.V03App.openRelationFact) window.V03App.openRelationFact(factId);
-      };
-    }
-    dock.appendChild(node);
-    while (dock.children.length > 2) dock.firstChild.remove();
+    node.className = 'fresh-note'; node.setAttribute('role', 'status');
+    const badge = document.createElement('b'); badge.textContent = kind;
+    const text = document.createElement('span'); text.textContent = title;
+    node.append(badge, text); host.prepend(node);
+    const state = { node, hide: 0, remove: 0 }; timers.set(host, state);
     requestAnimationFrame(() => node.classList.add('on'));
-    const hide = setTimeout(() => { node.classList.remove('on'); setTimeout(() => node.remove(), 380); }, 4200);
-    node.addEventListener('pointerenter', () => clearTimeout(hide));
-    return cat;
+    state.hide = setTimeout(() => { node.classList.remove('on'); state.remove = setTimeout(() => { node.remove(); if (timers.get(host) === state) timers.delete(host); }, 350); }, 3800);
   }
   function star(host, point, id, bright = true) {
     if (!host || !point || !point.every(Number.isFinite)) return false;
@@ -6895,7 +6730,7 @@ window.V03Feed = (() => {
   expose(sampleGeo(D.FACTS.filter(f=>f.impact==='high'),72));
   while(cursor<plan.length&&loaded.size<600)expose([plan[cursor++]]);
   function status(){return {loaded:loaded.size,total:D.FACTS.length,done,elapsed:started?Math.round(performance.now()-t0):0,revision,arrivals:history.slice()};}
-  function changed(){revision++;S.emit('data:revealed',status());}
+  function changed(){revision++;S.emit('data:revealed',status());const meta=document.getElementById('streamMeta');if(meta)meta.textContent='事实 '+loaded.size.toLocaleString()+' / '+D.FACTS.length.toLocaleString();}
   function complete(){expose(D.FACTS);cursor=plan.length;done=true;clearInterval(loadTimer);changed();startRetire();}
   function step(){
     const fraction=Math.min(1,(performance.now()-t0)/LOAD_MS), want=Math.ceil(600+(plan.length-600)*fraction);
@@ -7161,9 +6996,8 @@ window.V03Fact = (function () {
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.sk.mode3d && S.state.tab === 'fact') {
-          /* V3.0：切换视角不再弹提示文案 */
-          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); }
-          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); }
+          if (edge === 'in') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('三维地球已放到最大 · 切换到二维全球'); }
+          else if (edge === 'surface') { S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } }); V03Shell.toast('进入 2D 全球视角'); }
         }
         if (edge === 'in' || edge === 'surface') { S.set({ sk: { mode3d: false } }); }
       }
@@ -7175,6 +7009,7 @@ window.V03Fact = (function () {
       if (camera.zoom > box[0] + .004) return;
       e.preventDefault(); e.stopImmediatePropagation();
       S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
     }, { capture: true, passive: false });
     const seen = new Set();
     S.onEvent('stream:line', p => {
@@ -7198,9 +7033,6 @@ window.V03Fact = (function () {
       if (!g) return;
       camera.zoom = g.zoom != null ? g.zoom : camera.zoom;
       if (g.center) camera.center = g.center.slice();
-      /* V3.2：临界 zoom 之内 2D 地图只允许左右移动 —— 纬度被夹在默认纬度附近一个窄带，
-         超过临界点（要进入下一级视野）才放开纵向拖动。不能在事件里 setOption，交回 afterZoom 落地。 */
-      clampLat();
       /* ECharts 已在当前交互帧完成 geo roam；不要在事件内重入 setOption。
          只在用户停手后提交层级 / 状态，避免 2 万点被每帧重复布局。 */
       if (camera.roamTimer) clearTimeout(camera.roamTimer);
@@ -7258,26 +7090,7 @@ window.V03Fact = (function () {
     });
   }
   /* 缩放后决策（滚轮与 +/− 按钮共用）：到阈值切层、到边界收敛 */
-  /* V3.2：纵向拖动夹紧（level 的临界 zoom 之前只留一条窄带） */
-  const LAT_LOCK = { L1: { maxZoom: 2.15, band: 8 }, L2: { maxZoom: 2.6, band: 6 }, L3: { maxZoom: Infinity, band: 4 } };
-  function clampLat() {
-    const st = S.state;
-    if (st.sk.mode3d) return;
-    const rule = LAT_LOCK[st.geo.level]; if (!rule) return;
-    const def = (LEVEL[st.geo.level] || {}).center; if (!def) return;
-    if (camera.zoom > rule.maxZoom) return;
-    const lat = Math.max(def[1] - rule.band, Math.min(def[1] + rule.band, camera.center[1]));
-    if (Math.abs(lat - camera.center[1]) > 0.01) {
-      camera.center = [camera.center[0], lat];
-      camera.latPending = true;
-    }
-  }
-
   function afterZoom() {
-    if (camera.latPending && chart) {
-      camera.latPending = false;
-      chart.setOption({ geo: { center: camera.center.slice() } }, { lazyUpdate: true, silent: true });
-    }
     const st = S.state, lv = LEVEL[st.geo.level], box = lv.zoomBox;
     /* 三份相同的世界互相接续；停手后按 360° 回到中央副本，视觉位置不跳变。 */
     if (st.geo.level === 'L1' && Math.abs(camera.center[0] - 105) > 180) camera.center = wrappedCenter(camera.center);
@@ -7285,6 +7098,7 @@ window.V03Fact = (function () {
     if (st.geo.level === 'L1' && camera.zoom < box[0] - .02) {
       camera.zoom = box[0];
       S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     if (camera.zoom < box[0]) camera.zoom = box[0];
@@ -7324,6 +7138,7 @@ window.V03Fact = (function () {
     /* 全球视角在最小比例尺继续缩小：与滚轮 / 按钮一致，切回三维地球 */
     if (factor < 1 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * factor));
@@ -7340,6 +7155,7 @@ window.V03Fact = (function () {
     /* 全球视角缩到最小再缩：切回三维地球 */
     if (dir < 0 && S.state.geo.level === 'L1' && camera.zoom <= box[0] + .004) {
       S.set({ sk: { mode3d: true } });
+      if (window.V03Shell) window.V03Shell.toast('二维缩到最小 · 回到三维地球');
       return;
     }
     const next = Math.min(box[1], Math.max(box[0], camera.zoom * (dir > 0 ? 1.14 : 1 / 1.14)));
@@ -7463,7 +7279,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, ((leafOf(f) || {}).group || f.l1Label || '事实'), f.title, f.id);
+      V03Intake.note(dom.side, options.replay?'事实接入回放':'新事实', f.title);
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -7496,21 +7312,13 @@ window.V03Fact = (function () {
   const freshIds = new Set();
   function autoScrollCards(el) {
     if (!el || el.__auto) return;
-    el.__auto = { t: 0, raf: 0, paused: 0, hover: false, lastTop: el.scrollTop };
-    /* 用 document 上的 pointermove 判定指针是否在卡片区内：容器可能被浮层覆盖，pointerenter 不一定触发 */
-    document.addEventListener('pointermove', e => {
-      const a = el.__auto; if (!a || !el.isConnected) return;
-      const r = el.getBoundingClientRect();
-      a.hover = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-    }, { passive: true });
+    el.__auto = { t: 0, raf: 0, paused: 0, lastTop: el.scrollTop };
     const stepFn = () => {
       const a = el.__auto;
       a.raf = requestAnimationFrame(stepFn);
       if (S.state.tab !== 'fact' || !S.state.panels.cards || document.hidden) return;
       if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
       if (Date.now() < a.paused) return;
-      /* V3.3：悬停标志由 pointerenter/leave 维护（比在 rAF 里判断 :hover 可靠） */
-      if (a.hover) { a.lastTop = el.scrollTop; return; }
       if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { a.t += 0.016; if (a.t > 6) { a.t = 0; el.scrollTop = 0 }    /* 到底停一下再回到顶部 */
         if (a.t > 0 && a.t < 0.02) { a.paused = Date.now() + 1800 } return }
@@ -7959,74 +7767,13 @@ window.V03Fact = (function () {
       '<div class="fs-why">' + esc(c.fallbackReason || '该视频源暂不可直接播放，保留静态卡片') + '</div>' +
       (c.hlsUrl || c.embedUrl ? '<a class="ext" href="' + esc(c.hlsUrl || c.embedUrl) + '" target="_blank" rel="noopener noreferrer">打开原始视频源</a>' : '') + '</div>';
   }
-  /* V3.3：核心摘要按「二级分类」各有一套字段（需求表 25 类）。
-     每类 3 行；行内取值为该分类主字段，缺字段时按 品种 → 地区 → 时间 → 摘要 降级，不编造数值。 */
-  const CORE_LABELS = {
-    '价格': ['价格对象', '当前值', '统计周期'],
-    '天气': ['天气类型', '覆盖范围', '最高/最低'],
-    '灾害': ['灾害类型', '受灾范围', '受灾面积'],
-    '物流运输': ['运输方式', '起点 → 终点', '异常情况'],
-    '交易': ['交易场所', '成交额 / 量', '时间窗口'],
-    '农业政策': ['发布机构', '适用地区', '政策动作'],
-    '市场监管': ['发布机构', '适用对象', '检查动作'],
-    '贸易政策': ['发布机构', '适用国家', '政策动作'],
-    '生产主体': ['主体名称', '涉及品种', '规模变化'],
-    '生产过程': ['生产环节', '涉及品种', '进度情况'],
-    '投入品': ['投入品', '当前价格', '供应情况'],
-    '产能供给': ['生产主体', '涉及品种', '产量'],
-    '仓储冷链': ['库存主体', '涉及品种', '库存/库容'],
-    '流向': ['起点 → 终点', '涉及品种', '流转数量'],
-    '贸易通关': ['进出口方向', '口岸 / 数量', '通关状态'],
-    '市场主体': ['主体名称', '主体类型', '涉及品种'],
-    '供需': ['涉及品种', '供需方向', '缺口/过剩'],
-    '消费行为': ['消费群体', '涉及品种', '行为变化'],
-    '媒体舆情': ['信息主体', '主要观点', '传播范围'],
-    '品牌产品': ['品牌/产品', '事件类型', '关键内容'],
-    '公共治理': ['措施类型', '适用地区', '起止时间'],
-    '宏观环境': ['指标名称', '当前值', '影响地区'],
-    '地缘与安全': ['事件类型', '影响地区', '事件状态'],
-    '基础设施': ['设施名称', '事件类型', '所在地'],
-    '技术产业': ['技术名称', '应用主体', '涉及品种'],
-    '资源环境': ['资源类型', '监测区域', '指标值'],
-  };
-  const coreValues = f => {
-    const c = f.card || {}, fl = c.fields || {};
-    const pick = (...ks) => { for (const k of ks) { const v = fl[k] != null ? fl[k] : c[k]; if (v != null && v !== '') return String(v); } return ''; };
-    return {
-      commodity: pick('commodityName') || f.variety || '',
-      price: pick('priceValue') ? pick('priceValue') + ' ' + pick('priceUnit') : '',
-      change: typeof c.changePct === 'number' ? (c.changePct >= 0 ? '↑ ' : '↓ ') + Math.abs(c.changePct).toFixed(1) + '%' : '',
-      period: pick('period', 'statPeriod') || (f.date ? String(f.date).slice(0, 10) : ''),
-      region: f.region || pick('regionName'),
-      date: f.date ? String(f.date).slice(0, 10) : '',
-      variety: f.variety || pick('variety', 'commodityName'),
-      org: pick('issuer', 'agency', 'sourceName', 'marketName'),
-      title: f.title || '',
-      summary: String(f.summary || '').slice(0, 60),
-    };
-  };
-  /* 3 行核心摘要：有专门字段就用，缺就按降级链取，最多截 60 字 */
-  function coreSummary(f) {
-    const leaf = leafOf(f) || {}, sub = leaf.sub || leaf.n || '', labels = CORE_LABELS[sub];
-    if (!labels) return '';
-    const v = coreValues(f);
-    const filled = [
-      v.commodity && v.commodity !== f.title ? v.commodity : (v.org || v.region || v.title),
-      sub === '价格' ? [v.price, v.change].filter(Boolean).join('  ') || v.variety || v.summary
-                       : (v.region || v.variety || v.summary),
-      sub === '价格' ? v.period : (v.date || v.summary),
-    ].map(x => String(x || '').slice(0, 60) || '—');
-    return '<div class="fcard-core">' + labels.map((k, i) =>
-      '<div class="fc-line"><span>' + esc(k) + '</span><b>' + esc(filled[i]) + '</b></div>').join('') + '</div>';
-  }
-
   const dataLabel = f => f.prov === 'real' ? '真实来源' : f.prov === 'deidentified' ? '脱敏数据' : '模拟数据';
   const sourceCount = f => new Set((f.evidence || []).map(e => e.t || e.url || e.k).filter(Boolean)).size;
   function cardHTML(f, fresh) {
     const c = f.card || {}, cat = catOf(f);
     const foot = '<div class="fcard-foot"><span>' + esc(f.region || '') + '</span>' +
       (f.date ? '<span>·</span><span>' + esc(f.date) + '</span>' : '') +
-      '</div>';
+      '<span class="sp"></span><span class="fcard-mark">' + sourceCount(f) + ' 个来源</span></div>';
     let body = '';
     switch (f.cardType) {
       case 'price': {
@@ -8067,10 +7814,9 @@ window.V03Fact = (function () {
         body = '<h5>' + esc(c.title || f.title) + '</h5><p>' + esc(f.summary) + '</p>' +
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
-    return '<article class="fcard" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span>' +
-      (fresh ? '<i class="new-dot" aria-label="新接入"></i>' : '') + '</div>' +
-      V03Media.figure(f) + coreSummary(f) + body + foot + '</article>';
+    return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
+      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
+      V03Media.figure(f) + body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 
   let visibleCardCount = 20;
@@ -8096,12 +7842,7 @@ window.V03Fact = (function () {
     V03Media.beginCards('fact');
     dom.sideBody.innerHTML = '<div class="fcards">' + facts.slice(0, visibleCardCount).map(f => cardHTML(f, false)).join('') + '</div>' +
       (facts.length > visibleCardCount ? '<div class="fc-more">已显示 ' + visibleCardCount + ' / ' + facts.length + '，继续滚动加载</div>' : '');
-    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => {
-      if (!freshIds.has(el.dataset.fid)) return;
-      el.classList.add('is-fresh');
-      const meta = el.querySelector('.fcard-v12-meta');
-      if (meta && !meta.querySelector('.new-dot')) meta.insertAdjacentHTML('beforeend', '<i class="new-dot" aria-label="新接入"></i>');
-    });
+    dom.sideBody.querySelectorAll('.fcards .fcard').forEach(el => { if (freshIds.has(el.dataset.fid)) el.classList.add('is-fresh'); });
     dom.sideBody.scrollTop = scroll;
     autoScrollCards(dom.sideBody);
     dom.sideBody.onscroll = () => {
@@ -8151,26 +7892,27 @@ window.V03Fact = (function () {
           ${row('分类', [leaf.group, leaf.sub, leaf.n].filter(Boolean).join(' › '))}
           ${row('发生时间', f.occurredAt || f.date || '来源材料未提供发生时间')}
           ${row('地理范围', path || '来源材料未提供可靠位置')}
-          ${row('涉及品种', (f.variety || (f.card && f.card.variety) || (f.commodityName) || '来源材料未提供涉及品种'))}
         </div>
         <div class="fd-sec"><h4>涉及本体 <small>点击进入关联层</small></h4>
           <div>${objs.map(o => { const dm = D.domain(o.domain); return '<span class="objchip" data-obj="' + esc(o.id) + '"><span class="d" style="background:' + dm.c + '"></span><b>' + esc(o.name) + '</b>' + esc(dm.n) + '</span>'; }).join('') || '<p>暂无已确认本体；Jev 候选尚未接入。</p>'}</div>
         </div>
         <div class="fd-sec"><h4>关键数值</h4>${metric ? row('指标', metric) : '<p>来源材料未提供可核对的数值和口径。</p>'}</div>
+        <div class="fd-sec"><h4>显示层级与地理影响</h4>
+          ${row('显示层级', scope)}
+          ${row('地理影响半径', f.radius ? f.radius + ' km' : '未知')}
+        </div>
         <div class="fd-sec"><h4>证据状态</h4>${row('状态', status)}</div>
-        <div class="fd-sec">
-          ${evidence.length ? evidence.map((e, i) => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q class="ev-q" data-ev="${i}" role="button" tabindex="0" title="查看完整来源">${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
+        <div class="fd-sec"><h4>证据与来源 <small>${evidence.length} 条</small></h4>
+          ${evidence.length ? evidence.map(e => `<div class="ev"><div class="ev-t">${esc(e.k || '证据')}<span>${esc(e.t || '来源名称缺失')}</span></div><q>${esc(e.q || '原文片段缺失')}</q>${e.url ? '<a class="ext" href="' + esc(e.url) + '" target="_blank" rel="noopener noreferrer">来源链接</a>' : ''}</div>`).join('') : '<p>来源不详：材料未提供来源证据。</p>'}
           ${f.sourceUrl ? '<a class="ext" href="' + esc(f.sourceUrl) + '" target="_blank" rel="noopener noreferrer">原始来源</a>' : ''}
         </div>
         ${typeFields.filter(([, v]) => v != null && v !== '').length ? '<div class="fd-sec"><h4>类型字段</h4>' + typeFields.map(([k, v]) => row(k, v)).join('') + '</div>' : ''}
         <div class="fd-actions">
           <button class="btn sec" id="toRel">在关联层查看</button>
           <button class="btn sec" id="toSim">基于该事实发起推演</button>
+          <button class="btn ter" id="toLog">${st.logOpen ? '收起事实形成过程' : '查看事实形成过程'}</button>
         </div>
-        <div class="fd-actions fd-actions-end">
-          <button class="link-btn" id="toLog">查看事实形成过程</button>
-        </div>
-        ${st.logOpen ? '<div class="fd-sec">' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + row('当前版本', f.version || 'V0.01') + '</div>' : ''}
+        ${st.logOpen ? '<div class="fd-sec"><h4>事实形成过程</h4>' + (f.ingestedAt ? row('首次采集时间', f.ingestedAt) + row('最近更新时间', f.ingestedAt) : '') + '</div>' : ''}
       </div>`;
     box.querySelectorAll('[data-obj]').forEach(n => n.onclick = () => S.set({
       tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]),
@@ -8180,28 +7922,8 @@ window.V03Fact = (function () {
     if (toRel) toRel.onclick = () => S.set({ tab: 'relation', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]), rel: { focusFact: f.id, sel: null, kind: null, stack: [] } });
     const toSim = box.querySelector('#toSim');
     if (toSim) toSim.onclick = () => S.set({ tab: 'sim', factId: null, factReturnId: f.id, q: '', factSearch: st.q, carry: uniq([...(st.carry || []), f.id]) });
-    /* V3.0 证据弹窗：固定尺寸文字容器，证据原文与“事实形成过程”共用 */
-    const pop = document.createElement('div');
-    pop.className = 'ev-pop'; pop.hidden = true;
-    pop.innerHTML = '<div class="ev-pop-box"><div class="ev-pop-t"></div><div class="ev-pop-body"></div><button class="ev-pop-x" type="button" aria-label="关闭">×</button></div>';
-    box.appendChild(pop);
-    const openEvPop = (title, body) => {
-      pop.querySelector('.ev-pop-t').textContent = title;
-      pop.querySelector('.ev-pop-body').textContent = body;
-      pop.hidden = false;
-    };
-    pop.querySelector('.ev-pop-x').onclick = () => { pop.hidden = true; };
-    pop.onclick = e => { if (e.target === pop) pop.hidden = true; };
-    box.querySelectorAll('.ev-q').forEach(q => {
-      const e = evidence[+q.dataset.ev] || {};
-      q.onclick = () => openEvPop(e.t || '来源材料', (e.q || '原文片段缺失') + (e.url ? '\n\n来源链接：' + e.url : ''));
-      q.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); q.click(); } };
-    });
     const toLog = box.querySelector('#toLog');
-    if (toLog) toLog.onclick = () => openEvPop('事实形成过程',
-      '首次采集时间：' + (f.ingestedAt || '未知') +
-      '\n最近更新时间：' + (f.updatedAt || f.ingestedAt || '未知') +
-      '\n当前版本：' + (f.version || 'V0.01'));
+    if (toLog) toLog.onclick = () => S.set({ logOpen: !st.logOpen });
     VIS.sync();
     V03Media.mount(box);
   }
@@ -8473,8 +8195,8 @@ window.V03Relation = (function () {
       /* 放到最大 or 点球面任意区域（不是点）→ 进入 2D 全球视角 */
       zoomEdge: edge => {
         if (S.state.rel.view !== 'globe') return;
-        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); }
-        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); }
+        if (edge === 'in') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('三维地球已放到最大 · 切换到二维全球'); }
+        else if (edge === 'surface') { S.set({ rel: { view: 'geo', level: 'L1' } }); toast('进入 2D 全球视角'); }
       }
     });
 
@@ -9286,7 +9008,7 @@ window.V03Relation = (function () {
       renderPanel(S.state, F.objects(S.state));
       if(S.state.rel.view==='geo')paintFocus();
     }
-    V03Intake.note(dom.side, '本体', list[0].name, null);
+    V03Intake.note(dom.side, replay?'本体接入回放':'新本体', list[0].name);
     list.forEach(relFlashStar);
     dom.body.scrollTop = 0;
     if (dom.body.__auto) dom.body.__auto.paused = Date.now() + 4500;
@@ -9481,9 +9203,28 @@ window.V03Relation = (function () {
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
     if (dom.hint && st.rel.view !== 'graph') {
-      /* V3.1/3.3：底部层级面包屑与交互提示整条移除，且不再写入文本（DOM 里也不留“世界/点击地图进入中国”） */
-      dom.hint.hidden = true;
-      dom.hint.textContent = '';
+      const lv = relLevel();
+      dom.hint.hidden = st.rel.view !== 'geo';
+      /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
+      const trail = ['世界', '中国', relFocus() || '省区'];
+      const at = lv === 'L1' ? 0 : lv === 'L2' ? 1 : 2;
+      dom.hint.innerHTML = trail.slice(0, at + 1).map((t, i) =>
+        '<span class="jump' + (i === at ? ' on' : '') + '" role="button" tabindex="0" title="跳到' + t + '">' + t + '</span>').join('<i>›</i>')
+        + '<em>' + (lv === 'L1' ? '点击地图进中国（点本体/关系看详情）· 双指缩放 · Esc 返回'
+          : lv === 'L2' ? '点击省份进省区 · 点本体/关系看详情 · 滚轮缩小返回世界 · Esc 返回'
+          : '滚轮缩小或 Esc 返回全国') + '</em>'
+        + '<b class="drill" role="button" tabindex="0">' + (lv === 'L1' ? '进入中国 →' : lv === 'L2' ? '进入' + (relFocus() || '湖南') + ' →' : '返回全国') + '</b>';
+      dom.hint.querySelectorAll('span.jump').forEach((el, i) => {
+        const go = () => { const want = i === 0 ? 'L1' : i === 1 ? 'L2' : 'L3'; if (relLevel() !== want) enterLevel(want, want === 'L3' ? (relFocus() || '湖南') : null); };
+        el.onclick = go;
+        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+      });
+      const drillBtn = dom.hint.querySelector('b.drill');
+      if (drillBtn) {
+        const go = () => { if (!drillIn()) enterLevel('L2', null); };
+        drillBtn.onclick = go;
+        drillBtn.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+      }
     }
     shownView = st.rel.view;
     if (st.rel.view === 'globe') {
@@ -9620,23 +9361,6 @@ window.V03Sim = (function () {
 
   return { mount, update };
 })();
-
-</script>
-<script>
-/* V3.4：快捷键与底部日志图标 —— 直接使用 UI.zip 里 Figma 导出的 SVG 原路径（非重新绘制） */
-window.V03IconsFigma = {
-    zoomOut: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M17.5 20.5H31.5" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </svg>',
-    zoomIn: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M17.5 20.5H24.5M24.5 20.5H31.5M24.5 20.5V13.5M24.5 20.5V27.5" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </svg>',
-    mode2d: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M14.5 12.7222L21.1667 10.5L27.8333 12.7222L34.5 10.5V28.2778L27.8333 30.5L21.1667 28.2778L14.5 30.5V12.7222Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M21.1667 10.5V28.2778M27.8333 12.7222V30.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </svg>',
-    mode3d: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M19.2553 25.806C18.513 25.806 17.8517 25.6784 17.2717 25.423C16.695 25.1647 16.2393 24.81 15.9047 24.359C15.573 23.905 15.4023 23.3814 15.3927 22.788H17.56C17.5733 23.0367 17.6547 23.2554 17.8037 23.4444C17.9563 23.63 18.1583 23.774 18.4103 23.877C18.6623 23.9797 18.9457 24.031 19.2603 24.031C19.5887 24.031 19.8787 23.973 20.1303 23.857C20.3823 23.741 20.5797 23.5804 20.722 23.3747C20.8647 23.1694 20.936 22.9324 20.936 22.6637C20.936 22.392 20.8597 22.1517 20.707 21.943C20.558 21.7307 20.3427 21.565 20.061 21.4457C19.7823 21.3264 19.451 21.2667 19.0667 21.2667H18.117V19.686H19.0667C19.3913 19.686 19.678 19.6294 19.9267 19.5167C20.1787 19.404 20.374 19.2484 20.5133 19.0494C20.6523 18.8474 20.722 18.612 20.722 18.3437C20.722 18.0884 20.6607 17.8647 20.538 17.6724C20.4187 17.4767 20.2497 17.3244 20.031 17.215C19.8157 17.1057 19.5637 17.051 19.2753 17.051C18.9837 17.051 18.717 17.104 18.475 17.21C18.233 17.3127 18.039 17.4604 17.8933 17.6524C17.7473 17.8447 17.6697 18.07 17.6597 18.3287H15.5963C15.6063 17.742 15.7737 17.225 16.0983 16.7774C16.4233 16.33 16.8607 15.9804 17.411 15.7284C17.9643 15.4734 18.5893 15.3457 19.2853 15.3457C19.988 15.3457 20.6027 15.4734 21.1297 15.7284C21.6567 15.9837 22.066 16.3284 22.3577 16.7627C22.6527 17.1934 22.7987 17.6774 22.7953 18.2144C22.7987 18.7844 22.6213 19.26 22.2633 19.641C21.9087 20.0224 21.4463 20.2644 20.8763 20.367V20.4464C21.6253 20.5427 22.1953 20.8027 22.5863 21.227C22.9807 21.648 23.1763 22.175 23.173 22.808C23.1763 23.388 23.009 23.9034 22.671 24.354C22.3363 24.805 21.8737 25.1597 21.284 25.418C20.694 25.6767 20.0177 25.806 19.2553 25.806ZM28.3897 25.6667H24.78V15.485H28.4193C29.4433 15.485 30.325 15.6887 31.0643 16.0964C31.8033 16.5007 32.3717 17.0824 32.7693 17.8414C33.1707 18.6004 33.371 19.5087 33.371 20.5657C33.371 21.6264 33.1707 22.538 32.7693 23.3004C32.3717 24.0627 31.8 24.6474 31.0543 25.055C30.312 25.4627 29.4237 25.6667 28.3897 25.6667ZM26.9327 23.8224H28.3C28.9363 23.8224 29.4717 23.7097 29.906 23.484C30.3433 23.2554 30.6713 22.9024 30.8903 22.4254C31.1123 21.9447 31.2233 21.3247 31.2233 20.5657C31.2233 19.8134 31.1123 19.1987 30.8903 18.7214C30.6713 18.244 30.345 17.8927 29.9107 17.6674C29.4767 17.442 28.9413 17.3294 28.305 17.3294H26.9327V23.8224Z" fill="#171B22"/> </svg>',
-    influenceOn: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M24.5 29.5C29.4707 29.5 33.5 25.4707 33.5 20.5C33.5 15.5293 29.4707 11.5 24.5 11.5C19.5293 11.5 15.5 15.5293 15.5 20.5C15.5 25.4707 19.5293 29.5 24.5 29.5Z" fill="#20242B" fill-opacity="0.06" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M24.5 24.5C26.709 24.5 28.5 22.709 28.5 20.5C28.5 18.291 26.709 16.5 24.5 16.5C22.291 16.5 20.5 18.291 20.5 20.5C20.5 22.709 22.291 24.5 24.5 24.5Z" fill="#20242B" fill-opacity="0.13" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M24.5 21.6998C25.1627 21.6998 25.7 21.1625 25.7 20.4998C25.7 19.8371 25.1627 19.2998 24.5 19.2998C23.8373 19.2998 23.3 19.8371 23.3 20.4998C23.3 21.1625 23.8373 21.6998 24.5 21.6998Z" fill="#20242B"/> </svg>',
-    influenceOff: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <g opacity="0.38"> <path d="M24.5 30.5C30.023 30.5 34.5 26.023 34.5 20.5C34.5 14.977 30.023 10.5 24.5 10.5C18.977 10.5 14.5 14.977 14.5 20.5C14.5 26.023 18.977 30.5 24.5 30.5Z" fill="#20242B" fill-opacity="0.06" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M24.5 24.9446C26.9545 24.9446 28.9445 22.9546 28.9445 20.5001C28.9445 18.0457 26.9545 16.0557 24.5 16.0557C22.0456 16.0557 20.0556 18.0457 20.0556 20.5001C20.0556 22.9546 22.0456 24.9446 24.5 24.9446Z" fill="#20242B" fill-opacity="0.13" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M24.5 21.8337C25.2363 21.8337 25.8333 21.2366 25.8333 20.5003C25.8333 19.764 25.2363 19.167 24.5 19.167C23.7637 19.167 23.1667 19.764 23.1667 20.5003C23.1667 21.2366 23.7637 21.8337 24.5 21.8337Z" fill="#20242B"/> </g> <path d="M14.5 10.5L34.5 30.5" stroke-width="2.15" stroke-linecap="round" stroke="#20242B"/> </svg>',
-    search: '<svg viewBox="0 0 105 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M96.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H96.5C100.918 40.5 104.5 36.9183 104.5 32.5V8.5C104.5 4.08172 100.918 0.5 96.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M29.5 19C29.5 22.59 26.59 25.5 23 25.5C19.41 25.5 16.5 22.59 16.5 19C16.5 15.41 19.41 12.5 23 12.5C26.59 12.5 29.5 15.41 29.5 19Z" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M28 24L33 29" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M49.728 15.061L50.443 15.698C50.1137 15.8887 49.7453 16.0707 49.338 16.244C48.9307 16.4087 48.545 16.5517 48.181 16.673C48.155 16.5777 48.1117 16.4693 48.051 16.348C47.999 16.218 47.947 16.1053 47.895 16.01C48.2243 15.88 48.558 15.7327 48.896 15.568C49.234 15.3947 49.5113 15.2257 49.728 15.061ZM47.7 15.724L48.571 15.997V20.183H47.7V15.724ZM47.7 19.741H53.576V16.452H51.925V15.646H54.46V20.56H47.7V19.741ZM48.09 17.713H49.975V18.454H48.09V17.713ZM51.99 17.713H53.966V18.454H51.99V17.713ZM50.56 14.58H51.457V21.925H50.56V14.58ZM47.349 21.743H53.745V22.575H47.349V21.743ZM53.459 21.743H53.654L53.823 21.704L54.421 21.99C54.1177 22.6833 53.7103 23.29 53.199 23.81C52.6963 24.3213 52.12 24.759 51.47 25.123C50.82 25.4783 50.118 25.773 49.364 26.007C48.61 26.241 47.8387 26.423 47.05 26.553C47.0067 26.4317 46.9417 26.2887 46.855 26.124C46.777 25.968 46.6947 25.8337 46.608 25.721C47.3533 25.6257 48.077 25.4827 48.779 25.292C49.4897 25.0927 50.1527 24.837 50.768 24.525C51.3833 24.213 51.9207 23.8403 52.38 23.407C52.848 22.965 53.2077 22.4537 53.459 21.873V21.743ZM49.052 22.471C49.4073 23.0517 49.884 23.563 50.482 24.005C51.0887 24.447 51.7863 24.8153 52.575 25.11C53.3637 25.4047 54.213 25.6213 55.123 25.76C55.0537 25.8293 54.9757 25.916 54.889 26.02C54.811 26.124 54.7373 26.228 54.668 26.332C54.6073 26.436 54.551 26.5313 54.499 26.618C53.5717 26.4447 52.705 26.1847 51.899 25.838C51.093 25.5 50.3737 25.0797 49.741 24.577C49.117 24.0657 48.6013 23.472 48.194 22.796L49.052 22.471ZM42.864 21.496C43.4273 21.34 44.099 21.1537 44.879 20.937C45.6677 20.7117 46.4607 20.482 47.258 20.248L47.388 21.119C46.6427 21.353 45.8973 21.587 45.152 21.821C44.4153 22.055 43.7437 22.263 43.137 22.445L42.864 21.496ZM43.046 17.193H47.245V18.116H43.046V17.193ZM44.853 14.58H45.789V25.409C45.789 25.6777 45.7543 25.8857 45.685 26.033C45.6157 26.1803 45.4987 26.293 45.334 26.371C45.1607 26.4403 44.9353 26.4837 44.658 26.501C44.3893 26.527 44.0383 26.54 43.605 26.54C43.5877 26.4187 43.5487 26.2713 43.488 26.098C43.4273 25.9333 43.3667 25.786 43.306 25.656C43.6007 25.6647 43.8693 25.669 44.112 25.669C44.3547 25.669 44.5193 25.6647 44.606 25.656C44.6927 25.656 44.7533 25.6387 44.788 25.604C44.8313 25.5693 44.853 25.5043 44.853 25.409V14.58ZM61.493 22.952H62.455V26.566H61.493V22.952ZM61.48 14.567H62.455V18.22H61.48V14.567ZM61.012 18.454L61.909 18.883C61.5363 19.2383 61.1333 19.5937 60.7 19.949C60.2667 20.3043 59.8593 20.6077 59.478 20.859L58.763 20.469C59.0143 20.287 59.2787 20.079 59.556 19.845C59.8333 19.611 60.102 19.3727 60.362 19.13C60.622 18.8787 60.8387 18.6533 61.012 18.454ZM63.807 19.286L64.704 19.767C64.21 20.1657 63.6727 20.5773 63.092 21.002C62.5113 21.418 61.922 21.821 61.324 22.211C60.7347 22.5923 60.1757 22.9347 59.647 23.238L58.958 22.757C59.348 22.5317 59.7597 22.2803 60.193 22.003C60.635 21.717 61.077 21.418 61.519 21.106C61.961 20.794 62.377 20.482 62.767 20.17C63.157 19.858 63.5037 19.5633 63.807 19.286ZM57.775 20.43L58.425 19.871C58.7457 20.027 59.0837 20.209 59.439 20.417C59.803 20.625 60.1453 20.833 60.466 21.041C60.7953 21.249 61.064 21.444 61.272 21.626L60.583 22.263C60.3923 22.081 60.1367 21.8817 59.816 21.665C59.504 21.4397 59.166 21.2187 58.802 21.002C58.4467 20.7853 58.1043 20.5947 57.775 20.43ZM63.677 21.444L64.327 20.937C64.7083 21.1537 65.107 21.405 65.523 21.691C65.9477 21.9683 66.3463 22.25 66.719 22.536C67.0917 22.8133 67.395 23.0647 67.629 23.29L66.953 23.888C66.719 23.654 66.42 23.394 66.056 23.108C65.692 22.8133 65.302 22.523 64.886 22.237C64.47 21.9423 64.067 21.678 63.677 21.444ZM63.703 24.226L64.457 23.719C64.8297 23.901 65.2197 24.1133 65.627 24.356C66.043 24.59 66.4373 24.8327 66.81 25.084C67.1827 25.3353 67.4903 25.5693 67.733 25.786L66.927 26.371C66.7103 26.1543 66.42 25.916 66.056 25.656C65.7007 25.4047 65.315 25.1533 64.899 24.902C64.483 24.6507 64.0843 24.4253 63.703 24.226ZM56.358 22.549C56.9473 22.549 57.6233 22.549 58.386 22.549C59.1573 22.5403 59.9807 22.5317 60.856 22.523C61.7313 22.5057 62.637 22.4927 63.573 22.484C64.509 22.4667 65.4407 22.4493 66.368 22.432L66.316 23.199C65.1113 23.2337 63.9023 23.2683 62.689 23.303C61.4843 23.3377 60.3403 23.368 59.257 23.394C58.1823 23.42 57.2333 23.4417 56.41 23.459L56.358 22.549ZM59.27 23.706L60.193 24.057C59.8983 24.3517 59.5603 24.6463 59.179 24.941C58.8063 25.227 58.4163 25.4913 58.009 25.734C57.6103 25.9853 57.2247 26.2063 56.852 26.397C56.8 26.3363 56.7263 26.2627 56.631 26.176C56.5357 26.0893 56.4403 26.0027 56.345 25.916C56.2497 25.838 56.1587 25.773 56.072 25.721C56.6527 25.4783 57.2333 25.1793 57.814 24.824C58.3947 24.4687 58.88 24.096 59.27 23.706ZM56.488 15.724H67.486V16.582H56.488V15.724ZM56.462 17.83H67.59V20.287H66.641V18.688H57.385V20.287H56.462V17.83Z" fill="#20242B"/> </svg>',
-    liveOn: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M18.5 13.5H30.5C32.157 13.5 33.5 14.843 33.5 16.5V24.5C33.5 26.157 32.157 27.5 30.5 27.5H18.5C16.843 27.5 15.5 26.157 15.5 24.5V16.5C15.5 14.843 16.843 13.5 18.5 13.5Z" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M22.5 17.5L27.5 20.5L22.5 23.5V17.5Z" fill="#20242B"/> </svg>',
-    liveOff: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <g opacity="0.38"> <path d="M18.5 12.833H30.5C32.157 12.833 33.5 14.1763 33.5 15.833V23.833C33.5 25.4897 32.157 26.833 30.5 26.833H18.5C16.843 26.833 15.5 25.4897 15.5 23.833V15.833C15.5 14.1763 16.843 12.833 18.5 12.833Z" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M22.5 16.833L27.5 19.833L22.5 22.833V16.833Z" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </g> <path d="M15.5 10.5L33.5 28.5" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </svg>',
-    fullscreen: '<svg viewBox="0 0 49 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M40.5 0.5H8.5C4.08172 0.5 0.5 4.08172 0.5 8.5V32.5C0.5 36.9183 4.08172 40.5 8.5 40.5H40.5C44.9183 40.5 48.5 36.9183 48.5 32.5V8.5C48.5 4.08172 44.9183 0.5 40.5 0.5Z" fill="white" stroke="#E5E7EB"/> <path d="M15.5 16.5H20.5V11.5M28.5 11.5V16.5H33.5M20.5 29.5V24.5H15.5M28.5 29.5V24.5H33.5" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </svg>',
-    terminal: '<svg viewBox="0 0 52 41" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M5.79999 1.7998H45.8C48.0089 1.7998 49.8 3.59092 49.8 5.7998V35.1331C49.8 37.342 48.0089 39.1331 45.8 39.1331H5.79999C3.5911 39.1331 1.79999 37.342 1.79999 35.1331V5.7998C1.79999 3.59092 3.5911 1.7998 5.79999 1.7998Z" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> <path d="M1.79999 25.7998H49.8" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" stroke="#20242B"/> </svg>',
-};
 
 </script>
 <script>
@@ -9816,66 +9540,8 @@ window.V03IconsFigma = {
     if (staleTime) staleTime.remove();
     mount.classList.toggle('menu-mode', mode === 'menu');
     mount.classList.toggle('rel-mode', st.tab === 'relation');
-    /* V3.0：右下角快捷键按设计稿分三排
-       ① 缩小 / 放大 / 2D·3D / 地理影响圆   ② 搜索 / 视频自动播放 / 全屏   ③ 近 7 天 / 30 天 / 半年 / 1 年 */
-    const FACT_ROWS = [['zoomOut', 'zoomIn', 'mode3d', 'influence'], ['search', 'live', 'fullscreen'], ['T7', 'T30', 'T180', 'T365']];
-    const REL_ROWS = [['zoomOut', 'zoomIn', 'view3d', 'view2d', 'viewGraph'], ['search', 'fullscreen']];
-    const TIME_BTNS = { T7: ['近 7 天', '7d'], T30: ['近 30 天', '30d'], T180: ['近半年', '180d'], T365: ['近 1 年', '365d'] };
-    const order = st.tab === 'relation' ? REL_ROWS.flat() : FACT_ROWS.flat();
-    if (mode === 'map' && st.tab !== 'relation') {
-      FACT_ROWS.forEach((rowKeys, ri) => {
-        const rowEl = el('div', 'sk-row sk-row-' + (ri + 1));
-        rowKeys.forEach(k => {
-          if (TIME_BTNS[k]) {
-            const [label, val] = TIME_BTNS[k];
-            const on = st.time === val;
-            const tb = el('button', 'sk sk-t' + (on ? ' on' : ''), '<span class="sk-tl">' + label + '</span>');
-            tb.type = 'button'; tb.dataset.k = k; tb.title = label; tb.setAttribute('aria-pressed', String(on));
-            tb.onclick = () => S.set({ time: st.time === val ? 'all' : val });
-            rowEl.appendChild(tb);
-            return;
-          }
-          const sk = SK.find(x => x.k === k); if (!sk) return;
-          const api = layerApi();
-          const zs = (sk.kind === 'zoom' && api && api.zoomState) ? api.zoomState() : null;
-          const on = sk.kind === 'sw' ? !!sk.get(st) : false;
-          const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
-          b.dataset.k = sk.k; b.title = sk.n + '：' + sk.d;
-          /* V3.4：设计稿图标优先（UI.zip 的 SVG 原路径），缺图时回退到内联图标 */
-          const FI = window.V03IconsFigma || {};
-          const figKey = sk.k === 'mode3d' ? (st.sk.mode3d ? 'mode2d' : 'mode3d')
-            : sk.k === 'influence' ? (on ? 'influenceOn' : 'influenceOff')
-            : sk.k === 'live' ? (on ? 'liveOn' : 'liveOff')
-            : sk.k;
-          b.innerHTML = FI[figKey]
-            ? '<span class="sk-i sk-fig">' + FI[figKey] + '</span>'
-            : '<span class="sk-i">' + svg(sk.i, 16) + '</span>';
-          b.setAttribute('aria-pressed', String(on));
-          if (sk.kind === 'zoom') {
-            if (!api || !api.zoomBy) { b.disabled = true; }
-            else if (zs && ((sk.dir > 0 && !zs.canIn) || (sk.dir < 0 && !zs.canOut))) { b.disabled = true; }
-            b.onpointerdown = e => { e.preventDefault(); startZoomHold(sk.dir); };
-            b.oncontextmenu = e => e.preventDefault();
-          } else {
-            b.onclick = () => {
-              if (sk.k === 'fullscreen') return toggleFullscreen(!st.sk.fullscreen);
-              if (sk.kind === 'sw') S.set(sk.set(!sk.get(st)));
-              else openPop(sk, b, () => renderShortcutBar(mount, opts));
-            };
-          }
-          rowEl.appendChild(b);
-        });
-        mount.appendChild(rowEl);
-      });
-      if (st.q) {
-        const chip = el('div', 'sk-search-term');
-        chip.appendChild(el('span', '', st.q));
-        const clear = el('button', '', '×'); clear.type = 'button'; clear.title = '清空搜索';
-        clear.onclick = () => S.set({ q: '' });
-        chip.appendChild(clear); mount.appendChild(chip);
-      }
-      return;
-    }
+    const order = st.tab === 'relation' ? ['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen']
+      : ['time','zoomIn','zoomOut','mode3d','influence','fullscreen','search','gates'];   /* 时间范围并入快捷键组 */
     (mode === 'map' ? order.map(k => SK.find(x => x.k === k)) : SK).forEach((sk, idx) => {
       if (st.tab === 'relation' && !['zoomIn','zoomOut','view3d','view2d','viewGraph','search','gates','fullscreen'].includes(sk.k)) return;
       if (mode === 'map' && st.tab !== 'relation' && !['time','zoomIn','zoomOut','mode3d','influence','search','gates','fullscreen'].includes(sk.k)) return;
@@ -10047,7 +9713,7 @@ window.V03IconsFigma = {
 
     /* ② 图层数据分类筛选（F3 三级字典 / A2 九类对象域） */
     const s2 = el('section', 'mn-sec');
-    s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '事实分类筛选'));
+    s2.appendChild(el('div', 'mn-h', isRel ? '本体分类筛选' : '图层数据分类筛选'));
     tree.forEach(g => {
       const blk = el('div', 'mn-grp');
       const groupHead = el('button', 'mn-l1 mn-l1-button', (g.color ? '<i style="background:' + g.color + '"></i>' : '') + '<span>' + g.n + '</span>');
@@ -10086,11 +9752,7 @@ window.V03IconsFigma = {
     s2.appendChild(quick);
     if (!isRel) {
       const selector = el('div', 'mn-v12-filters');
-      selector.innerHTML = '<div class="mn-l2">品种筛选</div><div class="mn-varieties"></div>' +
-        '<div class="mn-l2">区域筛选</div>' +
-        '<div class="mn-region-box"><input class="mn-region" type="search" placeholder="输入中国 / 湖南，回车进入" value="' +
-        String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" autocomplete="off" role="combobox" aria-expanded="false">' +
-        '<div class="mn-region-pop" role="listbox" hidden></div></div>';
+      selector.innerHTML = '<div class="mn-l2">品种（多选，跨层保留）</div><div class="mn-varieties"></div><label class="mn-l2">区域筛选 <input class="mn-region" type="search" placeholder="国家 / 省 / 市" value="' + String(st.region || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></label>';
       const row = selector.querySelector('.mn-varieties');
       ['榴莲', '车厘子', '辣椒'].forEach(v => {
         const b = el('button', 'l3' + (st.varieties.includes(v) ? ' on' : ''), v);
@@ -10099,75 +9761,44 @@ window.V03IconsFigma = {
         row.appendChild(b);
       });
       const inp = selector.querySelector('.mn-region');
-      const pop = selector.querySelector('.mn-region-pop');
-      const REGIONS = [{ n: '中国', level: 'L2', focus: null }, { n: '湖南', level: 'L3', focus: '湖南' }];
-      const paint = q => {
-        const hit = REGIONS.filter(r => !q || r.n.includes(q));
-        pop.innerHTML = hit.map(r => '<button type="button" class="mn-region-opt" data-i="' + REGIONS.indexOf(r) + '">' + r.n + '</button>').join('') ||
-          '<div class="mn-region-none">无匹配区域</div>';
-        pop.hidden = false; inp.setAttribute('aria-expanded', 'true');
-      };
-      const go = r => {
-        if (!r) return;
-        pop.hidden = true; inp.setAttribute('aria-expanded', 'false');
-        inp.value = r.n;
-        S.set({ region: r.n, geo: { level: r.level, focus: r.focus } });
-      };
-      inp.oninput = () => paint(inp.value.trim());
-      inp.onfocus = () => paint(inp.value.trim());
-      inp.onkeydown = e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const q = inp.value.trim();
-          go(REGIONS.find(r => r.n === q) || REGIONS.find(r => r.n.includes(q)) || (!q ? null : null));
-          if (!q) { S.set({ region: '' }); }
-        }
-        if (e.key === 'Escape') { pop.hidden = true; inp.blur(); }
-      };
-      pop.onclick = e => { const b = e.target.closest('.mn-region-opt'); if (b) go(REGIONS[+b.dataset.i]); };
-      document.addEventListener('pointerdown', ev => { if (!selector.querySelector('.mn-region-box').contains(ev.target)) pop.hidden = true; }, { once: true });
+      inp.onchange = () => S.set({ region: inp.value.trim() });
+      inp.onkeydown = e => { if (e.key === 'Enter') inp.blur(); };
       s2.appendChild(selector);
     }
     body.appendChild(s2);
 
     if (isRel) {
-      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选'));
+      const variety=el('section','mn-sec');variety.appendChild(el('div','mn-h','品种筛选 · 跨层同步'));
       const row=el('div','mn-varieties');
       ['榴莲','车厘子','辣椒'].forEach(v=>{const b=el('button','l3'+(st.varieties.includes(v)?' on':''),v);b.setAttribute('aria-pressed',String(st.varieties.includes(v)));b.onclick=()=>S.set({varieties:st.varieties.includes(v)?st.varieties.filter(x=>x!==v):st.varieties.concat(v)});row.appendChild(b);});
       variety.appendChild(row);body.appendChild(variety);
-      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选'));
+      const relFilter=el('section','mn-sec');relFilter.appendChild(el('div','mn-h','关系筛选 · 颜色图例'));
       const selected=st.relTypes;
-        /* V3.0：两级展示（一级分组带色块，二级类型同用一级色） */
-        const opts = new Map(F.relationTypeOptions(st).map(o => [o.type, o.count]));
-        F.REL_L1.forEach(g => {
-          const types = g.types.filter(t => opts.has(t));
-          if (!types.length) return;
-          relFilter.appendChild(el('div', 'mn-l2 mn-rel-l1', '<i style="background:' + g.color + '"></i>' + g.n));
-          const typeRow = el('div', 'mn-rel-types');
-          types.forEach(t => {
-            const on = !Array.isArray(selected) || selected.includes(t);
-            const b = el('button', 'l3' + (on ? ' on' : ''));
-            b.dataset.relType = t;
-            b.title = opts.get(t) + ' 条实际关系；地图仅绘制两端可定位的关系并抽样显示，完整关系可在图谱和详情查看';
-            b.innerHTML = '<i style="background:' + g.color + '"></i><span>' + t + '</span>';
-            b.setAttribute('aria-pressed', String(on));
-            b.onclick = () => { const set = new Set(Array.isArray(S.state.relTypes) ? S.state.relTypes : F.relationTypes()); on ? set.delete(t) : set.add(t); S.set({ relTypes: [...set] }); };
-            typeRow.appendChild(b);
-          });
-          relFilter.appendChild(typeRow);
+      relFilter.appendChild(el('div','mn-l2','当前范围内实际存在的关系'));
+        const typeRow=el('div','mn-rel-types');
+        F.relationTypeOptions(st).forEach(({type:t,count,color})=>{
+          const on=!Array.isArray(selected)||selected.includes(t);
+          const b=el('button','l3'+(on?' on':''));
+          b.dataset.relType=t;
+          b.title=count+' 条实际关系；地图仅绘制两端可定位的关系，并抽样显示，完整关系可在图谱和详情查看';
+          b.innerHTML='<i style="background:'+color+'"></i><span>'+t+'</span><small>'+count+'</small>';
+          b.setAttribute('aria-pressed',String(on));
+          b.onclick=()=>{const set=new Set(Array.isArray(S.state.relTypes)?S.state.relTypes:F.relationTypes());on?set.delete(t):set.add(t);S.set({relTypes:[...set]});};
+          typeRow.appendChild(b);
         });
+        relFilter.appendChild(typeRow);
       body.appendChild(relFilter);
-
+      const cross=el('section','mn-sec');cross.appendChild(el('div','mn-h','视图控制'));
+      const check=el('label','mn-overlay');check.innerHTML='<input type="checkbox"'+(st.rel.crossRegion?' checked':'')+'><span>跨区域关系</span>';check.querySelector('input').onchange=e=>S.set({rel:{crossRegion:e.target.checked}});cross.appendChild(check);body.appendChild(cross);
     }
 
     if (!isRel) {
       const overlay = el('section', 'mn-sec');
-      overlay.appendChild(el('div', 'mn-h', '叠加图层'));
+      overlay.appendChild(el('div', 'mn-h', '叠加数据图层（独立开关）'));
       [['regions','农作物主要产区','region'],['gates','港口','port'],['airports','机场','airport'],['markets','农贸市场','market'],['risks','地缘风险区（仅世界）','risk']].forEach(([key,label,kind]) => {
         const item = el('label', 'mn-overlay');
         const emoji = (window.V03Fact && window.V03Fact.layerEmoji) ? window.V03Fact.layerEmoji(kind) : '';
-        item.innerHTML = '<span class="mn-ov-label"><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>' +
-          '<span class="sw"><input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><i></i></span>';
+        item.innerHTML = '<input type="checkbox"' + (st.sk[key] ? ' checked' : '') + '><span><i class="mn-ov-em">' + emoji + '</i>' + label + '</span>';
         item.querySelector('input').onchange = e => S.set({ sk: { [key]: e.target.checked } });
         overlay.appendChild(item);
       });
@@ -10178,10 +9809,10 @@ window.V03IconsFigma = {
        时间范围改到地图右下角快捷键里单独一排 */
     /* ④ 地图快捷键总开关（独立一段） */
     const s4 = el('section', 'mn-sec');
-    s4.appendChild(el('div', 'mn-h', '快捷控制'));
+    s4.appendChild(el('div', 'mn-h', '地图快捷键'));
     const master = el('label', 'mn-master');
-    master.innerHTML = '<span class="mn-ov-label"><b>显示地图快捷键</b></span>' +
-      '<span class="sw"><input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '><i></i></span>';
+    master.innerHTML = '<input type="checkbox" id="skMaster"' + (st.panels.shortcuts ? ' checked' : '') + '>' +
+      '<span><b>地图快捷键</b><small>只控制地图右下角整组快捷键；关闭后本面板快捷控制仍可用</small></span>';
     master.querySelector('input').onchange = e => S.set({ panels: { shortcuts: e.target.checked } });
     s4.appendChild(master);
     body.appendChild(s4);
@@ -10207,19 +9838,16 @@ window.V03IconsFigma = {
   const pad2 = n => String(n).padStart(2, '0');
   const stamp = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' +
     pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '.' + String(d.getMilliseconds()).padStart(3, '0');
-  /* V3.0：日志类型 → 颜色（新增 / 归并去重 / 更新覆盖 / 告警） */
-  const LOG_KIND = { ingest: 'add', extract: 'add', resolve: 'mod', geo: 'mod', score: 'mod', link: 'mod', graph: 'mod', warn: 'del' };
   function logText(e) {
     const f = e.factId ? D.factById(e.factId) : null;
     const tag = STAGE_TAG[e.stage] || '接入';
-    return tag + ' · ' + (f ? f.title : '预置处理步骤');
+    return '演示记录 · ' + tag + ' · ' + (f ? f.title : '预置处理步骤') + '（非实时任务）';
   }
   /* B3/M7：每条进入流水的事实都向地图发一次「星闪」 */
   function pushStreamLine(e) {
     const body = $('streamBody');
     if (!body || !e) return;
     const row = el('div', 'st-line');
-    row.dataset.kind = LOG_KIND[e.stage] || 'add';
     row.appendChild(el('span', 'tx', logText(e)));
     body.appendChild(row);
     while (body.children.length > 90) body.removeChild(body.firstChild);
@@ -10251,8 +9879,6 @@ window.V03IconsFigma = {
   }
   function syncStream() {
     const st = S.state, box = $('streamBox');
-    const logo = $('stLogo');
-    if (logo && !logo.innerHTML && window.V03IconsFigma && V03IconsFigma.terminal) logo.innerHTML = V03IconsFigma.terminal;
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
     const largeScreen = window.innerWidth >= 2200;
@@ -10301,40 +9927,6 @@ window.V03IconsFigma = {
     const box = $('drawerStack');
     box.style.right = S.state.panels.cards && (S.state.tab === 'relation' || stack.some(d => d.kind === 'fact'))
       ? 'var(--side-w)' : '0px';
-    /* V3.3：事实详情是单例 —— 框、标题、X 不动，只让内容「旧的向右收、新的从右进」 */
-    if (stack.length === 1 && stack[0].kind === 'fact' && window.V03Fact && V03Fact.renderDetail) {
-      const key = stack[0].id + '|' + (S.state.logOpen ? 'L' : '');
-      let frame = box.querySelector('.drawer.drawer-single');
-      if (!frame) {
-        box.innerHTML = '';
-        frame = el('div', 'drawer drawer-single');
-        const head = el('div', 'drawer-head');
-        head.innerHTML = '<b>事实详情</b><span class="sp"></span>';
-        const x = el('button', 'drawer-x', '×');
-        x.onclick = () => S.set({ factId: null, logOpen: false });
-        head.appendChild(x);
-        frame.appendChild(head);
-        frame.appendChild(el('div', 'drawer-stage'));
-        box.appendChild(frame);
-        frame.dataset.key = '';
-      }
-      box.style.pointerEvents = 'auto';
-      if (frame.dataset.key === key) return;
-      const stage = frame.querySelector('.drawer-stage');
-      const next = el('div', 'drawer-slide in');
-      try { V03Fact.renderDetail(next); } catch (e) { console.error('drawer', e); }
-      const prev = stage.querySelector('.drawer-slide');
-      stage.appendChild(next);
-      requestAnimationFrame(() => {
-        next.classList.remove('in');
-        if (prev) {
-          prev.classList.add('out');
-          setTimeout(() => prev.remove(), 320);
-        }
-      });
-      frame.dataset.key = key;
-      return;
-    }
     const sig = JSON.stringify([S.state.tab, stack, S.state.logOpen, S.state.sk.live]);
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
@@ -10380,28 +9972,6 @@ window.V03IconsFigma = {
       if (document.activeElement !== inp) setTimeout(() => inp.focus(), 30);
     }
   }
-  /* V3.0：ESC 退回全球 2D 视角（输入框/弹层有各自的 ESC 行为，先让给它们） */
-  function bindEscHome() {
-    document.addEventListener('keydown', e => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return;
-      const t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      const st = S.state;
-      if (st.settings && (st.settings.gate || st.settings.authed)) return;
-      if (st.tab === 'fact') {
-        if (st.sk.mode3d || st.geo.level !== 'L1' || st.geo.focus) {
-          S.set({ sk: { mode3d: false }, geo: { level: 'L1', focus: null } });
-          e.preventDefault();
-        }
-      } else if (st.tab === 'relation') {
-        if (st.rel.view === 'graph' || st.rel.level !== 'L1' || st.rel.focus) {
-          S.set({ rel: { view: 'geo', level: 'L1', focus: null } });
-          e.preventDefault();
-        }
-      }
-    });
-  }
-
   function bindSettings() {
     $('pwOk').onclick = () => {
       if ($('pwInput').value.trim() === PW) { $('pwInput').value = ''; S.set({ settings: { gate: false, authed: true } }); }
@@ -10460,7 +10030,6 @@ window.V03IconsFigma = {
     $('btnSettings').onclick = () => S.set({ settings: { gate: true, authed: false } });
     $('streamClose').onclick = () => S.set({ panels: { stream: false } });
     bindSettings();
-  bindEscHome();
     document.addEventListener('keydown', onKey);
     document.addEventListener('fullscreenchange', () => S.set({ sk: { fullscreen: !!document.fullscreenElement } }));
   }
