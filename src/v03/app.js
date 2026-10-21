@@ -187,7 +187,7 @@
           if (TIME_BTNS[k]) {
             const [label, val] = TIME_BTNS[k];
             const on = st.time === val;
-            const tb = el('button', 'sk sk-t' + (on ? ' on' : ''), '<span class="sk-v">' + label + '</span>');
+            const tb = el('button', 'sk sk-t' + (on ? ' on' : ''), '<span class="sk-tl">' + label + '</span>');
             tb.type = 'button'; tb.dataset.k = k; tb.title = label; tb.setAttribute('aria-pressed', String(on));
             tb.onclick = () => S.set({ time: st.time === val ? 'all' : val });
             rowEl.appendChild(tb);
@@ -199,7 +199,15 @@
           const on = sk.kind === 'sw' ? !!sk.get(st) : false;
           const b = el('button', 'sk' + (on ? ' on' : '') + (sk.kind === 'zoom' ? ' zoom' : ''));
           b.dataset.k = sk.k; b.title = sk.n + '：' + sk.d;
-          b.innerHTML = '<span class="sk-i">' + svg(sk.i, 16) + '</span>';
+          /* V3.4：设计稿图标优先（UI.zip 的 SVG 原路径），缺图时回退到内联图标 */
+          const FI = window.V03IconsFigma || {};
+          const figKey = sk.k === 'mode3d' ? (st.sk.mode3d ? 'mode2d' : 'mode3d')
+            : sk.k === 'influence' ? (on ? 'influenceOn' : 'influenceOff')
+            : sk.k === 'live' ? (on ? 'liveOn' : 'liveOff')
+            : sk.k;
+          b.innerHTML = FI[figKey]
+            ? '<span class="sk-i sk-fig">' + FI[figKey] + '</span>'
+            : '<span class="sk-i">' + svg(sk.i, 16) + '</span>';
           b.setAttribute('aria-pressed', String(on));
           if (sk.kind === 'zoom') {
             if (!api || !api.zoomBy) { b.disabled = true; }
@@ -601,6 +609,8 @@
   }
   function syncStream() {
     const st = S.state, box = $('streamBox');
+    const logo = $('stLogo');
+    if (logo && !logo.innerHTML && window.V03IconsFigma && V03IconsFigma.terminal) logo.innerHTML = V03IconsFigma.terminal;
     const on = st.tab !== 'sim' && st.panels.stream;
     box.classList.toggle('on', on);
     const largeScreen = window.innerWidth >= 2200;

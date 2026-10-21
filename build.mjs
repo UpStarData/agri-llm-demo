@@ -59,6 +59,7 @@ const JS = [
   'src/v03/fact.js',        // 事实层
   'src/v03/relation.js',    // 关联层
   'src/v03/mirofish-bridge.js', // 旧版工作台 iframe 桥接；发起页在工作台内按 PRD 调整
+  'src/v03/icons-figma.js', // V3.4 Figma 导出的快捷键/日志图标（原路径）
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];

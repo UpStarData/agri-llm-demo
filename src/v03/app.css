@@ -629,3 +629,20 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .fc-line{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:.6875rem;line-height:1.5}
 .fc-line span{color:var(--dim)}
 .fc-line b{font-weight:var(--f-reg);color:var(--ink);overflow-wrap:anywhere}
+
+/* V3.4：设计稿图标尺寸（Figma 导出 49×41），按钮随之放大到 32×27 */
+.mapsk{width:max-content}
+.mapsk .sk{width:32px;height:27px}
+/* 搜索在设计稿里是宽条（105×41），按原比例显示，别压成方块 */
+.mapsk .sk[data-k="search"]{width:auto}
+.mapsk .sk[data-k="search"] .sk-i.sk-fig{width:66px}
+.mapsk .sk[data-k="search"] .sk-i.sk-fig svg{width:66px}
+/* 第三排时间档：按文字撑开，不要挤成 32px */
+.mapsk .sk-t{width:auto;min-width:52px;padding:0 8px;white-space:nowrap;
+  background:rgba(255,255,255,.94);border:1px solid #E5E7EB;border-radius:9px}
+.mapsk .sk-t .sk-tl{display:block;font-size:.625rem;line-height:1;letter-spacing:0;color:#20242B;white-space:nowrap}
+.mapsk .sk-i.sk-fig{display:block;width:32px;height:26px}
+.mapsk .sk-i.sk-fig svg{width:32px;height:26px;display:block}
+.mapsk .sk.zoom .sk-i.sk-fig svg{opacity:1}
+.st-bar .st-logo{display:inline-flex;align-items:center;margin-right:6px}
+.st-bar .st-logo svg{width:16px;height:13px;display:block}
