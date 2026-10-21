@@ -76,7 +76,13 @@
       <div class="m">4c066df3b6c5<br>7899cd2 · v3.0</div>
     </div>
     <div class="row">
-      <div class="v now">V2.9.1</div>
+      <div class="v now">V2.9.2</div>
+      <div class="d">V2.9 界面不变；修掉 V2.9.1 里我引入的一个运行时错误：iframe 改成本地 <code>../mirofish/</code> 后，postMessage 用的 <code>MIROFISH_ORIGIN</code> 已删除却仍被引用，导致推演层报 <code>ReferenceError</code>。现在 origin 取 <code>window.location.origin</code>，实测推演层内嵌工作台正常渲染、控制台 0 错误<br><a target="_blank" rel="noopener noreferrer" href="../v2.9.2/">进入 /v2.9.2/ →</a></div>
+      <div class="u"><time datetime="2026-10-21T10:40:00+08:00">2026-10-21 10:40</time></div>
+      <div class="m">9d8a0a268e38<br>279c904 · v2.9.2</div>
+    </div>
+    <div class="row">
+      <div class="v">V2.9.1</div>
       <div class="d"><strong>V2.9 的界面与交互不变</strong>，只修一处：推演层内嵌的工作台改为<strong>仓库自带</strong>（<code>../mirofish/</code>），不再依赖已经 404 的外部 Pages 站——那套 <code>mirofish-frontend-preview</code> 仓库在 2026-10-13 转成 private 后 Pages 停用，V2.9 的推演层因此打不开。V3.0–V3.4 保留可访问，不作为最新版<br><a target="_blank" rel="noopener noreferrer" href="../v2.9.1/">进入 /v2.9.1/ →</a></div>
       <div class="u"><time datetime="2026-10-21T09:20:00+08:00">2026-10-21 09:20</time></div>
       <div class="m">2c11732df91f<br>17c14b1 · v2.9.1</div>
