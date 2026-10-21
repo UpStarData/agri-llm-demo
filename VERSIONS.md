@@ -167,3 +167,11 @@ agri-llm-demo/
 - 界面、交互、数据与 V2.9 完全一致；
 - 唯一改动：推演层 iframe 由 `https://upstardata.github.io/mirofish-frontend-preview/` 改成仓库内 `../mirofish/`（自带 1.1 MB 静态构建），修复推演层打不开；
 - 根因：`UpStarData/mirofish-frontend-preview` 于 2026-10-13 转为 private，GitHub Pages 随之停用，原地址 404；V2.9 与 V3.x 用的是同一个外部地址，所以两者都打不开，与 V3 改动无关。
+
+## V2.9.2（2026-10-21）
+
+地址：https://upstardata.github.io/agri-llm-demo/v2.9.2/ ・ 构建指纹 `9d8a0a268e38` ・ 源码 `279c904`
+
+- 界面/交互/数据与 V2.9 一致；
+- 修 V2.9.1 的回归：iframe 指向自带工作台后 `MIROFISH_ORIGIN` 未定义（postMessage 处 ReferenceError），现取 `window.location.origin`；
+- 实测：推演层 iframe 加载 `../mirofish/`，内部渲染「历史推演记录 / 发起新推演 / 热门推演」，控制台 0 错误。
