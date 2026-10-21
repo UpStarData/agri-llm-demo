@@ -1,7 +1,7 @@
 {
-  "hash": "32e7547aa801",
-  "git": "4cb3086",
-  "builtAt": "2026-10-19T04:55:44.546Z",
+  "hash": "2c11732df91f",
+  "git": "17c14b1",
+  "builtAt": "2026-10-21T01:04:52.648Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -72,5 +72,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 103387549
+  "bytes": 103387586
 }

@@ -2,8 +2,8 @@
 window.V03Sim = (function () {
   const D = window.V03Data;
   const S = window.V03Store;
-  const MIROFISH_ORIGIN = 'https://upstardata.github.io';
-  const MIROFISH_URL = MIROFISH_ORIGIN + '/mirofish-frontend-preview/?embed=agrilink#/';
+  /* V2.9.1：推演层工作台改为仓库内自带（../mirofish/），不再依赖已停用的外部 Pages 站 */
+  const MIROFISH_URL = '../mirofish/index.html?embed=agrilink#/';
   let root, frame, promptInput, lastSelection = '', loaded = false;
 
   function context() {
