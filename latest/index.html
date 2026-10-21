@@ -119,7 +119,7 @@ svg{display:block}
 #layer-sim{background:var(--bg)}
 
 /* ---------------- 左侧菜单（从左侧滑出，固定四段） ---------------- */
-.menu{position:absolute;left:0;top:0;bottom:0;width:336px;z-index:55;transform:translateX(-102%);
+.menu{position:absolute;left:0;top:0;bottom:var(--stream-h);width:336px;z-index:55;transform:translateX(-102%);
   background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
   border-right:1px solid var(--glass-line);box-shadow:var(--shadow);
   transition:transform .26s var(--ease);display:flex;flex-direction:column;overflow:hidden}
@@ -625,6 +625,20 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .ev-pop-t{font-weight:var(--f-semi);font-size:.8125rem;color:var(--ink);padding-right:24px}
 .ev-pop-body{margin-top:10px;flex:1;overflow:auto;white-space:pre-wrap;font-size:.75rem;line-height:1.7;color:var(--ink)}
 .ev-pop-x{position:absolute;top:10px;right:12px;border:0;background:none;font-size:1rem;color:var(--mut);cursor:pointer}
+
+/* V3.3：事实详情单例容器 + 内容滑动替换（框与标题不动） */
+.drawer-single{position:relative;display:flex;flex-direction:column}
+.drawer-stage{position:relative;flex:1;min-height:0;overflow:hidden}
+.drawer-slide{position:absolute;inset:0;overflow:auto;padding:0 2px;
+  transition:transform .3s cubic-bezier(.22,1,.36,1),opacity .3s ease}
+.drawer-slide.in{transform:translateX(38px);opacity:0}
+.drawer-slide.out{transform:translateX(64px);opacity:0}
+
+/* V3.3：卡片核心摘要（按二级分类 3 行） */
+.fcard-core{display:flex;flex-direction:column;gap:2px;margin:6px 0 2px}
+.fc-line{display:grid;grid-template-columns:66px 1fr;gap:8px;font-size:.6875rem;line-height:1.5}
+.fc-line span{color:var(--dim)}
+.fc-line b{font-weight:var(--f-reg);color:var(--ink);overflow-wrap:anywhere}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -978,7 +992,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V3.2</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V3.3</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -1044,7 +1058,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"9374737ae28f","git":"29494f3","builtAt":"2026-10-20T15:52:46.122Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"a9c1440c11b8","git":"e5ac47b","builtAt":"2026-10-21T00:12:24.461Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -7465,15 +7479,21 @@ window.V03Fact = (function () {
   const freshIds = new Set();
   function autoScrollCards(el) {
     if (!el || el.__auto) return;
-    el.__auto = { t: 0, raf: 0, paused: 0, lastTop: el.scrollTop };
+    el.__auto = { t: 0, raf: 0, paused: 0, hover: false, lastTop: el.scrollTop };
+    /* 用 document 上的 pointermove 判定指针是否在卡片区内：容器可能被浮层覆盖，pointerenter 不一定触发 */
+    document.addEventListener('pointermove', e => {
+      const a = el.__auto; if (!a || !el.isConnected) return;
+      const r = el.getBoundingClientRect();
+      a.hover = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    }, { passive: true });
     const stepFn = () => {
       const a = el.__auto;
       a.raf = requestAnimationFrame(stepFn);
       if (S.state.tab !== 'fact' || !S.state.panels.cards || document.hidden) return;
       if (!el.isConnected) { cancelAnimationFrame(a.raf); el.__auto = null; return }
       if (Date.now() < a.paused) return;
-      /* V3.0：鼠标在卡片区悬停时不自动滚动 */
-      if (el.matches(':hover')) { a.lastTop = el.scrollTop; return; }
+      /* V3.3：悬停标志由 pointerenter/leave 维护（比在 rAF 里判断 :hover 可靠） */
+      if (a.hover) { a.lastTop = el.scrollTop; return; }
       if (Math.abs(el.scrollTop - a.lastTop) > 2) { a.paused = Date.now() + 2500; a.lastTop = el.scrollTop; return }  /* 用户手动滚动后暂停一小会儿 */
       if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { a.t += 0.016; if (a.t > 6) { a.t = 0; el.scrollTop = 0 }    /* 到底停一下再回到顶部 */
         if (a.t > 0 && a.t < 0.02) { a.paused = Date.now() + 1800 } return }
@@ -7922,6 +7942,67 @@ window.V03Fact = (function () {
       '<div class="fs-why">' + esc(c.fallbackReason || '该视频源暂不可直接播放，保留静态卡片') + '</div>' +
       (c.hlsUrl || c.embedUrl ? '<a class="ext" href="' + esc(c.hlsUrl || c.embedUrl) + '" target="_blank" rel="noopener noreferrer">打开原始视频源</a>' : '') + '</div>';
   }
+  /* V3.3：核心摘要按「二级分类」各有一套字段（需求表 25 类）。
+     每类 3 行；行内取值为该分类主字段，缺字段时按 品种 → 地区 → 时间 → 摘要 降级，不编造数值。 */
+  const CORE_LABELS = {
+    '价格': ['价格对象', '当前值', '统计周期'],
+    '天气': ['天气类型', '覆盖范围', '最高/最低'],
+    '灾害': ['灾害类型', '受灾范围', '受灾面积'],
+    '物流运输': ['运输方式', '起点 → 终点', '异常情况'],
+    '交易': ['交易场所', '成交额 / 量', '时间窗口'],
+    '农业政策': ['发布机构', '适用地区', '政策动作'],
+    '市场监管': ['发布机构', '适用对象', '检查动作'],
+    '贸易政策': ['发布机构', '适用国家', '政策动作'],
+    '生产主体': ['主体名称', '涉及品种', '规模变化'],
+    '生产过程': ['生产环节', '涉及品种', '进度情况'],
+    '投入品': ['投入品', '当前价格', '供应情况'],
+    '产能供给': ['生产主体', '涉及品种', '产量'],
+    '仓储冷链': ['库存主体', '涉及品种', '库存/库容'],
+    '流向': ['起点 → 终点', '涉及品种', '流转数量'],
+    '贸易通关': ['进出口方向', '口岸 / 数量', '通关状态'],
+    '市场主体': ['主体名称', '主体类型', '涉及品种'],
+    '供需': ['涉及品种', '供需方向', '缺口/过剩'],
+    '消费行为': ['消费群体', '涉及品种', '行为变化'],
+    '媒体舆情': ['信息主体', '主要观点', '传播范围'],
+    '品牌产品': ['品牌/产品', '事件类型', '关键内容'],
+    '公共治理': ['措施类型', '适用地区', '起止时间'],
+    '宏观环境': ['指标名称', '当前值', '影响地区'],
+    '地缘与安全': ['事件类型', '影响地区', '事件状态'],
+    '基础设施': ['设施名称', '事件类型', '所在地'],
+    '技术产业': ['技术名称', '应用主体', '涉及品种'],
+    '资源环境': ['资源类型', '监测区域', '指标值'],
+  };
+  const coreValues = f => {
+    const c = f.card || {}, fl = c.fields || {};
+    const pick = (...ks) => { for (const k of ks) { const v = fl[k] != null ? fl[k] : c[k]; if (v != null && v !== '') return String(v); } return ''; };
+    return {
+      commodity: pick('commodityName') || f.variety || '',
+      price: pick('priceValue') ? pick('priceValue') + ' ' + pick('priceUnit') : '',
+      change: typeof c.changePct === 'number' ? (c.changePct >= 0 ? '↑ ' : '↓ ') + Math.abs(c.changePct).toFixed(1) + '%' : '',
+      period: pick('period', 'statPeriod') || (f.date ? String(f.date).slice(0, 10) : ''),
+      region: f.region || pick('regionName'),
+      date: f.date ? String(f.date).slice(0, 10) : '',
+      variety: f.variety || pick('variety', 'commodityName'),
+      org: pick('issuer', 'agency', 'sourceName', 'marketName'),
+      title: f.title || '',
+      summary: String(f.summary || '').slice(0, 60),
+    };
+  };
+  /* 3 行核心摘要：有专门字段就用，缺就按降级链取，最多截 60 字 */
+  function coreSummary(f) {
+    const leaf = leafOf(f) || {}, sub = leaf.sub || leaf.n || '', labels = CORE_LABELS[sub];
+    if (!labels) return '';
+    const v = coreValues(f);
+    const filled = [
+      v.commodity && v.commodity !== f.title ? v.commodity : (v.org || v.region || v.title),
+      sub === '价格' ? [v.price, v.change].filter(Boolean).join('  ') || v.variety || v.summary
+                       : (v.region || v.variety || v.summary),
+      sub === '价格' ? v.period : (v.date || v.summary),
+    ].map(x => String(x || '').slice(0, 60) || '—');
+    return '<div class="fcard-core">' + labels.map((k, i) =>
+      '<div class="fc-line"><span>' + esc(k) + '</span><b>' + esc(filled[i]) + '</b></div>').join('') + '</div>';
+  }
+
   const dataLabel = f => f.prov === 'real' ? '真实来源' : f.prov === 'deidentified' ? '脱敏数据' : '模拟数据';
   const sourceCount = f => new Set((f.evidence || []).map(e => e.t || e.url || e.k).filter(Boolean)).size;
   function cardHTML(f, fresh) {
@@ -7972,7 +8053,7 @@ window.V03Fact = (function () {
     return '<article class="fcard" data-fid="' + esc(f.id) + '" tabindex="0">' +
       '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span>' +
       (fresh ? '<i class="new-dot" aria-label="新接入"></i>' : '') + '</div>' +
-      V03Media.figure(f) + body + foot + '</article>';
+      V03Media.figure(f) + coreSummary(f) + body + foot + '</article>';
   }
 
   let visibleCardCount = 20;
@@ -9383,28 +9464,9 @@ window.V03Relation = (function () {
     dom.main.classList.toggle('graph-view', st.rel.view === 'graph');
     dom.main.classList.toggle('globe-view', st.rel.view === 'globe');
     if (dom.hint && st.rel.view !== 'graph') {
-      const lv = relLevel();
-      dom.hint.hidden = true;   /* V3.0：底部层级面包屑与操作提示整条移除 */
-      /* 层级面包屑（可点：直接跳到该层）+ 一句交互提示 */
-      const trail = ['世界', '中国', relFocus() || '省区'];
-      const at = lv === 'L1' ? 0 : lv === 'L2' ? 1 : 2;
-      dom.hint.innerHTML = trail.slice(0, at + 1).map((t, i) =>
-        '<span class="jump' + (i === at ? ' on' : '') + '" role="button" tabindex="0" title="跳到' + t + '">' + t + '</span>').join('<i>›</i>')
-        + '<em>' + (lv === 'L1' ? '点击地图进中国（点本体/关系看详情）· 双指缩放 · Esc 返回'
-          : lv === 'L2' ? '点击省份进省区 · 点本体/关系看详情 · 滚轮缩小返回世界 · Esc 返回'
-          : '滚轮缩小或 Esc 返回全国') + '</em>'
-        + '<b class="drill" role="button" tabindex="0">' + (lv === 'L1' ? '进入中国 →' : lv === 'L2' ? '进入' + (relFocus() || '湖南') + ' →' : '返回全国') + '</b>';
-      dom.hint.querySelectorAll('span.jump').forEach((el, i) => {
-        const go = () => { const want = i === 0 ? 'L1' : i === 1 ? 'L2' : 'L3'; if (relLevel() !== want) enterLevel(want, want === 'L3' ? (relFocus() || '湖南') : null); };
-        el.onclick = go;
-        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-      });
-      const drillBtn = dom.hint.querySelector('b.drill');
-      if (drillBtn) {
-        const go = () => { if (!drillIn()) enterLevel('L2', null); };
-        drillBtn.onclick = go;
-        drillBtn.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
-      }
+      /* V3.1/3.3：底部层级面包屑与交互提示整条移除，且不再写入文本（DOM 里也不留“世界/点击地图进入中国”） */
+      dom.hint.hidden = true;
+      dom.hint.textContent = '';
     }
     shownView = st.rel.view;
     if (st.rel.view === 'globe') {
@@ -10195,6 +10257,40 @@ window.V03Sim = (function () {
     const box = $('drawerStack');
     box.style.right = S.state.panels.cards && (S.state.tab === 'relation' || stack.some(d => d.kind === 'fact'))
       ? 'var(--side-w)' : '0px';
+    /* V3.3：事实详情是单例 —— 框、标题、X 不动，只让内容「旧的向右收、新的从右进」 */
+    if (stack.length === 1 && stack[0].kind === 'fact' && window.V03Fact && V03Fact.renderDetail) {
+      const key = stack[0].id + '|' + (S.state.logOpen ? 'L' : '');
+      let frame = box.querySelector('.drawer.drawer-single');
+      if (!frame) {
+        box.innerHTML = '';
+        frame = el('div', 'drawer drawer-single');
+        const head = el('div', 'drawer-head');
+        head.innerHTML = '<b>事实详情</b><span class="sp"></span>';
+        const x = el('button', 'drawer-x', '×');
+        x.onclick = () => S.set({ factId: null, logOpen: false });
+        head.appendChild(x);
+        frame.appendChild(head);
+        frame.appendChild(el('div', 'drawer-stage'));
+        box.appendChild(frame);
+        frame.dataset.key = '';
+      }
+      box.style.pointerEvents = 'auto';
+      if (frame.dataset.key === key) return;
+      const stage = frame.querySelector('.drawer-stage');
+      const next = el('div', 'drawer-slide in');
+      try { V03Fact.renderDetail(next); } catch (e) { console.error('drawer', e); }
+      const prev = stage.querySelector('.drawer-slide');
+      stage.appendChild(next);
+      requestAnimationFrame(() => {
+        next.classList.remove('in');
+        if (prev) {
+          prev.classList.add('out');
+          setTimeout(() => prev.remove(), 320);
+        }
+      });
+      frame.dataset.key = key;
+      return;
+    }
     const sig = JSON.stringify([S.state.tab, stack, S.state.logOpen, S.state.sk.live]);
     if (box.dataset.sig === sig) return;
     box.dataset.sig = sig;
