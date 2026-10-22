@@ -10,7 +10,7 @@
   --ink:#20384b;--mut:#496476;--dim:#667c8b;--hint:#738796;
   --accent:#236bad;--accent-soft:#e6f2fb;--green:#368b6f;--orange:#ae7650;--purple:#74658f;--red:#b65c5d;
   --warn:#b45309;--warn-bg:#fef3c7;
-  --ocean:#b8cee0;--land:#f1efe8;--land-2:#dce8df;--map-line:rgba(79,108,123,.67);--map-label:#344f60;
+  --ocean:#54b5f0;--land:#f1efe8;--land-2:#dce8df;--map-line:rgba(79,108,123,.67);--map-label:#344f60;
   /* 一级分类主题色（V2.8.4，色值先自动生成）：事实层 7 类 + 关联层 4 类。
      两层地图、地球、图谱与菜单图例都从这里取色；改这几行即可整体换色。 */
   --fact-l1-1:#4f8fa8;--fact-l1-2:#6aa35c;--fact-l1-3:#43a09a;--fact-l1-4:#c9705f;
@@ -44,7 +44,7 @@ html[data-theme="color"]{
   --ink:#1c2a3a;--mut:#4c5f74;--dim:#6f8194;--hint:#8698a8;
   --accent:#2f6fd0;--accent-soft:#e8f1fd;--green:#3f9d6a;--orange:#c9852f;--purple:#7a68c8;--red:#c8545c;
   --warn:#9a5a12;--warn-bg:#f6e3c0;
-  --ocean:#5fbdf2;--land:#cfe9bd;--land-2:#b6dfa4;--map-line:rgba(224,128,118,.55);--map-label:#2b3d52;
+  --ocean:#54b5f0;--land:#cfe9bd;--land-2:#b6dfa4;--map-line:rgba(224,128,118,.55);--map-label:#2b3d52;
   /* 三维地球：近黑深空 + 亮蓝海面 + 浅绿陆块 + 蓝白大气层 */
   --globe-space-1:#0a1c33;--globe-space-2:#040c18;--globe-nebula:#2f6fd0;
   /* V3.0：3D 海洋取 2D 海面色（--ocean #5fbdf2）的同族明暗 */
@@ -117,7 +117,7 @@ svg{display:block}
 .menu-close{position:absolute;right:6px;top:5px;width:22px;height:22px;border-radius:5px;font-size:.9375rem;line-height:1;color:var(--dim);z-index:2}
 .menu-close:hover{background:var(--panel-2);color:var(--ink)}
 .menu-body{flex:1;overflow-y:auto;padding:10px 10px 16px}
-.mn-sec{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--hair)}
+.mn-sec{padding-bottom:0;margin-bottom:0;border-bottom:0}
 .mn-sec:last-child{border-bottom:none;margin-bottom:0}
 .mn-h{font-size:.6875rem;font-weight:var(--f-semi);letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
 /* L1：只保留「事实条数 / 整体可信占比」，数字大、文字小、无边框 */
@@ -655,7 +655,7 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
   --ds-gap:20px;
   --font-ui:'IBM Plex Sans SC','PingFang SC',-apple-system,'Helvetica Neue',sans-serif;
   --font-num:'IBM Plex Mono','SF Mono',ui-monospace,monospace;
-  --accent:var(--ocean);--accent-soft:rgba(95,189,242,.16);   /* 主题蓝 = 海洋蓝 */
+  --accent:#54b5f0;--accent-soft:rgba(84,181,240,.16);   /* 主题蓝 = 海洋蓝 */
 }
 /* 全站字体统一为 IBM Plex Sans SC（推演层是 iframe，不受影响）；数字用等宽字体单独覆盖 */
 body,body *:not(.ov-i b):not(.st-line):not(.st-line *):not(code):not(pre):not(.mono){font-family:var(--font-ui)!important}
@@ -663,9 +663,10 @@ body,body *:not(.ov-i b):not(.st-line):not(.st-line *):not(code):not(pre):not(.m
 /* 面板表面：按附件 SVG（356 宽、白 62%、1px #E5E7EB 描边） */
 .menu{background:linear-gradient(rgba(255,255,255,.62),rgba(255,255,255,.62));border-right:1px solid #E5E7EB}
 /* 六个块之间 20px 分隔 */
-.menu-body{display:flex;flex-direction:column;gap:var(--ds-gap)}
-.mn-sec{gap:8px;padding-bottom:0}
-.mn-sec+.mn-sec{border-top:1px solid #EDEDED;padding-top:var(--ds-gap)}
+/* V3.6：不用分割线，全部用间距区分模块 */
+.menu-body{display:flex;flex-direction:column;gap:30px;padding-top:12px;padding-bottom:16px}
+.mn-sec{gap:0;padding-bottom:0;border-bottom:0}
+.mn-sec+.mn-sec{border-top:0;padding-top:0}
 /* 三级主标题：18 / Regular / #161616 */
 .mn-h{font-size:var(--ds-h3);font-weight:400;color:var(--ds-ink);letter-spacing:0}
 /* 文案与描述：14 / #8d8d8d */
@@ -682,3 +683,24 @@ body,body *:not(.ov-i b):not(.st-line):not(.st-line *):not(code):not(pre):not(.m
 .mn-l2,.mn-l3 .l3,.mn-overlay,.mn-region,.mn-region-opt,.mn-varieties .l3{font-size:var(--ds-body)}
 .mn-region{height:32px;line-height:30px;padding:0 10px}
 .mn-region::placeholder{color:var(--ds-desc)}
+
+/* V3.6 左菜单排版：组与组 10px，二级标题后直接跟 chips，不做分割线 */
+.mn-grp{margin:0 0 10px}
+.mn-grp + .mn-grp{margin-top:10px}
+.mn-grp .mn-l1{margin:0 0 10px;line-height:1.25}
+.mn-grp .mn-l2{margin:0 0 4px;line-height:1.2}
+.mn-grp .mn-l3{gap:4px;margin:0 0 10px}
+.mn-grp .mn-l3:last-child{margin-bottom:0}
+.mn-sec .mn-h{margin:0 0 12px;line-height:1.2}
+.mn-quick{margin-top:8px}
+/* 数字更醒目（Plex Mono 20 Bold）；如要回到 16 告我一声 */
+.ov-i b,.ov-i b[data-ov]{font-size:20px!important;font-weight:700!important;line-height:1.1}
+/* 左上 X：悬停不变色 */
+.menu-close:hover{background:transparent;color:var(--dim)}
+/* 菜单与底部日志贴合：无描边、无圆角、无缝隙 */
+.menu{border-right:1px solid #E5E7EB;border-bottom:0;border-radius:0;margin-bottom:0}
+.menu-body{height:100%;overflow-y:auto}
+
+/* V3.6：主题蓝在所有主题下都等于海洋蓝 #54B5F0（覆盖 data-theme 里的旧值） */
+:root,html[data-theme="color"],html[data-theme="light"],html[data-theme="dark"]{
+  --accent:#54b5f0;--accent-soft:rgba(84,181,240,.16);--ocean:#54b5f0}
