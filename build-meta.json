@@ -1,7 +1,7 @@
 {
-  "hash": "9d8a0a268e38",
-  "git": "b3f89bb",
-  "builtAt": "2026-10-21T03:24:32.075Z",
+  "hash": "cef321c261e4",
+  "git": "279c904",
+  "builtAt": "2026-10-23T07:43:05.382Z",
   "partial": false,
   "inputs": [
     "src/v03/shell.html",
@@ -27,6 +27,8 @@
     "src/v03/fact.js",
     "src/v03/relation.js",
     "src/v03/mirofish-bridge.js",
+    "src/v03/danmaku.js",
+    "src/v03/timeline.js",
     "src/v03/app.js",
     "data/china.geo.json",
     "data/world110.geo.json",
@@ -72,5 +74,5 @@
     "fonts/PlexBold-sub.woff2"
   ],
   "missing": [],
-  "bytes": 103387728
+  "bytes": 103402618
 }

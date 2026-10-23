@@ -547,6 +547,51 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 /* 叠加图层图标（内联 SVG，透明底） */
 .mn-overlay .mn-ov-em{font-style:normal;margin-right:6px;font-size:14px;line-height:1;background:transparent}
 .mn-overlay span{display:inline-flex;align-items:center}
+
+/* ================= V2.9.3 弹幕 & 时间轴 ================= */
+.danmaku{position:absolute;width:336px;z-index:48;pointer-events:none;
+  background:rgba(255,255,255,.42);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+  border:1px solid rgba(229,231,235,.85);border-radius:12px;box-shadow:0 12px 30px -20px rgba(15,23,42,.45)}
+/* 新事实接入：贴底部终端上方，常驻 */
+.dm-arrive{left:10px;bottom:calc(var(--stream-h) + 78px);max-height:25vh;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;padding:8px 10px;gap:4px;pointer-events:none}
+/* 事实消亡：左上 */
+.dm-perish{left:10px;top:40px;max-height:25vh;overflow:hidden;padding:8px 10px}
+.dm-h{font-size:12px;color:#8d8d8d;margin-bottom:4px}
+.dm-list{display:flex;flex-direction:column;gap:4px}
+.dm-row{display:flex;gap:4px;align-items:baseline;font-size:12px;line-height:1.25;color:#3b4a55;
+  opacity:0;transform:translateY(4px);transition:opacity .28s ease,transform .28s ease;white-space:nowrap;overflow:hidden}
+.dm-row.on{opacity:1;transform:none}
+.dm-row b{font-weight:600;flex:0 0 auto}
+.dm-row i{font-style:normal;color:#6b7a86;flex:0 0 auto}
+.dm-row span{overflow:hidden;text-overflow:ellipsis;color:#54636e}
+.dm-row.shatter{animation:dmShatter .6s ease forwards}
+@keyframes dmShatter{
+  0%{opacity:1;transform:none;filter:blur(0)}
+  55%{opacity:.7;transform:translateY(-2px) scale(1.02);filter:blur(1.2px)}
+  100%{opacity:0;transform:translateY(-10px) scale(.9);filter:blur(4px)}
+}
+/* 时间轴 */
+.tl{position:absolute;left:356px;bottom:calc(var(--stream-h) + 16px);height:34px;width:440px;z-index:47;
+  display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:12px;
+  background:rgba(255,255,255,.5);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+  border:1px solid rgba(229,231,235,.9);box-shadow:0 12px 30px -22px rgba(15,23,42,.4);
+  transition:width .45s cubic-bezier(.22,1,.36,1);opacity:0;pointer-events:none}
+.tl.on{opacity:1;pointer-events:auto}
+.tl:hover{width:1000px}
+.tl-play{display:none;flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1px solid #54b5f0;background:#fff;
+  color:#2a7fb8;font-size:10px;line-height:1;cursor:pointer;padding:0}
+.tl.paused .tl-play{display:block}
+.tl-track{position:relative;flex:1;height:100%;cursor:pointer}
+.tl-ticks{position:absolute;inset:0}
+.tl-tick{position:absolute;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tl-tick i{width:1px;height:8px;background:#9fb0bd;display:block}
+.tl-tick b{font-size:9px;color:#7b8a96;font-family:'IBM Plex Mono',monospace}
+.tl-fill{position:absolute;left:0;top:50%;height:2px;background:#54b5f0;transform:translateY(-50%);width:0}
+.tl-head{position:absolute;top:0;left:0;width:0;height:100%}
+.tl-head::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;background:#e5484d;border-radius:1px}
+.tl-date{position:absolute;left:0;top:-2px;transform:translateX(-50%);font-size:9px;padding:1px 4px;border-radius:4px;
+  background:#e5484d;color:#fff;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -900,7 +945,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.2</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.3</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -924,6 +969,25 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <!-- 快捷键组（地图右下角，两排；含放大 / 缩小） -->
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
+
+      <!-- V2.9.3：事实消亡弹幕（左上，常驻） -->
+      <div class="danmaku dm-perish" id="danmakuPerish" role="status" aria-live="polite">
+        <div class="dm-h">事实消亡弹幕</div>
+        <div class="dm-list" id="danmakuPerishList"></div>
+      </div>
+
+      <!-- V2.9.3：新事实接入弹幕（左下，贴着底部终端上方，常驻） -->
+      <div class="danmaku dm-arrive" id="danmakuArrive" role="status" aria-live="polite"></div>
+
+      <!-- V2.9.3：时间轴（默认 440，悬停展开到 1000；红线上有日期，可拖动） -->
+      <div class="tl" id="timeline" aria-label="时间轴">
+        <button class="tl-play" id="tlPlay" type="button" aria-label="播放">▶</button>
+        <div class="tl-track" id="tlTrack">
+          <div class="tl-ticks" id="tlTicks"></div>
+          <div class="tl-fill" id="tlFill"></div>
+          <div class="tl-head" id="tlHead"><span class="tl-date" id="tlDate"></span></div>
+        </div>
+      </div>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
@@ -964,7 +1028,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"9d8a0a268e38","git":"b3f89bb","builtAt":"2026-10-21T03:24:31.889Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"cef321c261e4","git":"279c904","builtAt":"2026-10-23T07:43:05.232Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -5596,7 +5660,7 @@ window.V03Store = (function () {
 
     /* 选择型快捷键与筛选状态同源。默认保留全球历年业务资料；
        用户可主动切换近期窗口，原始统计期和报道日期不改写。 */
-    time: 'all',                  // 全球默认保留历史业务事实；原日期不改写
+    time: 'all', dayCursor: null,                  // 全球默认保留历史业务事实；原日期不改写
     cred: 'all',
     infl: 'all',
     q: '',
@@ -5894,7 +5958,7 @@ window.V03Filter = (function () {
   let factCacheKey='',factCache=[];
   function facts(s) {
     s = s || window.V03Store.state;
-    const key=JSON.stringify([D.revision,window.V03Feed?.revision,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q]);
+    const key=JSON.stringify([D.revision,window.V03Feed?.revision,s.time,s.catKeys,s.varieties,s.region,s.sourceMode,s.q,s.dayCursor||null]);
     if(key===factCacheKey)return factCache;
     const set = selected(s, 'catKeys', FACT_ITEMS);
     factCacheKey=key;
@@ -5902,6 +5966,8 @@ window.V03Filter = (function () {
       /* 时间筛选对所有事实生效：此前档案类事实（占 94%）被豁免，导致切换时间几乎不变化、
          点不会消失（用户 2026-10-17 反馈第 1 条）。档案仍保留原始发布日期，只是按窗口过滤。 */
       D.inWindow(f.date, s.time) &&
+      /* V2.9.3：时间轴播放/拖动时，只显示「这一天及以前」的事实 */
+      (!s.dayCursor || String(f.date || '').slice(0, 10) <= s.dayCursor) &&
       (!window.V03Feed || V03Feed.isFactVisible(f.id)) &&
       (set.size===FACT_ITEMS.length || matched(f, set)) &&
       varietyOk(f, s.varieties) &&
@@ -6854,6 +6920,21 @@ window.V03Fact = (function () {
     return g || null;
   };
   /* 一级事实分类色（V2.8.4）：地图点填充、地球、光晕、详情统一取这一份 */
+  /* V2.9.3：数据里没有 variety 字段（55,222 条均为空），品种从标题/摘要/本体名里识别已知品种词 */
+  const VARIETY_VOCAB = ['榴莲', '车厘子', '樱桃', '辣椒', '苹果', '白菜', '玉米', '小麦', '水稻', '大豆', '猪肉', '牛肉', '柑橘', '香蕉', '葡萄', '土豆', '番茄', '茶叶', '咖啡'];
+  function varietyOf(f) {
+    const body = [f.title, f.summary, f.card && f.card.commodityName,
+      ...((f.objects || []).map(id => (D.objById(id) || {}).name))].filter(Boolean).join(' ');
+    const hit = VARIETY_VOCAB.find(v => body.includes(v));
+    return hit || '';
+  }
+
+  /* V2.9.3：给弹幕用的「标签 + 分类色」 */
+  function tagOf(f) {
+    const leaf = leafOf(f) || {};
+    return { label: leaf.n || (leaf.sub || '事实'), color: l1Color(f) };
+  }
+
   const l1Color = f => (window.V03Theme ? window.V03Theme.fact((groupOf(f) || {}).key) : '') || (groupOf(f) || {}).color || catOf(f).c;
   const dotColor = f => l1Color(f);
   const emojiOf = f => leafOf(f).e || catOf(f).e;
@@ -7149,6 +7230,18 @@ window.V03Fact = (function () {
   function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
   /* 取「按哈希排序后的前 n/20 个」而不是取模：取模在点位少时比例波动大（比如 207 个点只掉 8 个），
      排序取前 1/20 则严格约等于 1/20，且同一个筛选每次命中同一批（确定性）。 */
+  /* V2.9.3：被退场（消亡）的坐标对应的任意一条事实 → 推入「事实消亡弹幕」 */
+  function announcePerish(keys) {
+    if (!window.V03Danmaku) return;
+    const done = new Set();
+    for (const k of keys) {
+      if (done.has(k)) continue;
+      done.add(k);
+      const f = D.FACTS.find(x => x.lng != null && x.lat != null && (x.lng.toFixed(4) + '|' + x.lat.toFixed(4)) === k);
+      if (f) V03Danmaku.perish(f);
+    }
+  }
+
   function pickPrune(selected, viewKey) {
     const list = [...selected];
     const want = Math.max(1, Math.round(list.length / PRUNE_MOD));
@@ -7173,6 +7266,7 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
+      if (pruneSet && pruneSet.keys) announcePerish(pruneSet.keys);
       pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
@@ -7242,7 +7336,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, options.replay?'事实接入回放':'新事实', f.title);
+      if (window.V03Danmaku) V03Danmaku.arrive(f);   /* V2.9.3：顶部通知去掉，改为左侧「新事实接入弹幕」 */
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -7481,6 +7575,7 @@ window.V03Fact = (function () {
       });
     }
     return {
+    tagOf, varietyOf,
       backgroundColor: 'transparent',
       /* Full map rebuilds (including level changes) must not tween independently of geo points. */
       animation: false,
@@ -7778,7 +7873,13 @@ window.V03Fact = (function () {
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
     return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
+      (() => {
+        /* V2.9.3：标签用分类色，后面跟「· 涉及品种」 */
+        const tag = esc(leafOf(f).n || cat.n);
+        const variety = f.variety || (f.card && (f.card.variety || f.card.commodityName)) || varietyOf(f);
+        return '<div class="fcard-v12-meta"><b class="fcard-tag" style="color:' + (l1Color(f) || cat.c) + '">' + tag + '</b>' +
+          (variety ? '<span class="fcard-variety">· ' + esc(variety) + '</span>' : '') + '</div>';
+      })() +
       V03Media.figure(f) + body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 
@@ -9328,6 +9429,205 @@ window.V03Sim = (function () {
 
 </script>
 <script>
+/* V2.9.3：两块弹幕 —— 「新事实接入」与「事实消亡」。
+   - 接入：竖排、新条目从底部进入，标签用分类色，摘要截 12 字
+   - 消亡：新条目进入时，最老的一条“破碎”消失，其余上移
+   两块都是毛玻璃、常驻左侧，不随底部终端开关消失。 */
+window.V03Danmaku = (() => {
+  const MAX_ARRIVE = 30, MAX_PERISH = 8;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const clip = (s, n) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n) + '…' : t; };
+  let arriveBox = null, perishBox = null;
+
+  function label(f) {
+    try { if (window.V03Fact && V03Fact.tagOf) return V03Fact.tagOf(f).label; } catch (e) {}
+    return (f.card && f.card.subCategory) || '事实';
+  }
+  function colorOf(f) {
+    try { return (window.V03Fact && V03Fact.tagOf) ? V03Fact.tagOf(f).color : ''; } catch (e) { return ''; }
+  }
+  function row(f) {
+    const el = document.createElement('div');
+    el.className = 'dm-row';
+    const variety = f.variety || (f.card && (f.card.variety || f.card.commodityName)) || '';
+    el.innerHTML = '<b style="color:' + (colorOf(f) || 'inherit') + '">' + esc(label(f)) + '</b>' +
+      (variety ? '<i>· ' + esc(clip(variety, 8)) + '</i>' : '') +
+      '<span>' + esc(clip(f.summary || f.title, 12)) + '</span>';
+    return el;
+  }
+  function arrive(f) {
+    if (!arriveBox || !f) return;
+    const node = row(f);
+    arriveBox.appendChild(node);
+    while (arriveBox.children.length > MAX_ARRIVE) arriveBox.firstChild.remove();
+    arriveBox.scrollTop = arriveBox.scrollHeight;
+    requestAnimationFrame(() => node.classList.add('on'));
+  }
+  function perish(f) {
+    if (!perishBox || !f) return;
+    const node = row(f);
+    node.classList.add('once');
+    perishBox.prepend(node);
+    requestAnimationFrame(() => node.classList.add('on'));
+    /* 新数据进来 → 最老的一条破碎消失 */
+    const rows = [...perishBox.children];
+    if (rows.length > MAX_PERISH) {
+      const oldest = rows[rows.length - 1];
+      oldest.classList.add('shatter');
+      setTimeout(() => oldest.remove(), 620);
+    }
+  }
+  function mount() {
+    arriveBox = document.getElementById('danmakuArrive');
+    perishBox = document.getElementById('danmakuPerishList');
+    if (perishBox) perishBox.innerHTML = '';
+    if (arriveBox) arriveBox.innerHTML = '';
+  }
+  return { mount, arrive, perish };
+})();
+
+</script>
+<script>
+/* V2.9.3：时间轴组件
+   - 默认 440px，鼠标移入展开到 1000px
+   - 刻度只画“重要的天”（窗口内事实数达到阈值的那几天），所以刻度间距不相等
+   - 选中时间范围后自动播放：红线从左跑到今天，日期跟着红线走，地图按 dayCursor 逐日长出来
+   - 播放中可拖动红线：拖动即暂停，松手停在那一天；左侧出现播放按钮可继续
+   - 跑完或取消 → 回到初始（dayCursor = null） */
+window.V03Timeline = (() => {
+  const S = () => window.V03Store;
+  let host, track, ticksEl, fillEl, headEl, dateEl, playBtn;
+  let days = [], t0 = 0, tEnd = 0, cur = 0, timer = 0, paused = false, started = false;
+
+  const iso = ts => new Date(ts).toISOString().slice(0, 10);
+  const todayTs = () => Date.parse(String((window.V03Data || {}).TODAY || iso(Date.now())) + 'T00:00:00Z');
+
+  function spanDays() {
+    const t = S().state.time;
+    return ({ '7d': 7, '30d': 30, '180d': 180, '365d': 365, all: 365 })[t] || 30;
+  }
+  /* 窗口内每天的事实数 → 只留“重要的天”，最多 14 个刻度 */
+  function computeDays() {
+    const D = window.V03Data || {}, now = todayTs(), span = spanDays();
+    const cnt = new Map();
+    for (const f of (D.FACTS || [])) {
+      const ds = String(f.date || '').slice(0, 10);
+      const ts = Date.parse(ds + 'T00:00:00Z');
+      if (!Number.isFinite(ts)) continue;
+      const dd = (now - ts) / 86400000;
+      if (dd < 0 || dd > span) continue;
+      cnt.set(ds, (cnt.get(ds) || 0) + 1);
+    }
+    const all = [...cnt.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    if (!all.length) return [];
+    const avg = all.reduce((s, x) => s + x[1], 0) / all.length;
+    let imp = all.filter(([, c]) => c >= Math.max(2, Math.ceil(avg * .55)));
+    if (imp.length > 14) imp = imp.slice(-14);
+    if (imp.length < 2) imp = all.slice(-Math.min(7, all.length));
+    return imp.map(([d]) => ({ date: d, ts: Date.parse(d + 'T00:00:00Z') }));
+  }
+
+  function xOf(ts) {
+    const w = track.clientWidth || 440;
+    if (tEnd <= t0) return 0;
+    return Math.max(0, Math.min(w, (ts - t0) / (tEnd - t0) * w));
+  }
+  function tickAt(x) {
+    const w = track.clientWidth || 440;
+    const ts = t0 + (tEnd - t0) * (x / Math.max(1, w));
+    if (!days.length) return iso(ts);
+    let best = days[0];
+    for (const d of days) if (Math.abs(d.ts - ts) < Math.abs(best.ts - ts)) best = d;
+    return best.date;
+  }
+
+  function paintTicks() {
+    /* 刻度按真实日期排布（所以间距不等）；标签太挤时只保留不互相压住的那几个 */
+    let lastLabel = -999;
+    ticksEl.innerHTML = days.map(d => {
+      const x = xOf(d.ts);
+      const showLabel = x - lastLabel >= 46;
+      if (showLabel) lastLabel = x;
+      return '<span class="tl-tick" style="left:' + x + 'px"><i></i>' +
+        (showLabel ? '<b>' + d.date.slice(5) + '</b>' : '') + '</span>';
+    }).join('');
+  }
+  function paintHead() {
+    const x = xOf(cur);
+    headEl.style.transform = 'translateX(' + x + 'px)';
+    fillEl.style.width = x + 'px';
+    dateEl.textContent = iso(cur);
+  }
+  function setCursor(dateStr, continuous) {
+    if (continuous != null) {
+      cur = Math.min(tEnd, Math.max(t0, continuous));
+    } else {
+      const ts = Date.parse(dateStr + 'T00:00:00Z');
+      if (Number.isFinite(ts)) cur = Math.min(tEnd, Math.max(t0, ts));
+    }
+    paintHead();
+    S().set({ dayCursor: dateStr });
+  }
+  function stop() { if (timer) cancelAnimationFrame(timer); timer = 0; }
+
+  function play() {
+    if (!days.length) days = computeDays();
+    if (!days.length) return;
+    t0 = days[0].ts; tEnd = todayTs();
+    if (cur < t0 || cur >= tEnd) cur = t0;
+    paused = false; started = true; host.classList.add('on', 'running'); host.classList.remove('paused');
+    paintTicks(); paintHead();
+    stop();
+    let last = performance.now();
+    const step = now => {
+      const dt = now - last; last = now;
+      cur = Math.min(tEnd, cur + dt * ((tEnd - t0) / 12000));   /* 12 秒跑完整个窗口 */
+      setCursor(iso(cur), cur);
+      if (cur < tEnd) timer = requestAnimationFrame(step);
+      else { timer = 0; finish(); }
+    };
+    timer = requestAnimationFrame(step);
+  }
+  function finish() {
+    host.classList.remove('running', 'paused', 'on');
+    S().set({ dayCursor: null });
+    cur = 0; started = false; paused = false;
+  }
+  function pause() {
+    stop(); paused = true;
+    host.classList.add('paused'); host.classList.remove('running');
+  }
+
+  function bind() {
+    host = document.getElementById('timeline');
+    if (!host) return;
+    track = document.getElementById('tlTrack'); ticksEl = document.getElementById('tlTicks');
+    fillEl = document.getElementById('tlFill'); headEl = document.getElementById('tlHead');
+    dateEl = document.getElementById('tlDate'); playBtn = document.getElementById('tlPlay');
+
+    playBtn.onclick = e => { e.stopPropagation(); play(); };
+    headEl.addEventListener('pointerdown', e => {
+      e.preventDefault(); headEl.setPointerCapture(e.pointerId);
+      pause();
+      const move = ev => {
+        const r = track.getBoundingClientRect();
+        setCursor(tickAt(Math.max(0, Math.min(r.width, ev.clientX - r.left))));
+      };
+      const up = () => { headEl.removeEventListener('pointermove', move); headEl.removeEventListener('pointerup', up); };
+      headEl.addEventListener('pointermove', move); headEl.addEventListener('pointerup', up);
+    });
+    /* 时间范围变化由 app.js 的时间按钮显式调用 play()（订阅拿到的是补丁不是完整 state，会每帧重置） */
+    days = computeDays();
+    if (days.length) { t0 = days[0].ts; tEnd = todayTs(); }
+    paintTicks();
+  }
+
+  function mount() { bind(); }
+  return { mount, play, pause, days: () => days.slice() };
+})();
+
+</script>
+<script>
 /* ============================================================
    AgriLink 农链 V1.0 · 视觉校准骨架（V2 指令）
    G1 顶部 24px 轻量工具条：菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置
@@ -9456,7 +9756,11 @@ window.V03Sim = (function () {
     if (sk.kind === 'sel') {
       sk.opts.forEach(([v, n]) => {
         const b = el('button', 'sk-opt' + (sk.get(S.state) === v ? ' on' : ''), n);
-        b.onclick = () => { S.set(sk.set(v)); closePop(); rerender(); };
+        b.onclick = () => {
+          S.set(sk.set(v)); closePop(); rerender();
+          /* V2.9.3：选时间范围 → 启动时间轴播放（'all' 不播） */
+          if (sk.k === 'time' && window.V03Timeline) { if (v !== 'all') setTimeout(() => V03Timeline.play(), 60); }
+        };
         box.appendChild(b);
       });
       if (sk.k === 'time') {
@@ -10028,6 +10332,8 @@ window.V03Sim = (function () {
       drawers: drawerStackApi,
       toast
     };
+    if (window.V03Danmaku && V03Danmaku.mount) V03Danmaku.mount();
+    if (window.V03Timeline && V03Timeline.mount) V03Timeline.mount();
     renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); renderSettings();
     syncStream(); refreshLayers(true); syncDrawers();
     window.V03_DEBUG = {

@@ -74,6 +74,21 @@ window.V03Fact = (function () {
     return g || null;
   };
   /* 一级事实分类色（V2.8.4）：地图点填充、地球、光晕、详情统一取这一份 */
+  /* V2.9.3：数据里没有 variety 字段（55,222 条均为空），品种从标题/摘要/本体名里识别已知品种词 */
+  const VARIETY_VOCAB = ['榴莲', '车厘子', '樱桃', '辣椒', '苹果', '白菜', '玉米', '小麦', '水稻', '大豆', '猪肉', '牛肉', '柑橘', '香蕉', '葡萄', '土豆', '番茄', '茶叶', '咖啡'];
+  function varietyOf(f) {
+    const body = [f.title, f.summary, f.card && f.card.commodityName,
+      ...((f.objects || []).map(id => (D.objById(id) || {}).name))].filter(Boolean).join(' ');
+    const hit = VARIETY_VOCAB.find(v => body.includes(v));
+    return hit || '';
+  }
+
+  /* V2.9.3：给弹幕用的「标签 + 分类色」 */
+  function tagOf(f) {
+    const leaf = leafOf(f) || {};
+    return { label: leaf.n || (leaf.sub || '事实'), color: l1Color(f) };
+  }
+
   const l1Color = f => (window.V03Theme ? window.V03Theme.fact((groupOf(f) || {}).key) : '') || (groupOf(f) || {}).color || catOf(f).c;
   const dotColor = f => l1Color(f);
   const emojiOf = f => leafOf(f).e || catOf(f).e;
@@ -369,6 +384,18 @@ window.V03Fact = (function () {
   function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
   /* 取「按哈希排序后的前 n/20 个」而不是取模：取模在点位少时比例波动大（比如 207 个点只掉 8 个），
      排序取前 1/20 则严格约等于 1/20，且同一个筛选每次命中同一批（确定性）。 */
+  /* V2.9.3：被退场（消亡）的坐标对应的任意一条事实 → 推入「事实消亡弹幕」 */
+  function announcePerish(keys) {
+    if (!window.V03Danmaku) return;
+    const done = new Set();
+    for (const k of keys) {
+      if (done.has(k)) continue;
+      done.add(k);
+      const f = D.FACTS.find(x => x.lng != null && x.lat != null && (x.lng.toFixed(4) + '|' + x.lat.toFixed(4)) === k);
+      if (f) V03Danmaku.perish(f);
+    }
+  }
+
   function pickPrune(selected, viewKey) {
     const list = [...selected];
     const want = Math.max(1, Math.round(list.length / PRUNE_MOD));
@@ -393,6 +420,7 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
+      if (pruneSet && pruneSet.keys) announcePerish(pruneSet.keys);
       pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
@@ -462,7 +490,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      V03Intake.note(dom.side, options.replay?'事实接入回放':'新事实', f.title);
+      if (window.V03Danmaku) V03Danmaku.arrive(f);   /* V2.9.3：顶部通知去掉，改为左侧「新事实接入弹幕」 */
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -701,6 +729,7 @@ window.V03Fact = (function () {
       });
     }
     return {
+    tagOf, varietyOf,
       backgroundColor: 'transparent',
       /* Full map rebuilds (including level changes) must not tween independently of geo points. */
       animation: false,
@@ -998,7 +1027,13 @@ window.V03Fact = (function () {
           ((c.sourceName || c.publishedAt) ? '<div class="fcard-note">' + esc(c.sourceName || '') + (c.sourceName && c.publishedAt ? ' · ' : '') + (c.publishedAt ? String(c.publishedAt).slice(0, 10) : '') + '</div>' : '');
     }
     return '<article class="fcard' + (fresh ? ' fresh' : '') + '" data-fid="' + esc(f.id) + '" tabindex="0">' +
-      '<div class="fcard-v12-meta"><span>' + esc(leafOf(f).n || cat.n) + '</span></div>' +
+      (() => {
+        /* V2.9.3：标签用分类色，后面跟「· 涉及品种」 */
+        const tag = esc(leafOf(f).n || cat.n);
+        const variety = f.variety || (f.card && (f.card.variety || f.card.commodityName)) || varietyOf(f);
+        return '<div class="fcard-v12-meta"><b class="fcard-tag" style="color:' + (l1Color(f) || cat.c) + '">' + tag + '</b>' +
+          (variety ? '<span class="fcard-variety">· ' + esc(variety) + '</span>' : '') + '</div>';
+      })() +
       V03Media.figure(f) + body + foot + '<button class="fcard-detail" type="button">查看详情 →</button></article>';
   }
 

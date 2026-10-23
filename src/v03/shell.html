@@ -40,6 +40,25 @@
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
+      <!-- V2.9.3：事实消亡弹幕（左上，常驻） -->
+      <div class="danmaku dm-perish" id="danmakuPerish" role="status" aria-live="polite">
+        <div class="dm-h">事实消亡弹幕</div>
+        <div class="dm-list" id="danmakuPerishList"></div>
+      </div>
+
+      <!-- V2.9.3：新事实接入弹幕（左下，贴着底部终端上方，常驻） -->
+      <div class="danmaku dm-arrive" id="danmakuArrive" role="status" aria-live="polite"></div>
+
+      <!-- V2.9.3：时间轴（默认 440，悬停展开到 1000；红线上有日期，可拖动） -->
+      <div class="tl" id="timeline" aria-label="时间轴">
+        <button class="tl-play" id="tlPlay" type="button" aria-label="播放">▶</button>
+        <div class="tl-track" id="tlTrack">
+          <div class="tl-ticks" id="tlTicks"></div>
+          <div class="tl-fill" id="tlFill"></div>
+          <div class="tl-head" id="tlHead"><span class="tl-date" id="tlDate"></span></div>
+        </div>
+      </div>
+
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
 

@@ -126,7 +126,11 @@
     if (sk.kind === 'sel') {
       sk.opts.forEach(([v, n]) => {
         const b = el('button', 'sk-opt' + (sk.get(S.state) === v ? ' on' : ''), n);
-        b.onclick = () => { S.set(sk.set(v)); closePop(); rerender(); };
+        b.onclick = () => {
+          S.set(sk.set(v)); closePop(); rerender();
+          /* V2.9.3：选时间范围 → 启动时间轴播放（'all' 不播） */
+          if (sk.k === 'time' && window.V03Timeline) { if (v !== 'all') setTimeout(() => V03Timeline.play(), 60); }
+        };
         box.appendChild(b);
       });
       if (sk.k === 'time') {
@@ -698,6 +702,8 @@
       drawers: drawerStackApi,
       toast
     };
+    if (window.V03Danmaku && V03Danmaku.mount) V03Danmaku.mount();
+    if (window.V03Timeline && V03Timeline.mount) V03Timeline.mount();
     renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); renderSettings();
     syncStream(); refreshLayers(true); syncDrawers();
     window.V03_DEBUG = {

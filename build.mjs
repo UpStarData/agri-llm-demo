@@ -59,6 +59,8 @@ const JS = [
   'src/v03/fact.js',        // 事实层
   'src/v03/relation.js',    // 关联层
   'src/v03/mirofish-bridge.js', // 旧版工作台 iframe 桥接；发起页在工作台内按 PRD 调整
+  'src/v03/danmaku.js',      // V2.9.3 新事实接入 / 事实消亡弹幕
+  'src/v03/timeline.js',     // V2.9.3 时间轴（播放/拖动/按天回放）
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];
