@@ -584,38 +584,42 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
   background:#e5484d;color:#fff;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
 
 
-/* ============ V2.9.5：借用组件外观、与项目背景融合（无深色面板） ============ */
-.fstreams{position:absolute;left:336px;top:38px;bottom:calc(var(--stream-h) + 96px);width:308px;z-index:46;
-  display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
-.fstreams .fact-stream{pointer-events:auto;min-width:0;padding:6px 8px;border-radius:10px;
-  background:rgba(255,255,255,.4);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);
-  border:1px solid rgba(229,231,235,.75);box-shadow:0 12px 28px -24px rgba(15,23,42,.5)}
-.tlbar{position:absolute;left:336px;right:16px;bottom:calc(var(--stream-h) + 8px);z-index:46;
-  padding:8px 12px 6px;border-radius:12px;color:#22303f;
-  background:rgba(255,255,255,.42);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
-  border:1px solid rgba(229,231,235,.8);box-shadow:0 14px 34px -26px rgba(15,23,42,.5)}
-.tlbar .fact-datebar{display:flex;align-items:center;gap:10px}
-.tlbar .fact-date-controls{display:flex;align-items:center;gap:6px}
-.tlbar .fact-presets{display:flex;gap:4px;margin-left:auto}
-.tlbar .tlbar-act{display:flex;gap:4px;margin-left:8px}
-.tlbar button{border:0;background:transparent;color:#4a6b8e;font-size:11px;padding:3px 6px;border-radius:6px;cursor:pointer}
-.tlbar button:hover{background:rgba(84,181,240,.14);color:#1f3b52}
-.tlbar button[aria-pressed="true"]{background:rgba(84,181,240,.2);color:#0f2f47}
-.tlbar input[type=date]{border:0;background:transparent;font:500 12px/20px 'IBM Plex Mono',monospace;color:#22303f;color-scheme:light;width:116px}
-.tlbar .fact-axis{height:44px;margin:2px 0 0}
-.tlbar .fact-axis-tick{background:#b9c6cf}
-.tlbar .fact-axis-line{background:rgba(34,48,63,.1)}
-.tlbar .fact-axis-labels{color:#7b8a96;font-size:9px}
-.tlbar .fact-axis-selected{background:#ff521d;top:12px;height:20px}
-.tlbar .fact-live-dot{background:#54b5f0;box-shadow:0 0 8px rgba(84,181,240,.5)}
-/* 呼入/呼出：透明行，标签用分类色，文本用项目墨色 */
-.fstreams .fact-stream-date{color:#7b8a96;font:9px/16px 'IBM Plex Mono',monospace;letter-spacing:.06em;
-  display:flex;align-items:center;gap:6px;margin-bottom:2px;text-shadow:0 1px 2px rgba(255,255,255,.65)}
-.fstreams .fact-viewport{height:132px;mask-image:linear-gradient(transparent,#000 10%,#000 90%,transparent)}
-.fstreams .fact-row{height:26px;gap:8px;font-size:11px}
-.fstreams .fact-tag{width:52px;line-height:16px;font-size:9px;color:#22303f;border-radius:3px;
-  background:color-mix(in srgb, var(--category) 42%, transparent)}
-.fstreams .fact-product{width:52px;color:#3d5566;text-shadow:0 1px 2px rgba(255,255,255,.6)}
-.fstreams .fact-summary{color:#22303f;text-shadow:0 1px 2px rgba(255,255,255,.65)}
-.fstreams #facts-out .fact-tag{background:transparent;border:1px solid #9fb0bd;color:#6b7a86}
-.fstreams #facts-out .fact-product,.fstreams #facts-out .fact-summary{color:#6b7a86}
+
+/* ================= V2.9.6：无痕贴在终端上 ================= */
+:root,html[data-theme="color"]{--stream-surface:#24444d}
+html[data-theme="dark"]{--stream-surface:#193646}
+html[data-theme="light"]{--stream-surface:#0b0f14}
+.fact-band{position:absolute;left:336px;right:0;bottom:var(--stream-h);z-index:46;
+  background:var(--stream-surface);border-top:1px solid rgba(255,255,255,.06);
+  display:grid;grid-template-columns:330px minmax(0,1fr);gap:18px;padding:10px 16px 8px;
+  font-family:inherit;color:#ededed}
+/* 左列：呼出在上、呼入在下 */
+.fact-band .fstreams{position:static;display:flex;flex-direction:column;justify-content:space-between;gap:6px;width:auto;pointer-events:auto}
+.fact-band #facts-out{order:0}
+.fact-band #facts-in{order:1}
+.fact-band .fact-stream{padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.fact-band .fact-stream-date{display:none}                 /* 去掉日期，没有意义 */
+.fact-band .fact-viewport{height:112px;mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent)}
+.fact-band .fact-row{height:24px;gap:10px;font-size:12px}
+/* 右列：时间轴（原型自己的刻度与配色，无外壳） */
+.fact-band .tlbar{position:static;width:auto;padding:0;margin:0;background:none;border:0;box-shadow:none;
+  backdrop-filter:none;-webkit-backdrop-filter:none;color:#ededed}
+.fact-band .tlbar .fact-datebar{display:flex;align-items:center;gap:10px}
+.fact-band .tlbar .fact-presets{margin-left:auto}
+.fact-band .tlbar button{color:#c8d6dd;font-size:11px;padding:3px 6px;border-radius:6px;background:none;border:0}
+.fact-band .tlbar button:hover{background:rgba(255,255,255,.08);color:#fff}
+.fact-band .tlbar button[aria-pressed="true"]{background:rgba(255,255,255,.14);color:#fff}
+.fact-band .tlbar input[type=date]{color:#dfe9ee;border:0;background:none;color-scheme:dark;font:500 12px/20px 'IBM Plex Mono',monospace;width:112px}
+.fact-band .tlbar .fact-axis{height:46px;margin:4px 0 0}
+.fact-band .tlbar .fact-axis-labels{display:none}          /* 去掉 2026.x.x 这类日期 */
+.fact-band .tlbar .fact-axis-tick{background:#7d97a3}
+.fact-band .tlbar .fact-axis-line{background:rgba(255,255,255,.08)}
+.fact-band .tlbar .fact-axis-selected{background:#ff521d}
+.fact-band .tlbar .fact-live-dot{background:#ff734a;box-shadow:0 0 9px rgba(255,115,74,.4)}
+/* 行内文字：用原型自己的配色，不再加浅色投影 */
+.fact-band .fact-tag{width:52px;line-height:16px;font-size:10px;color:#191b1d;border-radius:3px;
+  background:color-mix(in srgb, var(--category) 60%, transparent)}
+.fact-band .fact-product{width:52px;color:#c8c9ca}
+.fact-band .fact-summary{color:#f0f0f0}
+.fact-band #facts-out .fact-tag{background:transparent;border:1px solid #8d8d8d38;color:#8d8d8d;font-weight:400}
+.fact-band #facts-out .fact-product,.fact-band #facts-out .fact-summary{color:#8d8d8d}

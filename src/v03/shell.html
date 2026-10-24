@@ -40,7 +40,8 @@
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
-      <!-- V2.9.5：呼出（上）/ 呼入（下）—— 紧贴左侧菜单的右缘，透明无底色 -->
+      <!-- V2.9.6：终端同色带（无卡片、无玻璃）：左列 呼出 上 / 呼入 下，右列 时间轴 -->
+      <div class="fact-band" id="factBand">
       <div class="fstreams" id="factStreams" aria-label="事实呼出与呼入">
         <section class="fact-stream" id="facts-out" role="region" aria-label="所选日期前30天新增事实">
           <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13V2m-4 4 4-4 4 4" stroke="currentColor"/></svg><time id="outgoing-date"></time></div>
@@ -74,6 +75,7 @@
           <div class="fact-axis-labels" aria-hidden="true"></div>
           <input id="fact-range" type="range" min="-90" max="0" value="0" step="1" aria-label="拖动时间轴选择日期">
         </div>
+      </div>
       </div>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
