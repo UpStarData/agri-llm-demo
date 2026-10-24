@@ -582,3 +582,32 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .tl-head::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;background:#e5484d;border-radius:1px}
 .tl-date{position:absolute;left:0;top:-2px;transform:translateX(-50%);font-size:9px;padding:1px 4px;border-radius:4px;
   background:#e5484d;color:#fff;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+
+/* ================= V2.9.4 事实时间终端（timeline.zip 组件） ================= */
+.fact-terminal{position:absolute !important;left:356px;bottom:calc(var(--stream-h) + 8px);
+  width:min(560px, calc(100vw - 700px));max-height:min(46vh, 430px);overflow:auto;z-index:46;
+  border-radius:14px;border:1px solid rgba(255,255,255,.08);padding:12px 14px 10px;
+  box-shadow:0 18px 44px -26px rgba(0,0,0,.55);box-sizing:border-box}
+.fact-terminal .fact-streams{grid-template-columns:1fr;gap:10px}
+.fact-terminal .fact-stream{order:0}
+.fact-terminal #facts-out{order:0}
+.fact-terminal #facts-in{order:1}
+.fact-terminal .fact-viewport{height:120px}
+.fact-terminal .fact-axis{height:56px;margin:8px 0 14px}
+.fact-terminal .fact-footer{margin-top:6px}
+/* V2.9.4：把原型面板收进左侧窄栏（原组件按 1040px 宽排版） */
+.fact-terminal{padding:10px 12px 8px !important;width:min(620px, calc(100vw - 720px)) !important;
+  max-height:min(44vh, 400px) !important}
+.fact-terminal .fact-datebar{flex-wrap:nowrap;gap:6px}
+.fact-terminal .fact-date-controls{gap:8px}
+.fact-terminal .fact-presets{flex-wrap:nowrap;gap:4px;margin:6px 0 2px}
+.fact-terminal .fact-presets button{white-space:nowrap;font-size:11px;padding:3px 6px}
+.fact-terminal #fact-today,.fact-terminal #fact-play{white-space:nowrap;writing-mode:horizontal-tb;font-size:11px}
+.fact-terminal .fact-row{height:28px;font-size:11px;gap:8px}
+.fact-terminal .fact-tag{width:52px;line-height:16px;font-size:9px}
+.fact-terminal .fact-product{width:56px;font-size:11px}
+.fact-terminal .fact-summary{font-size:11px}
+.fact-terminal .fact-viewport{height:92px}
+.fact-terminal .fact-axis{height:46px;margin:2px 0 6px}
+.fact-terminal .fact-stream-date{font-size:9px;margin-bottom:2px}
+.fact-terminal .fact-footer{display:none}

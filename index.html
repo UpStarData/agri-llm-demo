@@ -592,6 +592,35 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .tl-head::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:2px;background:#e5484d;border-radius:1px}
 .tl-date{position:absolute;left:0;top:-2px;transform:translateX(-50%);font-size:9px;padding:1px 4px;border-radius:4px;
   background:#e5484d;color:#fff;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+
+/* ================= V2.9.4 事实时间终端（timeline.zip 组件） ================= */
+.fact-terminal{position:absolute !important;left:356px;bottom:calc(var(--stream-h) + 8px);
+  width:min(560px, calc(100vw - 700px));max-height:min(46vh, 430px);overflow:auto;z-index:46;
+  border-radius:14px;border:1px solid rgba(255,255,255,.08);padding:12px 14px 10px;
+  box-shadow:0 18px 44px -26px rgba(0,0,0,.55);box-sizing:border-box}
+.fact-terminal .fact-streams{grid-template-columns:1fr;gap:10px}
+.fact-terminal .fact-stream{order:0}
+.fact-terminal #facts-out{order:0}
+.fact-terminal #facts-in{order:1}
+.fact-terminal .fact-viewport{height:120px}
+.fact-terminal .fact-axis{height:56px;margin:8px 0 14px}
+.fact-terminal .fact-footer{margin-top:6px}
+/* V2.9.4：把原型面板收进左侧窄栏（原组件按 1040px 宽排版） */
+.fact-terminal{padding:10px 12px 8px !important;width:min(620px, calc(100vw - 720px)) !important;
+  max-height:min(44vh, 400px) !important}
+.fact-terminal .fact-datebar{flex-wrap:nowrap;gap:6px}
+.fact-terminal .fact-date-controls{gap:8px}
+.fact-terminal .fact-presets{flex-wrap:nowrap;gap:4px;margin:6px 0 2px}
+.fact-terminal .fact-presets button{white-space:nowrap;font-size:11px;padding:3px 6px}
+.fact-terminal #fact-today,.fact-terminal #fact-play{white-space:nowrap;writing-mode:horizontal-tb;font-size:11px}
+.fact-terminal .fact-row{height:28px;font-size:11px;gap:8px}
+.fact-terminal .fact-tag{width:52px;line-height:16px;font-size:9px}
+.fact-terminal .fact-product{width:56px;font-size:11px}
+.fact-terminal .fact-summary{font-size:11px}
+.fact-terminal .fact-viewport{height:92px}
+.fact-terminal .fact-axis{height:46px;margin:2px 0 6px}
+.fact-terminal .fact-stream-date{font-size:9px;margin-bottom:2px}
+.fact-terminal .fact-footer{display:none}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -937,6 +966,157 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
 .prd-evidence{position:fixed;right:330px;top:100px;z-index:50;background:var(--panel);padding:20px;border:1px solid var(--line);border-radius:12px;width:min(370px,70vw);box-shadow:0 10px 30px rgba(0,0,0,.15)}.prd-evidence[hidden]{display:none}.prd-evidence button{float:right;border:0;background:none;color:var(--accent)}
 @media(max-width:1050px){.prd-start{grid-template-columns:180px 1fr}.prd-recommend{display:none}.prd-running,.prd-report-layout{grid-template-columns:1fr}.prd-stage-panel{display:grid;grid-template-columns:1fr 1fr;gap:3px}.prd-stage-panel h3,.prd-agent-box{grid-column:1/-1}}
 @media(max-width:680px){.prd-start{display:flex;flex-direction:column}.prd-history{max-height:120px;overflow:auto}.prd-compose{padding:18px}.prd-intro h1{font-size:21px}.prd-running{display:block}.prd-stage-panel{display:block}.prd-report-layout{display:block}.prd-report-main{min-height:auto}.prd-report-side{margin-top:12px}.prd-top>span{display:none}}
+
+/* 从原站已渲染 CSS 整理：移除 Vue scope id，使用独立类名。 */
+.recording-timeline {
+  --timeline-fade: 235 235 235;
+  --timeline-mark: #c5c5c5;
+  --timeline-text: #000;
+  --timeline-accent: #ff521d;
+  width: 400px;
+  max-width: 100%;
+  color: var(--timeline-text);
+  font-family: -apple-system, system-ui, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+.recording-timeline__time {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.recording-timeline__wrapper {
+  height: 24px;
+  margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.recording-timeline__indicator {
+  z-index: 2;
+  background: var(--timeline-accent);
+  width: 1px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.recording-timeline__scale {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+.recording-timeline__mark {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 4px;
+  background: var(--timeline-mark);
+  transform: translateX(-50%);
+}
+.recording-timeline__mark--medium { height: 8px; }
+.recording-timeline__mark--large { height: 16px; }
+.recording-timeline__mark--origin { height: 24px; }
+.recording-timeline__fade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to right,
+    rgb(var(--timeline-fade) / 1) 0%,
+    rgb(var(--timeline-fade) / 0) 40%,
+    rgb(var(--timeline-fade) / 0) 60%,
+    rgb(var(--timeline-fade) / 1) 100%);
+}
+.recording-timeline__baseline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--timeline-mark);
+}
+.recording-timeline--compact { width: 120px; }
+.recording-timeline--compact .recording-timeline__time { font-size: 10px; line-height: 15px; }
+.recording-timeline--compact .recording-timeline__wrapper { height: 15px; }
+.recording-timeline--compact .recording-timeline__mark { height: 2.5px; }
+.recording-timeline--compact .recording-timeline__mark--medium { height: 5px; }
+.recording-timeline--compact .recording-timeline__mark--large { height: 10px; }
+.recording-timeline--compact .recording-timeline__mark--origin { height: 15px; }
+
+.fact-terminal {
+  --surface: #191b1d;
+  background: var(--surface);
+  color: #ededed;
+  padding: 38px max(24px, calc((100% - 1040px) / 2)) 30px;
+  font-family: -apple-system, system-ui, "PingFang SC", sans-serif;
+  overflow: hidden;
+}
+.fact-datebar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.fact-date-controls { display: flex; gap: 14px; align-items: center; }
+.fact-terminal button { border: 0; border-radius: 4px; background: transparent; color: #aaa; padding: 4px 8px; font-size: 12px; }
+.fact-terminal button:hover { color: #fff; background: #ffffff09; }
+.fact-terminal button:disabled { opacity: .25; cursor: default; }
+.fact-terminal button:focus-visible, .fact-terminal input:focus-visible { outline: 1px solid #ff825e; outline-offset: 5px; }
+.fact-terminal input[type=date] { font: 500 12px/20px -apple-system, system-ui, sans-serif; letter-spacing: 1px; background: transparent; color: #ddd; border: 0; color-scheme: dark; width: 132px; }
+.fact-terminal input::-webkit-calendar-picker-indicator { opacity: .4; }
+.fact-live-dot { width: 4px; height: 4px; background: #ff734a; border-radius: 50%; display: inline-block; box-shadow: 0 0 9px #ff734a44; }
+.fact-axis { height: 64px; position: relative; margin: 14px 0 26px; }
+.fact-axis-ticks { position: absolute; inset: 0 0 24px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
+.fact-axis-tick { width: 1px; background: #55585a; height: 4px; position: absolute; bottom: 0; }
+.fact-axis-tick.major { height: 13px; }
+.fact-axis-selected { position: absolute; top: 17px; height: 23px; width: 1px; background: #ff734a; pointer-events: none; }
+.fact-axis-line { position: absolute; top: 39px; height: 1px; background: #ffffff0d; width: 100%; }
+.fact-axis-labels { position: absolute; inset: 43px 0 0; color: #686b70; font: 10px/18px ui-monospace, monospace; }
+.fact-axis input { position: absolute; top: 0; left: -8px; width: calc(100% + 16px); height: 42px; appearance: none; -webkit-appearance: none; background: transparent; margin: 0; cursor: ew-resize; touch-action: pan-y; }
+.fact-axis input::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; height: 42px; width: 16px; background: transparent; }
+.fact-axis input::-moz-range-thumb { height: 42px; width: 16px; border: 0; background: transparent; }
+.fact-axis input::-moz-range-track { background: transparent; }
+.fact-streams { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; }
+.fact-stream { min-width: 0; }
+.fact-stream-date { font: 10px/20px ui-monospace, monospace; color: #777b80; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.fact-stream-date svg { width: 12px; height: 12px; opacity: .7; }
+.fact-viewport { position: relative; height: 204px; overflow: hidden; mask-image: linear-gradient(transparent, #000 6%, #000 92%, transparent); }
+.fact-track { position: relative; }
+.fact-row { height: 40px; display: flex; align-items: center; gap: 14px; white-space: nowrap; font-size: 12px; letter-spacing: .2px; }
+.fact-tag { font-size: 10px; color: #191b1d; font-weight: 600; background: color-mix(in srgb, var(--category) 60%, transparent); width: 36px; flex-shrink: 0; border: 1px solid transparent; border-radius: 3px; text-align: center; line-height: 20px; }
+.fact-product { color: #c8c9ca; width: 44px; flex-shrink: 0; }
+.fact-summary { color: #f0f0f0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.fact-row.is-outgoing .fact-tag, .fact-row.is-outgoing .fact-product, .fact-row.is-outgoing .fact-summary { color: #8d8d8d; }
+.fact-row.is-outgoing .fact-tag { background: transparent; border-color: #8d8d8d38; font-weight: 400; }
+.fact-row.entering { animation: fact-enter var(--enter-duration, 250ms) cubic-bezier(.12,.82,.2,1) both; }
+.fact-row.absorbing { animation: fact-absorb var(--exit-duration, 420ms) cubic-bezier(.2,.55,.25,1) var(--exit-delay, 0ms) both; }
+.fact-row.shattering > * { visibility: hidden; }
+.fact-shards { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.fact-shard { position: absolute; color: #8d8d8d; animation: fact-shatter var(--shatter-duration, 350ms) cubic-bezier(.16,.65,.4,1) both; }
+.fact-shard-piece { position: absolute; inset: 0; overflow: hidden; }
+.fact-footer { display: flex; justify-content: space-between; margin-top: 17px; padding-top: 17px; border-top: 1px solid #ffffff08; color: #62666b; font-size: 10px; letter-spacing: 1px; }
+@keyframes fact-enter { from { opacity: 0; transform: translate(-12px, 16px); } to { opacity: 1; transform: translate(0, 0); } }
+@keyframes fact-absorb { 0% { opacity: 1; transform: translateX(0); } 30% { opacity: .85; } 100% { opacity: 0; transform: translate(var(--absorb-x, 70px), -4px); } }
+@keyframes fact-shatter { 0% { opacity: 1; transform: translate(0,0) rotate(0) scale(1); } 35% { opacity: .75; transform: translate(var(--drift-x),var(--drift-y)) rotate(0) scale(.98); } 100% { opacity: 0; transform: translate(var(--dx),var(--dy)) rotate(var(--rotate)) scale(.85); } }
+@media(max-width: 760px) { .fact-streams { gap: 32px; } .fact-row { gap: 8px; font-size: 11px; } .fact-terminal { padding: 28px 20px; } }
+@media(max-width: 580px) { .fact-streams { grid-template-columns: 1fr; gap: 24px; } .fact-viewport { height: 164px; } .fact-axis { margin-bottom: 16px; } }
+@media(prefers-reduced-motion: reduce) { .fact-row, .fact-shard { animation: none !important; } }
+
+/* 今天是日期选中态，不使用 disabled 的弱化样式。 */
+.fact-terminal #fact-today { color: #777b80; background: transparent; transition: color .2s, background-color .2s; }
+.fact-terminal #fact-today[aria-pressed="true"] { color: #e0d2b5; background: #B4A58224; }
+.fact-terminal #fact-today:not([aria-pressed="true"]):hover { color: #b2b4b7; background: #ffffff08; }
+.fact-terminal #fact-play { width: 32px; height: 28px; padding: 0; margin-left: 5px; font-size: 15px; line-height: 28px; vertical-align: middle; }
+.fact-terminal #fact-play[aria-pressed="true"] { color: #e0d2b5; }
+.fact-axis-selected { transition: left 240ms cubic-bezier(.16,1,.3,1); }
+@media (prefers-reduced-motion: reduce) { .fact-axis-selected { transition: none; } }
+
+.fact-presets { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 23px; }
+.fact-terminal .fact-presets button { padding: 5px 12px; color: #777b80; font-size: 11px; transition: color .18s, background-color .18s; }
+.fact-terminal .fact-presets button[aria-pressed="true"] { color: #e0d2b5; background: #B4A58224; }
+.fact-terminal .fact-presets button:hover { color: #ddd2bd; }
+.fact-axis-labels span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
+.fact-axis-labels .first { transform: none; }
+.fact-axis-labels .last { transform: translateX(-100%); }
+
+.fact-row.entering, .fact-row.absorbing, .fact-shard { will-change: transform, opacity; }
 </style>
 </head>
 <body>
@@ -945,7 +1125,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.3</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.4</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -970,24 +1150,39 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
-      <!-- V2.9.3：事实消亡弹幕（左上，常驻） -->
-      <div class="danmaku dm-perish" id="danmakuPerish" role="status" aria-live="polite">
-        <div class="dm-h">事实消亡弹幕</div>
-        <div class="dm-list" id="danmakuPerishList"></div>
-      </div>
-
-      <!-- V2.9.3：新事实接入弹幕（左下，贴着底部终端上方，常驻） -->
-      <div class="danmaku dm-arrive" id="danmakuArrive" role="status" aria-live="polite"></div>
-
-      <!-- V2.9.3：时间轴（默认 440，悬停展开到 1000；红线上有日期，可拖动） -->
-      <div class="tl" id="timeline" aria-label="时间轴">
-        <button class="tl-play" id="tlPlay" type="button" aria-label="播放">▶</button>
-        <div class="tl-track" id="tlTrack">
-          <div class="tl-ticks" id="tlTicks"></div>
-          <div class="tl-fill" id="tlFill"></div>
-          <div class="tl-head" id="tlHead"><span class="tl-date" id="tlDate"></span></div>
+      <!-- V2.9.4：事实时间终端（呼出在上 / 呼入在下，常驻，来自 timeline.zip 组件） -->
+      <section class="fact-terminal" id="factTerminal" aria-label="事实时间终端">
+        <div class="fact-datebar">
+          <div class="fact-date-controls">
+            <span class="fact-live-dot" aria-hidden="true"></span>
+            <button id="fact-prev" aria-label="前一天">‹</button>
+            <input id="fact-date" type="date" aria-label="选择事实日期">
+            <button id="fact-next" aria-label="后一天">›</button>
+          </div>
+          <div><button id="fact-today" aria-pressed="true">今天</button><button id="fact-play" aria-label="播放时间轴" aria-pressed="false">▷</button></div>
         </div>
-      </div>
+        <div class="fact-presets" role="group" aria-label="时间轴范围">
+          <button data-fact-range="7" aria-pressed="false">近 7 天</button>
+          <button data-fact-range="30" aria-pressed="false">近 30 天</button>
+          <button data-fact-range="half" aria-pressed="false">近半年</button>
+          <button data-fact-range="year" aria-pressed="false">近 1 年</button>
+        </div>
+        <div class="fact-axis">
+          <div class="fact-axis-ticks" aria-hidden="true"></div><div class="fact-axis-selected" aria-hidden="true"></div><div class="fact-axis-line"></div>
+          <div class="fact-axis-labels" aria-hidden="true"></div>
+          <input id="fact-range" type="range" min="-90" max="0" value="0" step="1" aria-label="拖动时间轴选择日期">
+        </div>
+        <div class="fact-streams">
+          <div class="fact-stream" id="facts-out" role="region" aria-label="所选日期前30天新增事实">
+            <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13V2m-4 4 4-4 4 4" stroke="currentColor"/></svg><time id="outgoing-date"></time></div>
+            <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
+          </div>
+          <div class="fact-stream" id="facts-in" role="region" aria-label="所选当天新增事实">
+            <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v11m-4-4 4 4 4-4" stroke="currentColor"/></svg><time id="incoming-date"></time></div>
+            <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
+          </div>
+        </div>
+      </section>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
@@ -1028,7 +1223,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"cef321c261e4","git":"279c904","builtAt":"2026-10-23T07:43:05.232Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"8d19cdfe857f","git":"0af99ea","builtAt":"2026-10-24T09:03:40.291Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -7266,7 +7461,6 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
-      if (pruneSet && pruneSet.keys) announcePerish(pruneSet.keys);
       pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
@@ -7336,7 +7530,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      if (window.V03Danmaku) V03Danmaku.arrive(f);   /* V2.9.3：顶部通知去掉，改为左侧「新事实接入弹幕」 */
+
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;
@@ -9429,201 +9623,526 @@ window.V03Sim = (function () {
 
 </script>
 <script>
-/* V2.9.3：两块弹幕 —— 「新事实接入」与「事实消亡」。
-   - 接入：竖排、新条目从底部进入，标签用分类色，摘要截 12 字
-   - 消亡：新条目进入时，最老的一条“破碎”消失，其余上移
-   两块都是毛玻璃、常驻左侧，不随底部终端开关消失。 */
-window.V03Danmaku = (() => {
-  const MAX_ARRIVE = 30, MAX_PERISH = 8;
-  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const clip = (s, n) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n) + '…' : t; };
-  let arriveBox = null, perishBox = null;
-
-  function label(f) {
-    try { if (window.V03Fact && V03Fact.tagOf) return V03Fact.tagOf(f).label; } catch (e) {}
-    return (f.card && f.card.subCategory) || '事实';
-  }
-  function colorOf(f) {
-    try { return (window.V03Fact && V03Fact.tagOf) ? V03Fact.tagOf(f).color : ''; } catch (e) { return ''; }
-  }
-  function row(f) {
-    const el = document.createElement('div');
-    el.className = 'dm-row';
-    const variety = f.variety || (f.card && (f.card.variety || f.card.commodityName)) || '';
-    el.innerHTML = '<b style="color:' + (colorOf(f) || 'inherit') + '">' + esc(label(f)) + '</b>' +
-      (variety ? '<i>· ' + esc(clip(variety, 8)) + '</i>' : '') +
-      '<span>' + esc(clip(f.summary || f.title, 12)) + '</span>';
-    return el;
-  }
-  function arrive(f) {
-    if (!arriveBox || !f) return;
-    const node = row(f);
-    arriveBox.appendChild(node);
-    while (arriveBox.children.length > MAX_ARRIVE) arriveBox.firstChild.remove();
-    arriveBox.scrollTop = arriveBox.scrollHeight;
-    requestAnimationFrame(() => node.classList.add('on'));
-  }
-  function perish(f) {
-    if (!perishBox || !f) return;
-    const node = row(f);
-    node.classList.add('once');
-    perishBox.prepend(node);
-    requestAnimationFrame(() => node.classList.add('on'));
-    /* 新数据进来 → 最老的一条破碎消失 */
-    const rows = [...perishBox.children];
-    if (rows.length > MAX_PERISH) {
-      const oldest = rows[rows.length - 1];
-      oldest.classList.add('shatter');
-      setTimeout(() => oldest.remove(), 620);
+/* 独立重写的驱动逻辑。只渲染可见刻度，支持长时间运行。 */
+(function () {
+  class RecordingTimeline {
+    constructor(root, { compact = false, pixelsPerSecond = 10 } = {}) {
+      this.root = root;
+      this.compact = compact;
+      this.pixelsPerSecond = pixelsPerSecond;
+      this.elapsed = 0;
+      this.startedAt = null;
+      this.frame = 0;
+      root.classList.add('recording-timeline');
+      root.classList.toggle('recording-timeline--compact', compact);
+      root.innerHTML = '<div class="recording-timeline__time" role="timer">00:00:00</div><div class="recording-timeline__wrapper" aria-hidden="true"><div class="recording-timeline__indicator"></div><div class="recording-timeline__scale"></div><div class="recording-timeline__fade"></div><div class="recording-timeline__baseline"></div></div>';
+      this.time = root.querySelector('.recording-timeline__time');
+      this.scale = root.querySelector('.recording-timeline__scale');
+      this.tick = this.tick.bind(this);
+      this.observer = new ResizeObserver(() => { this.range = ''; this.render(); });
+      this.observer.observe(root);
+      this.render();
+    }
+    get seconds() {
+      return this.elapsed + (this.startedAt === null ? 0 : (performance.now() - this.startedAt) / 1000);
+    }
+    render() {
+      const seconds = this.seconds;
+      const total = Math.floor(seconds);
+      this.time.textContent = [Math.floor(total / 3600), Math.floor(total / 60) % 60, total % 60].map(n => String(n).padStart(2, '0')).join(':');
+      const spacing = this.compact ? 6 : 10;
+      const offset = seconds * this.pixelsPerSecond * (this.compact ? 0.6 : 1);
+      const first = Math.floor(offset / spacing);
+      const count = Math.ceil(this.root.clientWidth / spacing) + 3;
+      const range = `${first}:${count}`;
+      if (range !== this.range) {
+        this.range = range;
+        const fragment = document.createDocumentFragment();
+        for (let i = first; i <= first + count; i++) {
+          const mark = document.createElement('div');
+          const size = i === 0 ? 'origin' : i % 10 === 0 ? 'large' : i % 5 === 0 ? 'medium' : '';
+          mark.className = 'recording-timeline__mark' + (size ? ` recording-timeline__mark--${size}` : '');
+          mark.style.left = `${(i - first) * spacing}px`;
+          fragment.appendChild(mark);
+        }
+        this.scale.replaceChildren(fragment);
+      }
+      this.scale.style.transform = `translateX(${first * spacing - offset}px)`;
+    }
+    tick() {
+      this.render();
+      if (this.startedAt !== null) this.frame = requestAnimationFrame(this.tick);
+    }
+    start() {
+      if (this.startedAt !== null) return;
+      this.startedAt = performance.now();
+      this.tick();
+    }
+    pause() {
+      this.elapsed = this.seconds;
+      this.startedAt = null;
+      cancelAnimationFrame(this.frame);
+      this.render();
+    }
+    reset() {
+      this.pause();
+      this.elapsed = 0;
+      this.render();
+    }
+    setTime(seconds) {
+      this.elapsed = Math.max(0, Number(seconds) || 0);
+      if (this.startedAt !== null) this.startedAt = performance.now();
+      this.render();
+    }
+    destroy() {
+      this.pause();
+      this.observer.disconnect();
     }
   }
-  function mount() {
-    arriveBox = document.getElementById('danmakuArrive');
-    perishBox = document.getElementById('danmakuPerishList');
-    if (perishBox) perishBox.innerHTML = '';
-    if (arriveBox) arriveBox.innerHTML = '';
-  }
-  return { mount, arrive, perish };
+  window.RecordingTimeline = RecordingTimeline;
 })();
 
 </script>
 <script>
-/* V2.9.3：时间轴组件
-   - 默认 440px，鼠标移入展开到 1000px
-   - 刻度只画“重要的天”（窗口内事实数达到阈值的那几天），所以刻度间距不相等
-   - 选中时间范围后自动播放：红线从左跑到今天，日期跟着红线走，地图按 dayCursor 逐日长出来
-   - 播放中可拖动红线：拖动即暂停，松手停在那一天；左侧出现播放按钮可继续
-   - 跑完或取消 → 回到初始（dayCursor = null） */
-window.V03Timeline = (() => {
-  const S = () => window.V03Store;
-  let host, track, ticksEl, fillEl, headEl, dateEl, playBtn;
-  let days = [], t0 = 0, tEnd = 0, cur = 0, timer = 0, paused = false, started = false;
-
-  const iso = ts => new Date(ts).toISOString().slice(0, 10);
-  const todayTs = () => Date.parse(String((window.V03Data || {}).TODAY || iso(Date.now())) + 'T00:00:00Z');
-
-  function spanDays() {
-    const t = S().state.time;
-    return ({ '7d': 7, '30d': 30, '180d': 180, '365d': 365, all: 365 })[t] || 30;
+(function () {
+  const DAY = 86400000;
+  const parse = key => new Date(key + 'T00:00:00Z');
+  const format = date => date.toISOString().slice(0, 10);
+  const shiftDays = (key, days) => format(new Date(parse(key).getTime() + days * DAY));
+  function shiftMonths(key, months) {
+    const date = parse(key);
+    const day = date.getUTCDate();
+    date.setUTCDate(1);
+    date.setUTCMonth(date.getUTCMonth() + months);
+    const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+    date.setUTCDate(Math.min(day, lastDay));
+    return format(date);
   }
-  /* 窗口内每天的事实数 → 只留“重要的天”，最多 14 个刻度 */
-  function computeDays() {
-    const D = window.V03Data || {}, now = todayTs(), span = spanDays();
-    const cnt = new Map();
-    for (const f of (D.FACTS || [])) {
-      const ds = String(f.date || '').slice(0, 10);
-      const ts = Date.parse(ds + 'T00:00:00Z');
-      if (!Number.isFinite(ts)) continue;
-      const dd = (now - ts) / 86400000;
-      if (dd < 0 || dd > span) continue;
-      cnt.set(ds, (cnt.get(ds) || 0) + 1);
+  function startFor(today, preset) {
+    if (preset === '7') return shiftDays(today, -7);
+    if (preset === '30') return shiftDays(today, -30);
+    return shiftMonths(today, preset === 'half' ? -6 : -12);
+  }
+  function axisPlan(start, end, width = 1040) {
+    const days = Math.round((parse(end) - parse(start)) / DAY);
+    const ticks = [];
+    for (let offset = 0; offset <= days; offset++) {
+      const key = shiftDays(start, offset);
+      const firstOfMonth = key.endsWith('-01');
+      if (days <= 31 || offset % 7 === 0 || firstOfMonth || offset === days) {
+        ticks.push({ percent: offset / days * 100, major: days > 60 ? firstOfMonth : offset % (days <= 7 ? 1 : 7) === 0 });
+      }
     }
-    const all = [...cnt.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    if (!all.length) return [];
-    const avg = all.reduce((s, x) => s + x[1], 0) / all.length;
-    let imp = all.filter(([, c]) => c >= Math.max(2, Math.ceil(avg * .55)));
-    if (imp.length > 14) imp = imp.slice(-14);
-    if (imp.length < 2) imp = all.slice(-Math.min(7, all.length));
-    return imp.map(([d]) => ({ date: d, ts: Date.parse(d + 'T00:00:00Z') }));
-  }
-
-  function xOf(ts) {
-    const w = track.clientWidth || 440;
-    if (tEnd <= t0) return 0;
-    return Math.max(0, Math.min(w, (ts - t0) / (tEnd - t0) * w));
-  }
-  function tickAt(x) {
-    const w = track.clientWidth || 440;
-    const ts = t0 + (tEnd - t0) * (x / Math.max(1, w));
-    if (!days.length) return iso(ts);
-    let best = days[0];
-    for (const d of days) if (Math.abs(d.ts - ts) < Math.abs(best.ts - ts)) best = d;
-    return best.date;
-  }
-
-  function paintTicks() {
-    /* 刻度按真实日期排布（所以间距不等）；标签太挤时只保留不互相压住的那几个 */
-    let lastLabel = -999;
-    ticksEl.innerHTML = days.map(d => {
-      const x = xOf(d.ts);
-      const showLabel = x - lastLabel >= 46;
-      if (showLabel) lastLabel = x;
-      return '<span class="tl-tick" style="left:' + x + 'px"><i></i>' +
-        (showLabel ? '<b>' + d.date.slice(5) + '</b>' : '') + '</span>';
-    }).join('');
-  }
-  function paintHead() {
-    const x = xOf(cur);
-    headEl.style.transform = 'translateX(' + x + 'px)';
-    fillEl.style.width = x + 'px';
-    dateEl.textContent = iso(cur);
-  }
-  function setCursor(dateStr, continuous) {
-    if (continuous != null) {
-      cur = Math.min(tEnd, Math.max(t0, continuous));
-    } else {
-      const ts = Date.parse(dateStr + 'T00:00:00Z');
-      if (Number.isFinite(ts)) cur = Math.min(tEnd, Math.max(t0, ts));
+    // 长区间以月份标注；根据实际宽度剔除相邻标签，保留首尾边界。
+    const gap = width < 500 ? 70 : 92;
+    const long = days > 60;
+    const candidates = [];
+    for (let offset = 1; offset < days; offset++) {
+      const key = shiftDays(start, offset);
+      if (long ? key.endsWith('-01') : offset % (days <= 7 ? 1 : 7) === 0) candidates.push({ key, offset });
     }
-    paintHead();
-    S().set({ dayCursor: dateStr });
-  }
-  function stop() { if (timer) cancelAnimationFrame(timer); timer = 0; }
-
-  function play() {
-    if (!days.length) days = computeDays();
-    if (!days.length) return;
-    t0 = days[0].ts; tEnd = todayTs();
-    if (cur < t0 || cur >= tEnd) cur = t0;
-    paused = false; started = true; host.classList.add('on', 'running'); host.classList.remove('paused');
-    paintTicks(); paintHead();
-    stop();
-    let last = performance.now();
-    const step = now => {
-      const dt = now - last; last = now;
-      cur = Math.min(tEnd, cur + dt * ((tEnd - t0) / 12000));   /* 12 秒跑完整个窗口 */
-      setCursor(iso(cur), cur);
-      if (cur < tEnd) timer = requestAnimationFrame(step);
-      else { timer = 0; finish(); }
+    const labels = [{ key: start, offset: 0 }];
+    for (const label of candidates) {
+      if ((label.offset - labels.at(-1).offset) / days * width >= gap && (days - label.offset) / days * width >= gap) labels.push(label);
+    }
+    labels.push({ key: end, offset: days });
+    return {
+      days,
+      ticks,
+      labels: labels.map((label, i) => ({
+        date: label.key,
+        percent: label.offset / days * 100,
+        text: long ? label.key.slice(0, 7).replace('-', '.') : label.key.slice(5).replace('-', '.'),
+        edge: i === 0 ? 'first' : i === labels.length - 1 ? 'last' : '',
+      })),
     };
-    timer = requestAnimationFrame(step);
   }
-  function finish() {
-    host.classList.remove('running', 'paused', 'on');
-    S().set({ dayCursor: null });
-    cur = 0; started = false; paused = false;
-  }
-  function pause() {
-    stop(); paused = true;
-    host.classList.add('paused'); host.classList.remove('running');
-  }
+  window.FactDateRange = { startFor, axisPlan };
+})();
 
-  function bind() {
-    host = document.getElementById('timeline');
-    if (!host) return;
-    track = document.getElementById('tlTrack'); ticksEl = document.getElementById('tlTicks');
-    fillEl = document.getElementById('tlFill'); headEl = document.getElementById('tlHead');
-    dateEl = document.getElementById('tlDate'); playBtn = document.getElementById('tlPlay');
+</script>
+<script>
+(function () {
+  const DAY = 86400000;
+  const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && Number.isFinite(Date.parse(value + 'T00:00:00Z'))
+    && new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value;
+  // 日期回放只驱动日期；事实队列的直播节奏独立运行。
+  class FactDatePlayback {
+    constructor({ today, stepMs = 1200, onDateChange = () => {}, onStateChange = () => {} }) {
+      this.today = today;
+      this.selected = today;
+      this.playing = false;
+      this.stepMs = stepMs;
+      this.onDateChange = onDateChange;
+      this.onStateChange = onStateChange;
+    }
+    select(date) {
+      this.pause();
+      if (!validDate(date) || date > this.today) return false;
+      this.selected = date;
+      this.onDateChange(date);
+      this.onStateChange(this);
+      return true;
+    }
+    play() {
+      this.pause();
+      if (this.selected >= this.today) return;
+      this.playing = true;
+      this.onStateChange(this);
+      this.schedule();
+    }
+    pause() {
+      clearTimeout(this.timer);
+      this.timer = null;
+      this.playing = false;
+      this.onStateChange(this);
+    }
+    schedule() {
+      if (!this.playing) return;
+      this.timer = setTimeout(() => {
+        if (!this.playing) return;
+        this.timer = null;
+        const next = new Date(Date.parse(this.selected + 'T00:00:00Z') + DAY).toISOString().slice(0, 10);
+        this.selected = next > this.today ? this.today : next;
+        if (this.selected === this.today) this.playing = false;
+        this.onDateChange(this.selected);
+        this.onStateChange(this);
+        this.schedule();
+      }, this.stepMs);
+    }
+    updateToday(today) {
+      if (!validDate(today) || this.today === today) return;
+      const followedToday = this.selected === this.today;
+      this.today = today;
+      if (followedToday) this.select(today);
+      else { this.onDateChange(this.selected); this.onStateChange(this); }
+    }
+  }
+  window.FactDatePlayback = FactDatePlayback;
+})();
 
-    playBtn.onclick = e => { e.stopPropagation(); play(); };
-    headEl.addEventListener('pointerdown', e => {
-      e.preventDefault(); headEl.setPointerCapture(e.pointerId);
-      pause();
-      const move = ev => {
-        const r = track.getBoundingClientRect();
-        setCursor(tickAt(Math.max(0, Math.min(r.width, ev.clientX - r.left))));
-      };
-      const up = () => { headEl.removeEventListener('pointermove', move); headEl.removeEventListener('pointerup', up); };
-      headEl.addEventListener('pointermove', move); headEl.addEventListener('pointerup', up);
+</script>
+<script>
+(function () {
+  const DAY = 86400000;
+  const iso = date => date.toISOString().slice(0, 10);
+  // 固定采用上海日历日，避免时区、夏令时和跨月减 30 天的误差。
+  const todayKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const addDays = (key, days) => iso(new Date(Date.parse(key + 'T00:00:00Z') + days * DAY));
+  /* V2.9.4：数据改为本项目真实事实（创建时间 = ingestedAt || date） */
+  const createdKey = f => String(f.ingestedAt || f.date || '').slice(0, 10);
+  const tagOf = f => { try { return window.V03Fact.tagOf(f); } catch (e) { return { label: '事实', color: '#B4A582' }; } };
+  const varietyOf = f => { try { return window.V03Fact.varietyOf(f) || ''; } catch (e) { return ''; } };
+  const cache = new Map();
+  function getFacts(date) {
+    if (!cache.has(date)) {
+      const FACTS = (window.V03Data && V03Data.FACTS) || [];
+      const hits = [];
+      for (const f of FACTS) if (createdKey(f) === date) hits.push(f);
+      hits.sort((a, b) => String(a.ingestedAt || a.date).localeCompare(String(b.ingestedAt || b.date)));
+      cache.set(date, hits.slice(0, 80).map(f => {
+        const tag = tagOf(f);
+        return { id: f.id, date, category: tag.label, product: varietyOf(f),
+                 summary: String(f.summary || f.title || ''), color: tag.color };
+      }));
+    }
+    return cache.get(date);
+  }
+  const truncate = text => { const chars = Array.from(text); return chars.length > 12 ? chars.slice(0, 11).join('') + '…' : text; };
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const randomBetween = (min, max) => min + Math.random() * (max - min);
+  // 两个实例各自维持连发状态；下一次到达时间与每次上推动画分别随机。
+  function nextPulse(outgoing, burstRemaining) {
+    if (burstRemaining === 0 && Math.random() < (outgoing ? .3 : .48)) {
+      burstRemaining = Math.floor(randomBetween(2, outgoing ? 4 : 6));
+    }
+    const burst = burstRemaining > 0;
+    const lull = !burst && Math.random() < .16;
+    const batchSize = burst ? Math.floor(randomBetween(outgoing ? 1 : 2, 5)) : 1;
+    return {
+      batchSize,
+      burstRemaining: Math.max(0, burstRemaining - 1),
+      delay: burst ? randomBetween(80, outgoing ? 260 : 200)
+        : lull ? randomBetween(850, outgoing ? 1500 : 1100)
+        : randomBetween(outgoing ? 160 : 80, outgoing ? 650 : 380),
+      lead: outgoing ? randomBetween(35, 85) : randomBetween(0, 25),
+      duration: (burst ? randomBetween(outgoing ? 340 : 300, outgoing ? 460 : 420)
+        : randomBetween(outgoing ? 350 : 310, outgoing ? 500 : 450)) + (batchSize - 1) * 60,
+      easing: outgoing
+        ? `cubic-bezier(${randomBetween(.12, .24)},.64,.28,1)`
+        : `cubic-bezier(${randomBetween(.12, .22)},.76,.3,1)`,
+    };
+  }
+  class FactStream {
+    constructor(root, outgoing) {
+      this.root = root;
+      this.outgoing = outgoing;
+      this.track = root.querySelector('.fact-track');
+      this.shards = root.querySelector('.fact-shards');
+      this.animations = [];
+      this.timers = [];
+    }
+    setData(data) {
+      this.cancel();
+      this.data = data;
+      this.index = 0;
+      this.track.replaceChildren();
+      this.normalizeRows();
+    }
+    normalizeRows() {
+      const count = Math.max(1, Math.floor(this.root.querySelector('.fact-viewport').clientHeight / 40));
+      while (this.track.children.length > count) { this.track.lastElementChild.remove(); this.index--; }
+      while (this.track.children.length < count) { if (this.append() == null) break; }
+    }
+    append(entering = false) {
+      /* V2.9.4：当天没有新增事实时，data 为空 —— 空状态即可，不能因为取模 NaN 崩掉 */
+      if (!this.data || !this.data.length) return null;
+      const fact = this.data[this.index++ % this.data.length];
+      const row = document.createElement('div');
+      row.className = 'fact-row' + (this.outgoing ? ' is-outgoing' : '') + (entering && !reduced.matches ? ' entering' : '');
+      row.dataset.factId = fact.id;
+      for (const [className, value] of [['fact-tag', fact.category], ['fact-product', fact.product], ['fact-summary', truncate(fact.summary)]]) {
+        const span = document.createElement('span');
+        span.className = className;
+        span.textContent = value;
+        if (className === 'fact-tag') span.style.setProperty('--category', fact.color);
+        if (className === 'fact-summary') span.title = fact.summary;
+        row.append(span);
+      }
+      this.track.append(row);
+      return row;
+    }
+    shatter(row, totalMs = 500) {
+      const base = this.root.querySelector('.fact-viewport').getBoundingClientRect();
+      const fragment = document.createDocumentFragment();
+      for (const span of row.children) {
+        const chars = Array.from(span.textContent);
+        // 每个字分成上下两片，保留原文字形，再分别飞散。
+        for (let i = 0; i < chars.length; i++) {
+          const range = document.createRange();
+          const start = chars.slice(0, i).join('').length;
+          range.setStart(span.firstChild, start);
+          range.setEnd(span.firstChild, start + chars[i].length);
+          const rect = range.getBoundingClientRect();
+          for (let part = 0; part < 2; part++) {
+            const shard = document.createElement('span');
+            shard.className = 'fact-shard';
+            shard.textContent = chars[i];
+            const dx = -randomBetween(18, 88);
+            const dy = randomBetween(-22, 10);
+            const delay = randomBetween(0, totalMs * .14);
+            const duration = Math.max(100, totalMs - delay - randomBetween(20, 70));
+            Object.assign(shard.style, {
+              left: `${rect.left - base.left}px`, top: `${rect.top - base.top}px`,
+              width: `${rect.width + 1}px`, height: `${rect.height}px`,
+              font: getComputedStyle(span).font, lineHeight: `${rect.height}px`,
+              clipPath: part ? 'inset(50% 0 0 0)' : 'inset(0 0 50% 0)',
+            });
+            shard.style.setProperty('--dx', `${dx}px`);
+            shard.style.setProperty('--dy', `${dy}px`);
+            shard.style.setProperty('--drift-x', `${dx * .28}px`);
+            shard.style.setProperty('--drift-y', `${dy * .24}px`);
+            shard.style.setProperty('--rotate', `${randomBetween(-24, 24)}deg`);
+            shard.style.setProperty('--shatter-duration', `${duration}ms`);
+            shard.style.animationDelay = `${delay}ms`;
+            fragment.append(shard);
+          }
+        }
+      }
+      this.shards.append(fragment);
+      row.classList.add('shattering');
+    }
+    start() {
+      this.stop();
+      this.active = true;
+      this.burstRemaining = 0;
+      this.queueNext();
+    }
+    stop() {
+      this.active = false;
+      clearTimeout(this.arrivalTimer);
+      this.cancel();
+    }
+    queueNext() {
+      if (!this.active) return;
+      const pulse = nextPulse(this.outgoing, this.burstRemaining);
+      this.burstRemaining = pulse.burstRemaining;
+      this.arrivalTimer = setTimeout(() => {
+        if (this.active) this.advance(pulse);
+      }, pulse.delay);
+    }
+    advance(pulse) {
+      this.cancel();
+      this.normalizeRows();
+      // 连发模拟到达量增大时，一整批向上推进；慢速仍逐条进出。
+      const count = Math.min(pulse.batchSize, this.track.children.length);
+      const departing = Array.from(this.track.children).slice(0, count);
+      this.root.dataset.batchSize = String(count);
+      if (reduced.matches) {
+        departing.forEach(row => row.remove());
+        for (let i = 0; i < count; i++) { if (this.append() == null) break; }
+        this.arrivalTimer = setTimeout(() => { if (this.active) this.queueNext(); }, 1400);
+        return;
+      }
+      this.pendingRows = [];
+      for (let i = 0; i < count; i++) {
+        const tail = this.append(true);
+        const stagger = i * 18;
+        tail.style.setProperty('--enter-duration', `${pulse.duration + pulse.lead - stagger}ms`);
+        tail.style.animationDelay = `${stagger}ms`;
+        this.pendingRows.push(tail);
+      }
+      this.shards.style.setProperty('--shatter-duration', `${Math.max(180, pulse.duration + pulse.lead - 35)}ms`);
+      departing.forEach((row, i) => {
+        const delay = i * 22 + randomBetween(0, 20);
+        row.style.setProperty('--exit-delay', `${delay}ms`);
+        row.style.setProperty('--exit-duration', `${pulse.duration + pulse.lead - delay}ms`);
+        row.style.setProperty('--absorb-x', `${randomBetween(55, 95)}px`);
+        if (this.outgoing) this.shatter(row, pulse.duration + pulse.lead); else row.classList.add('absorbing');
+      });
+      this.timers.push(setTimeout(() => {
+        const animation = this.track.animate([
+          { transform: 'translateY(0)' },
+          { transform: `translateY(-${40 * count}px)` },
+        ], { duration: pulse.duration, easing: pulse.easing, fill: 'forwards' });
+        this.animations.push(animation);
+        animation.onfinish = () => {
+          departing.forEach(row => row.remove());
+          animation.onfinish = null;
+          animation.cancel();
+          this.pendingRows = [];
+          this.shards.replaceChildren();
+          this.queueNext();
+        };
+      }, pulse.lead));
+    }
+    cancel() {
+      if (this.pendingRows?.length) {
+        this.index -= this.pendingRows.length;
+        this.pendingRows.forEach(row => row.remove());
+        this.pendingRows = [];
+      }
+      this.timers.forEach(clearTimeout); this.timers = [];
+      this.animations.forEach(a => { a.onfinish = null; a.cancel(); }); this.animations = [];
+      this.shards.replaceChildren();
+      this.track.querySelectorAll('.absorbing,.shattering').forEach(row => row.classList.remove('absorbing', 'shattering'));
+    }
+  }
+  const dateInput = document.querySelector('#fact-date');
+  const axis = document.querySelector('#fact-range');
+  const ticks = document.querySelector('.fact-axis-ticks');
+  const todayButton = document.querySelector('#fact-today');
+  const playButton = document.querySelector('#fact-play');
+  const incoming = new FactStream(document.querySelector('#facts-in'), false);
+  const outgoing = new FactStream(document.querySelector('#facts-out'), true);
+  let today = todayKey();
+  let activeRange = null;
+  let viewRange = null;
+  function scheduleStreams() {
+    incoming.stop();
+    outgoing.stop();
+    if (!document.hidden) { incoming.start(); outgoing.start(); }
+  }
+  function syncPlayback(state) {
+    const isToday = state.selected === state.today;
+    todayButton.setAttribute('aria-pressed', String(isToday));
+    todayButton.classList.toggle('is-selected', isToday);
+    playButton.textContent = state.playing ? 'Ⅱ' : '▷';
+    playButton.setAttribute('aria-label', state.playing ? '暂停时间轴播放' : '播放时间轴');
+    playButton.setAttribute('aria-pressed', String(state.playing));
+    document.querySelector('.fact-terminal').classList.toggle('is-replaying', state.playing);
+  }
+  function renderAxis(key) {
+    const desiredStart = viewRange ? FactDateRange.startFor(today, viewRange) : addDays(today, -90);
+    const start = key < desiredStart ? key : desiredStart;
+    const plan = FactDateRange.axisPlan(start, today, document.querySelector('.fact-axis').clientWidth || 1040);
+    const delta = Math.round((Date.parse(key) - Date.parse(today)) / DAY);
+    axis.min = -plan.days;
+    axis.value = delta;
+    axis.setAttribute('aria-valuetext', key);
+    ticks.replaceChildren();
+    for (const item of plan.ticks) {
+      const tick = document.createElement('i');
+      tick.className = 'fact-axis-tick' + (item.major ? ' major' : '');
+      tick.style.left = `calc(${item.percent}% - .5px)`;
+      ticks.append(tick);
+    }
+    document.querySelector('.fact-axis-selected').style.left = `calc(${(delta + plan.days) / plan.days * 100}% - .5px)`;
+    const labels = document.querySelector('.fact-axis-labels');
+    labels.replaceChildren();
+    for (const item of plan.labels) {
+      const label = document.createElement('span');
+      label.textContent = item.text;
+      label.title = item.date;
+      label.style.left = `${item.percent}%`;
+      label.className = item.edge;
+      labels.append(label);
+    }
+    document.querySelectorAll('[data-fact-range]').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.factRange === activeRange));
     });
-    /* 时间范围变化由 app.js 的时间按钮显式调用 play()（订阅拿到的是补丁不是完整 state，会每帧重置） */
-    days = computeDays();
-    if (days.length) { t0 = days[0].ts; tEnd = todayTs(); }
-    paintTicks();
   }
-
-  function mount() { bind(); }
-  return { mount, play, pause, days: () => days.slice() };
+  function renderDate(key) {
+    // 到达今天立即退出预设选中态；保留显示范围，刻度不跳动。
+    if (key === today) activeRange = null;
+    dateInput.value = key;
+    document.querySelector('#fact-next').disabled = key === today;
+    const expired = addDays(key, -30);
+    document.querySelector('#incoming-date').textContent = key.replaceAll('-', '.');
+    document.querySelector('#outgoing-date').textContent = expired.replaceAll('-', '.');
+    document.querySelector('#incoming-date').dateTime = key;
+    document.querySelector('#outgoing-date').dateTime = expired;
+    try { window.V03Store && V03Store.set({ dayCursor: key === today ? null : key }); } catch (e) {}
+    incoming.setData(getFacts(key));
+    outgoing.setData(getFacts(expired));
+    renderAxis(key);
+    scheduleStreams();
+  }
+  const playback = new FactDatePlayback({ today, onDateChange: renderDate, onStateChange: syncPlayback });
+  function manualSelect(key) {
+    if (viewRange && key < FactDateRange.startFor(today, viewRange)) {
+      activeRange = null;
+      viewRange = null;
+    }
+    return playback.select(key);
+  }
+  document.querySelectorAll('[data-fact-range]').forEach(button => {
+    button.onclick = () => {
+      activeRange = button.dataset.factRange;
+      viewRange = activeRange;
+      playback.select(FactDateRange.startFor(today, activeRange));
+      playback.play();
+    };
+  });
+  const axisResize = new ResizeObserver(() => renderAxis(playback.selected));
+  axisResize.observe(document.querySelector('.fact-axis'));
+  dateInput.max = today;
+  dateInput.value = today;
+  dateInput.addEventListener('pointerdown', () => playback.pause());
+  dateInput.addEventListener('keydown', () => playback.pause());
+  dateInput.addEventListener('change', () => {
+    if (!dateInput.validity.valid || !dateInput.value || !manualSelect(dateInput.value)) dateInput.value = playback.selected;
+  });
+  axis.addEventListener('pointerdown', () => playback.pause());
+  axis.addEventListener('keydown', () => playback.pause());
+  axis.addEventListener('input', () => manualSelect(addDays(today, Number(axis.value))));
+  document.querySelector('#fact-prev').onclick = () => manualSelect(addDays(playback.selected, -1));
+  document.querySelector('#fact-next').onclick = () => manualSelect(addDays(playback.selected, 1));
+  todayButton.onclick = () => playback.select(today);
+  playButton.onclick = () => playback.playing ? playback.pause() : playback.play();
+  document.addEventListener('visibilitychange', () => {
+    const latest = todayKey();
+    if (today !== latest) {
+      today = latest;
+      dateInput.max = today;
+      playback.updateToday(today);
+    }
+    if (document.hidden) playback.pause();
+    scheduleStreams();
+  });
+  playback.select(today);
+  // 接入真实数据时替换 getFacts(date)，两侧继续共享同一个按日期查询的事实源。
 })();
 
 </script>
@@ -10332,8 +10851,6 @@ window.V03Timeline = (() => {
       drawers: drawerStackApi,
       toast
     };
-    if (window.V03Danmaku && V03Danmaku.mount) V03Danmaku.mount();
-    if (window.V03Timeline && V03Timeline.mount) V03Timeline.mount();
     renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); renderSettings();
     syncStream(); refreshLayers(true); syncDrawers();
     window.V03_DEBUG = {

@@ -39,7 +39,7 @@ const fontCss = FACES.map(f =>
   `@font-face{font-family:'IBM Plex Sans SC';src:url(data:font/woff2;base64,${b64(f.file)}) format('woff2');font-weight:${f.weight};font-style:normal;font-display:swap}`
 ).join('\n');
 
-const CSS = ['src/v03/app.css', 'src/v03/relation.css', 'src/v03/sim.css'];
+const CSS = ['src/v03/app.css', 'src/v03/relation.css', 'src/v03/sim.css', 'src/v03/tl/timeline.css', 'src/v03/tl/facts.css'];
 const JS = [
   'src/v03/mass.js',       // 事实质量级模型（每个三级类型 1万/10万/100万 条 + 采样展示）
   'src/v03/pkg-adapter.js', // 数据包 agrilink-demo-v1（LLM-292）→ 页面内部模型
@@ -59,8 +59,10 @@ const JS = [
   'src/v03/fact.js',        // 事实层
   'src/v03/relation.js',    // 关联层
   'src/v03/mirofish-bridge.js', // 旧版工作台 iframe 桥接；发起页在工作台内按 PRD 调整
-  'src/v03/danmaku.js',      // V2.9.3 新事实接入 / 事实消亡弹幕
-  'src/v03/timeline.js',     // V2.9.3 时间轴（播放/拖动/按天回放）
+  'src/v03/tl/timeline.js',   // V2.9.4 时间刻度条（来自 timeline.zip）
+  'src/v03/tl/date-range.js',
+  'src/v03/tl/date-playback.js',
+  'src/v03/tl/facts.js',      // V2.9.4 呼入/呼出事实流（数据接本项目）
   'src/v03/app.js'          // 骨架 / 图层菜单 / 快捷键 / 流水 / 弹窗
 ];
 const GEO = ['data/china.geo.json', 'data/world110.geo.json'];
@@ -121,7 +123,7 @@ html = put(html, '/*FONT_CSS*/', fontCss);
 html = put(html, '/*APP_VER*/', 'V' + JSON.parse(rd('package.json')).version.replace(/\.0$/, ''));
 html = put(html, '/*APP_CSS*/', rd(CSS[0]));
 html = put(html, '/*REL_CSS*/', rd(CSS[1]));
-html = put(html, '/*SIM_CSS*/', rd(CSS[2]));
+html = put(html, '/*SIM_CSS*/', rd(CSS[2]) + '\n' + CSS.slice(3).map(rd).join('\n'));
 html = put(html, '<!--BUILD-->', `<script>window.__V03_BUILD=${JSON.stringify({ hash, git, builtAt: new Date().toISOString(), partial: PARTIAL })};</script>`);
 html = put(html, '<!--LIBS-->', libs);
 html = put(html, '<!--DATA-->', data);

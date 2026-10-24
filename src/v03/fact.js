@@ -420,7 +420,6 @@ window.V03Fact = (function () {
       exitLevel = st.geo.level;
       growKey = st.time;
       growK = 0;
-      if (pruneSet && pruneSet.keys) announcePerish(pruneSet.keys);
       pruneSet = null; pruneT0 = 0; pruneArmed = true;        /* 这次铺完之后再退场 5% */
       const dur = GROW_MS[st.time] || 3200;
       if (!growRaf) {
@@ -490,7 +489,7 @@ window.V03Fact = (function () {
     S.set({ newFacts: freshOrder.slice() });
     if (S.state.tab === 'fact') {
       renderCards();
-      if (window.V03Danmaku) V03Danmaku.arrive(f);   /* V2.9.3：顶部通知去掉，改为左侧「新事实接入弹幕」 */
+
       flashStar(f, 'bright');
       if (dom.sideBody.__auto) dom.sideBody.__auto.paused = Date.now() + 4500;
       dom.sideBody.scrollTop = 0;

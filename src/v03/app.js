@@ -702,8 +702,6 @@
       drawers: drawerStackApi,
       toast
     };
-    if (window.V03Danmaku && V03Danmaku.mount) V03Danmaku.mount();
-    if (window.V03Timeline && V03Timeline.mount) V03Timeline.mount();
     renderTabs(); renderTopIcons(); renderMenu(); renderMapSk(); renderZoom(); renderSettings();
     syncStream(); refreshLayers(true); syncDrawers();
     window.V03_DEBUG = {

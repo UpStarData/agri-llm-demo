@@ -1,0 +1,77 @@
+/* 从原站已渲染 CSS 整理：移除 Vue scope id，使用独立类名。 */
+.recording-timeline {
+  --timeline-fade: 235 235 235;
+  --timeline-mark: #c5c5c5;
+  --timeline-text: #000;
+  --timeline-accent: #ff521d;
+  width: 400px;
+  max-width: 100%;
+  color: var(--timeline-text);
+  font-family: -apple-system, system-ui, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+.recording-timeline__time {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.recording-timeline__wrapper {
+  height: 24px;
+  margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.recording-timeline__indicator {
+  z-index: 2;
+  background: var(--timeline-accent);
+  width: 1px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.recording-timeline__scale {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+.recording-timeline__mark {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 4px;
+  background: var(--timeline-mark);
+  transform: translateX(-50%);
+}
+.recording-timeline__mark--medium { height: 8px; }
+.recording-timeline__mark--large { height: 16px; }
+.recording-timeline__mark--origin { height: 24px; }
+.recording-timeline__fade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to right,
+    rgb(var(--timeline-fade) / 1) 0%,
+    rgb(var(--timeline-fade) / 0) 40%,
+    rgb(var(--timeline-fade) / 0) 60%,
+    rgb(var(--timeline-fade) / 1) 100%);
+}
+.recording-timeline__baseline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--timeline-mark);
+}
+.recording-timeline--compact { width: 120px; }
+.recording-timeline--compact .recording-timeline__time { font-size: 10px; line-height: 15px; }
+.recording-timeline--compact .recording-timeline__wrapper { height: 15px; }
+.recording-timeline--compact .recording-timeline__mark { height: 2.5px; }
+.recording-timeline--compact .recording-timeline__mark--medium { height: 5px; }
+.recording-timeline--compact .recording-timeline__mark--large { height: 10px; }
+.recording-timeline--compact .recording-timeline__mark--origin { height: 15px; }
