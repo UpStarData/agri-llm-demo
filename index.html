@@ -593,34 +593,42 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 .tl-date{position:absolute;left:0;top:-2px;transform:translateX(-50%);font-size:9px;padding:1px 4px;border-radius:4px;
   background:#e5484d;color:#fff;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
 
-/* ================= V2.9.4 事实时间终端（timeline.zip 组件） ================= */
-.fact-terminal{position:absolute !important;left:356px;bottom:calc(var(--stream-h) + 8px);
-  width:min(560px, calc(100vw - 700px));max-height:min(46vh, 430px);overflow:auto;z-index:46;
-  border-radius:14px;border:1px solid rgba(255,255,255,.08);padding:12px 14px 10px;
-  box-shadow:0 18px 44px -26px rgba(0,0,0,.55);box-sizing:border-box}
-.fact-terminal .fact-streams{grid-template-columns:1fr;gap:10px}
-.fact-terminal .fact-stream{order:0}
-.fact-terminal #facts-out{order:0}
-.fact-terminal #facts-in{order:1}
-.fact-terminal .fact-viewport{height:120px}
-.fact-terminal .fact-axis{height:56px;margin:8px 0 14px}
-.fact-terminal .fact-footer{margin-top:6px}
-/* V2.9.4：把原型面板收进左侧窄栏（原组件按 1040px 宽排版） */
-.fact-terminal{padding:10px 12px 8px !important;width:min(620px, calc(100vw - 720px)) !important;
-  max-height:min(44vh, 400px) !important}
-.fact-terminal .fact-datebar{flex-wrap:nowrap;gap:6px}
-.fact-terminal .fact-date-controls{gap:8px}
-.fact-terminal .fact-presets{flex-wrap:nowrap;gap:4px;margin:6px 0 2px}
-.fact-terminal .fact-presets button{white-space:nowrap;font-size:11px;padding:3px 6px}
-.fact-terminal #fact-today,.fact-terminal #fact-play{white-space:nowrap;writing-mode:horizontal-tb;font-size:11px}
-.fact-terminal .fact-row{height:28px;font-size:11px;gap:8px}
-.fact-terminal .fact-tag{width:52px;line-height:16px;font-size:9px}
-.fact-terminal .fact-product{width:56px;font-size:11px}
-.fact-terminal .fact-summary{font-size:11px}
-.fact-terminal .fact-viewport{height:92px}
-.fact-terminal .fact-axis{height:46px;margin:2px 0 6px}
-.fact-terminal .fact-stream-date{font-size:9px;margin-bottom:2px}
-.fact-terminal .fact-footer{display:none}
+
+/* ============ V2.9.5：借用组件外观、与项目背景融合（无深色面板） ============ */
+.fstreams{position:absolute;left:336px;top:38px;bottom:calc(var(--stream-h) + 96px);width:308px;z-index:46;
+  display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.fstreams .fact-stream{pointer-events:auto;min-width:0;padding:6px 8px;border-radius:10px;
+  background:rgba(255,255,255,.4);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);
+  border:1px solid rgba(229,231,235,.75);box-shadow:0 12px 28px -24px rgba(15,23,42,.5)}
+.tlbar{position:absolute;left:336px;right:16px;bottom:calc(var(--stream-h) + 8px);z-index:46;
+  padding:8px 12px 6px;border-radius:12px;color:#22303f;
+  background:rgba(255,255,255,.42);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
+  border:1px solid rgba(229,231,235,.8);box-shadow:0 14px 34px -26px rgba(15,23,42,.5)}
+.tlbar .fact-datebar{display:flex;align-items:center;gap:10px}
+.tlbar .fact-date-controls{display:flex;align-items:center;gap:6px}
+.tlbar .fact-presets{display:flex;gap:4px;margin-left:auto}
+.tlbar .tlbar-act{display:flex;gap:4px;margin-left:8px}
+.tlbar button{border:0;background:transparent;color:#4a6b8e;font-size:11px;padding:3px 6px;border-radius:6px;cursor:pointer}
+.tlbar button:hover{background:rgba(84,181,240,.14);color:#1f3b52}
+.tlbar button[aria-pressed="true"]{background:rgba(84,181,240,.2);color:#0f2f47}
+.tlbar input[type=date]{border:0;background:transparent;font:500 12px/20px 'IBM Plex Mono',monospace;color:#22303f;color-scheme:light;width:116px}
+.tlbar .fact-axis{height:44px;margin:2px 0 0}
+.tlbar .fact-axis-tick{background:#b9c6cf}
+.tlbar .fact-axis-line{background:rgba(34,48,63,.1)}
+.tlbar .fact-axis-labels{color:#7b8a96;font-size:9px}
+.tlbar .fact-axis-selected{background:#ff521d;top:12px;height:20px}
+.tlbar .fact-live-dot{background:#54b5f0;box-shadow:0 0 8px rgba(84,181,240,.5)}
+/* 呼入/呼出：透明行，标签用分类色，文本用项目墨色 */
+.fstreams .fact-stream-date{color:#7b8a96;font:9px/16px 'IBM Plex Mono',monospace;letter-spacing:.06em;
+  display:flex;align-items:center;gap:6px;margin-bottom:2px;text-shadow:0 1px 2px rgba(255,255,255,.65)}
+.fstreams .fact-viewport{height:132px;mask-image:linear-gradient(transparent,#000 10%,#000 90%,transparent)}
+.fstreams .fact-row{height:26px;gap:8px;font-size:11px}
+.fstreams .fact-tag{width:52px;line-height:16px;font-size:9px;color:#22303f;border-radius:3px;
+  background:color-mix(in srgb, var(--category) 42%, transparent)}
+.fstreams .fact-product{width:52px;color:#3d5566;text-shadow:0 1px 2px rgba(255,255,255,.6)}
+.fstreams .fact-summary{color:#22303f;text-shadow:0 1px 2px rgba(255,255,255,.65)}
+.fstreams #facts-out .fact-tag{background:transparent;border:1px solid #9fb0bd;color:#6b7a86}
+.fstreams #facts-out .fact-product,.fstreams #facts-out .fact-summary{color:#6b7a86}
 </style>
 <style>/* ============================================================
    关联层样式（V2）：与事实层同一套浅色视觉与布局
@@ -1125,7 +1133,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <!-- G1：顶部轻量工具条（视觉 24px；菜单显隐 · 🌾 AgriLink · 三 TAB · 流水显隐 · 卡片显隐 · 设置） -->
   <header class="topbar">
     <button class="tb-ic" id="menuBtn" aria-label="菜单显隐" aria-pressed="false"></button>
-    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.4</small></div>
+    <div class="brand"><span class="logo" id="logo" aria-hidden="true">🌾</span><b>AgriLink</b><small id="appVer">V2.9.5</small></div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="三个一级 TAB"></nav>
     <div class="tb-right">
       <button class="tb-ic" id="btnStream" aria-label="底部流水显隐"></button>
@@ -1150,8 +1158,20 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
-      <!-- V2.9.4：事实时间终端（呼出在上 / 呼入在下，常驻，来自 timeline.zip 组件） -->
-      <section class="fact-terminal" id="factTerminal" aria-label="事实时间终端">
+      <!-- V2.9.5：呼出（上）/ 呼入（下）—— 紧贴左侧菜单的右缘，透明无底色 -->
+      <div class="fstreams" id="factStreams" aria-label="事实呼出与呼入">
+        <section class="fact-stream" id="facts-out" role="region" aria-label="所选日期前30天新增事实">
+          <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13V2m-4 4 4-4 4 4" stroke="currentColor"/></svg><time id="outgoing-date"></time></div>
+          <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
+        </section>
+        <section class="fact-stream" id="facts-in" role="region" aria-label="所选当天新增事实">
+          <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v11m-4-4 4 4 4-4" stroke="currentColor"/></svg><time id="incoming-date"></time></div>
+          <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
+        </section>
+      </div>
+
+      <!-- V2.9.5：时间轴（日期条 + 范围预设 + 轴）—— 置于底部终端顶部，透明融合，不做深色面板 -->
+      <div class="tlbar" id="tlBar" aria-label="时间轴">
         <div class="fact-datebar">
           <div class="fact-date-controls">
             <span class="fact-live-dot" aria-hidden="true"></span>
@@ -1159,30 +1179,20 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
             <input id="fact-date" type="date" aria-label="选择事实日期">
             <button id="fact-next" aria-label="后一天">›</button>
           </div>
-          <div><button id="fact-today" aria-pressed="true">今天</button><button id="fact-play" aria-label="播放时间轴" aria-pressed="false">▷</button></div>
-        </div>
-        <div class="fact-presets" role="group" aria-label="时间轴范围">
-          <button data-fact-range="7" aria-pressed="false">近 7 天</button>
-          <button data-fact-range="30" aria-pressed="false">近 30 天</button>
-          <button data-fact-range="half" aria-pressed="false">近半年</button>
-          <button data-fact-range="year" aria-pressed="false">近 1 年</button>
+          <div class="fact-presets" role="group" aria-label="时间轴范围">
+            <button data-fact-range="7" aria-pressed="false">近 7 天</button>
+            <button data-fact-range="30" aria-pressed="false">近 30 天</button>
+            <button data-fact-range="half" aria-pressed="false">近半年</button>
+            <button data-fact-range="year" aria-pressed="false">近 1 年</button>
+          </div>
+          <div class="tlbar-act"><button id="fact-today" aria-pressed="true">今天</button><button id="fact-play" aria-label="播放时间轴" aria-pressed="false">▷</button></div>
         </div>
         <div class="fact-axis">
           <div class="fact-axis-ticks" aria-hidden="true"></div><div class="fact-axis-selected" aria-hidden="true"></div><div class="fact-axis-line"></div>
           <div class="fact-axis-labels" aria-hidden="true"></div>
           <input id="fact-range" type="range" min="-90" max="0" value="0" step="1" aria-label="拖动时间轴选择日期">
         </div>
-        <div class="fact-streams">
-          <div class="fact-stream" id="facts-out" role="region" aria-label="所选日期前30天新增事实">
-            <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13V2m-4 4 4-4 4 4" stroke="currentColor"/></svg><time id="outgoing-date"></time></div>
-            <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
-          </div>
-          <div class="fact-stream" id="facts-in" role="region" aria-label="所选当天新增事实">
-            <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v11m-4-4 4 4 4-4" stroke="currentColor"/></svg><time id="incoming-date"></time></div>
-            <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
@@ -1223,7 +1233,7 @@ html[data-theme="color"] .sim-tag.review{background:var(--panel-2)}
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script>window.__V03_BUILD={"hash":"8d19cdfe857f","git":"0af99ea","builtAt":"2026-10-24T09:03:40.291Z","partial":false};</script>
+<script>window.__V03_BUILD={"hash":"579d70464a7a","git":"0f21c54","builtAt":"2026-10-24T09:11:44.076Z","partial":false};</script>
 <script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -10036,7 +10046,17 @@ window.V03Sim = (function () {
   const playButton = document.querySelector('#fact-play');
   const incoming = new FactStream(document.querySelector('#facts-in'), false);
   const outgoing = new FactStream(document.querySelector('#facts-out'), true);
-  let today = todayKey();
+  /* V2.9.5：数据里“今天”可能没有新增事实（当前数据到 2026-09-21 为止）。
+     这种情况默认回落到“最近有事实的一天”，否则呼入区整块空白，看起来像坏了。 */
+  function latestFactDay() {
+    const FACTS = (window.V03Data && V03Data.FACTS) || [];
+    const t = todayKey();
+    const seen = new Set();
+    for (const f of FACTS) { const k = String(f.ingestedAt || f.date || '').slice(0, 10); if (k && k <= t) seen.add(k); }
+    if (!seen.size) return t;
+    return [...seen].sort().pop();
+  }
+  let today = (() => { const t = todayKey(); return latestFactDay() === t ? t : t; })();
   let activeRange = null;
   let viewRange = null;
   function scheduleStreams() {
@@ -10051,7 +10071,7 @@ window.V03Sim = (function () {
     playButton.textContent = state.playing ? 'Ⅱ' : '▷';
     playButton.setAttribute('aria-label', state.playing ? '暂停时间轴播放' : '播放时间轴');
     playButton.setAttribute('aria-pressed', String(state.playing));
-    document.querySelector('.fact-terminal').classList.toggle('is-replaying', state.playing);
+    const host = document.getElementById('tlBar'); if (host) host.classList.toggle('is-replaying', state.playing);
   }
   function renderAxis(key) {
     const desiredStart = viewRange ? FactDateRange.startFor(today, viewRange) : addDays(today, -90);
@@ -10094,7 +10114,16 @@ window.V03Sim = (function () {
     document.querySelector('#incoming-date').dateTime = key;
     document.querySelector('#outgoing-date').dateTime = expired;
     try { window.V03Store && V03Store.set({ dayCursor: key === today ? null : key }); } catch (e) {}
-    incoming.setData(getFacts(key));
+    /* V2.9.5：所选那天没有新增时，往前找最近 7 天里有数据的一天来展示（标签同步显示真实日期），避免整块空白 */
+    let inKey = key, inData = getFacts(key);
+    for (let d = 1; d <= 7 && !inData.length; d++) {
+      const alt = addDays(key, -d);
+      const altData = getFacts(alt);
+      if (altData.length) { inKey = alt; inData = altData; break; }
+    }
+    document.querySelector('#incoming-date').textContent = inKey.replaceAll('-', '.');
+    document.querySelector('#incoming-date').dateTime = inKey;
+    incoming.setData(inData);
     outgoing.setData(getFacts(expired));
     renderAxis(key);
     scheduleStreams();
@@ -10118,7 +10147,14 @@ window.V03Sim = (function () {
   const axisResize = new ResizeObserver(() => renderAxis(playback.selected));
   axisResize.observe(document.querySelector('.fact-axis'));
   dateInput.max = today;
-  dateInput.value = today;
+  /* 数据是启动后适配进来的：等就绪后再定位到“最近有事实的一天” */
+  function seedInitial() {
+    const seed = latestFactDay();
+    playback.select(seed);
+    dateInput.value = seed;
+    renderDate(seed);
+  }
+  if (window.__AGRI_READY) seedInitial(); else setTimeout(seedInitial, 600);
   dateInput.addEventListener('pointerdown', () => playback.pause());
   dateInput.addEventListener('keydown', () => playback.pause());
   dateInput.addEventListener('change', () => {

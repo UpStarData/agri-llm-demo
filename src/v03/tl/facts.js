@@ -210,7 +210,17 @@
   const playButton = document.querySelector('#fact-play');
   const incoming = new FactStream(document.querySelector('#facts-in'), false);
   const outgoing = new FactStream(document.querySelector('#facts-out'), true);
-  let today = todayKey();
+  /* V2.9.5：数据里“今天”可能没有新增事实（当前数据到 2026-09-21 为止）。
+     这种情况默认回落到“最近有事实的一天”，否则呼入区整块空白，看起来像坏了。 */
+  function latestFactDay() {
+    const FACTS = (window.V03Data && V03Data.FACTS) || [];
+    const t = todayKey();
+    const seen = new Set();
+    for (const f of FACTS) { const k = String(f.ingestedAt || f.date || '').slice(0, 10); if (k && k <= t) seen.add(k); }
+    if (!seen.size) return t;
+    return [...seen].sort().pop();
+  }
+  let today = (() => { const t = todayKey(); return latestFactDay() === t ? t : t; })();
   let activeRange = null;
   let viewRange = null;
   function scheduleStreams() {
@@ -225,7 +235,7 @@
     playButton.textContent = state.playing ? 'Ⅱ' : '▷';
     playButton.setAttribute('aria-label', state.playing ? '暂停时间轴播放' : '播放时间轴');
     playButton.setAttribute('aria-pressed', String(state.playing));
-    document.querySelector('.fact-terminal').classList.toggle('is-replaying', state.playing);
+    const host = document.getElementById('tlBar'); if (host) host.classList.toggle('is-replaying', state.playing);
   }
   function renderAxis(key) {
     const desiredStart = viewRange ? FactDateRange.startFor(today, viewRange) : addDays(today, -90);
@@ -268,7 +278,16 @@
     document.querySelector('#incoming-date').dateTime = key;
     document.querySelector('#outgoing-date').dateTime = expired;
     try { window.V03Store && V03Store.set({ dayCursor: key === today ? null : key }); } catch (e) {}
-    incoming.setData(getFacts(key));
+    /* V2.9.5：所选那天没有新增时，往前找最近 7 天里有数据的一天来展示（标签同步显示真实日期），避免整块空白 */
+    let inKey = key, inData = getFacts(key);
+    for (let d = 1; d <= 7 && !inData.length; d++) {
+      const alt = addDays(key, -d);
+      const altData = getFacts(alt);
+      if (altData.length) { inKey = alt; inData = altData; break; }
+    }
+    document.querySelector('#incoming-date').textContent = inKey.replaceAll('-', '.');
+    document.querySelector('#incoming-date').dateTime = inKey;
+    incoming.setData(inData);
     outgoing.setData(getFacts(expired));
     renderAxis(key);
     scheduleStreams();
@@ -292,7 +311,14 @@
   const axisResize = new ResizeObserver(() => renderAxis(playback.selected));
   axisResize.observe(document.querySelector('.fact-axis'));
   dateInput.max = today;
-  dateInput.value = today;
+  /* 数据是启动后适配进来的：等就绪后再定位到“最近有事实的一天” */
+  function seedInitial() {
+    const seed = latestFactDay();
+    playback.select(seed);
+    dateInput.value = seed;
+    renderDate(seed);
+  }
+  if (window.__AGRI_READY) seedInitial(); else setTimeout(seedInitial, 600);
   dateInput.addEventListener('pointerdown', () => playback.pause());
   dateInput.addEventListener('keydown', () => playback.pause());
   dateInput.addEventListener('change', () => {

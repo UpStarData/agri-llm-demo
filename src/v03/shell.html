@@ -40,8 +40,20 @@
       <div class="mapsk" id="mapSk" role="group" aria-label="地图快捷键"></div>
       <div class="mapzoom" id="mapZoom" role="group" aria-label="地图缩放"></div>
 
-      <!-- V2.9.4：事实时间终端（呼出在上 / 呼入在下，常驻，来自 timeline.zip 组件） -->
-      <section class="fact-terminal" id="factTerminal" aria-label="事实时间终端">
+      <!-- V2.9.5：呼出（上）/ 呼入（下）—— 紧贴左侧菜单的右缘，透明无底色 -->
+      <div class="fstreams" id="factStreams" aria-label="事实呼出与呼入">
+        <section class="fact-stream" id="facts-out" role="region" aria-label="所选日期前30天新增事实">
+          <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13V2m-4 4 4-4 4 4" stroke="currentColor"/></svg><time id="outgoing-date"></time></div>
+          <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
+        </section>
+        <section class="fact-stream" id="facts-in" role="region" aria-label="所选当天新增事实">
+          <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v11m-4-4 4 4 4-4" stroke="currentColor"/></svg><time id="incoming-date"></time></div>
+          <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
+        </section>
+      </div>
+
+      <!-- V2.9.5：时间轴（日期条 + 范围预设 + 轴）—— 置于底部终端顶部，透明融合，不做深色面板 -->
+      <div class="tlbar" id="tlBar" aria-label="时间轴">
         <div class="fact-datebar">
           <div class="fact-date-controls">
             <span class="fact-live-dot" aria-hidden="true"></span>
@@ -49,30 +61,20 @@
             <input id="fact-date" type="date" aria-label="选择事实日期">
             <button id="fact-next" aria-label="后一天">›</button>
           </div>
-          <div><button id="fact-today" aria-pressed="true">今天</button><button id="fact-play" aria-label="播放时间轴" aria-pressed="false">▷</button></div>
-        </div>
-        <div class="fact-presets" role="group" aria-label="时间轴范围">
-          <button data-fact-range="7" aria-pressed="false">近 7 天</button>
-          <button data-fact-range="30" aria-pressed="false">近 30 天</button>
-          <button data-fact-range="half" aria-pressed="false">近半年</button>
-          <button data-fact-range="year" aria-pressed="false">近 1 年</button>
+          <div class="fact-presets" role="group" aria-label="时间轴范围">
+            <button data-fact-range="7" aria-pressed="false">近 7 天</button>
+            <button data-fact-range="30" aria-pressed="false">近 30 天</button>
+            <button data-fact-range="half" aria-pressed="false">近半年</button>
+            <button data-fact-range="year" aria-pressed="false">近 1 年</button>
+          </div>
+          <div class="tlbar-act"><button id="fact-today" aria-pressed="true">今天</button><button id="fact-play" aria-label="播放时间轴" aria-pressed="false">▷</button></div>
         </div>
         <div class="fact-axis">
           <div class="fact-axis-ticks" aria-hidden="true"></div><div class="fact-axis-selected" aria-hidden="true"></div><div class="fact-axis-line"></div>
           <div class="fact-axis-labels" aria-hidden="true"></div>
           <input id="fact-range" type="range" min="-90" max="0" value="0" step="1" aria-label="拖动时间轴选择日期">
         </div>
-        <div class="fact-streams">
-          <div class="fact-stream" id="facts-out" role="region" aria-label="所选日期前30天新增事实">
-            <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13V2m-4 4 4-4 4 4" stroke="currentColor"/></svg><time id="outgoing-date"></time></div>
-            <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
-          </div>
-          <div class="fact-stream" id="facts-in" role="region" aria-label="所选当天新增事实">
-            <div class="fact-stream-date"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v11m-4-4 4 4 4-4" stroke="currentColor"/></svg><time id="incoming-date"></time></div>
-            <div class="fact-viewport"><div class="fact-track"></div><div class="fact-shards" aria-hidden="true"></div></div>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <!-- F10 / A5：右侧嵌套抽屉（事实详情 / 本体详情 / 关系详情逐层展开） -->
       <div class="drawer-stack" id="drawerStack"></div>
