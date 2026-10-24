@@ -4,25 +4,32 @@
   // 固定采用上海日历日，避免时区、夏令时和跨月减 30 天的误差。
   const todayKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const addDays = (key, days) => iso(new Date(Date.parse(key + 'T00:00:00Z') + days * DAY));
-  /* V2.9.4：数据改为本项目真实事实（创建时间 = ingestedAt || date） */
-  const createdKey = f => String(f.ingestedAt || f.date || '').slice(0, 10);
-  const tagOf = f => { try { return window.V03Fact.tagOf(f); } catch (e) { return { label: '事实', color: '#B4A582' }; } };
-  const varietyOf = f => { try { return window.V03Fact.varietyOf(f) || ''; } catch (e) { return ''; } };
+  /* V2.9.8：用刘洋 demo 那份数据（每条都有涉及品种），分类映射到系统的一级/三级分类与颜色 */
+  const EXAMPLES = [
+    ['新闻', '车厘子', '东北大车厘子采收上市'], ['政策', '榴莲', '国务院最新批文降低榴莲进口关税'],
+    ['行情', '苹果', '山东产区收购价格小幅上涨'], ['产地', '葡萄', '云南阳光玫瑰进入集中采收期'],
+    ['新闻', '蓝莓', '首批高山蓝莓陆续进入市场'], ['政策', '柑橘', '新一轮冷链物流补贴开放申请'],
+    ['行情', '榴莲', '金枕到港量环比增加'], ['产地', '车厘子', '新季果园完成首轮品质抽检'],
+    ['新闻', '芒果', '海南芒果开启新一轮采摘'], ['行情', '葡萄', '优质鲜果终端需求回暖'],
+    ['政策', '苹果', '产地溯源试点新增合作果园'], ['产地', '蓝莓', '核心产区鲜果分级标准升级'],
+    ['新闻', '柑橘', '早熟蜜橘首批发往华东市场'], ['行情', '芒果', '主要批发市场交易量回升'],
+    ['政策', '车厘子', '进口鲜果通关流程进一步优化'], ['产地', '榴莲', '东部产区迎来集中供货窗口'],
+  ];
+  /* demo 的四个分类 → 本系统分类（标签文字 + 颜色都跟系统走） */
+  const CAT_MAP = {
+    新闻: { label: '媒体舆情', color: '#8d7fbe' },
+    政策: { label: '政策与治理', color: '#5d80c4' },
+    行情: { label: '市场与交易', color: '#c9705f' },
+    产地: { label: '生产与供给', color: '#6aa35c' },
+  };
   const cache = new Map();
   function getFacts(date) {
     if (!cache.has(date)) {
-      const FACTS = (window.V03Data && V03Data.FACTS) || [];
-      const hits = [];
-      for (const f of FACTS) if (createdKey(f) === date) hits.push(f);
-      hits.sort((a, b) => String(a.ingestedAt || a.date).localeCompare(String(b.ingestedAt || b.date)));
-      cache.set(date, hits.slice(0, 80).map(f => {
-        const tag = tagOf(f);
-        return { id: f.id, date, category: tag.label, product: varietyOf(f),
-                 summary: (() => {
-                   const sum = String(f.summary || '').trim(), title = String(f.title || '').trim();
-                   /* V2.9.7：摘要常以日期开头，看起来像一行日期；这种就用标题 */
-                   return /^\d{4}[-年/.]/.test(sum) ? (title || sum) : (sum || title);
-                 })(), color: tag.color };
+      const seed = Math.floor(Date.parse(date + 'T00:00:00Z') / DAY);
+      cache.set(date, Array.from({ length: 8 }, (_, i) => {
+        const item = EXAMPLES[((seed * 7 + i * 3) % EXAMPLES.length + EXAMPLES.length) % EXAMPLES.length];
+        const cat = CAT_MAP[item[0]] || { label: item[0], color: '#B4A582' };
+        return { id: `${date}-${i}`, date, category: cat.label, product: item[1], summary: item[2], color: cat.color };
       }));
     }
     return cache.get(date);
@@ -80,7 +87,8 @@
       const row = document.createElement('div');
       row.className = 'fact-row' + (this.outgoing ? ' is-outgoing' : '') + (entering && !reduced.matches ? ' entering' : '');
       row.dataset.factId = fact.id;
-      for (const [className, value] of [['fact-tag', fact.category], ['fact-product', fact.product], ['fact-summary', truncate(fact.summary)]]) {
+      for (const [className, value] of [['fact-tag', fact.category], ['fact-product', fact.product || ''], ['fact-summary', truncate(fact.summary)]]) {
+        if (className === 'fact-product' && !value) { row.classList.add('no-product'); }
         const span = document.createElement('span');
         span.className = className;
         span.textContent = value;

@@ -1,6 +1,6 @@
 {
   "name": "agri-llm-demo",
-  "version": "2.9.7",
+  "version": "2.9.8",
   "private": true,
   "description": "AgriLink V2.7 · 全球业务事实恢复、叠加图层默认开启与稳定关联动画",
   "type": "module",

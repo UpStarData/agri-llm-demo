@@ -586,43 +586,32 @@ html[data-theme="color"] .st-bar{border-bottom-color:#406773}
 
 
 
-/* ================= V2.9.7：无任何背景，按草图摆放 ================= */
+
+/* ================= V2.9.8：位置由我定，外观全交给 demo ================= */
 :root{--menu-w:0px}
-.app-menu-open{--menu-w:336px}
-/* 呼出：菜单右缘、地图上方 */
-.fact-band,.fstreams{position:static;background:none;border:0;backdrop-filter:none}
-#factStreams{position:absolute;left:calc(var(--menu-w) + 10px);top:40px;width:min(400px, calc(100vw - var(--menu-w) - 620px));
-  z-index:46;display:flex;flex-direction:column;gap:8px;pointer-events:none;background:none!important;border:0!important}
-#facts-out{pointer-events:auto;align-self:flex-start;width:100%}
-#facts-in{pointer-events:auto;align-self:flex-start;width:100%;position:fixed;left:calc(var(--menu-w) + 10px);
-  bottom:calc(var(--stream-h) + 10px)}
-/* 两路流：无卡片，只有文字；呼入标签用系统分类色，呼出全灰 */
-.fact-stream{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;
+html.app-menu-open{--menu-w:336px}
+#factStreams{position:absolute;left:calc(var(--menu-w) + 10px);top:40px;width:min(390px, calc(100vw - var(--menu-w) - 640px));
+  z-index:46;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#facts-out{pointer-events:auto;width:100%}
+#facts-in{pointer-events:auto;width:100%;position:fixed;left:calc(var(--menu-w) + 10px);bottom:calc(var(--stream-h) + 88px)}
+/* 只要无背景；字号/颜色/行高保持 demo 原样 */
+#factStreams .fact-stream,.tlbar{background:none!important;border:0!important;box-shadow:none!important;
   backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.fact-stream-date{display:none}
-.fact-viewport{height:118px;mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent)}
-.fact-row{height:24px;gap:10px;font-size:12px}
-.fact-tag{width:52px;line-height:16px;font-size:10px;border-radius:3px;color:#191b1d;
-  background:color-mix(in srgb, var(--category) 60%, transparent)}
-.fact-product{width:52px;color:#3d5566}
-.fact-summary{color:#22303f}
-#facts-out .fact-tag{background:transparent!important;border:1px solid #8d8d8d55;color:#7b8a96;font-weight:400}
-#facts-out .fact-product,#facts-out .fact-summary{color:#7b8a96}
-/* 时间轴：呼入右侧、终端上方；demo 自己的刻度/指针/文字，只是不要背景 */
-.tlbar{position:absolute;left:calc(var(--menu-w) + 10px + min(400px, calc(100vw - var(--menu-w) - 620px)) + 16px);
-  right:calc(var(--side-w, 0px) + 120px);bottom:calc(var(--stream-h) + 10px);z-index:46;
-  background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;padding:0!important;color:#22303f}
-.tlbar .fact-datebar{display:flex;align-items:center;gap:10px}
-.tlbar .fact-presets{margin-left:auto;display:flex;gap:6px}
-.tlbar button{background:none;border:0;color:#5d7286;font-size:11px;padding:3px 6px;border-radius:6px}
-.tlbar button[aria-pressed="true"]{color:#ff521d}
-.tlbar input[type=date]{border:0;background:none;color:#22303f;color-scheme:light;
-  font:500 12px/20px 'IBM Plex Mono',monospace;width:110px}
-.tlbar .fact-axis{height:44px;margin:4px 0 0}
-.tlbar .fact-axis-tick{background:#8fa2b0}
-.tlbar .fact-axis-line{background:rgba(34,48,63,.12)}
+#factStreams .fact-stream-date{display:none!important}
+#factStreams .fact-viewport{height:112px}
+/* 无品种时紧凑：品种不占位 */
+#factStreams .fact-row.no-product .fact-product{display:none}
+/* 时间轴：demo 外观，只给位置与避让右侧快捷键簇（≈96px） */
+.tlbar{position:absolute;left:calc(var(--menu-w) + 10px + min(390px, calc(100vw - var(--menu-w) - 640px)) + 18px);
+  right:calc(var(--side-w, 0px) + 182px);bottom:calc(var(--stream-h) + 14px);z-index:46;padding:0!important}
 .tlbar .fact-axis-labels{display:none}
-.tlbar .fact-axis-selected{background:#ff521d}
-/* 菜单打开、时间轴变短时：收起预设文字，只留日期与轴 */
+/* 局部：时间轴太窄时收起范围预设，其余仍是 demo 样式 */
 .tlbar.is-narrow .fact-presets{display:none}
+/* 呼出呼入在浅色地图上用 demo 深色字，避免看不清 */
+#factStreams .fact-summary{color:#22303f}
+#factStreams .fact-product{color:#3d5566}
+#facts-out .fact-summary,#facts-out .fact-product{color:#7b8a96}
+/* V2.9.8：时间轴按 demo 的紧凑宽度（400 左右），不要拉满整行 */
+.tlbar{max-width:470px;min-width:340px}
+.tlbar .fact-presets{margin-left:8px}
+.tlbar .fact-datebar{gap:8px}
