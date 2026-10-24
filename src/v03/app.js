@@ -327,6 +327,12 @@
   function renderMenu() {
     const st = S.state, body = $('menuBody');
     $('menu').classList.toggle('on', st.menu && st.tab !== 'sim');
+    /* V2.9.7：左菜单开合直接决定三块的位置与时间轴可用宽度 */
+    document.documentElement.classList.toggle('app-menu-open', !!(st.menu && st.tab !== 'sim'));
+    try {
+      const tl = document.getElementById('tlBar');
+      if (tl) requestAnimationFrame(() => tl.classList.toggle('is-narrow', tl.clientWidth < 520));
+    } catch (e) {}
     $('menu').setAttribute('aria-hidden', String(!st.menu || st.tab === 'sim'));
     if (!st.menu || st.tab === 'sim') { ovStop(); return; }
 

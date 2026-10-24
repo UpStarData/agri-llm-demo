@@ -18,7 +18,11 @@
       cache.set(date, hits.slice(0, 80).map(f => {
         const tag = tagOf(f);
         return { id: f.id, date, category: tag.label, product: varietyOf(f),
-                 summary: String(f.summary || f.title || ''), color: tag.color };
+                 summary: (() => {
+                   const sum = String(f.summary || '').trim(), title = String(f.title || '').trim();
+                   /* V2.9.7：摘要常以日期开头，看起来像一行日期；这种就用标题 */
+                   return /^\d{4}[-年/.]/.test(sum) ? (title || sum) : (sum || title);
+                 })(), color: tag.color };
       }));
     }
     return cache.get(date);
